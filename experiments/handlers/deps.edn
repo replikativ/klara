@@ -1,0 +1,6 @@
+{:paths ["src"]
+ :deps {org.clojure/clojure {:mvn/version "1.12.0"}
+        is.simm/partial-cps {:local/root "../../../partial-cps"}}
+ :aliases
+ {:bench {:jvm-opts ["--add-exports" "java.base/jdk.internal.vm=ALL-UNNAMED"
+                     "-Xms1g" "-Xmx1g" "-XX:+UseParallelGC"]}}}
