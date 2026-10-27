@@ -26,6 +26,12 @@ research notes go in `research/`, the synthesis in `01-core-v1.md`.
    ansatz, kept Lean-4-checkable; corpus as the conformance suite. Spec bugs
    are acceptable and fixed by iteration; "certain" ≠ paranoid.
 9. Serve both PL research/formalization and Clojure-style pragmatics.
+11. **Sound by design.** Klara-native semantics is sound; unsoundness and
+    quirks of a host are respected only where interop requires them, and then
+    quarantined at Tier H: named, documented, pinned by tests, never leaking
+    into Klara-native types or laws (e.g. Clojure maps' equals/hashCode
+    mismatch for negative Integer/Long keys stays a Tier H wart; Klara's own
+    collections satisfy the java.util contracts). (Christian, 2026-10-27)
 10. Work backwards from simulation and a resource-aware calculus of bounded
     rationality (MPI talk 2026-10; raster/design/compiler-north-star.md).
 
