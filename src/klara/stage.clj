@@ -6,7 +6,9 @@
 
     {:code-id h          ; CodeId of the fn term it specializes
      :guards #{g ..}     ; its assumption set
-     :run f              ; host fn of the remaining arguments
+     :run f              ; a host fn of the arguments (must not perform
+                         ;   Klara effects: it is a host frame), or
+     :klara g :prefix [..] ; Klara code entered in the same machine
      :certificate {..}}
 
   Guards, all checked on ENTRY (never later — live frames cannot be
@@ -124,7 +126,7 @@
               exe (some (fn [[_ exe]] (when (every? #(guard-holds? % ctx) (:guards exe)) exe))
                         cands)]
           (swap! cache update-in [:stats (if exe :hits :fallbacks)] inc)
-          (:run exe))))))
+          exe)))))
 
 (defn invalidate!
   "Drop executables whose [:world ..] guards fail in root. Returns the
@@ -154,9 +156,9 @@
 
 (defn residual
   "The trivial specializer: an executable for closure f (optionally fixed
-  statics) that runs the generic code, guarded by f's captures, statics
-  and the world reads of its body in basis. By s-m-n it is correct by
-  construction."
+  statics) that enters the generic code in the same machine, guarded by
+  f's captures, statics and the world reads of its body in basis. By
+  s-m-n it is correct by construction, and effects inside keep working."
   ([f basis] (residual f [] basis))
   ([f statics basis]
    (let [term (ev/closure-term f)
@@ -164,7 +166,7 @@
          guards (cond-> (into #{[:captures (ev/closure-locals f)]} (world-guards term basis))
                   (seq statics) (conj [:statics (vec statics)]))]
      {:code-id cid :guards guards
-      :run (fn [& args] (ev/call-generic f (into (vec statics) args)))
+      :klara f :prefix (vec statics)
       :certificate (certify cid guards :klara/trivial {:specializer :klara.stage/residual})})))
 
 (defn executable

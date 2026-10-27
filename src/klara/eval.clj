@@ -50,7 +50,7 @@
 (def ^:dynamic *fiber* nil)
 (def ^:dynamic *basis* nil)
 (def ^:dynamic *entry-hook*
-  "nil, or (fn [f statics args basis]) -> host fn or nil."
+  "nil, or (fn [f statics args basis]) -> executable map or nil."
   nil)
 
 (declare call-value call-value*)
@@ -182,25 +182,39 @@
 (defn- enter-hook [f statics args basis]
   (when *entry-hook* (*entry-hook* f statics args basis)))
 
+(defn- enter-closure
+  "The generic path: bind arguments, run the body under the closure's
+  basis (or the caller's, for an open closure)."
+  [f args env k]
+  (let [{:keys [arity rest? body]} (closure-term f)
+        n (count args)]
+    (if (or (< n arity) (and (not rest?) (> n arity)))
+      (raise (ex-info "klara: arity mismatch" {:expected arity :rest? rest? :actual n})
+             env k)
+      (let [av (vec args)
+            bound (if rest? (conj (subvec av 0 arity) (seq (subvec av arity))) av)]
+        [:eval body {:locals (into (closure-locals f) bound)
+                     :basis (or (closure-basis f) (:basis env))
+                     :mint (or (closure-basis f) (:mint env))}
+         k]))))
+
+(defn- run-executable
+  "An executable either names Klara code entered in THIS machine
+  (:klara closure + :prefix arguments; effects keep working) or a host
+  function (:run; a host frame, so it must not perform Klara effects)."
+  [exe args env k]
+  (if-let [g (:klara exe)]
+    (enter-closure g (into (vec (:prefix exe)) args) env k)
+    (host-apply (:run exe) args env k)))
+
 (defn call-value*
   "Apply value f to args: returns the next machine state."
   [f args env k]
   (cond
     (closure? f)
-    (let [{:keys [arity rest? body]} (closure-term f)
-          n (count args)
-          b (or (closure-basis f) (:basis env))]
-      (if (or (< n arity) (and (not rest?) (> n arity)))
-        (raise (ex-info "klara: arity mismatch" {:expected arity :rest? rest? :actual n})
-               env k)
-        (if-let [exe (enter-hook f [] args b)]
-          (host-apply exe args env k)
-          (let [av (vec args)
-                bound (if rest? (conj (subvec av 0 arity) (seq (subvec av arity))) av)]
-            [:eval body {:locals (into (closure-locals f) bound)
-                         :basis b
-                         :mint (or (closure-basis f) (:mint env))}
-             k]))))
+    (if-let [exe (enter-hook f [] args (or (closure-basis f) (:basis env)))]
+      (run-executable exe args env k)
+      (enter-closure f args env k))
 
     (instance? Cont f)
     [:ret (first args) env (into k (rseq (:frames f)))]
@@ -209,7 +223,7 @@
     (if-let [exe (enter-hook (pap-fn f) (pap-statics f) args
                              (or (when (closure? (pap-fn f)) (closure-basis (pap-fn f)))
                                  (:basis env)))]
-      (host-apply exe args env k)
+      (run-executable exe args env k)
       (call-value* (pap-fn f) (into (vec (pap-statics f)) args) env k))
 
     (ifn? f) (host-apply f args env k)
@@ -326,15 +340,3 @@
   (let [b (or (when (closure? f) (closure-basis f)) *basis* w/empty-root)]
     (binding [*basis* b]
       (drive (call-value* f args {:locals [] :basis b :mint b} '())))))
-
-(defn call-generic
-  "call-value with the stage hook off for the outermost entry (used by
-  trivial residuals, which must not re-enter themselves)."
-  [f args]
-  (let [hook *entry-hook*
-        first? (volatile! true)]
-    (binding [*entry-hook* (when hook
-                             (fn [g s a b]
-                               (if @first? (do (vreset! first? false) nil)
-                                   (hook g s a b))))]
-      (call-value f args))))
