@@ -153,3 +153,26 @@ pinned parent root; authorities split exactly once (RFC 0001).
 6. Relicensing the Typed Clojure fork's own files (if solely Christian's).
 7. Held-out discipline (G9) is covered by no type system; it stays a runtime
    evidence rule.
+
+## 6. Decisions (Christian, 2026-10-27)
+
+All recommendations in §5 accepted. The Typed Clojure fork's own files are
+solely Christian's and may be relicensed and ported directly (upstream
+Typed Clojure files remain EPL: ideas only). `../ChezScheme` updated to
+upstream main (2026-10-23, fae51c27).
+
+## 7. Next implementation steps
+
+- **S1 runtime slice** (`klara/src`): core syntax (12 forms), world with
+  immutable roots and one versioned publication protocol, basis-specific
+  execution environments (no shared host namespace), the expander ported from
+  v0 + X1 producing core terms, a T0 reference interpreter of K0 with
+  reference handlers, and the specialization cache with guards and
+  certificate-checked install. Tests: X1's criteria, R3 (deleting caches
+  changes nothing), R4 (old/new versions coexist across forks).
+- **S2 formal spec (X3)**: small-step semantics for the 12 forms with
+  reference handlers in ansatz, Lean-compatible; compiled `step` run
+  differentially against S1's T0 interpreter.
+- **S3 first wandler idea** (after S1): map/filter/reduce fusion as a law-
+  licensed rewrite with an ansatz certificate, installed through the
+  specialization cache, with generic fallback on edit.
