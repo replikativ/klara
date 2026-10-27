@@ -179,3 +179,43 @@ replacing T0/T1 with a Chez-style fast compiler (many small, simple passes,
 careful IR representations), keeping speculation and guards only for T2. The
 pass framework could build on ../pattern (rule-based rewriting over persistent
 data, nanopass-style dialects).
+
+## 9. The specializer is planned on a meta level (Christian, 2026-10-27)
+
+The specializer is itself budgeted and steered by cheaper, coarser predictors,
+as in AutoML or Bayesian optimization and as raster's north star prescribes:
+predictions that are faster than running the underlying system decide where
+the expensive computation goes.
+
+**A ladder of predictors**, ordered by cost and fidelity:
+
+| Level | Predictor | Cost | Licence of its predictions |
+|---|---|---|---|
+| 0 | type system / static analysis (abstract interpretation) | ~free at compile time | *certified*: sound over-approximation |
+| 1 | analytic cost models (op counts, cardinality estimates, roofline) | µs | estimate with a stated error model |
+| 2 | learned surrogates (cost models trained on receipts, GP/BO over schedules) | µs–ms | *statistical*: calibrated on held-out receipts |
+| 3 | profiling and sampled measurement | ms–s | measurement with provenance |
+| 4 | the actual run (real compute, the real world) | full | ground truth |
+
+Principles:
+
+1. **Each predictor is a translation to a coarser model** with an error ε —
+   the same `translate` move as in simulation (coarse-graining). Planning the
+   compiler is therefore inference over a tower of models of the program's
+   own behaviour, steered by the same allocation policy that steers
+   simulations. Type systems are the exact, cheap end of this tower: a sound
+   predictor for certain properties.
+2. **Value of computation decides**: refine a prediction (move down the ladder)
+   only when the expected improvement in the decision is worth the cost;
+   specialize only when predicted savings × expected executions exceed compile
+   plus verification cost.
+3. **No infinite regress**: each meta level gets a budget that is a bounded
+   fraction of the expected savings of the level below; the top level is a
+   fixed, simple heuristic.
+4. **Predictors learn from receipts**, with the evidence discipline:
+   measurements are split, never copied; the evidence used to select a plan is
+   kept apart from the evidence used to claim its gain; surrogates are
+   calibrated on held-out receipts.
+5. **Predictions never replace certificates**: a level-2 prediction may steer
+   which rewrite to try; only a level-0 proof or a guarded check licenses
+   running it.
