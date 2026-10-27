@@ -127,3 +127,55 @@ ansatz (X3), a big-step semantics for the terminating, effect-free fragment
 proved equivalent to it (a standard, cheap theorem that also validates the
 reference interpreter), then the denotational model and adequacy for the
 discrete fragment.
+
+## 8. The compiler under its own staging lens (discussion, 2026-10-27)
+
+The compiler's inputs have different binding times:
+
+| Input | Changes | Grade |
+|---|---|---|
+| compiler code, pass definitions, rule sets, policies | rarely (compiler development) | stable, versioned in the world |
+| host description (KRI, emitter, CPU features) | per deployment | static per build |
+| the program being compiled | per definition version | static per CodeId |
+| profiles and assumptions | revocable | assumption sets (guards) |
+| runtime data | always | dynamic |
+
+Consequences:
+
+1. **The compiler specializes itself** on the stable inputs: passes and rule
+   matchers compiled for the current rule set and host (pattern's compiled
+   matchers already work this way). Changing a rule invalidates only the
+   matcher specializations that read it.
+2. **Compiler development has the application workflow**: passes are world
+   definitions with recorded reads, so editing a pass invalidates only cached
+   results that used it; a new pass can be tried in a fork, compared
+   differentially against the old compiler's outputs, and adopted with a
+   receipt.
+3. **Correctness transfers for free**: if a pass is proved correct, its
+   specializations are correct by the s-m-n law (specialize-then-run ≡ run,
+   A2(ii)); no proof per specialization.
+4. **Towers collapse**: user-level DSLs (wandler pipelines, foerster models)
+   are interpreters on top of Klara; specializing through the tower removes
+   the interpretive layers (Amin–Rompf). This is how wandler-in-Klara becomes
+   fast without a bespoke code generator.
+5. **The Futamura projections are concrete**: specializer + interpreter =
+   compiler (1st/2nd); specializer applied to itself = compiler generator
+   (3rd). Self-hosting (ring 5) is the collapse whose output must hash to the
+   shipped artifact.
+6. **Compile time is a budgeted resource**: compile iff expected saved cost
+   exceeds compile cost; the compiler's own costs appear in receipts. The
+   compiler is a bounded-rational policy inside the calculus it implements —
+   the MPI talk's "layered compilation as learning".
+
+Hazards: the specializer must terminate when applied to itself (fuel,
+generalization); code-size growth; debuggability; bootstrap order (a seed
+compiler must exist before it can specialize itself). Early stages must not
+depend on self-specialization for acceptable compile speed.
+
+**Chez Scheme's counterpoint.** Chez (../ChezScheme) compiles every REPL form
+to machine code through a nanopass pipeline (Keep & Dybvig) fast enough that
+it needs no interpreter tier and no JIT. For native hosts this suggests
+replacing T0/T1 with a Chez-style fast compiler (many small, simple passes,
+careful IR representations), keeping speculation and guards only for T2. The
+pass framework could build on ../pattern (rule-based rewriting over persistent
+data, nanopass-style dialects).
