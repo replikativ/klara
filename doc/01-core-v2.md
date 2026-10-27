@@ -227,9 +227,17 @@ restart · R8 expansion honesty.
 
 ## 11. Prerequisites found by the reviews
 
-- **ansatz `check-constant-replace`** replaces a constant without rechecking
-  dependents (inspection; to reproduce). Certificates are untrusted until
-  proof environments use fresh internal names and immutable roots.
+- **ansatz `check-constant-replace`**: REFUTED for ansatz main (0.2.418), by
+  the ansatz session through code and public API — all admission paths use
+  `check-constant`, which rejects an existing name; redefinition is rejected
+  and the kernel environment is unchanged. `check-constant-replace` /
+  `Env.addOrReplaceConstant` are dead code (unused since 480450e) and slated
+  for deletion with a regression test. If REPL redefinition of proof
+  constants is ever wanted: fresh internal names per version plus a
+  user-name → version map over immutable environments (Env is already
+  persistent). Certificates must name checker version, store/bundle cohort
+  (bundle.edn records cohort and per-artifact sha256) and dependency closure,
+  because prepared stores admit imported declarations in trust mode.
 - **v0 dispatch firewall** keeps a stale implementation when a method is
   replaced at the same pattern (inspection; to reproduce).
 - **v0 world publication** separates root update and cell sync (race by
