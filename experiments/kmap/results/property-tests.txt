@@ -1,0 +1,57 @@
+== backend :phm
+
+Testing kmap.core-test
+quick-check :records {:pass? true, :num-tests 2000, :seed 1793127473968, :time-elapsed-ms 313} 
+quick-check :ops {:pass? true, :num-tests 10000, :seed 1793127474288, :time-elapsed-ms 23523} 
+quick-check :equality {:pass? true, :num-tests 10000, :seed 1793127497820, :time-elapsed-ms 25018} 
+quick-check :relational {:pass? true, :num-tests 10000, :seed 1793127522840, :time-elapsed-ms 6919} 
+
+Ran 5 tests containing 15 assertions.
+0 failures, 0 errors.
+== backend :champ
+
+Testing kmap.core-test
+quick-check :records {:pass? true, :num-tests 2000, :seed 1793127529761, :time-elapsed-ms 19} 
+quick-check :ops {:pass? true, :num-tests 10000, :seed 1793127529781, :time-elapsed-ms 12553} 
+quick-check :equality {:pass? true, :num-tests 10000, :seed 1793127542339, :time-elapsed-ms 20706} 
+quick-check :relational {:pass? true, :num-tests 10000, :seed 1793127563046, :time-elapsed-ms 8396} 
+
+Testing kmap.champ-test
+quick-check :champ-model {:pass? true, :num-tests 10000, :seed 1793127571455, :time-elapsed-ms 66510} 
+
+Ran 6 tests containing 16 assertions.
+0 failures, 0 errors.
+== interface-omission probe (kmap.trap)
+{:1-all
+ {:clj=x true,
+  :x=clj true,
+  :hash= true,
+  :x-in-set-of-clj true,
+  :clj-in-set-of-x true,
+  :vec [true true],
+  :.equals [true true]},
+ :2-no-MapEquivalence
+ {:clj=x false,
+  :x=clj true,
+  :hash= true,
+  :x-in-set-of-clj true,
+  :clj-in-set-of-x false,
+  :vec [false true],
+  :.equals [true true]},
+ :3-no-java.util.Map
+ {:clj=x false,
+  :x=clj true,
+  :hash= true,
+  :x-in-set-of-clj true,
+  :clj-in-set-of-x false,
+  :vec [false true],
+  :.equals [false true]},
+ :4-no-IHashEq
+ {:clj=x true,
+  :x=clj true,
+  :hash= false,
+  :x-in-set-of-clj false,
+  :clj-in-set-of-x false,
+  :vec [true true],
+  :.equals [true true]}}
+tests exit 0

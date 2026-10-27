@@ -1,0 +1,16 @@
+{:impl "protocol", :scenario "mono", :ns-per-call 4.246721805840339}
+{:impl "defop", :scenario "mono", :ns-per-call 3.4230093079433264}
+{:impl "protocol", :scenario "poly2", :ns-per-call 11.341617863018854}
+{:impl "defop", :scenario "poly2", :ns-per-call 7.314255084474759}
+{:impl "protocol", :scenario "poly3", :ns-per-call 14.53746203248737}
+{:impl "defop", :scenario "poly3", :ns-per-call 14.074554336439203}
+{:impl "protocol", :scenario "mega", :ns-per-call 34.43341068923332}
+{:impl "defop", :scenario "mega", :ns-per-call 24.932059622021555}
+{:impl "protocol", :scenario "mono", :ns-per-call 3.906120196398578}
+{:impl "defop", :scenario "mono", :ns-per-call 2.7057475896891514}
+{:impl "protocol", :scenario "poly2", :ns-per-call 8.101149209399612}
+{:impl "defop", :scenario "poly2", :ns-per-call 4.355314496086579}
+{:impl "protocol", :scenario "poly3", :ns-per-call 10.910744316111096}
+{:impl "defop", :scenario "poly3", :ns-per-call 8.818397008465592}
+{:impl "protocol", :scenario "mega", :ns-per-call 20.267237880961655}
+{:impl "defop", :scenario "mega", :ns-per-call 14.817423362197975}
