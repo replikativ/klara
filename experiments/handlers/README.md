@@ -46,8 +46,9 @@ estimates across styles, because they consume the same RNG stream: IS
   the work step measured 4.6 ns/step.
 - **JVMs:**
   - Primary: OpenJDK 25.0.4.1 (Ubuntu build), C2. 3 rounds.
-  - Secondary: Oracle GraalVM 25.0.1 with the Graal JIT. Only 1 round was
-    complete when this README was written, so treat it as indicative.
+  - Secondary: Oracle GraalVM 25.0.1 with the Graal JIT. 2 rounds. The
+    table below shows round 1; `results/summary.md` has both rounds, and
+    round 2 changed best values by at most a few percent.
   - Flags: `-Xms1g -Xmx1g -XX:+UseParallelGC --add-exports java.base/jdk.internal.vm=ALL-UNNAMED`.
   - Clojure 1.12.0, partial-cps at `ed9b382` (local root).
 - **Harness:** one fresh JVM per benchmark per round, so call-site profiles do
@@ -134,7 +135,7 @@ The fast-path IS run carries costs the counter loop does not: boxing of the
 choose result and unboxing of the observe argument through `IFn`, and two
 different clauses.
 
-### GraalVM 25 (Graal JIT), 1 round, indicative only
+### GraalVM 25 (Graal JIT), round 1 (both rounds in results/summary.md)
 
 | benchmark | best ns | vs direct |
 |---|---:|---:|
