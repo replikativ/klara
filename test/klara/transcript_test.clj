@@ -110,13 +110,13 @@
 
 (deftest parser
   (let [md (str "text\n```klara-repl\nk=> (+ 1 2)\n3\nk=> (let [x 1]\n"
-                "        x)\n1\n\nk=> :basis\nmain v0\n```\n"
+                "        x)\n1\n\nk=> :repl/basis\nmain v0\n```\n"
                 "```klara-repl :norun\nk=> (oops)\n```\n```clojure\nk=> no\n```\n")
         [b1 b2 :as bs] (parse-file md)]
     (is (= 2 (count bs)))
     (is (= [{:line 3 :form "(+ 1 2)" :expected "3"}
             {:line 5 :form "(let [x 1]\n        x)" :expected "1"}
-            {:line 9 :form ":basis" :expected "main v0"}]
+            {:line 9 :form ":repl/basis" :expected "main v0"}]
            (:entries b1)))
     (is (:norun? b2))
     (testing "the parsed block runs"

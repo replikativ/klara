@@ -34,7 +34,7 @@ and `(code-vector cs)` (the code of a vector of code values whose number is
 known only at generation time).
 
 REPL support: the printer shows a code value as `(code <Klara source>)`, and
-`:code <form>` pretty-prints the source of the code value that `<form>`
+`:repl/code <form>` pretty-prints the source of the code value that `<form>`
 evaluates to.
 
 ## Code, escape, run
@@ -259,7 +259,7 @@ k=> (def sack
                                       ((esc (g gen (- m 1))) ((esc (g gen m)) (- n 1))))))))]
             (g gen m)))))
 #'sack
-k=> :code (sack 2)
+k=> :repl/code (sack 2)
 (letfn
   [(h_1 [n_4] (if (= n_4 0) (h_2 1) (h_2 (h_1 (- n_4 1)))))
    (h_2 [n_5] (if (= n_5 0) (h_3 1) (h_3 (h_2 (- n_5 1)))))

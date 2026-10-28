@@ -47,8 +47,8 @@ clojure -M:repl      # the Klara REPL, prompt k=>
 clojure -X:test      # all tests, including every transcript in the guide and examples
 ```
 
-A bare keyword at the prompt is a REPL command (`:help`, `:world`,
-`:basis`, `:fork name`, `:switch name`, `:expand form`, `:code form`).
+A bare keyword at the prompt is a REPL command (`:repl/help`, `:repl/world`,
+`:repl/basis`, `:repl/fork name`, `:repl/switch name`, `:repl/expand form`, `:repl/code form`).
 
 ## Transcripts
 
@@ -71,7 +71,7 @@ k=> (let [y 2]
 ````
 
 - A line starting with `k=> ` holds a form (or several, or a REPL command
-  such as `:world`).
+  such as `:repl/world`).
 - A form continues on the following lines when they are indented by at least
   4 spaces.
 - Every line after the form, up to the next `k=>` line or the end of the block,

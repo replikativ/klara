@@ -22,15 +22,15 @@ The REPL can fork its current world and switch between worlds:
 ```klara-repl
 k=> (defn price [x] (* x 10))
 #'price
-k=> :fork cheap
+k=> :repl/fork cheap
 forked main -> cheap
 k=> (defn price [x] (* x 7))
 #'price
 k=> (price 3)
 21
-k=> :basis
+k=> :repl/basis
 cheap v2 (forked from main)
-k=> :switch main
+k=> :repl/switch main
 switched to main
 k=> (price 3)
 30

@@ -55,7 +55,7 @@ checkout of [wandler](https://github.com/replikativ/wandler) next to this
 repository (`../wandler`) for one differential test.
 
 ```
-clojure -M:repl                       # the Klara REPL (prompt k=>; :help lists commands)
+clojure -M:repl                       # the Klara REPL (prompt k=>; :repl/help lists commands)
 clojure -X:test                       # all tests, including every transcript in doc/guide and examples
 echo '(handle [m {:choose (fn [p k] (concat (k true) (k false)))}] [(perform m :choose 1/2)])' \
   | clojure -M:repl                   # a first example: a handler that enumerates both choices

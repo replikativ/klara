@@ -79,7 +79,7 @@ Specializing the evaluator to `fac-src` with the generating operations is
 compilation:
 
 ```klara-repl
-k=> :code (evalp gen fac-src {})
+k=> :repl/code (evalp gen fac-src {})
 (fn self_1 [v_2] (if (zero? v_2) 1 (* v_2 (self_1 (- v_2 1)))))
 k=> (def fac (run (evalp gen fac-src {})))
 #'fac

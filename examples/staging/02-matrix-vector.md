@@ -64,7 +64,7 @@ k=> (def m [[1 0 2 0]
             [0 0 0 0]
             [0 3 1 0]])
 #'m
-k=> :code (smv m)
+k=> :repl/code (smv m)
 (fn [v_1]
   (let [t_2 (nth v_1 0) t_3 (nth v_1 2) t_4 (nth v_1 1)]
     [(+ t_2 (* 2 t_3)) 0 (+ (* 3 t_4) t_3)]))

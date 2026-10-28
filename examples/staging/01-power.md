@@ -50,7 +50,7 @@ k=> (def spower
                           (code (* (esc h) (esc h))))
               :else (code (* (esc x) (esc (spower (dec n) x)))))))
 #'spower
-k=> :code (code (fn [y] (esc (spower 13 (code y)))))
+k=> :repl/code (code (fn [y] (esc (spower 13 (code y)))))
 (fn [y_1]
   (let [t_2 (* y_1 (* y_1 y_1)) t_3 (* t_2 t_2)] (* y_1 (* t_3 t_3))))
 k=> ((run (code (fn [y] (esc (spower 13 (code y)))))) 2)

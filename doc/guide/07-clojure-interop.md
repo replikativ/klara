@@ -152,8 +152,8 @@ to — Java interop, mutable fields, protocol internals — by putting a
 wins, as with babashka's `:bb`):
 
 ```klara-repl
-k=> [#?(:klara :klara-branch :clj :clj-branch)]
-[:klara-branch]
+k=> #?(:klara :klara-branch :clj :clj-branch)
+:klara-branch
 k=> [#?(:clj :clj-branch :klara :klara-branch)]
 [:clj-branch]
 k=> [#?(:cljs :cljs-only :default :fallback)]
@@ -166,3 +166,7 @@ through Klara's expander, and the parts that must differ get `:klara`
 branches — until Klara's own compiler hosts them without the Clojure jar
 (self-hosting). Java source in a library (for example ansatz's kernel in
 `src-java/`) stays a JVM-host dependency and needs a port for other hosts.
+
+REPL commands are keywords in the `repl` namespace (`:repl/world`,
+`:repl/fork`, …), following clojure.main's `:repl/quit`; every other keyword
+is an ordinary value, as the first transcript above shows.

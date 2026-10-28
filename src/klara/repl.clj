@@ -9,14 +9,15 @@
   REPL is a convenience layer: it repairs instead of leaving dependents
   pending; the report is printed as `;; stale: ..` / `;; cutoff: ..`).
 
-  Commands are keywords at top level:
-    :world            definitions of the current world, with versions
-    :basis            current world name and root version
-    :fork <name>      fork the current world as <name> and switch to it
-    :switch <name>    switch to world <name>
-    :expand <form>    show the core term of <form>, printed as source
-    :code <form>      evaluate <form> to a code value, pretty-print it
-    :help             this list
+  Commands are keywords in the repl namespace (as clojure.main's :repl/quit);
+  any other keyword evaluates to itself:
+    :repl/world            definitions of the current world, with versions
+    :repl/basis            current world name and root version
+    :repl/fork <name>      fork the current world as <name> and switch to it
+    :repl/switch <name>    switch to world <name>
+    :repl/expand <form>    show the core term of <form>, printed as source
+    :repl/code <form>      evaluate <form> to a code value, pretty-print it
+    :repl/help             this list
 
   Errors print as `!! <kind>: <message>` and never end the session.
 
@@ -123,13 +124,13 @@
 
 (def help-text
   (str/join "\n"
-            [":world            definitions of the current world, with versions"
-             ":basis            current world name and root version"
-             ":fork <name>      fork the current world as <name> and switch to it"
-             ":switch <name>    switch to world <name>"
-             ":expand <form>    show the core term of <form>, printed as source"
-             ":code <form>      evaluate <form> to a code value and pretty-print it"
-             ":help             this list"]))
+            [":repl/world            definitions of the current world, with versions"
+             ":repl/basis            current world name and root version"
+             ":repl/fork <name>      fork the current world as <name> and switch to it"
+             ":repl/switch <name>    switch to world <name>"
+             ":repl/expand <form>    show the core term of <form>, printed as source"
+             ":repl/code <form>      evaluate <form> to a code value and pretty-print it"
+             ":repl/help             this list"]))
 
 (defn- world-listing [s]
   (let [root (current-root s)
@@ -164,26 +165,32 @@
     (reset! (:current s) nm)
     (str "switched to " nm)))
 
-(def ^:private commands-with-arg #{:fork :switch :expand :code})
+(def ^:private commands-with-arg #{:repl/fork :repl/switch :repl/expand :repl/code})
+
+(defn- command?
+  "REPL commands are keywords in the `repl` namespace, following clojure.main's
+  :repl/quit; every other keyword is an ordinary value and evaluates to itself."
+  [form]
+  (and (keyword? form) (= "repl" (namespace form))))
 
 (defn- run-command [s cmd arg]
   (case cmd
-    :help help-text
-    :world (world-listing s)
-    :basis (basis-line s)
-    :fork (fork! s arg)
-    :switch (switch! s arg)
-    :expand (if (def-form? arg)
+    :repl/help help-text
+    :repl/world (world-listing s)
+    :repl/basis (basis-line s)
+    :repl/fork (fork! s arg)
+    :repl/switch (switch! s arg)
+    :repl/expand (if (def-form? arg)
               (let [res (x/expand-recorded arg (current-root s))]
                 (str "(" (first arg) " " (:name res) " "
                      (print-value (code/core->form (:term res))) ")"))
               (print-value (code/core->form (x/expand-expr arg (current-root s)))))
-    :code (let [v (eval-form s arg)]
+    :repl/code (let [v (eval-form s arg)]
             (if (code/code? v)
               (pretty (code/code->form v))
-              (throw (ex-info (str ":code expects a code value, got " (print-value v))
+              (throw (ex-info (str ":repl/code expects a code value, got " (print-value v))
                               {:klara/error :repl}))))
-    (throw (ex-info (str "unknown command " cmd " (try :help)") {:klara/error :repl}))))
+    (throw (ex-info (str "unknown command " cmd " (try :repl/help)") {:klara/error :repl}))))
 
 (defn- eval-top
   "Evaluate one top-level form (or command); returns the printed output."
@@ -192,7 +199,7 @@
         res (binding [*out* out a/*store* (:store s)]
               (try
                 (cond
-                  (keyword? form) (run-command s form arg)
+                  (command? form) (run-command s form arg)
                   :else (eval-top-form s form))
                 (catch Throwable t (format-error t))))
         printed (str out)]
@@ -259,7 +266,7 @@
   []
   (let [s (session)
         rdr (LineNumberingPushbackReader. (java.io.InputStreamReader. System/in))]
-    (println "Klara REPL over T0. :help lists commands; Ctrl-D exits.")
+    (println "Klara REPL over T0. :repl/help lists commands; Ctrl-D exits.")
     (loop []
       (print "k=> ") (flush)
       (let [form (try (read-form rdr) (catch Throwable t t))]

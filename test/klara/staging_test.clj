@@ -144,7 +144,7 @@
 
 (deftest printing-and-repl
   (let [s (session-of power)]
-    (is (= "(fn [y_1] (* y_1 (* y_1 1)))" (ev s ":code (code (fn [y] (esc (power 2 (code y)))))")))
-    (is (= "(let [a_1 1 b_2 2] (+ a_1 b_2))" (ev s ":expand (let [a 1 b 2] (+ a b))")))
+    (is (= "(fn [y_1] (* y_1 (* y_1 1)))" (ev s ":repl/code (code (fn [y] (esc (power 2 (code y)))))")))
+    (is (= "(let [a_1 1 b_2 2] (+ a_1 b_2))" (ev s ":repl/expand (let [a 1 b 2] (+ a b))")))
     (is (= "true" (ev s "(closed? (code (fn [x] x)))")))
     (is (code/code? (code/->code {:op :quote :datum 1})))))

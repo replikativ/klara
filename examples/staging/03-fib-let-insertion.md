@@ -43,7 +43,7 @@ k=> (def lfib
                           c)))]
             (f n)))))
 #'lfib
-k=> :code (code (fn [x y] (esc (lfib 5 (code x) (code y)))))
+k=> :repl/code (code (fn [x y] (esc (lfib 5 (code x) (code y)))))
 (fn [x_1 y_2]
   (let [t_3 (+ y_2 x_1)
         t_4 (+ t_3 y_2)
@@ -87,7 +87,7 @@ k=> (def sfib
                                                    ((esc (g gen (- n 2))) x y))))))]
             (code (fn [x y] ((esc (g gen n)) x y)))))))
 #'sfib
-k=> :code (sfib 5)
+k=> :repl/code (sfib 5)
 (letfn
   [(h_1 [x_7 y_8] (+ (h_2 x_7 y_8) (h_3 x_7 y_8)))
    (h_2 [x_9 y_10] (+ (h_3 x_9 y_10) (h_4 x_9 y_10)))
@@ -114,7 +114,7 @@ k=> (def sack
                                       ((esc (g gen (- m 1))) ((esc (g gen m)) (- n 1))))))))]
             (g gen m)))))
 #'sack
-k=> :code (sack 2)
+k=> :repl/code (sack 2)
 (letfn
   [(h_1 [n_4] (if (= n_4 0) (h_2 1) (h_2 (h_1 (- n_4 1)))))
    (h_2 [n_5] (if (= n_5 0) (h_3 1) (h_3 (h_2 (- n_5 1)))))

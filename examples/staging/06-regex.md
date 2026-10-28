@@ -89,7 +89,7 @@ An anchored pattern compiles to fixed offsets until the `*`, and then to one
 loop for the star:
 
 ```klara-repl
-k=> :code (compile-re "^ab*c$")
+k=> :repl/code (compile-re "^ab*c$")
 (fn [s_1]
   (if (< 0 (count s_1))
     (if (= \a (nth s_1 0))
@@ -110,7 +110,7 @@ An unanchored pattern tries every start position, and `.` costs only a bounds
 check:
 
 ```klara-repl
-k=> :code (compile-re "a.c")
+k=> :repl/code (compile-re "a.c")
 (fn [s_1]
   (loop [i_2 0]
     (let [t_3 (inc i_2) t_4 (inc t_3)]

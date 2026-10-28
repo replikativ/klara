@@ -10,7 +10,7 @@ syntax expands into the core.
 Literals are Clojure data: numbers (including ratios), strings, keywords,
 symbols, `nil`, booleans, and the persistent collections. Klara values have
 no observable identity; equality is Clojure's `=`. (A bare keyword at the
-prompt is a REPL command such as `:help`, so keywords appear inside other
+prompt is a REPL command such as `:repl/help`, so keywords appear inside other
 forms here.)
 
 ```klara-repl
@@ -155,15 +155,15 @@ true
 
 The expander turns every surface form into core terms. It is hygienic
 (scope sets), resolves locals to de Bruijn indices and records what it read
-from the world. The REPL command `:expand` shows the core term of a form,
+from the world. The REPL command `:repl/expand` shows the core term of a form,
 printed back as Klara source (locals get numbered names):
 
 ```klara-repl
-k=> :expand (let [x 1] (when (pos? x) :yes))
+k=> :repl/expand (let [x 1] (when (pos? x) :yes))
 (let [x_1 1] (if (pos? x_1) :yes))
-k=> :expand (loop [i 0] (if (< i 3) (recur (inc i)) i))
+k=> :repl/expand (loop [i 0] (if (< i 3) (recur (inc i)) i))
 (let [i_1 0] (letfn [(loop_2 [i_3] (if (< i_3 3) (loop_2 (inc i_3)) i_3))] (loop_2 i_1)))
-k=> :expand (try (/ 1 0) (catch ArithmeticException e :div0))
+k=> :repl/expand (try (/ 1 0) (catch ArithmeticException e :div0))
 (handle :dynamic #:exn{:raise (fn [ex_1 k_2] (if (instance? (perform :host/class (quote ArithmeticException)) ex_1) (let [e_3 ex_1] :div0) (throw ex_1)))} (/ 1 0))
 ```
 
@@ -182,7 +182,7 @@ k=> (klara.expand/expand-expr '(map inc [1 2]) klara.world/empty-root)
 
 In the first term, `b` is index 0 and `a` index 1: binders are pushed left
 to right, so the last parameter is innermost. The second shows what the
-printer of `:expand` resugars: a call of a clojure.core function is an
+printer of `:repl/expand` resugars: a call of a clojure.core function is an
 ambient effect, `(perform :host/call 'clojure.core/map ..)`.
 
 | Surface | Core |

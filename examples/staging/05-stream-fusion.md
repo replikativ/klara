@@ -77,7 +77,7 @@ k=> (def pipeline
                                           (smap (fn [x] (code (* (esc x) (esc x))))
                                                 (from-range (code 0) (code n))))))))))
 #'pipeline
-k=> :code pipeline
+k=> :repl/code pipeline
 (fn [n_1]
   (let [acc_2 (atom 0)
         _ (let [left_3 (atom 3) i_4 0]

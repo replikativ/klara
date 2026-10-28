@@ -474,3 +474,19 @@ Avoid ClojureScript's top-level registration pattern, the main source of its
 payload. Multi-shot effects need CPS or replay on every web target (JSPI and
 Wasm stack switching are one-shot). Size precedents: squint 2.0 KB gzip hello
 world, cljs advanced ~23 KB, immutable.js Map alone 18.6 KB.
+
+## Data format: EDN (decision, 2026-10-28)
+
+Klara commits to **EDN** for all of its data: receipts, certificates,
+manifests, world and code serialization, RFC artifacts, effect payloads.
+Identity, versioning and provenance are expressed with namespaced keywords
+and tagged literals (`#inst`, `#uuid`, plus Klara tags). Two consequences:
+
+- **Canonical encoding for hashing.** Content addressing (CodeIds, receipts,
+  certificates) needs one canonical byte encoding of EDN values: sorted map
+  keys and set elements by a total order, normalized numbers, no metadata in
+  the hash. This must be specified once and used everywhere.
+- **Other formats only at boundaries**, and only where they add something EDN
+  lacks: JSON-LD (globally resolvable IRIs, W3C PROV vocabularies) for
+  exporting provenance to external systems; JSON for web interop. They are
+  projections of the EDN data, never the source of truth.
