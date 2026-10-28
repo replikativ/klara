@@ -11,8 +11,10 @@ Most of this document is design. Each section says what exists. In short:
 S1 (`src/klara/{core,world,expand,eval,defs,stage}.clj`) implements the
 expander, worlds, the T0 interpreter and the specialization cache; S3
 (`src/klara/fusion*.clj`) implements one certified T3 rewrite; `spec/`
-holds the small-step semantics in ansatz. There is no K1–K3 IR, no emitter
-and no second host yet. See `background/impl/S1.md` and `S3.md`.
+holds the small-step semantics in ansatz. S8 adds named K1, guarded scalar
+passes and a Clojure-form emitter for a conservative subset. K2 unboxed
+layouts, a dedicated K3 backend and a second host remain design. See
+`background/impl/S1.md`, `S3.md` and `S8.md`.
 
 Three views of one system:
 
@@ -84,7 +86,8 @@ kernel route (T3).
 | T0 interpreter of K0 | implemented, `klara.eval` (S1) |
 | specialization cache, guards, certificate-checked install | implemented, `klara.stage` (S1) |
 | one T3 rewrite (map/filter/reduce fusion, ansatz certificate) | implemented, `klara.fusion` (S3) |
-| analyze, K1, K2, K3, emitters, predictor ladder | design |
+| named K1, guarded inlining, partial evaluation, scalar replacement, Clojure emission | implemented for a conservative subset, `klara.compile` (S8); tested, not proved |
+| full K2 layouts, dedicated K3 emitters, predictor ladder | design |
 
 ## 2. The host contract (KRI)
 
@@ -118,8 +121,8 @@ never sees a half-published state.
 | Tier | What | Written in |
 |---|---|---|
 | T0 | interpreter of K0 | Klara (portable) or a host seed (sci on JVM/JS, a small C interpreter natively) |
-| T1 | baseline compile: generic code, var indirection, no assumptions | Klara compiler + host emitter |
-| T2 | specialized: guards, effect erasure, shapes, unboxed layouts | Klara specializer + host emitter |
+| T1 | S8: Clojure-form emission for a conservative subset; full generic-call coverage remains design | Clojure seed compiler + public Clojure `eval` |
+| T2 | S8 front half: guarded inlining, local scalar replacement, lexical tail/abort lowering; shapes and unboxed layouts remain design | Clojure seed passes + host emitter |
 | T3 | certified kernels: law- or proof-licensed rewrites (wandler/raster style) | Klara + ansatz certificates |
 | collapse | AOT artifact under a closed-world manifest | the same pipeline with all cells declared static |
 
@@ -133,8 +136,8 @@ Per host:
 | | JVM | native (Chez) |
 |---|---|---|
 | T0 | sci-style interpreter (today: `klara.eval`, a CEK machine in Clojure) | Petite-style interpreter for huge/trivial forms |
-| T1 | generic bytecode, var indirection | Chez-compiled generic code, var indirection, no inlining across cells |
-| T2 | specialized bytecode with guards | Chez-compiled specialized code with guards (Klara supplies speculation; Chez has none) |
+| T1 | S8: Clojure-compiled subset | Chez-compiled generic code, var indirection, no inlining across cells |
+| T2 | S8: guarded scalar passes; HotSpot optimization | Chez-compiled specialized code with guards (Klara supplies speculation; Chez has none) |
 | T3 | raster kernels (today: S3's fused host functions) | metacarp/carpaccio kernels |
 | continuations | selective CPS (measured 2.7× tax on transformed code) | segmented stacks (no tax on non-capturing code; needs no mutable-local lowering and an authority scan before a second resume) |
 
