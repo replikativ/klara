@@ -421,9 +421,11 @@
       prim (apply c/prim (second form) (map ex (drop 2 form)))
       specialize (apply c/specialize (map ex (rest form)))
       def (throw (ex-info "expand: def is only allowed at top level" {:form form}))
-      code (c/code* (expand (one-arg form) ctx (assoc env :level (inc (level env)) :recur nil)))
+      ;; recur keeps its target across code/esc: a (code (recur ..)) built
+      ;; inside a generated loop refers to that loop, like any variable
+      code (c/code* (expand (one-arg form) ctx (assoc env :level (inc (level env)))))
       esc (if (pos? (level env))
-            (c/esc (expand (one-arg form) ctx (assoc env :level (dec (level env)) :recur nil)))
+            (c/esc (expand (one-arg form) ctx (assoc env :level (dec (level env)))))
             (throw (ex-info "expand: esc outside code" {:form form}))))))
 
 ;; ---------------------------------------------------------------------------

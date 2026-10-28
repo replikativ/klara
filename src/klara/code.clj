@@ -306,6 +306,26 @@
                                (:names lam) (:args body)))
             (->form (recurify (:body lam) h) rn)))))
 
+(defn- loop-inits
+  "(let [a e1] .. (let [b e2] (letrec [lam] (h a b)))) where a, b occur
+  only as those arguments -> the letrec applied to e1 e2 (the shape
+  loop* expands to; printing it back as (loop [x e1 ..] ..)). nil if t
+  does not have that shape."
+  [t]
+  (loop [u t binds []]
+    (if (= :let (:op u))
+      (recur (:body u) (conj binds [(first (:names u)) (:init u)]))
+      (when (and (seq binds) (= :letrec (:op u)) (= 1 (count (:names u)))
+                 (= :app (:op (:body u)))
+                 (= (map first binds) (map :name (:args (:body u))))
+                 (every? #(= :var (:op %)) (:args (:body u)))
+                 (let [lam (first (:inits u))
+                       used (free-vars lam)]
+                   (not-any? #(contains? used (first %)) binds))
+                 (every? (fn [[nm init]] (not-any? #(contains? (free-vars (second %)) nm) binds))
+                         binds))
+        (assoc-in u [:body :args] (mapv second binds))))))
+
 (defn- ->form [t rn]
   (let [f #(->form % rn)]
     (case (:op t)
@@ -315,7 +335,7 @@
                (literal (:datum t)))
       :resolve (:id t)
       :fn (fn-form t rn)
-      :let (let-chain t rn)
+      :let (if-let [l (loop-inits t)] (f l) (let-chain t rn))
       :if (if (and (= :quote (:op (:else t))) (nil? (:datum (:else t))) (not (:csp (:else t))))
             (list 'if (f (:test t)) (f (:then t)))
             (list 'if (f (:test t)) (f (:then t)) (f (:else t))))

@@ -83,14 +83,6 @@
 (defn- def-form? [form]
   (and (seq? form) (contains? '#{def defmacro} (first form))))
 
-(defn- definition?
-  "A def or defmacro, or a top-level macro call expanding to one (defn)."
-  [s form]
-  (or (def-form? form)
-      (and (seq? form) (symbol? (first form))
-           (try (contains? #{:def :macro} (:kind (x/expand-recorded form (current-root s))))
-                (catch Throwable _ false)))))
-
 (defn- define [s form]
   (let [wo (current-world s)
         {:keys [name]} (binding [ev/*fiber* (w/fiber wo)] (d/define! wo form))
@@ -106,6 +98,20 @@
   (let [fib (w/fiber (current-world s))
         root (w/basis fib)]
     (ev/run (x/expand-expr form root) {:basis root :fiber fib})))
+
+(defn- eval-top-form
+  "A top-level form: (def ..)/(defmacro ..) are published; anything else
+  is expanded ONCE, and published if it expanded to a definition (defn
+  and other def-producing macros), else evaluated in a fiber."
+  [s form]
+  (if (def-form? form)
+    (define s form)
+    (let [fib (w/fiber (current-world s))
+          root (w/basis fib)
+          res (x/expand-recorded form root)]
+      (if (contains? #{:def :macro} (:kind res))
+        (define s form)
+        (print-value (ev/run (:term res) {:basis root :fiber fib}))))))
 
 (defn- pretty [form]
   (str/trimr (with-out-str
@@ -184,8 +190,7 @@
               (try
                 (cond
                   (keyword? form) (run-command s form arg)
-                  (definition? s form) (define s form)
-                  :else (print-value (eval-form s form)))
+                  :else (eval-top-form s form))
                 (catch Throwable t (format-error t))))
         printed (str out)]
     (str/join "\n" (remove str/blank? [(str/trimr printed) res]))))
