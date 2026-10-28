@@ -258,12 +258,16 @@
               (and (:ctx f) (a/ctx-open? (:ctx f))))
       (unwind! f outer))))
 
-(defn- dispatch-clause [cl args captured outer env k]
+(defn- dispatch-clause [cl args captured outer env k op]
   (let [kind (when (closure? cl) (effect-class/classify (closure-term cl)))
         borrowed? (some #(= :borrow (:tag %)) captured)]
     (if (and (not (#{:tail :abortive} kind)) (a/full-owned-held? (all-frames k)))
-      (raise (ex-info "klara: general effect cannot capture a full owned write share"
-                      {:klara/error :authority}) env k)
+      (let [error (ex-info "klara: general effect cannot capture a full owned write share"
+                           {:klara/error :authority})]
+        ;; A rejected exception clause cannot catch its own admission error.
+        (if (= op :exn/raise)
+          (do (when borrowed? (cleanup-captured! captured outer)) (raise error env outer))
+          (raise error env k)))
       (if (= :abortive kind)
         (do (when borrowed? (cleanup-captured! captured outer))
             (call-value* cl (conj (vec args) nil) env outer))
@@ -287,7 +291,7 @@
     (if-let [[captured outer f] (and (instance? Instance target)
                                      (find-frame k #(= (:id target) (:id %))))]
       (if-let [cl (get (:clauses f) op)]
-        (dispatch-clause cl args captured outer env k)
+        (dispatch-clause cl args captured outer env k op)
         (raise (ex-info (str "klara: instance does not handle " op) {:op op}) env k))
       (raise (ex-info (str "klara: unhandled lexical effect " op
                            " (instance out of extent, or behind a host frame)")
@@ -299,7 +303,7 @@
       (if (unwind-frame? f)
         (do (try (unwind! f outer) (catch clojure.lang.ExceptionInfo _ nil))
             (do-perform nil op args env outer))
-        (dispatch-clause (get (:clauses f) op) args captured outer env k))
+        (dispatch-clause (get (:clauses f) op) args captured outer env k op))
       (if (= :exn/raise op)
         (let [ex (first args)]
           (throw (if (instance? Throwable ex)
@@ -990,8 +994,8 @@
                        (call-value* thunk [] env (conj k {:tag :direct :cap cap :cap-id id :env env})))
         :auth/use (let [[r f & more] args]
                     (call-value* f (into [(a/op! :auth/payload [r] frames)] more) env k))
-        [:ret (a/op! op args frames) env k]))
-    (catch clojure.lang.ExceptionInfo e (raise e env k))))
+        [:ret (binding [*outer-k* (conj *outer-k* k)] (a/op! op args frames)) env k]))
+    (catch Throwable e (raise e env k))))
 
 (def ^:private skip-frame-keys
   #{:tag :node :body :todo :id :mode :names :outer :inner :done :state :bindings :ctx :group

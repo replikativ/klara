@@ -1,6 +1,11 @@
 (ns klara.affine-test
   (:require [clojure.test :refer [deftest is testing]]
             [klara.authority :as a]
+            [klara.affine :as affine]
+            [klara.compile.affine-erase :as erase]
+            [klara.compile.core :as cc]
+            [klara.defs :as defs]
+            [klara.stage :as stage]
             [klara.expand :as x]
             [klara.eval :as ev]
             [klara.world :as w]))
@@ -84,3 +89,79 @@
           '(defaffine bump [n] (let [o (own n)] (update! o inc) (freeze o))) w/empty-root)))))
     (is (thrown-with-msg? clojure.lang.ExceptionInfo #"affine:"
           (x/expand-recorded '(defaffine bad [] (let [o (own 0)] (freeze o) (read o))) w/empty-root)))))
+
+(def affine-loop
+  '(fn [n] (let [o (own [0])]
+             (loop [i 0]
+               (if (< i n)
+                 (do (update! o (fn [v] (assoc v 0 (inc (nth v 0))))) (recur (inc i)))
+                 nil))
+             (freeze o))))
+
+(deftest affine-erasure-differential
+  (doseq [form ['(let [before [1] o (own before)]
+                  (let [a (read o)]
+                    (update! o conj 2 3)
+                    (let [b (borrow [x o] (read x)) p (move o)]
+                      [before a b (freeze p)])))
+               '(let [o (own [0])]
+                  (let [a (read o)]
+                    (update! o (fn [v] (assoc v 0 (inc (nth v 0)))))
+                    [a (read o) (freeze o)]))
+               '(let [o (own 4)] (update! o + 2 3) (freeze o))
+               '(let [o (own 4)] (borrow [x o] (borrow [y x] (read y))) (freeze o))]]
+    (let [t (x/expand-expr form w/empty-root) d (affine/check t :declared)
+          observe (fn [f] (let [v (atom nil) trace (with-out-str (reset! v (f)))] [@v trace]))]
+      (binding [a/*store* (a/new-store)]
+        (let [checked (observe #(ev/run t))]
+          (doseq [in-place? [true false]]
+            (let [out (erase/erase t d {:in-place? in-place?})]
+              (is (= checked (observe #(eval (:form out)))))
+              (is (pos? (:checks-erased out)))))))
+      (is (thrown-with-msg? clojure.lang.ExceptionInfo #"derivation"
+            (erase/erase t (assoc d :code-id "forged"))))))
+  (let [t (x/expand-expr affine-loop w/empty-root) d (affine/check t :declared)
+        out (erase/erase t d) f (eval (:form out))]
+    (is (= 1 (count (:representations out))))
+    (doseq [n [0 1 2 50 1.5]]
+      (binding [a/*store* (a/new-store)]
+        (is (= (ev/call-value (ev/run t) [n]) (f n)))))))
+
+(deftest affine-compiler-integration
+  (let [world (w/make-world) cache (stage/make-cache)]
+    (defs/define! world (list 'def 'counter affine-loop))
+    (let [exe (cc/compile-def world 'counter)]
+      (is (= :affine-erase (get-in exe [:pass-log 0 :pass])))
+      (is (= 1 (count (:representations exe))))
+      (is (nil? (stage/check-certificate exe)))
+      (is (= :invalid-affine-derivation
+             (stage/check-certificate (assoc-in exe [:derivation :rules] []))))
+      (stage/install! cache exe)
+      (stage/with-cache cache
+        (binding [a/*store* (a/new-store)]
+          (is (= [1000] (defs/eval-form (w/snapshot world) '(counter 1000))))
+          (is (= [2] (defs/eval-form (w/snapshot world) '(counter 1.5)))))))))
+
+(deftest conservative-admission-regressions
+  (binding [a/*store* (a/new-store)]
+    (is (thrown-with-msg? clojure.lang.ExceptionInfo #"general effect"
+          (run '(handle :dynamic {:exn/raise (fn [ex k] (+ 1 (k 0)))}
+                  (let [o (own 0)] (throw :stop)))))))
+  ;; A recursive callback could mutate its captured cell under the update
+  ;; lease. It is not a pure function, even if the back edge preserves shares.
+  (is (nil? (affine/check
+       (x/expand-expr '(let [o (own 0)]
+                         (letfn [(again [v] (update! o (fn [x] (again x))))]
+                           (again 0))
+                         (freeze o)) w/empty-root)))))
+
+(deftest callback-exceptions-and-contexts
+  (binding [a/*store* (a/new-store)]
+    (is (= :returned
+           (run '(let [o (own 1) p (own 2)]
+                   (try (borrow [x o] (update! p (fn [_] (/ 1 0))))
+                        (catch Exception e (drop! o) (drop! p) :returned))))))
+    (is (= [[2]]
+           (run '(fork [a (let [o (own 1)]
+                           (update! o (fn [v] (+ v 1)))
+                           [(freeze o)])])))))))

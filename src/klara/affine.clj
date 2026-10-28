@@ -58,6 +58,7 @@
                                (when (or (:rest? t) (not= before @state)) (fail p "impure callback"))
                                {:kind :function})
                          :app (let [f (go (:fn t) :fn)]
+                                (when pure? (fail p "recursive call in a pure callback"))
                                 (when-not (= :loop (:kind f)) (fail p "unknown call"))
                                 (when-not (= (:arity f) (count (:args t))) (fail p "loop arity"))
                                 (doseq [[i a] (map-indexed vector (:args t))]

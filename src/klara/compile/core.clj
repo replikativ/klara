@@ -53,3 +53,5 @@
                               {:pass :escape :allocations-removed (:allocations-removed a)}
                               {:pass :pe :rounds (:rounds q) :fuel-exhausted? (:fuel-exhausted? q)}
                               {:pass :emit :backend :clojure}]})))))
+
+(alter-var-root #'compile-def (requiring-resolve 'klara.compile.affine-erase/wrap-compiler)) ; S10: isolated affine erasure hook
