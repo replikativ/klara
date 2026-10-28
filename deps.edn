@@ -12,6 +12,15 @@
          :jvm-opts ["--enable-native-access=ALL-UNNAMED" "-Xss16m"]
          :main-opts ["-m" "cognitect.test-runner"]
          :exec-fn cognitect.test-runner.api/test}
+;; S5: differential test of the ansatz spec (spec/) against T0. Separate
+  ;; because it elaborates the spec on the local ansatz checkout (~20 s).
+  :spec-diff {:extra-paths ["test-spec" "spec/src" "spec/test"]
+              :override-deps {org.replikativ/ansatz {:local/root "../ansatz"}}
+              :extra-deps {io.github.cognitect-labs/test-runner
+                           {:git/tag "v0.5.1" :git/sha "dfb30dd"}}
+              :jvm-opts ["--enable-native-access=ALL-UNNAMED" "-Xss16m"]
+              :exec-fn cognitect.test-runner.api/test
+              :exec-args {:dirs ["test-spec"]}}
   :repl {:jvm-opts ["--enable-native-access=ALL-UNNAMED" "-Xss16m"]
          :main-opts ["-m" "klara.repl"]}
   :nrepl {:extra-paths ["test"]

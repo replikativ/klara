@@ -92,4 +92,157 @@
   :expect {:stuck :prim-type}}
  {:name :bad-perform-target
   :program (perform 5 :x 1)
-  :expect {:stuck :bad-target}}]
+  :expect {:stuck :bad-target}} ;; ---------------------------------------------------------------- staging (S5)
+ ;; Code values observe as {:klara/code <de Bruijn term as EDN>} (see
+ ;; klara.spec.interp/tm->edn); code with a free generated name as
+ ;; :klara/open-code.
+ {:name :code-value
+  :program (code (prim + 1 2))
+  :expect {:value #:klara{:code [:prim + [:lit 1] [:lit 2]]}}}
+ {:name :run-code
+  :program (run (code (prim + 1 2)))
+  :expect {:value 3}}
+ {:name :code-fn
+  :program (code (fn [y] y))
+  :expect {:value #:klara{:code [:lam [:var 0]]}}}
+ {:name :esc-of-binder
+  ;; a variable of generated code used at level 0 stands for its own code
+  :program (code (fn [z] (prim + z (esc z))))
+  :expect {:value #:klara{:code [:lam [:prim + [:var 0] [:var 0]]]}}}
+ {:name :power
+  :program (letrec [power (fn [n x] (if (prim = n 0) (code 1) (code (prim * (esc x) (esc (power (prim - n 1) x))))))]
+             (code (fn [y] (esc (power 3 (code y))))))
+  :expect {:value #:klara{:code [:lam [:prim * [:var 0] [:prim * [:var 0] [:prim * [:var 0] [:lit 1]]]]]}}}
+ {:name :power-run
+  :program (letrec [power (fn [n x] (if (prim = n 0) (code 1) (code (prim * (esc x) (esc (power (prim - n 1) x))))))]
+             ((run (code (fn [y] (esc (power 3 (code y)))))) 2))
+  :expect {:value 8}}
+ {:name :nested-code
+  :program (code (code (prim + 1 (esc (esc (code 2))))))
+  :expect {:value #:klara{:code [:code [:prim + [:lit 1] [:esc [:lit 2]]]]}}}
+ {:name :run-run
+  :program (run (run (code (code (prim + 1 2)))))
+  :expect {:value 3}}
+ {:name :esc-level-2
+  :program (code (code (esc (esc (code 5)))))
+  :expect {:value #:klara{:code [:code [:esc [:lit 5]]]}}}
+ {:name :esc-outside-code
+  :program (esc 1)
+  :expect {:stuck :stage}}
+ {:name :esc-of-non-code
+  :program (code (esc 3))
+  :expect {:stuck :stage}}
+ {:name :run-of-non-code
+  :program (run 3)
+  :expect {:stuck :stage}}
+ {:name :csp-int
+  :program (let [n 5] (code (prim + n 1)))
+  :expect {:value #:klara{:code [:prim + [:lit 5] [:lit 1]]}}}
+ {:name :csp-closure
+  :program (let [k 2 f (fn [z] (prim * z k))] (code (f 3)))
+  :expect {:value #:klara{:code [:app [:lam [:prim * [:var 0] [:lit 2]]] [:lit 3]]}}}
+ {:name :csp-closure-run
+  :program (let [k 2 f (fn [z] (prim * z k))] (run (code (f 3))))
+  :expect {:value 6}}
+ {:name :csp-recursive-closure
+  :program (letrec [f (fn [n] (if (prim = n 0) 0 (f (prim - n 1))))] (run (code (f 3))))
+  :expect {:value 0}}
+ {:name :hygiene
+  ;; the spliced x is the outer binder, never captured by the inner one
+  :program (let [mk (fn [body] (code (fn [x] (esc body))))] (code (fn [x] (esc (mk (code x))))))
+  :expect {:value #:klara{:code [:lam [:lam [:var 1]]]}}}
+ {:name :hygiene-run
+  :program (let [mk (fn [body] (code (fn [x] (esc body))))] (((run (code (fn [x] (esc (mk (code x)))))) 1) 2))
+  :expect {:value 1}}
+ {:name :open-code-escapes
+  ;; an abortive handler carries open code out of its binder's extent
+  :program (handle [h] (code (fn [x] (esc (perform h :leak (code x))))) {:leak (fn [v k] v)})
+  :expect {:value :klara/open-code}}
+ {:name :extrusion-at-splice
+  :program (let [c (handle [h] (code (fn [x] (esc (perform h :leak (code x))))) {:leak (fn [v k] v)})]
+             (code (fn [y] (esc c))))
+  :expect {:stuck :scope-extrusion}}
+ {:name :extrusion-at-run
+  :program (let [c (handle [h] (code (fn [x] (esc (perform h :leak (code x))))) {:leak (fn [v k] v)})]
+             (run c))
+  :expect {:stuck :scope-extrusion}}
+ {:name :run-open-code-in-scope
+  ;; run needs closed code even while the binder is alive
+  :program (code (fn [x] (esc (run (code x)))))
+  :expect {:stuck :scope-extrusion}}
+ {:name :resume-inside-binder
+  ;; resuming re-enters the binder's extent, so the name is alive again
+  :program (handle [h] (code (fn [x] (esc (perform h :op (code x))))) {:op (fn [v k] (k v))})
+  :expect {:value #:klara{:code [:lam [:var 0]]}}}
+ {:name :multi-shot-build
+  :program (handle [c] (code (prim + (esc (perform c :flip nil)) 1))
+             {:flip (fn [v k] (code (prim * (esc (k (code 10))) (esc (k (code 20))))))})
+  :expect {:value #:klara{:code [:prim * [:prim + [:lit 10] [:lit 1]] [:prim + [:lit 20] [:lit 1]]]}}}
+ {:name :lift-capability
+  :program (handle [h] (code h) {})
+  :expect {:stuck :lift}}
+ {:name :csp-code-value
+  ;; deliberate difference: T0 refuses a code value used inside code without esc
+  :program (let [c (code 1)] (code (prim + 1 c)))
+  :expect {:value #:klara{:code [:prim + [:lit 1] [:code [:lit 1]]]}}}
+ {:name :staged-letrec
+  :program (run (code (letrec [f (fn [n] (if (prim = n 0) 1 (prim * n (f (prim - n 1)))))] (f 5))))
+  :expect {:value 120}}
+ {:name :staged-handle
+  :program (run (code (handle [h] (prim + 1 (perform h :get nil)) {:get (fn [v k] (k 41))})))
+  :expect {:value 42}}
+ {:name :staged-specialize
+  :program (run (code ((specialize (fn [a b] (prim - a b)) 10) 3)))
+  :expect {:value 7}}
+ {:name :staged-resolve
+  :world {:inc (fn [x] (prim + x 1))}
+  :program (run (code ((resolve :inc) 41)))
+  :expect {:value 42}}
+ {:name :ambient-in-esc
+  :program (code (esc (perform nil :print 1)))
+  :expect {:stuck :unhandled-op, :op :print}}
+ {:name :staged-let-generator
+  ;; a generator that let-binds generated code and splices the variable twice
+  :program (code (fn [x] (let [y (prim * x x)] (esc (let [c (code y)] (code (prim + (esc c) (esc c))))))))
+  :expect {:value #:klara{:code [:lam [:let [:prim * [:var 0] [:var 0]] [:prim + [:var 0] [:var 0]]]]}}} {:name :csp-closure-over-code-var
+  ;; deliberate difference: T0 refuses to lift a closure that captures a generated variable
+  :program (code (fn [x] (esc (let [f (fn [u] x)] (code (f 1))))))
+  :expect {:value #:klara{:code [:lam [:app [:lam [:var 1]] [:lit 1]]]}}}
+ {:name :eq-on-code
+  ;; deliberate difference: = on non-datums
+  :program (prim = (code 1) (code 1))
+  :expect {:stuck :prim-type}}
+ {:name :run-level-2-binder
+  :program (run (code (code (fn [x] (prim + x 1)))))
+  :expect {:value #:klara{:code [:lam [:prim + [:var 0] [:lit 1]]]}}}
+ {:name :run-run-level-2-binder
+  :program ((run (run (code (code (fn [x] (prim + x 1)))))) 1)
+  :expect {:value 2}}
+ {:name :run-nested-open
+  :program (code (fn [x] (esc (let [c (code x)] (run (code (code (esc (esc c)))))))))
+  :expect {:stuck :scope-extrusion}}
+ {:name :build-order
+  ;; a state handler numbers the escs in the order they are built
+  :program ((handle [s]
+              (code (handle [h] (prim - (esc (perform s :tick nil)) (perform h :get nil))
+                      {:return (fn [x] (prim * x (esc (perform s :tick nil))))
+                       :get (fn [v k] (k (esc (perform s :tick nil))))}))
+              {:return (fn [c] (fn [n] c))
+               :tick (fn [v k] (fn [n] ((k (code n)) (prim + n 1))))})
+            0)
+  :expect {:value #:klara{:code [:handle [:prim - [:lit 2] [:perform 1 [:var 0] [:lit nil]]] [:prim * [:var 0] [:lit 1]] [:if [:prim = [:var 2] [:lit 1]] [:app [:app [:lam [:lam [:app [:var 0] [:lit 0]]]] [:var 1]] [:var 0]] [:app [:lit nil] [:lit nil]]]]}}} {:name :csp-recursive-closure-code
+  ;; a recursive closure persists as an opaque constant (spec: its fix value)
+  :program (letrec [f (fn [n] (if (prim = n 0) 0 (f (prim - n 1))))] (code (f 3)))
+  :expect {:value #:klara{:code [:app [:fix [:if [:prim = [:var 0] [:lit 0]] [:lit 0] [:app [:var 1] [:prim - [:var 0] [:lit 1]]]]] [:lit 3]]}}}
+ {:name :staged-handle-code
+  :program (code (handle [h] (prim + 1 (perform h :get nil)) {:get (fn [v k] (k 41))}))
+  :expect {:value #:klara{:code [:handle [:prim + [:lit 1] [:perform 0 [:var 0] [:lit nil]]] [:var 0] [:if [:prim = [:var 2] [:lit 0]] [:app [:app [:lam [:lam [:app [:var 0] [:lit 41]]]] [:var 1]] [:var 0]] [:app [:lit nil] [:lit nil]]]]}}} {:name :resume-continuation-later
+  ;; a continuation captured inside a build, resumed after the handler returned
+  :program (let [k (handle [h] (code (fn [x] (esc (perform h :grab nil)))) {:grab (fn [v k] k)})] (k (code 5)))
+  :expect {:value #:klara{:code [:lam [:lit 5]]}}}
+ {:name :cross-stage-argument
+  :program ((run (code (fn [x] (code x)))) 5)
+  :expect {:value #:klara{:code [:lit 5]}}}
+ {:name :esc-at-level-2-of-binder
+  :program (code (fn [x] (code (esc x))))
+  :expect {:value #:klara{:code [:lam [:code [:esc [:var 0]]]]}}}]

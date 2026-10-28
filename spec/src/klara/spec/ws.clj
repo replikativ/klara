@@ -21,7 +21,16 @@
   (fix [n Nat] [fb Tm] [hfb (WS (+ n 2) fb)] :where [n (Tm.fix fb)])
   (cap [n Nat] [l Nat] :where [n (Tm.cap l)])
   (handling [n Nat] [l Nat] [b Tm] [r Tm] [o Tm] [hb (WS n b)] [hr (WS (+ n 1) r)] [ho (WS (+ n 3) o)]
-            :where [n (Tm.handling l b r o)]))
+            :where [n (Tm.handling l b r o)])
+  (code [n Nat] [u Tm] [hu (WS n u)] :where [n (Tm.code u)])
+  (esc [n Nat] [u Tm] [hu (WS n u)] :where [n (Tm.esc u)])
+  (run_ [n Nat] [u Tm] [hu (WS n u)] :where [n (Tm.run_ u)])
+  (gvar [n Nat] [g Nat] :where [n (Tm.gvar g)])
+  (nlam [n Nat] [g Nat] [b Tm] [hb (WS n b)] :where [n (Tm.nlam g b)])
+  (nlet [n Nat] [g Nat] [e Tm] [b Tm] [he (WS n e)] [hb (WS n b)] :where [n (Tm.nlet g e b)])
+  (nletrec [n Nat] [g Nat] [fb Tm] [b Tm] [hfb (WS n fb)] [hb (WS n b)] :where [n (Tm.nletrec g fb b)])
+  (nhandle [n Nat] [g Nat] [b Tm] [r Tm] [o Tm] [hb (WS n b)] [hr (WS n r)] [ho (WS n o)]
+           :where [n (Tm.nhandle g b r o)]))
 
 ;; ---------------------------------------------------------------------------
 ;; Weakening
@@ -84,7 +93,7 @@
   (all_goals (try (constructor)))
   (all_goals (try (first (apply ih_b) (apply ih_f) (apply ih_x) (apply ih_e) (apply ih_c) (apply ih_t)
                     (apply ih_fb) (apply ih_y) (apply ih_h) (apply ih_r) (apply ih_o) (apply ih_p)
-                    (apply ih_m))))
+                    (apply ih_m) (apply ih_u))))
   (all_goals (try (first (assumption) (omega)))))
 
 (a/theorem ws-substF' [n :- Nat, j :- Nat, v :- Tm, t :- Tm,
@@ -120,3 +129,18 @@
   (all_goals (cases h))
   (all_goals (simp [substF]))
   (all_goals (try (simp_all))))
+
+;; ---------------------------------------------------------------------------
+;; The closedness check of `run_` is sound.
+
+;; ansatz-specific: `try (obtain [a b] := h)` on an equation (not a
+;; conjunction) produces a kernel-rejected proof instead of failing (see
+;; README), so the conjuncts are projected with And.left/And.right.
+(a/theorem wsbF-WS [t :- Tm]
+  (forall [m :- Nat] (=> (= Bool (wsbF t m) true) (WS m t)))
+  (induction t)
+  (all_goals (intro m) (intro h))
+  (all_goals (simp [wsbF] at h))
+  (all_goals (constructor))
+  (all_goals (try (first (and_then (apply ih_b) (first (assumption) (exact (And.left h)) (exact (And.right h)) (exact (And.left (And.right h))) (exact (And.right (And.right h))))) (and_then (apply ih_f) (first (assumption) (exact (And.left h)) (exact (And.right h)) (exact (And.left (And.right h))) (exact (And.right (And.right h))))) (and_then (apply ih_x) (first (assumption) (exact (And.left h)) (exact (And.right h)) (exact (And.left (And.right h))) (exact (And.right (And.right h))))) (and_then (apply ih_e) (first (assumption) (exact (And.left h)) (exact (And.right h)) (exact (And.left (And.right h))) (exact (And.right (And.right h))))) (and_then (apply ih_c) (first (assumption) (exact (And.left h)) (exact (And.right h)) (exact (And.left (And.right h))) (exact (And.right (And.right h))))) (and_then (apply ih_u) (first (assumption) (exact (And.left h)) (exact (And.right h)) (exact (And.left (And.right h))) (exact (And.right (And.right h))))) (and_then (apply ih_fb) (first (assumption) (exact (And.left h)) (exact (And.right h)) (exact (And.left (And.right h))) (exact (And.right (And.right h))))) (and_then (apply ih_y) (first (assumption) (exact (And.left h)) (exact (And.right h)) (exact (And.left (And.right h))) (exact (And.right (And.right h))))) (and_then (apply ih_h) (first (assumption) (exact (And.left h)) (exact (And.right h)) (exact (And.left (And.right h))) (exact (And.right (And.right h))))) (and_then (apply ih_r) (first (assumption) (exact (And.left h)) (exact (And.right h)) (exact (And.left (And.right h))) (exact (And.right (And.right h))))) (and_then (apply ih_o) (first (assumption) (exact (And.left h)) (exact (And.right h)) (exact (And.left (And.right h))) (exact (And.right (And.right h))))) (and_then (apply ih_p) (first (assumption) (exact (And.left h)) (exact (And.right h)) (exact (And.left (And.right h))) (exact (And.right (And.right h))))) (and_then (apply ih_m) (first (assumption) (exact (And.left h)) (exact (And.right h)) (exact (And.left (And.right h))) (exact (And.right (And.right h))))) (and_then (apply ih_t) (first (assumption) (exact (And.left h)) (exact (And.right h)) (exact (And.left (And.right h))) (exact (And.right (And.right h))))))))
+  (all_goals (try (first (assumption) (omega)))))
