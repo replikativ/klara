@@ -427,5 +427,5 @@ Implementation steps and where they stand:
 | S1 | core syntax, worlds with one publication protocol, basis-specific execution, the expander producing core terms, T0 with reference handlers, the specialization cache with certificate-checked install | done (`background/impl/S1.md`) |
 | S2 | small-step semantics for the 12 forms in ansatz | done (`spec/README.md`); differential run against T0 pending |
 | S3 | map/filter/reduce fusion as a law-licensed rewrite with an ansatz certificate | done (`background/impl/S3.md`) |
-| staging | code values, `code`/`esc`/`run`/`lift`, a REPL | in progress (`guide/05-staging.md`) |
+| staging | code values, `code`/`esc`/`run`/`lift`, let-insertion, the REPL and transcript harness | implemented (`guide/05-staging.md`); not yet in the formal spec |
 | next | authority accounting (RFC 0001), op classes, a T1 emitter | design |

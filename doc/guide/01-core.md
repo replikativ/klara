@@ -35,7 +35,7 @@ collection with computed elements becomes a primitive call: `[1 2 (+ 1 2)]`
 is `(prim vector 1 2 (prim + 1 2))`.
 
 **Meaning.** Rule `prim` in `doc/semantics.md` §3: a primitive applied to
-values reduces to its result. Klara's 41 primitives (`+`, `first`, `assoc`,
+values reduces to its result. Klara's 44 primitives (`+`, `first`, `assoc`,
 …) carry clojure.core names and, by the naming rule, behave like the
 clojure.core functions of the same name on programs that do not fail.
 
@@ -124,6 +124,9 @@ k=> (fact 20)
 | 10 | perform | `(perform h :op a ..)`, `(perform :ns/op a ..)` | perform an effect (chapter 3) |
 | 11 | handle | `(handle [h {:op f ..}] body)`, `(handle :dynamic {..} body)` | install a handler (chapter 3) |
 | 12 | specialize | `(specialize f a ..)` | s-m-n: fix some arguments (below) |
+
+T0 adds two forms for staging, `code` and `esc`, which chapter 5 covers;
+they are not yet part of the formal spec.
 
 ```klara-repl
 k=> (prim + 1 2)

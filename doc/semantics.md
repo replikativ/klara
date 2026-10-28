@@ -30,7 +30,7 @@ Terms use de Bruijn indices: index 0 is the innermost binder.
 | if | `(if c t e)` | `if_ c t e` | `{:op :if ..}` |
 | letrec | `(letfn ..)`, `loop`, named `fn` | `letrec fb b` (one fn) | `{:op :letrec :inits [fn ..] :body t}` |
 | resolve | a world name `f` | `resolve id` | `{:op :resolve :id sym}` |
-| prim | `(+ a b)` … | `prim op x y`, op ∈ `+ - * = <` | `{:op :prim :name sym :args [..]}`, 41 clojure.core functions |
+| prim | `(+ a b)` … | `prim op x y`, op ∈ `+ - * = <` | `{:op :prim :name sym :args [..]}`, 44 clojure.core functions |
 | perform | `(perform h :op a ..)`, `(perform :ns/op a ..)` | `perform op h x` | `{:op :perform :target t\|nil :name kw :args [..]}` |
 | handle | `(handle [h {:op f .. :return r}] body)` | `handle b r o` | `{:op :handle :mode :lexical\|:dynamic :clauses {..} :return t :body t}` |
 | specialize | `(specialize f a ..)` | `specialize p m` | `{:op :specialize :fn t :args [..]}` |
@@ -39,6 +39,13 @@ The spec's front end (`spec/src/klara/spec/interp.clj`) curries n-ary
 functions and applications and turns a clause map `{:op clause ..}` into one
 clause that dispatches on the op tag. Every other surface form is a macro
 over these twelve; `doc/guide/01-core.md` lists the expansions.
+
+T0 has two more forms for staging, `code` (a bracket: its body is code
+one level up) and `esc` (a splice back down, ill-formed outside `code`),
+plus ambient operations `:stage/run`, `:stage/lift`, `:stage/genlet` and
+`:stage/genletrec`.
+They are not in the formal spec yet; `doc/guide/05-staging.md` describes
+them.
 
 The spec adds three **runtime forms** that arise only by reduction, in the
 style of WebAssembly's administrative instructions:
@@ -198,7 +205,7 @@ RFC 0002, which adds dynamic handlers for ambient operations.
 | | Lexical instance | Dynamic handler |
 |---|---|---|
 | surface | `(handle [h {:op f .. :return r}] body)` | `(handle :dynamic {:ns/op f ..} body)` |
-| handles | user operations (no namespace in `world host exn time`) | ambient operations only (`:world/*`, `:host/*`, `:exn/*`, `:time/*`) |
+| handles | user operations (no namespace in `world host exn time stage`) | ambient operations only (`:world/*`, `:host/*`, `:exn/*`, `:time/*`, `:stage/*`) |
 | found by | the instance value: `(perform h :op ..)` searches the continuation for that instance only | dynamic search for the nearest frame with a clause for the op |
 | if none | error "unhandled lexical effect" (the spec's *unhandled instance*) | the **reference handler** answers |
 | why | no accidental handling by an unrelated library handler (EF4) | the platform (or a test) can reinterpret world, host and time access |
@@ -222,6 +229,7 @@ an untargeted perform of a user operation.
 | `:world/resolve sym` | look `sym` up in the *fiber's current* pin (sees a raise) |
 | `:world/raise-basis` | move the fiber's pin to its world's newest root |
 | `:world/define sym v` | publish a raw value |
+| `:world/fork`, `:world/fiber`, `:world/eval-in w form`, `:world/call-in fib f args..`, `:world/invalidate [w] sym` | fork the world, create a pinned fiber, evaluate or call in a world or fiber, repair pending dependents (registered by `klara.defs`) |
 | `:exn/raise ex` | uncaught: leave the machine as a host exception |
 
 Host exceptions thrown by prims or host calls become `:exn/raise` at the
@@ -253,12 +261,13 @@ The architecture states each correctness claim as a commuting square
 | substitution | environments and closures (CEK machine with data frames) |
 | unary `lam`, binary `app` | n-ary `fn` with optional rest parameter |
 | one-function `letrec` | mutually recursive `letrec` |
-| datums nil/Bool/Int, 5 prims | any Clojure datum, 41 prims with clojure.core behaviour |
+| datums nil/Bool/Int, 5 prims | any Clojure datum, 44 prims with clojure.core behaviour |
 | world = finite map | world = versioned immutable root; code resolves against its **basis** (below) |
 | ambient op = stuck | dynamic handlers, then reference handlers |
 | `notFn`, `primType`, `badTarget`, `unbound` | raised as `:exn/raise` with messages "not a function", the host exception, "unhandled lexical effect", "unbound x"; unbound names are usually rejected earlier by the expander |
 | — | self tail calls in constant space |
 | — | the specialization cache hook on closure entry (`klara.stage`) |
+| — | staging forms `code`/`esc` and the `:stage/*` operations |
 
 **Bases.** A closure created at run time carries the root it was created
 under and resolves world names against it (a closure is a value). World
