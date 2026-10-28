@@ -83,17 +83,29 @@
 (defn- def-form? [form]
   (and (seq? form) (contains? '#{def defmacro} (first form))))
 
+(defn- definition?
+  "A def or defmacro, or a top-level macro call expanding to one (defn)."
+  [s form]
+  (or (def-form? form)
+      (and (seq? form) (symbol? (first form))
+           (try (contains? #{:def :macro} (:kind (x/expand-recorded form (current-root s))))
+                (catch Throwable _ false)))))
+
 (defn- define [s form]
   (let [wo (current-world s)
-        {:keys [name]} (d/define! wo form)
+        {:keys [name]} (binding [ev/*fiber* (w/fiber wo)] (d/define! wo form))
         rep (d/invalidate! wo name)
         line (fn [k] (when-let [xs (seq (get rep k))]
                        (str ";; " (clojure.core/name k) ": " (str/join " " xs))))]
     (str/join "\n" (remove nil? [(str "#'" name) (line :stale) (line :cutoff)]))))
 
-(defn- eval-form [s form]
-  (let [root (current-root s)]
-    (ev/run (x/expand-expr form root) {:basis root})))
+(defn- eval-form
+  "Evaluate form against the current world's newest root, in a fiber
+  pinned there (so :world/* operations act on the current world)."
+  [s form]
+  (let [fib (w/fiber (current-world s))
+        root (w/basis fib)]
+    (ev/run (x/expand-expr form root) {:basis root :fiber fib})))
 
 (defn- pretty [form]
   (str/trimr (with-out-str
@@ -172,7 +184,7 @@
               (try
                 (cond
                   (keyword? form) (run-command s form arg)
-                  (def-form? form) (define s form)
+                  (definition? s form) (define s form)
                   :else (print-value (eval-form s form)))
                 (catch Throwable t (format-error t))))
         printed (str out)]

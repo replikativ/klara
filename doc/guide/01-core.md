@@ -9,7 +9,9 @@ syntax expands into the core.
 
 Literals are Clojure data: numbers (including ratios), strings, keywords,
 symbols, `nil`, booleans, and the persistent collections. Klara values have
-no observable identity; equality is Clojure's `=`.
+no observable identity; equality is Clojure's `=`. (A bare keyword at the
+prompt is a REPL command such as `:help`, so keywords appear inside other
+forms here.)
 
 ```klara-repl
 k=> 42
@@ -18,8 +20,8 @@ k=> 1/3
 1/3
 k=> "text"
 "text"
-k=> :key
-:key
+k=> [:key 'sym]
+[:key sym]
 k=> [1 2 (+ 1 2)]
 [1 2 3]
 k=> {:a 1 :b [true nil]}
@@ -150,20 +152,35 @@ true
 
 The expander turns every surface form into core terms. It is hygienic
 (scope sets), resolves locals to de Bruijn indices and records what it read
-from the world. The expansion of an expression can be inspected from the
-REPL by calling the expander directly:
+from the world. The REPL command `:expand` shows the core term of a form,
+printed back as Klara source with generated local names:
+
+```klara-repl
+k=> :expand (let [x 1] (when (pos? x) :yes))
+(let [x_1 1] (if (pos? x_1) :yes))
+k=> :expand (loop [i 0] (if (< i 3) (recur (inc i)) i))
+(let [x_1 0] (letfn [(x_2 [x_3] (if (< x_3 3) (x_2 (inc x_3)) x_3))] (x_2 x_1)))
+k=> :expand (try (/ 1 0) (catch ArithmeticException e :div0))
+(handle :dynamic #:exn{:raise (fn [x_1 x_2] (if (instance? (perform :host/class (quote ArithmeticException)) x_1) (let [x_3 x_1] :div0) (throw x_1)))} (/ 1 0))
+```
+
+`when` is a clojure.core macro: the expander runs it (with hygiene) and
+expands its output, an `if`. `loop` became a `letfn` (a `letrec`) applied to
+the initial value. `try` became a dynamic handler of `:exn/raise`.
+
+The term itself is data. Calling the expander directly shows it raw:
 
 ```klara-repl
 k=> (klara.expand/expand-expr '(fn [a b] (- a b)) klara.world/empty-root)
 {:op :fn, :arity 2, :rest? false, :body {:op :prim, :name -, :args [{:op :local, :index 1} {:op :local, :index 0}]}}
-k=> (klara.expand/expand-expr '(let [x 1] (when (pos? x) :yes)) klara.world/empty-root)
-{:op :let, :init {:op :quote, :datum 1}, :body {:op :if, :test {:op :prim, :name pos?, :args [{:op :local, :index 0}]}, :then {:op :quote, :datum :yes}, :else {:op :quote, :datum nil}}}
+k=> (klara.expand/expand-expr '(map inc [1 2]) klara.world/empty-root)
+{:op :perform, :target nil, :name :host/call, :args [{:op :quote, :datum clojure.core/map} {:op :perform, :target nil, :name :host/var, :args [{:op :quote, :datum clojure.core/inc}]} {:op :quote, :datum [1 2]}]}
 ```
 
 In the first term, `b` is index 0 and `a` index 1: binders are pushed left
-to right, so the last parameter is innermost. In the second, `when` is a
-clojure.core macro: the expander runs it (with hygiene) and expands its
-output, an `if` with an implicit `nil` else branch.
+to right, so the last parameter is innermost. The second shows what the
+printer of `:expand` resugars: a call of a clojure.core function is an
+ambient effect, `(perform :host/call 'clojure.core/map ..)`.
 
 | Surface | Core |
 |---|---|
