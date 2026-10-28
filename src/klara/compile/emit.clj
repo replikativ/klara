@@ -5,7 +5,8 @@
   unwind only their own instance. Self tail recursion uses JVM recur.
   General effects, ambient operations and escaping functions stay in T0."
   (:require [klara.compile.ir :as ir] [klara.eval :as ev]
-            [klara.compile.runtime :as runtime] [klara.stage :as stage]))
+            [klara.compile.runtime :as runtime] [klara.stage :as stage]
+            [klara.world :as w] [klara.compile.unbox :as unbox]))
 
 (defn unsupported [t reason]
   (throw (ex-info (str "compile: " reason) {:klara/error :compile :reason reason :op (:op t)})))
@@ -25,6 +26,13 @@
            (if (and (instance? Long ~a) ~(if both? `(instance? Long ~b) true))
              (+ (long ~a) ~(if both? `(long ~b) b))
              (ev/deopt! 0 [~@(mapv go (:live t))]))))
+      :loop-check
+      (let [body (emit-expr (:body t) env tail? self)]
+        `(if (or (and stage/*feedback*
+                      (not (stage/speculate? stage/*feedback* [~(:code-id t) '~(:site t)])))
+                 (and ~@(map (fn [a] `(instance? Long ~(go a))) (:args t))))
+           ~body
+           (ev/deopt! 0 [~@(mapv go (:live t))])))
       :prim (list* (symbol "clojure.core" (name (:name t))) (mapv go (:args t)))
       :let (let [s (:name t)]
              `(let [~s ~(go (:init t))] ~(emit-expr (:body t) (assoc env s s) tail? self)))
@@ -34,8 +42,22 @@
       (if (and (= 1 (count (:inits t))) (not (:rest? (first (:inits t)))))
         (let [s (first (:names t)) f (first (:inits t)) ps (:params f)
               ctx (assoc env s {:recursive s :arity (:arity f)})
-              body (emit-expr (:body f) (into ctx (map (juxt identity identity) ps)) true s)]
-          `(letfn [(~s [~@ps] ~body)] ~(emit-expr (:body t) ctx tail? self)))
+              loop-env (into ctx (map (juxt identity identity) ps))
+              body (emit-expr (:body f) loop-env true s)
+              fast-body (emit-expr (if (= :loop-check (:op (:body f)))
+                                    (:body (:body f)) (:body f)) loop-env true s)
+              kinds (unbox/loop-kinds t)
+              generic `(letfn [(~s [~@ps] ~body)] ~(emit-expr (:body t) ctx tail? self))]
+          (if (seq kinds)
+            (let [args (mapv (fn [_] (gensym "initial")) ps)
+                  fallback `(letfn [(~s [~@ps] ~body)] (~s ~@args))]
+              `(let [~@(mapcat vector args (mapv go (get-in t [:body :args])))]
+                 ~(reduce (fn [other kind]
+                            `(if (and ~@(map (fn [a] `(instance? ~(if (= kind :long) 'Long 'Double) ~a)) args))
+                               (loop [~@(mapcat (fn [p a] [p (list (symbol "clojure.core" (name kind)) a)]) ps args)]
+                                 ~fast-body)
+                               ~other)) fallback (reverse kinds))))
+            generic))
         (unsupported t "only single-function letrec is emitted"))
       :app
       (let [f (when (= :local (get-in t [:fn :op])) (get env (get-in t [:fn :name])))
@@ -74,12 +96,13 @@
           (unsupported t "general or ambient operation remains in T0"))))
       (unsupported t (str "unsupported form " (:op t))))))
 
-(defn run [term]
-  (when (or (not= :fn (:op term)) (:rest? term)) (unsupported term "expected fixed-arity function"))
-  (let [ps (:params term) args (gensym "args")
-        body (emit-expr (:body term) (into {} (map (juxt identity identity) ps)) true nil)
-        form `(fn [& ~args]
-                (if (= ~(count ps) (count ~args))
-                  (let [[~@ps] ~args] ~body)
-                  klara.eval/deopt))]
-    {:form form :run (eval form)}))
+(defn run
+  ([term] (run term #{}))
+  ([term reads]
+   (when (or (not= :fn (:op term)) (:rest? term)) (unsupported term "expected fixed-arity function"))
+   (let [ps (:params term)
+         body (emit-expr (:body term) (into {} (map (juxt identity identity) ps)) true nil)
+         form `(fn [~@ps]
+                 ~@(for [[_ s h] reads] `(w/note-read! '~[:value s h]))
+                 ~body)]
+     {:form form :run (eval form)})))

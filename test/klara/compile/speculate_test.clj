@@ -77,7 +77,6 @@
   (doseq [program ['(fn [n] (let [m {:a n} y (get m :a)] (+ y 1)))
                    '(fn [n] (let [v #{n} y (count v)] (+ y 1)))
                    '(fn [n] (let [y n] (if (> y 0) (+ y 1) (+ y 2))))
-                   '(fn [n] (loop [i 2 s n] (if (> i 0) (recur (dec i) (+ s i)) s)))
                    '(fn [n] (handle [h {:op (fn [x k] (k x))}]
                               (let [y (perform h :op n)] (+ y 1))))]]
     (let [world (setup program) exe (cc/compile-def world 'f) cache (s/make-cache)]

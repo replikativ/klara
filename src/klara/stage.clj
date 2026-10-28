@@ -17,6 +17,7 @@
     [:world sym value-id]   the entry basis still answers sym this way
     [:world sym :absent]    the entry basis does not define sym
     [:arg i pred]           argument i satisfies pred (see `preds`)
+    [:arity n]             exactly n arguments (fixed-arity compiler ABI)
     [:captures locals]      the closure captured exactly these values
     [:statics vals]         the partial application fixed these values
     [:unhandled ops]        no dynamic handler for any of ops is active in
@@ -173,6 +174,7 @@
     :world (let [e (w/entry* basis a)]
              (if (= :absent b) (nil? e) (and e (= b (:value-id e)) (not (w/pending? basis e)))))
     :arg (and (< a (count args)) ((preds b) (nth args a)))
+    :arity (= a (count args))
     :captures (= a captures)
     :statics (= a statics)
     :unhandled (not (dynamically-handled? kont a))))

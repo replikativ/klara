@@ -11,7 +11,7 @@
 
 (stage/register-checker! :klara.compile/tested
   (fn [exe] (when-not (and (= :tested (get-in exe [:certificate :kind]))
-                           (= "s9-1" (get-in exe [:certificate :checker-version]))
+                           (= "s11-1" (get-in exe [:certificate :checker-version]))
                            (seq (:pass-log exe)) (fn? (:run exe))) :invalid-tested-executable)))
 
 (defn compile-def
@@ -27,19 +27,15 @@
            i (inline/run (:term s) basis inline-fuel)
            k1 (ir/lower (:term i))
            p (pe/run k1 fuel) a (escape/run (:term p)) q (pe/run (:term a) fuel)
-           out (emit/run (:term q))
-           guards (into #{[:captures []] [:statics []] [:unhandled #{:exn/raise}]} (:guards i))
+           out (emit/run (:term q) (:guards i))
+           guards (into #{[:captures []] [:statics []] [:unhandled #{:exn/raise}]
+                          [:arity (:arity source)]} (:guards i))
            cert (-> (stage/certify cid guards :klara.compile/tested
                                   {:suite "test/klara/compile" :obligation :T0-observational-equivalence})
-                    (assoc :kind :tested :checker-version "s9-1"
+                    (assoc :kind :tested :checker-version "s11-1"
                            :frame-states (when (seq (:frame-states s))
                                            (stage/frame-states-digest {:generic source :frame-states (:frame-states s)}))) (dissoc :digest))]
-       (merge out {:run (fn [& args]
-                                ;; Definition-time execution must record reads
-                                ;; erased by inlining, even on a cache hit.
-                                (doseq [[_ s h] (:guards i)] (w/note-read! [:value s h]))
-                                (apply (:run out) args))
-                   :generic source
+       (merge out {:generic source
                    :frame-states (when (seq (:frame-states s)) (:frame-states s))
                    :name sym :code-id cid :guards guards :ir (:term q)
                    :certificate (assoc cert :digest (stage/digest cert))

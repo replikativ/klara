@@ -15,14 +15,18 @@
     :letrec (-> t (update :inits #(mapv f %)) (update :body f))
     :prim (update t :args #(mapv f %))
     :numeric-guard (-> t (update :args #(mapv f %)) (update :live #(mapv f %)))
+    :loop-check (-> t (update :args #(mapv f %)) (update :live #(mapv f %)) (update :body f))
     :perform (cond-> (update t :args #(mapv f %)) (:target t) (update :target f))
     :handle (cond-> (-> t (update :clauses #(update-vals % f)) (update :body f))
               (:return t) (update :return f))
     (:code :esc) t))
 
 (defn nodes [t]
-  (tree-seq #(seq (if (= :numeric-guard (:op %)) (concat (:args %) (:live %)) (c/children %)))
-            #(if (= :numeric-guard (:op %)) (concat (:args %) (:live %)) (c/children %)) t))
+  (let [children #(case (:op %)
+                   :numeric-guard (concat (:args %) (:live %))
+                   :loop-check (concat (:args %) (:live %) [(:body %)])
+                   (c/children %))]
+    (tree-seq #(seq (children %)) children t)))
 (defn uses [t s] (count (filter #(and (= :local (:op %)) (= s (:name %))) (nodes t))))
 (defn substitute [t env]
   (if (= :local (:op t)) (get env (:name t) t)

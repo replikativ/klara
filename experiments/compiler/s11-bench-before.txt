@@ -1,1 +1,7 @@
 [0.002s][warning][perf,memops] Cannot use file /tmp/hsperfdata_christian-weilbach/2 because it is locked by another process (errno = 11)
+#'klara.compile-bench/run!
+{:java 25.0.1, :clojure 1.12.4, :input 200, :warmup 100, :batches 7, :calls-per-batch 20}
+{:T0-ms 1.21825905, :compile-ms 2.264335, :clojure-ms 0.009469149999999999, :T0/compiled 76.24841495853543, :benchmark :closures, :result 40800, :compiled-ms 0.0159775, :allocations-removed 1, :compiled/clojure 1.6873214596875115}
+{:T0-ms 1.2259506, :compile-ms 2.391812, :clojure-ms 0.019366050000000003, :T0/compiled 90.08943904939319, :benchmark :collections, :result 40400, :compiled-ms 0.01360815, :allocations-removed 2, :compiled/clojure 0.7026807221916703}
+{:T0-ms 0.46878035, :compile-ms 1.160381, :clojure-ms 0.0042689, :T0/compiled 59.33214993133737, :benchmark :numeric, :result 20100, :compiled-ms 0.00790095, :allocations-removed 0, :compiled/clojure 1.8508163695565603}
+{:T0-ms 0.7746127, :compile-ms 1.62165, :clojure-ms 0.00775445, :T0/compiled 71.76226937739425, :benchmark :tail-effects, :result 40200, :compiled-ms 0.010794149999999999, :allocations-removed 0, :compiled/clojure 1.3919942742554272}

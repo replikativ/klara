@@ -1,8 +1,8 @@
 (ns klara.compile.speculate
   "A deliberately small source-position preserving speculation pass.
-  Checkpoint only a binary + with a trivial first operand after a let spine.
-  There are no pending generic frames there. Other control/allocations
-  decline speculation; the ordinary compiler still handles them."
+  Checkpoint a binary + after a let spine, or the head of a single
+  self-tail loop in that spine. Neither position has pending generic
+  frames. Other control/allocations decline speculation."
   (:require [klara.compile.ir :as ir]))
 
 (defn run [term code-id]
@@ -33,6 +33,23 @@
                          (ir/trivial? (first (:args t))))
                   (do (reset! states [{:site path :at [:eval path] :env slots :kont []}])
                       {:op :numeric-guard :args (:args t) :live @live :code-id code-id :site path}) t)
+                :letrec
+                (let [f (first (:inits t)) s (first (:names t)) b (:body t)
+                      p (conj path :inits 0 :body)]
+                  (if (and (= 1 (count (:inits t))) (not (:rest? f))
+                           (= :app (:op b)) (= {:op :local :name s} (:fn b))
+                           (= (:arity f) (count (:args b)))
+                           (not-any? #(contains? #{:handle :perform :fn :letrec} (:op %))
+                                     (ir/nodes (:body f)))
+                           (some #(and (= :prim (:op %))
+                                       (contains? '#{+ - * / inc dec} (:name %))) (ir/nodes (:body f))))
+                    (let [params (mapv #(hash-map :op :local :name %) (:params f))
+                          env (into (conj slots [:letrec path 0]) (mapv slot params))]
+                      (reset! states [{:site p :at [:eval p] :env env :kont []}])
+                      (assoc-in t [:inits 0 :body]
+                                {:op :loop-check :args params :body (:body f)
+                                 :live @live :code-id code-id :site p}))
+                    t))
                 t))]
       (let [ps (:params term)
             slots (mapv #(slot {:op :local :name %}) ps)

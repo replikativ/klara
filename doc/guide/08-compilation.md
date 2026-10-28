@@ -31,7 +31,7 @@ k=> (pair-sum 4)
 9
 k=> :repl/compile pair-sum
 ;; compiled pair-sum: speculate -> inline -> lower -> pe -> escape -> pe -> emit
-;; guards 3; allocations removed 1
+;; guards 4; allocations removed 1
 k=> (pair-sum 4)
 9
 k=> :repl/compiled
@@ -57,7 +57,7 @@ k=> (defn twice-helper [x] (* 2 (helper x)))
 #'twice-helper
 k=> :repl/compile twice-helper
 ;; compiled twice-helper: speculate -> inline -> lower -> pe -> escape -> pe -> emit
-;; guards 4; allocations removed 0
+;; guards 5; allocations removed 0
 k=> (twice-helper 3)
 8
 k=> (defn helper [x] (+ x 100))
@@ -89,7 +89,7 @@ k=> (defn paid-add [e x] (let [paid (spend! e 1/4) y (* x 2)] (+ y 1)))
 #'paid-add
 k=> :repl/compile paid-add
 ;; compiled paid-add: speculate -> inline -> lower -> pe -> escape -> pe -> emit
-;; guards 3; allocations removed 0
+;; guards 4; allocations removed 0
 k=> (let [e (evidence 1)] [(paid-add e 1.5) (remaining e)])
 [4.0 3/4]
 k=> (let [e (evidence 1)] [(paid-add e 2) (remaining e)])
@@ -100,8 +100,37 @@ The first call fails the Long check after spending once. After three
 deopts at the same `(CodeId, source path)`, cache feedback disables that
 fast path and the emitted code uses ordinary generic addition. This does
 not require recompilation. Feedback is an optimization policy, not type
-evidence. Guards inside loops, branches and handlers, and checkpoints
-with virtual maps or sets, are not generated yet.
+evidence. Single self-tail loops in the top-level let spine also have a
+checkpoint at the loop body entrance. A failed Long check reconstructs
+the recursive closure and current boxed loop values there. Earlier
+iterations are not replayed. Checkpoints inside arbitrary branches and
+handlers, and checkpoints with virtual maps or sets, are not generated yet.
+
+## Representations and unboxing
+
+Compiled entries have a fixed arity, checked before running the body.
+For closed numeric self-tail loops, the emitter checks the initial JVM
+classes and uses primitive long or double loop locals when every backedge
+is known to preserve that class. Checked `+`, `-`, `*`, `inc` and `dec`
+keep Clojure's overflow behavior. Division, promotion and unknown calls
+do not establish that invariant and retain the boxed path. A guard is
+type evidence; feedback alone never permits a coercion.
+
+```klara-repl
+k=> (defn sum-to [n] (loop [i n s 0] (if (> i 0) (recur (dec i) (+ s i)) s)))
+#'sum-to
+k=> :repl/compile sum-to
+;; compiled sum-to: speculate -> inline -> lower -> pe -> escape -> pe -> emit
+;; guards 4; allocations removed 0
+k=> (sum-to 4)
+10
+k=> (sum-to 2.5)
+4.5
+```
+
+Values are boxed when returned or placed in a deopt frame state; equality,
+hashing and ratio results keep their ordinary semantics. Clearing the
+cache restores T0 execution.
 
 ## What compiles
 
@@ -127,7 +156,7 @@ authority operations (`fork`, `direct`, `use`) are not emitted. A failed
 `:repl/compile` reports the unsupported construct and installs nothing;
 ordinary evaluation still works.
 
-There is no unboxed representation, bytecode emitter, partial escape
+There is no general unboxed layout, bytecode emitter, partial escape
 analysis, standalone common-subexpression elimination, or automatic
 recompilation yet. Unknown calls conservatively escape their arguments;
 scalar replacement requires **every** use of an allocation to be safe.
