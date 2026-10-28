@@ -267,8 +267,8 @@
             ws (if shot? [1] (weights g pid))]
         (when (full-owned? st)
           (fail "fork: a full owned write share cannot be split"))
-        (when-not (and (pos? share) (every? pos? ws))
-          (fail "fork: owned read shares need positive fractions"))
+        (when-not (and (pos? share) (every? #(and (rational? %) (pos? %)) ws))
+          (fail "fork: owned read shares need positive rational fractions"))
         [(mapv (fn [i wt]
                  (kmint i {:cell cell :share (* share wt) :lent {} :permission :read}))
                (range n) ws)
@@ -669,6 +669,7 @@
           (doseq [c children :when c] (settle-child! c))))
       (doseq [[j ctx] (map-indexed vector ctxs)
               id @(:owned ctx)]
+        (when (= :owned (:kind (state id))) (close-owned-loans! id))
         (if (= j adopted) (rescope! id chain) (discard-owned! id)))
       (when (and adopted (not shot?) (empty? @errors))
         (let [intents @(:intents (nth ctxs adopted))]

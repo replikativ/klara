@@ -73,6 +73,13 @@
       (let [b (a/borrow-owned! t 1 [])]
         (is (not (a/full-owned-held? [])))
         (is (nil? (a/resume-blocker b)))
+        (doseq [ws [[0 1] [0.1 0.9]]]
+          (let [g (a/open-fork! {:shares {b ws}} 2 [])]
+            (is (thrown-with-msg? clojure.lang.ExceptionInfo #"positive rational fractions"
+                                  (a/op! :own/read [b] (frames g 0))))
+            (a/close-group! g [] :abort)
+            (is (= 1 (mass)))
+            (is (= :open (:status (a/state b))))))
         (doseq [how [:exit :abort]]
           (let [g (a/open-fork! {} 3 [])]
             (doseq [i (range 3)]
@@ -130,6 +137,35 @@
           (if adopt?
             (is (= :branch (op :own/freeze t)))
             (is (thrown-with-msg? clojure.lang.ExceptionInfo #"settled" (op :own/read t)))))))))
+
+(deftest owned-fork-loan-cleanup
+  (binding [a/*store* (a/new-store)]
+    (testing "adopting a fresh owned cell restores its full permission and closes escaped loans"
+      (let [g (a/open-fork! {} 2 [])
+            fs (frames g 0)
+            t (a/op! :own/alloc [:fresh] fs)
+            b (a/borrow-owned! t 1 fs)
+            c (a/borrow-owned! b 1/2 fs)]
+        (is (= 1 (mass)))
+        (a/adopt! (first (a/branches g [t nil])))
+        (a/close-group! g [] :exit)
+        (is (= 1 (mass)))
+        (doseq [loan [b c]]
+          (is (thrown-with-msg? clojure.lang.ExceptionInfo #"settled" (op :own/read loan))))
+        (is (= :fresh (op :own/freeze t)))))
+    (testing "the lender's remaining fraction also splits, with exact unequal weights"
+      (let [t (op :own/alloc :partial) b (a/borrow-owned! t 1/4 [])
+            g (a/open-fork! {:shares {t [1 2 3]}} 3 [])]
+        (is (= :partial (a/op! :own/read [t] (frames g 0))))
+        (is (= [1/8 1/4 3/8]
+               (mapv #(get-in (a/state %) [:payload :share])
+                     (:children (first (vals (:leases @g)))))))
+        (is (= 1 (mass)))
+        (a/close-group! g [] :exit)
+        (is (= 1 (mass)))
+        (is (thrown-with-msg? clojure.lang.ExceptionInfo #"full owned write share" (op :own/update t identity)))
+        (a/return-owned! b)
+        (is (= :partial (op :own/freeze t)))))))
 
 (deftest functional-update-lease
   (binding [a/*store* (a/new-store)]
