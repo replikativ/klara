@@ -138,3 +138,53 @@
   "Expand and evaluate form in fiber fib, under its pinned basis."
   [fib form]
   (eval-form (w/basis fib) form fib))
+
+;; ---------------------------------------------------------------------------
+;; world operations as ambient effects: forks, fibers, evaluation in them
+;; (used by the REPL, the guide and examples/klara; RFC 0001 snapshot forks,
+;; without authority accounting)
+;; ---------------------------------------------------------------------------
+
+(defn- current-world
+  "The world of the running fiber."
+  []
+  (or (:world ev/*fiber*)
+      (throw (ex-info "klara: no fiber is running (world operation needs one)"
+                      {:klara/error :no-fiber}))))
+
+(defn- fiber-of [target]
+  (if (instance? klara.world.World target) (w/fiber target) target))
+
+(defn eval-in-target
+  "Evaluate form in a world (under its current root) or a fiber (under its
+  pinned basis). A definition form is published to the target's world and
+  returns its name."
+  [target form]
+  (let [fib (fiber-of target)
+        res (x/expand-recorded form (w/basis fib))]
+    (if (#{:def :macro} (:kind res))
+      (:name (define! (:world fib) form))
+      (binding [ev/*fiber* fib] (eval-in fib form)))))
+
+(ev/register-reference-handler!
+ :world/fork
+ (fn [_ env]
+   (let [b (if ev/*fiber* (w/basis ev/*fiber*) (:basis env))]
+     (w/->World (atom b) b))))
+
+(ev/register-reference-handler!
+ :world/fiber
+ (fn [[target] _] (w/fiber (or target (current-world)))))
+
+(ev/register-reference-handler!
+ :world/eval-in
+ (fn [[target form] _] (eval-in-target target form)))
+
+(ev/register-reference-handler!
+ :world/call-in
+ (fn [[fib f & args] _]
+   (binding [ev/*fiber* (fiber-of fib)] (ev/call-value f (vec args)))))
+
+(ev/register-reference-handler!
+ :world/invalidate
+ (fn [[sym] _] (invalidate! (current-world) sym)))

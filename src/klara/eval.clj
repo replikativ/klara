@@ -148,6 +148,17 @@
                                                      :code-id (str "value:" (System/identityHashCode v))
                                                      :value-id (str "value:" (System/identityHashCode v))}))))})
 
+(defonce ^{:private true :doc "Reference handlers registered by namespaces that
+  sit above eval (klara.defs registers the world operations that need the
+  expander)."} extra-handlers (atom {}))
+
+(defn register-reference-handler!
+  "Add the reference handler for ambient operation op: (fn [args env])."
+  [op f]
+  (assert (core/ambient? op))
+  (swap! extra-handlers assoc op f)
+  op)
+
 (defn- find-frame
   "Split kont at the first handle frame satisfying pred:
   [captured-frames-top-first outer-kont frame] or nil."
@@ -177,7 +188,7 @@
           (throw (if (instance? Throwable ex)
                    ex
                    (ex-info "klara: uncaught exception" {:klara/exn ex}))))
-        (if-let [h (reference-handlers op)]
+        (if-let [h (or (reference-handlers op) (@extra-handlers op))]
           (try [:ret (h args env) env k]
                (catch Throwable t (raise t env k)))
           (raise (ex-info (str "klara: no handler for " op) {:op op}) env k))))))
