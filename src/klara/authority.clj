@@ -851,6 +851,7 @@
   (let [chain (ctx-chain frames)
         [a b] args]
     (case op
+      :own/check (do (require-full (usable a chain #{:owned} "owned parameter") "owned parameter") a)
       :own/alloc (mint! :owned {:cell a :share 1 :lent {} :permission :write} chain)
       :own/read (let [st (usable a chain #{:owned} "read")]
                   (when-not (pos? (get-in st [:payload :share]))

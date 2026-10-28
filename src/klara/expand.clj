@@ -37,6 +37,7 @@
   (perform :ns/op args..), (prim op args..), (specialize f args..)."
   (:require [clojure.set :as set]
             [klara.core :as c]
+            [klara.affine :as affine]
             [klara.world :as w]
             [klara.eval :as ev]))
 
@@ -167,6 +168,18 @@
     discard! :auth/discard, advance! :auth/advance, transfer! :auth/transfer
     partition! :auth/partition, status :auth/status, adopt! :auth/adopt, receipts :auth/receipts})
 
+(def own-ops
+  '{own :own/alloc, read :own/read, update! :own/update, move :own/move,
+    freeze :own/freeze, drop! :own/drop})
+
+(defn- borrow-macro [[_ binding & body :as form]]
+  (when-not (and (vector? binding) (= 2 (count binding)) (symbol? (first binding)))
+    (throw (ex-info "expand: borrow takes [name owned] and a body" {:form form})))
+  (list 'perform :own/borrow (second binding) (list* 'fn* [(first binding)] body)))
+
+(defn- affine-macro [[_ nm params & body]]
+  (list 'def (vary-meta nm assoc :affine true) (list* 'fn* params body)))
+
 (def builtin-macros (merge {'qq (fn [[_ template]] (qq-build template))
                             'run (stage-op :stage/run)
                             'lift (stage-op :stage/lift)
@@ -175,8 +188,10 @@
                             'speculate speculate-macro
                             'deopt! deopt-macro
                             'fork fork-macro
-                            'direct direct-macro}
-                           (update-vals auth-ops auth-op)))
+                            'direct direct-macro
+                            'borrow borrow-macro
+                            'defaffine affine-macro}
+                           (update-vals auth-ops auth-op) (update-vals own-ops auth-op)))
 
 (def staging-builtins
   "Functions over code values, resolved after prims (klara.code)."
@@ -353,12 +368,30 @@
     (coll? form) (boolean (some has-recur? form))
     :else false))
 
+(defn- parameter-contracts [params body]
+  (reduce (fn [[ps body] [i p]]
+            (let [hints (select-keys (meta p) [:own :borrow :move])]
+              (when (> (count (filter val hints)) 1)
+                (throw (ex-info "expand: conflicting ownership hints" {:parameter p})))
+              (if-let [hint (first (for [[k v] hints :when v] k))]
+                (let [p (vary-meta p dissoc :own :borrow :move)
+                      incoming (gensym "incoming")
+                      expr (case hint :own (list 'perform :own/check incoming)
+                                      :move (list 'perform :own/move incoming) :borrow nil)]
+                  [(assoc ps i incoming)
+                   [(if (= hint :borrow)
+                      (list* 'borrow [p incoming] body)
+                      (list* 'let* [p expr] body))]])
+                [ps body])))
+          [(vec params) body] (reverse (vec (map-indexed vector params)))))
+
 (defn- expand-fn* [[_ & tail] ctx env]
   (let [[fname tail] (if (symbol? (first tail)) [(first tail) (rest tail)] [nil tail])
         arities (if (vector? (first tail)) [tail] tail)
         _ (when (not= 1 (count arities))
             (throw (ex-info "expand: S1 supports single-arity fns only" {:form tail})))
-        [params & body] (first arities)]
+        [params & body] (first arities)
+        [params body] (parameter-contracts params body)]
     (if (or fname (has-recur? body))
       (let [sc (fresh-scope! ctx)
             self (when fname (add-scope fname sc))
@@ -580,7 +613,7 @@
             (case (:kind e)
               :macro (world-transformer e (:basis ctx))
               :def nil
-              (some-> (host-macro bare) host-transformer))))))))
+              (or (builtin-macros bare) (some-> (host-macro bare) host-transformer)))))))))
 
 (defn expand-recorded
   "Expand a top-level form against basis root. Returns
@@ -599,9 +632,12 @@
                                 (with-meta (first form) nil))]
                      (cond
                        (= 'def head)
-                       (let [[_ nm init] form nm (with-meta nm nil)]
+                       (let [[_ nm init] form
+                             declared? (:affine (meta nm)) nm (with-meta nm nil)
+                             term (expand init (assoc ctx :self nm) empty-env)
+                             derivation (when declared? (affine/check term :declared))]
                          {:kind :def :name nm
-                          :term (expand init (assoc ctx :self nm) empty-env)})
+                          :term (cond-> term derivation (vary-meta assoc :klara/affine derivation))})
                        (= 'defmacro head)
                        (let [[_ nm params & body] form nm (with-meta nm nil)]
                          {:kind :macro :name nm
