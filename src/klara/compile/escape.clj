@@ -94,7 +94,11 @@
                     (if (:escapes? a) t
                         (do (swap! removed inc)
                             (if (= :fn (:op init))
-                              (ir/substitute (:body t) {s init})
+                              (letfn [(copy [b]
+                                        (if (= {:op :local :name s} b)
+                                          (ir/freshen init)
+                                          (ir/map-children copy b)))]
+                                (copy (:body t)))
                               (let [ps (mapv (fn [_] (gensym "field")) (:args init))
                                     replace (fn replace [b]
                                               (if-let [i (projection b s init)]

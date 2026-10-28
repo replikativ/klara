@@ -14,12 +14,15 @@
     :if (-> t (update :test f) (update :then f) (update :else f))
     :letrec (-> t (update :inits #(mapv f %)) (update :body f))
     :prim (update t :args #(mapv f %))
+    :numeric-guard (-> t (update :args #(mapv f %)) (update :live #(mapv f %)))
     :perform (cond-> (update t :args #(mapv f %)) (:target t) (update :target f))
     :handle (cond-> (-> t (update :clauses #(update-vals % f)) (update :body f))
               (:return t) (update :return f))
     (:code :esc) t))
 
-(defn nodes [t] (tree-seq #(seq (c/children %)) c/children t))
+(defn nodes [t]
+  (tree-seq #(seq (if (= :numeric-guard (:op %)) (concat (:args %) (:live %)) (c/children %)))
+            #(if (= :numeric-guard (:op %)) (concat (:args %) (:live %)) (c/children %)) t))
 (defn uses [t s] (count (filter #(and (= :local (:op %)) (= s (:name %))) (nodes t))))
 (defn substitute [t env]
   (if (= :local (:op t)) (get env (:name t) t)
@@ -42,6 +45,27 @@
        :handle (let [s (gensym "handler")]
                  (assoc t :name s :clauses (update-vals (:clauses t) go)
                         :return (some-> (:return t) go) :body (named (:body t) (conj env s))))
+       (map-children go t)))))
+
+(defn freshen
+  "Copy named IR with fresh binders, preserving free names and quoted data."
+  ([t] (freshen t {}))
+  ([t env]
+   (let [go #(freshen % env)
+         bind (fn [ss] (zipmap ss (repeatedly (count ss) #(gensym "copy"))))]
+     (case (:op t)
+       :local (update t :name #(get env % %))
+       :fn (let [m (bind (:params t))]
+             (assoc t :params (mapv m (:params t)) :body (freshen (:body t) (merge env m))))
+       :let (let [m (bind [(:name t)])]
+              (assoc t :name (m (:name t)) :init (go (:init t))
+                     :body (freshen (:body t) (merge env m))))
+       :letrec (let [m (bind (:names t)) e (merge env m)]
+                 (assoc t :names (mapv m (:names t))
+                        :inits (mapv #(freshen % e) (:inits t)) :body (freshen (:body t) e)))
+       :handle (let [m (bind [(:name t)])]
+                 (assoc t :name (m (:name t)) :clauses (update-vals (:clauses t) go)
+                        :return (some-> (:return t) go) :body (freshen (:body t) (merge env m))))
        (map-children go t)))))
 
 (defn clause-class [t]
