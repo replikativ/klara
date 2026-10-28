@@ -306,6 +306,11 @@
                                (:names lam) (:args body)))
             (->form (recurify (:body lam) h) rn)))))
 
+(def ^:private ^:dynamic *loop-sugar*
+  "Print loop-shaped letrecs as loop/recur. Off for core->form, which
+  shows the core term as it is (the REPL's :expand)."
+  true)
+
 (defn- loop-inits
   "(let [a e1] .. (let [b e2] (letrec [lam] (h a b)))) where a, b occur
   only as those arguments -> the letrec applied to e1 e2 (the shape
@@ -335,14 +340,14 @@
                (literal (:datum t)))
       :resolve (:id t)
       :fn (fn-form t rn)
-      :let (if-let [l (loop-inits t)] (f l) (let-chain t rn))
+      :let (if-let [l (and *loop-sugar* (loop-inits t))] (f l) (let-chain t rn))
       :if (if (and (= :quote (:op (:else t))) (nil? (:datum (:else t))) (not (:csp (:else t))))
             (list 'if (f (:test t)) (f (:then t)))
             (list 'if (f (:test t)) (f (:then t)) (f (:else t))))
       :recur (apply list 'recur (map f (:args t)))
       :letrec (let [ns (:names t)
                     body (:body t)]
-                (or (loop-form t rn)
+                (or (and *loop-sugar* (loop-form t rn))
                 (if (and (= 1 (count ns)) (= :var (:op body)) (= (first ns) (:name body)))
                   (let [nm (name-of rn (first ns)) lam (first (:inits t))]
                     (list 'fn nm (params lam rn) (f (:body lam))))
@@ -375,7 +380,7 @@
 (defn core->form
   "Klara source of a core term (binder names from expansion metadata)."
   [t]
-  (s->form (core->s t)))
+  (binding [*loop-sugar* false] (s->form (core->s t))))
 
 (defmethod print-method Code [c ^java.io.Writer w]
   (binding [*print-meta* false]
