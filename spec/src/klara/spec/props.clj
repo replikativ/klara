@@ -26,7 +26,8 @@
   (val :where [Out.val])
   (next [n Nat] [e Tm] [he (WS 0 e)] :where [(Out.next n e)])
   (eff [tg (Option Nat)] [op Nat] [v Tm] [k Tm] [hv (WS 0 v)] [hk (WS 1 k)] :where [(Out.eff tg op v k)])
-  (stuck [s Stuck] [hs (Not (= Stuck s Stuck.scope))] :where [(Out.stuck s)]))
+  (stuck [s Stuck] [hs (Not (= Stuck s Stuck.scope))] :where [(Out.stuck s)])
+  (chk [ns (List Nat)] [n Nat] [e Tm] [he (WS 0 e)] :where [(Out.chk ns n e)]))
 
 ;; ---------------------------------------------------------------------------
 ;; (a) Determinism: Step is the graph of a function.
@@ -167,99 +168,333 @@
   ;; eff: the handler rule
   (apply handleEff-ok) (assumption) (assumption) (assumption) (assumption)
   ;; stuck
-  (constructor) (assumption))
+  (constructor) (assumption)
+  ;; chk: a splice under the handling frame
+  (constructor) (constructor) (assumption) (assumption) (assumption))
 
 (a/theorem ws-1-2 [t :- Tm, h :- (WS 1 t)] (WS 2 t)
   (apply (ws-weaken 1 t h)) (omega))
 
-;; The outcome of a closed term in a closed world satisfies the invariant.
-;; This one induction carries both preservation and progress: every `next`
-;; is closed, and no stuck state is the unnamed `scope`.
+;; ---------------------------------------------------------------------------
+;; Staging pieces of the outcome invariant (S5).
+
+(a/theorem seq3-ok [o1 :- Out, o2 :- Out, o3 :- Out, fr1 :- (=> Tm Tm), fr2 :- (=> Tm Tm), fr3 :- (=> Tm Tm),
+                    done :- Out, ho1 :- (OK o1), ho2 :- (OK o2), ho3 :- (OK o3), hd :- (OK done),
+                    h10 :- (forall [e :- Tm] (=> (WS 0 e) (WS 0 (fr1 e)))),
+                    h11 :- (forall [e :- Tm] (=> (WS 1 e) (WS 1 (fr1 e)))),
+                    h20 :- (forall [e :- Tm] (=> (WS 0 e) (WS 0 (fr2 e)))),
+                    h21 :- (forall [e :- Tm] (=> (WS 1 e) (WS 1 (fr2 e)))),
+                    h30 :- (forall [e :- Tm] (=> (WS 0 e) (WS 0 (fr3 e)))),
+                    h31 :- (forall [e :- Tm] (=> (WS 1 e) (WS 1 (fr3 e))))]
+  (OK (seq3 o1 o2 o3 fr1 fr2 fr3 done))
+  (cases ho1)
+  (all_goals (try (simp [seq3, frame])))
+  (exact (seq2-ok o2 o3 fr2 fr3 done ho2 ho3 hd h20 h21 h30 h31))
+
+  (all_goals (constructor))
+  (all_goals (try (first (apply h10) (apply h11))))
+  (all_goals (assumption)))
+
+(a/theorem atZero-ok [l :- Nat, x :- Out, y :- Out, hx :- (OK x), hy :- (OK y)] (OK (atZero l x y))
+  (cases l) (all_goals (simp only [atZero])) (all_goals (assumption)))
+
+(a/theorem dropOut-ok [g :- Nat, k :- Nat, o :- Out, ho :- (OK o)] (OK (dropOut g k o))
+  (cases ho) (all_goals (simp only [dropOut])) (all_goals (constructor)) (all_goals (assumption)))
+
+(a/theorem stuck-stage-ok [] (OK (Out.stuck Stuck.stage))
+  (apply OK.stuck) (intro hh) (cases hh))
+
+(a/theorem stuck-lift-ok [] (OK (Out.stuck Stuck.lift))
+  (apply OK.stuck) (intro hh) (cases hh))
+
+(a/theorem stuck-extrusion-ok [] (OK (Out.stuck Stuck.extrusion))
+  (apply OK.stuck) (intro hh) (cases hh))
+
+(a/theorem openLam-ok [n :- Nat, b :- Tm, hb :- (WS 1 b)] (OK (openLam n b))
+  (simp only [openLam]) (constructor) (constructor)
+  (apply ws-subst) (constructor) (assumption) (omega))
+
+(a/theorem openLet-ok [n :- Nat, e :- Tm, b :- Tm, he :- (WS 0 e), hb :- (WS 1 b)] (OK (openLet n e b))
+  (simp only [openLet]) (constructor) (constructor) (assumption)
+  (apply ws-subst) (constructor) (assumption) (omega))
+
+(a/theorem openLetrec-ok [n :- Nat, fb :- Tm, b :- Tm, hfb :- (WS 2 fb), hb :- (WS 1 b)] (OK (openLetrec n fb b))
+  (simp only [openLetrec]) (constructor) (constructor)
+  (apply ws-subst) (constructor) (apply ws-subst) (constructor) (assumption) (omega) (omega)
+  (apply ws-subst) (constructor) (assumption) (omega))
+
+(a/theorem openHandle-ok [n :- Nat, b :- Tm, r :- Tm, o :- Tm, hb :- (WS 1 b), hr :- (WS 1 r), ho :- (WS 3 o)]
+  (OK (openHandle n b r o))
+  (simp only [openHandle]) (constructor) (constructor)
+  (apply ws-subst) (constructor) (assumption) (omega)
+  (apply ws-subst) (constructor) (assumption) (omega)
+  (apply ws-subst) (constructor) (apply ws-subst) (constructor) (apply ws-subst) (constructor) (assumption)
+  (omega) (omega) (omega))
+
+(a/theorem splice-ok [n :- Nat, u :- Tm, hu :- (WS 0 u)] (OK (splice n u))
+  (cases hu)
+  (all_goals (simp only [splice]))
+  (all_goals (try (apply stuck-stage-ok)))
+  (constructor) (assumption))
+
+(a/theorem escAt-ok [m :- Nat, n :- Nat, u :- Tm, o :- Out, hu :- (WS 0 u), ho :- (OK o)] (OK (escAt m n u o))
+  (cases m)
+  (all_goals (simp only [escAt]))
+  (apply seq1-ok) (assumption) (apply splice-ok) (assumption)
+  (all_goals (try (apply frame-ok) (assumption)))
+  (all_goals (intro e) (intro he) (constructor) (assumption)))
+
+(a/theorem escOut-ok [l :- Nat, n :- Nat, u :- Tm, o :- Out, hu :- (WS 0 u), ho :- (OK o)] (OK (escOut l n u o))
+  (cases l)
+  (all_goals (simp only [escOut]))
+  (apply stuck-stage-ok)
+  (apply escAt-ok) (assumption) (assumption))
+
+(a/theorem runCode-ok [n :- Nat, c :- Tm] (OK (runCode n c))
+  (cases heq (wsbF c 0))
+  (all_goals (simp only [runCode, heq]))
+  (apply stuck-extrusion-ok)
+  (constructor) (exact (wsbF-WS c 0 heq)))
+
+(a/theorem runStep-ok [n :- Nat, u :- Tm] (OK (runStep n u))
+  (cases u)
+  (all_goals (simp only [runStep]))
+  (all_goals (try (apply stuck-stage-ok)))
+  (apply runCode-ok))
+
+(a/theorem pick-ws [c :- Tm, u :- Tm, e :- Tm, hu :- (WS 0 u), he :- (WS 0 e)] (WS 0 (pick c u e))
+  (simp only [pick]) (split) (all_goals (assumption)))
+
+;; Frames: closed stays closed, closed-but-hole stays closed-but-hole.
+;; One lemma per constructor: the main induction (ev-ok) then only dispatches.
+
+(a/theorem ev-lam-ok [w :- World, n :- Nat, b :- Tm, l :- Nat, hb :- (WS 1 b)]
+  (OK (ev w n (Tm.lam b) l))
+  (simp only [ev]) (apply atZero-ok) (constructor) (apply openLam-ok) (assumption))
+
+(a/theorem ev-app-ok [w :- World, n :- Nat, f :- Tm, x :- Tm, l :- Nat, hf :- (WS 0 f), hx :- (WS 0 x),
+                      of :- (OK (ev w n f l)), ox :- (OK (ev w n x l))]
+  (OK (ev w n (Tm.app f x) l))
+  (simp only [ev])
+  (apply seq2-ok) (exact of) (exact ox)
+  (apply atZero-ok) (apply beta-ok) (assumption) (assumption) (constructor)
+  (all_goals (intro e) (intro he) (try (dsimp)) (constructor))
+  (all_goals (first (assumption) (and_then (apply ws-closed) (assumption)))))
+
+(a/theorem ev-let-ok [w :- World, n :- Nat, e :- Tm, b :- Tm, l :- Nat, he :- (WS 0 e), hb :- (WS 1 b),
+                      oe :- (OK (ev w n e l))]
+  (OK (ev w n (Tm.let_ e b) l))
+  (simp only [ev])
+  (apply atZero-ok)
+  (apply seq1-ok) (exact oe)
+  (constructor) (apply ws-subst) (assumption) (assumption) (omega)
+  (intro e2) (intro he2) (try (dsimp)) (constructor) (assumption) (assumption)
+  (intro e2) (intro he2) (try (dsimp)) (constructor) (assumption) (apply ws-1-2) (assumption)
+  (apply openLet-ok) (assumption) (assumption))
+
+(a/theorem ev-if-ok [w :- World, n :- Nat, c :- Tm, u :- Tm, e :- Tm, l :- Nat,
+                     hc :- (WS 0 c), hu :- (WS 0 u), he :- (WS 0 e),
+                     oc :- (OK (ev w n c l)), ou :- (OK (ev w n u l)), oe :- (OK (ev w n e l))]
+  (OK (ev w n (Tm.if_ c u e) l))
+  (simp only [ev])
+  (apply atZero-ok)
+  (apply seq1-ok) (exact oc)
+  (constructor) (apply pick-ws) (assumption) (assumption)
+  (intro e2) (intro he2) (try (dsimp)) (constructor) (assumption) (assumption) (assumption)
+  (intro e2) (intro he2) (try (dsimp)) (constructor) (assumption)
+  (apply ws-closed) (assumption) (apply ws-closed) (assumption)
+  (apply seq3-ok) (exact oc) (exact ou) (exact oe) (constructor)
+  (all_goals (intro e2) (intro he2) (try (dsimp)) (constructor))
+  (all_goals (first (assumption) (and_then (apply ws-closed) (assumption)))))
+
+(a/theorem ev-letrec-ok [w :- World, n :- Nat, fb :- Tm, b :- Tm, l :- Nat, hfb :- (WS 2 fb), hb :- (WS 1 b)]
+  (OK (ev w n (Tm.letrec fb b) l))
+  (simp only [ev]) (apply atZero-ok)
+  (constructor) (apply ws-subst) (constructor) (assumption) (assumption) (omega)
+  (apply openLetrec-ok) (assumption) (assumption))
+
+(a/theorem ev-resolve-ok [w :- World, hw :- (WSW w), n :- Nat, id :- Nat, l :- Nat]
+  (OK (ev w n (Tm.resolve id) l))
+  (simp only [ev]) (apply atZero-ok)
+  (apply resolveResult-ok) (intro v0) (intro hl) (exact (lookup-ws w hw _ _ hl))
+  (constructor))
+
+(a/theorem ev-prim-ok [w :- World, n :- Nat, op :- PrimOp, x :- Tm, y :- Tm, l :- Nat, hx :- (WS 0 x), hy :- (WS 0 y),
+                       ox :- (OK (ev w n x l)), oy :- (OK (ev w n y l))]
+  (OK (ev w n (Tm.prim op x y) l))
+  (simp only [ev])
+  (apply seq2-ok) (exact ox) (exact oy)
+  (apply atZero-ok) (apply primStep-ok) (constructor)
+  (all_goals (intro e) (intro he) (try (dsimp)) (constructor))
+  (all_goals (first (assumption) (and_then (apply ws-closed) (assumption)))))
+
+(a/theorem ev-perform-ok [w :- World, n :- Nat, op :- Nat, h :- Tm, x :- Tm, l :- Nat, hh :- (WS 0 h), hx :- (WS 0 x),
+                          oh :- (OK (ev w n h l)), ox :- (OK (ev w n x l))]
+  (OK (ev w n (Tm.perform op h x) l))
+  (simp only [ev])
+  (apply seq2-ok) (exact oh) (exact ox)
+  (apply atZero-ok) (apply performStep-ok) (assumption) (constructor)
+  (all_goals (intro e) (intro he) (try (dsimp)) (constructor))
+  (all_goals (first (assumption) (and_then (apply ws-closed) (assumption)))))
+
+(a/theorem ev-handle-ok [w :- World, n :- Nat, b :- Tm, r :- Tm, o :- Tm, l :- Nat,
+                         hb :- (WS 1 b), hr :- (WS 1 r), ho :- (WS 3 o)]
+  (OK (ev w n (Tm.handle b r o) l))
+  (simp only [ev]) (apply atZero-ok)
+  (constructor) (constructor) (apply ws-subst) (constructor) (assumption) (omega) (assumption) (assumption)
+  (apply openHandle-ok) (assumption) (assumption) (assumption))
+
+(a/theorem ev-specialize-ok [w :- World, n :- Nat, p :- Tm, m :- Tm, l :- Nat, hp :- (WS 0 p), hm :- (WS 0 m),
+                             op :- (OK (ev w n p l)), om :- (OK (ev w n m l))]
+  (OK (ev w n (Tm.specialize p m) l))
+  (simp only [ev])
+  (apply seq2-ok) (exact op) (exact om)
+  (apply atZero-ok)
+  (constructor) (constructor) (constructor) (constructor)
+  (apply ws-closed) (assumption) (apply ws-closed) (assumption) (constructor) (omega)
+  (constructor)
+  (all_goals (intro e) (intro he) (try (dsimp)) (constructor))
+  (all_goals (first (assumption) (and_then (apply ws-closed) (assumption)))))
+
+(a/theorem ev-cap-ok [w :- World, n :- Nat, c :- Nat, l :- Nat] (OK (ev w n (Tm.cap c) l))
+  (simp only [ev]) (apply atZero-ok) (constructor) (apply stuck-lift-ok))
+
+(a/theorem ev-handling-ok [w :- World, n :- Nat, c :- Nat, b :- Tm, r :- Tm, o :- Tm, l :- Nat,
+                           hb :- (WS 0 b), hr :- (WS 1 r), ho :- (WS 3 o), ob :- (OK (ev w n b l))]
+  (OK (ev w n (Tm.handling c b r o) l))
+  (simp only [ev]) (apply atZero-ok)
+  (apply handlingOut-ok) (assumption) (assumption) (assumption) (exact ob)
+  (apply stuck-lift-ok))
+
+(a/theorem ev-code-ok [w :- World, n :- Nat, u :- Tm, l :- Nat, hu :- (WS 0 u), ou :- (OK (ev w n u (+ l 1)))]
+  (OK (ev w n (Tm.code u) l))
+  (simp only [ev]) (apply frame-ok) (exact ou)
+  (all_goals (intro e) (intro he) (try (dsimp)) (constructor) (assumption)))
+
+(a/theorem ev-esc-ok [w :- World, n :- Nat, u :- Tm, l :- Nat, hu :- (WS 0 u), ou :- (OK (ev w n u (- l 1)))]
+  (OK (ev w n (Tm.esc u) l))
+  (simp only [ev]) (apply escOut-ok) (assumption) (exact ou))
+
+(a/theorem ev-run-ok [w :- World, n :- Nat, u :- Tm, l :- Nat, hu :- (WS 0 u), ou :- (OK (ev w n u l))]
+  (OK (ev w n (Tm.run_ u) l))
+  (simp only [ev]) (apply atZero-ok)
+  (apply seq1-ok) (exact ou) (apply runStep-ok)
+  (intro e) (intro he) (try (dsimp)) (constructor) (assumption)
+  (intro e) (intro he) (try (dsimp)) (constructor) (assumption)
+  (apply frame-ok) (exact ou)
+  (all_goals (intro e) (intro he) (try (dsimp)) (constructor) (assumption)))
+
+(a/theorem ev-gvar-ok [w :- World, n :- Nat, g :- Nat, l :- Nat] (OK (ev w n (Tm.gvar g) l))
+  (simp only [ev]) (apply atZero-ok) (constructor) (constructor) (constructor) (constructor))
+
+(a/theorem ev-nlam-ok [w :- World, n :- Nat, g :- Nat, b :- Tm, l :- Nat, hb :- (WS 0 b), ob :- (OK (ev w n b l))]
+  (OK (ev w n (Tm.nlam g b) l))
+  (simp only [ev]) (apply atZero-ok) (apply stuck-stage-ok)
+  (apply dropOut-ok) (apply frame-ok) (exact ob)
+  (all_goals (intro e) (intro he) (try (dsimp)) (constructor) (assumption)))
+
+(a/theorem ev-nlet-ok [w :- World, n :- Nat, g :- Nat, e :- Tm, b :- Tm, l :- Nat, he :- (WS 0 e), hb :- (WS 0 b),
+                       oe :- (OK (ev w n e l)), ob :- (OK (ev w n b l))]
+  (OK (ev w n (Tm.nlet g e b) l))
+  (simp only [ev]) (apply atZero-ok) (apply stuck-stage-ok)
+  (apply dropOut-ok) (apply seq2-ok) (exact oe) (exact ob) (constructor)
+  (all_goals (intro e2) (intro he2) (try (dsimp)) (constructor))
+  (all_goals (first (assumption) (and_then (apply ws-closed) (assumption)))))
+
+(a/theorem ev-nletrec-ok [w :- World, n :- Nat, g :- Nat, fb :- Tm, b :- Tm, l :- Nat, hfb :- (WS 0 fb), hb :- (WS 0 b),
+                          ofb :- (OK (ev w n fb l)), ob :- (OK (ev w n b l))]
+  (OK (ev w n (Tm.nletrec g fb b) l))
+  (simp only [ev]) (apply atZero-ok) (apply stuck-stage-ok)
+  (apply dropOut-ok) (apply seq2-ok) (exact ofb) (exact ob) (constructor)
+  (all_goals (intro e2) (intro he2) (try (dsimp)) (constructor))
+  (all_goals (first (assumption) (and_then (apply ws-closed) (assumption)))))
+
+(a/theorem ev-nhandle-ok [w :- World, n :- Nat, g :- Nat, b :- Tm, r :- Tm, o :- Tm, l :- Nat,
+                          hb :- (WS 0 b), hr :- (WS 0 r), ho :- (WS 0 o),
+                          ob :- (OK (ev w n b l)), or :- (OK (ev w n r l)), oo :- (OK (ev w n o l))]
+  (OK (ev w n (Tm.nhandle g b r o) l))
+  (simp only [ev]) (apply atZero-ok) (apply stuck-stage-ok)
+  (apply dropOut-ok) (apply seq3-ok) (exact oo) (exact or) (exact ob) (constructor)
+  (all_goals (intro e2) (intro he2) (try (dsimp)) (constructor))
+  (all_goals (first (assumption) (and_then (apply ws-closed) (assumption)))))
+
+;; The outcome of a closed term at any level in a closed world satisfies the
+;; invariant. This one induction carries both preservation and progress:
+;; every `next` and `chk` is closed, and no stuck state is the unnamed `scope`.
+;; ansatz-specific: the goals are discharged in constructor order; a
+;; `first` over the case lemmas makes `apply` unfold `ev` on every mismatch
+;; and does not finish in 15 minutes (see README).
+(a/theorem ev-ok [w :- World, hw :- (WSW w), n :- Nat, t :- Tm]
+  (forall [l :- Nat] (=> (WS 0 t) (OK (ev w n t l))))
+  (induction t)
+  (all_goals (intro l) (intro ht))
+  (all_goals (cases ht))
+  ;; var
+  (omega)
+  ;; lit
+  (simp only [ev]) (constructor)
+  ;; lam
+  (apply ev-lam-ok) (assumption)
+  ;; app
+  (apply ev-app-ok) (assumption) (assumption) (apply ih_f) (assumption) (apply ih_x) (assumption)
+  ;; let_
+  (apply ev-let-ok) (assumption) (assumption) (apply ih_e) (assumption)
+  ;; if_
+  (apply ev-if-ok) (assumption) (assumption) (assumption) (apply ih_c) (assumption) (apply ih_t) (assumption)
+  (apply ih_e) (assumption)
+  ;; letrec
+  (apply ev-letrec-ok) (assumption) (assumption)
+  ;; resolve
+  (apply ev-resolve-ok) (assumption)
+  ;; prim
+  (apply ev-prim-ok) (assumption) (assumption) (apply ih_x) (assumption) (apply ih_y) (assumption)
+  ;; perform
+  (apply ev-perform-ok) (assumption) (assumption) (apply ih_h) (assumption) (apply ih_x) (assumption)
+  ;; handle
+  (apply ev-handle-ok) (assumption) (assumption) (assumption)
+  ;; specialize
+  (apply ev-specialize-ok) (assumption) (assumption) (apply ih_p) (assumption) (apply ih_m) (assumption)
+  ;; fix
+  (simp only [ev]) (constructor)
+  ;; cap
+  (apply ev-cap-ok)
+  ;; handling
+  (apply ev-handling-ok) (assumption) (assumption) (assumption) (apply ih_b) (assumption)
+  ;; code, esc, run_
+  (apply ev-code-ok) (assumption) (apply ih_t) (assumption)
+  (apply ev-esc-ok) (assumption) (apply ih_t) (assumption)
+  (apply ev-run-ok) (assumption) (apply ih_t) (assumption)
+  ;; gvar
+  (apply ev-gvar-ok)
+  ;; n-forms
+  (apply ev-nlam-ok) (assumption) (apply ih_b) (assumption)
+  (apply ev-nlet-ok) (assumption) (assumption) (apply ih_e) (assumption) (apply ih_b) (assumption)
+  (apply ev-nletrec-ok) (assumption) (assumption) (apply ih_fb) (assumption) (apply ih_b) (assumption)
+  (apply ev-nhandle-ok) (assumption) (assumption) (assumption) (apply ih_b) (assumption) (apply ih_r) (assumption)
+  (apply ih_o) (assumption))
+
 (a/theorem run1-ok [w :- World, hw :- (WSW w), n :- Nat, t :- Tm]
   (=> (WS 0 t) (OK (run1 w n t)))
-  (induction t)
-  (all_goals (intro ht))
-  (all_goals (cases ht))
-  (all_goals (try (omega)))
-  (all_goals (simp [run1]))
-  (all_goals (try (constructor)))
-  (all_goals (try (first (apply seq2-ok) (apply seq1-ok) (apply handlingOut-ok) (apply resolveResult-ok))))
-  (all_goals (try (first (apply ih_f) (apply ih_x) (apply ih_e) (apply ih_c) (apply ih_y) (apply ih_h)
-                         (apply ih_p) (apply ih_m) (apply ih_b))))
-  (all_goals (try (assumption)))
-  (all_goals (try (first (apply beta-ok) (apply primStep-ok) (apply performStep-ok))))
-  (all_goals (try (assumption)))
-  ;; the resolve case
-  (all_goals (try (intro v0) (intro hl) (exact (lookup-ws w hw _ _ hl))))
-  ;; frames
-  (all_goals (try (intro e2) (intro he2)))
-  (all_goals (try (dsimp)))
-  (all_goals (try (split)))
-  (all_goals (try (constructor)))
-  (all_goals (try (first (assumption) (and_then (apply ws-1-2) (assumption))
-                         (and_then (apply ws-closed) (assumption)) (apply ws-substF') (constructor))))
-  (all_goals (try (first (assumption) (omega) (and_then (apply ws-closed) (assumption)) (constructor))))
-  (all_goals (try (first (assumption) (omega) (and_then (apply ws-closed) (assumption)) (constructor))))
-  (all_goals (try (first (assumption) (omega) (and_then (apply ws-closed) (assumption)) (constructor))))
-  (all_goals (try (first (assumption) (omega)))))
-
-;; ---------------------------------------------------------------------------
-;; Only values have outcome `val`.
-
-(a/theorem seq2-ne [o1 :- Out, o2 :- Out, fr1 :- (=> Tm Tm), fr2 :- (=> Tm Tm), done :- Out,
-                    hd :- (Not (= Out done Out.val))]
-  (Not (= Out (seq2 o1 o2 fr1 fr2 done) Out.val))
-  (intro h)
-  (cases o1)
-  (all_goals (try (simp [seq2, frame] at h)))
-  (cases o2)
-  (all_goals (try (simp [frame] at h)))
-  (apply hd) (exact h))
-
-(a/theorem seq1-ne [o :- Out, fr :- (=> Tm Tm), done :- Out, hd :- (Not (= Out done Out.val))]
-  (Not (= Out (seq1 o fr done) Out.val))
-  (intro h)
-  (cases o)
-  (all_goals (try (simp [seq1, frame] at h)))
-  (apply hd) (exact h))
-
-(a/theorem beta-ne [n :- Nat, f :- Tm, x :- Tm] (Not (= Out (beta n f x) Out.val))
-  (intro h) (cases f) (all_goals (simp [beta] at h)) (all_goals (cases h)))
-
-(a/theorem primResult-ne [n :- Nat, r :- (Option Datum)] (Not (= Out (primResult n r) Out.val))
-  (intro h) (cases r) (all_goals (simp [primResult] at h)) (all_goals (cases h)))
-
-(a/theorem primStep-ne [n :- Nat, op :- PrimOp, x :- Tm, y :- Tm] (Not (= Out (primStep n op x y) Out.val))
-  (intro h)
-  (cases x) (all_goals (try (simp [primStep] at h)))
-  (cases y) (all_goals (try (simp [primStep] at h)))
-  (revert h) (apply primResult-ne))
-
-(a/theorem performStep-ne [op :- Nat, hh :- Tm, x :- Tm] (Not (= Out (performStep op hh x) Out.val))
-  (intro h)
-  (cases hh) (all_goals (try (simp [performStep] at h)))
-  (cases d) (all_goals (try (simp [performStep] at h))))
-
-(a/theorem handleEff-ne [n :- Nat, l :- Nat, r :- Tm, o :- Tm, tg :- (Option Nat), op :- Nat, v :- Tm, k :- Tm]
-  (Not (= Out (handleEff n l r o tg op v k) Out.val))
-  (intro h)
-  (cases tg) (all_goals (try (simp [handleEff] at h)))
-  (revert h) (split) (all_goals (dsimp)) (all_goals (intro h)) (all_goals (cases h)))
-
-(a/theorem handlingOut-ne [n :- Nat, l :- Nat, b :- Tm, r :- Tm, o :- Tm, ob :- Out]
-  (Not (= Out (handlingOut n l b r o ob) Out.val))
-  (intro h)
-  (cases ob) (all_goals (try (simp [handlingOut] at h)))
-  (revert h) (apply handleEff-ne))
+  (intro ht) (simp only [run1]) (exact (ev-ok w hw n t 0 ht)))
 
 (a/theorem stepOut-ok [w :- World, o :- Out, w2 :- World, n2 :- Nat, t2 :- Tm,
                        ho :- (OK o), hw :- (WSW w),
                        h :- (= (Option Config) (stepOut w o) (Option.some Config (Config.mk w2 n2 t2)))]
   (And (WSW w2) (WS 0 t2))
   (cases ho)
-  (all_goals (simp [stepOut] at h))
-  (all_goals (cases h))
-  (constructor) (assumption) (assumption))
+  (all_goals (simp only [stepOut] at h))
+  ;; val, next, eff, stuck
+  (cases h)
+  (cases h) (constructor) (assumption) (assumption)
+  (cases h)
+  (cases h)
+  ;; chk: steps only when every spliced name is alive
+  ;; ansatz-specific: `cases h` on an equation whose left side is the
+  ;; unreduced `chkStep ..` yields a kernel-rejected proof (see README), so
+  ;; the list is split first.
+  (revert h) (cases ns)
+  (intro h) (simp only [chkStep] at h) (cases h) (constructor) (assumption) (assumption)
+  (intro h) (simp only [chkStep] at h) (cases h))
 
 ;; ---------------------------------------------------------------------------
 ;; (c) Preservation of well-scopedness.
@@ -272,24 +507,14 @@
   (simp [step] at h)
   (exact (stepOut-ok w (run1 w n t) w2 n2 t2 (run1-ok w hw n t ht) hw h)))
 
-(a/theorem resolveResult-ne [n :- Nat, id :- Nat, r :- (Option Tm)] (Not (= Out (resolveResult n id r) Out.val))
-  (intro h) (cases r) (all_goals (simp [resolveResult] at h)) (all_goals (cases h)))
-
-(a/theorem run1-val [w :- World, n :- Nat, t :- Tm, hq :- (= Out (run1 w n t) Out.val)]
-  (= Bool (isVal t) true)
-  (cases t)
-  (all_goals (try (rfl)))
-  (all_goals (try (simp [run1] at hq)))
-  (all_goals (exfalso) (revert hq))
-  (all_goals (first (apply seq2-ne) (apply seq1-ne) (apply handlingOut-ne) (apply resolveResult-ne)))
-  (all_goals (try (first (apply beta-ne) (apply primStep-ne) (apply performStep-ne))))
-  (all_goals (intro hh) (cases hh)))
-
+;; Simple values (lit, lam, fix, cap) are values at level 0. Code values
+;; `code u` are values too but not `isVal`: their valuehood is recursive
+;; (u fully built at level 1); Progress states `value` as run1 = val.
 (a/theorem isVal-run1 [w :- World, n :- Nat, t :- Tm, h :- (= Bool (isVal t) Bool.true)]
   (= Out (run1 w n t) Out.val)
   (cases t)
   (all_goals (try (simp [isVal] at h)))
-  (all_goals (simp [run1])))
+  (all_goals (simp [run1, ev, atZero])))
 
 ;; ---------------------------------------------------------------------------
 ;; (b) Progress modulo named stuck states.
@@ -300,12 +525,16 @@
 ;; is excluded.
 
 (a/inductive Progress [] :in Prop :indices [c Config]
-  (value [w World] [n Nat] [t Tm] [h (= Bool (isVal t) Bool.true)] :where [(Config.mk w n t)])
+  (value [w World] [n Nat] [t Tm] [h (= Out (run1 w n t) Out.val)] :where [(Config.mk w n t)])
   (steps [c Config] [c2 Config] [h (Step c c2)] :where [c])
   (unhandled [w World] [n Nat] [t Tm] [tg (Option Nat)] [op Nat] [v Tm] [k Tm]
              [h (= Out (run1 w n t) (Out.eff tg op v k))] :where [(Config.mk w n t)])
   (error [w World] [n Nat] [t Tm] [s Stuck] [h (= Out (run1 w n t) (Out.stuck s))]
-         [hs (Not (= Stuck s Stuck.scope))] :where [(Config.mk w n t)]))
+         [hs (Not (= Stuck s Stuck.scope))] :where [(Config.mk w n t)])
+  ;; a splice of code that mentions a generated name whose binder is not on
+  ;; the path to the redex (scope extrusion, BER MetaOCaml's dynamic check)
+  (extrusion [w World] [n Nat] [t Tm] [g Nat] [gs (List Nat)] [n2 Nat] [e Tm]
+             [h (= Out (run1 w n t) (Out.chk (List.cons Nat g gs) n2 e))] :where [(Config.mk w n t)]))
 
 (a/theorem progress-next [w :- World, n :- Nat, t :- Tm, n2 :- Nat, e2 :- Tm]
   (=> (= Out (run1 w n t) (Out.next n2 e2)) (Progress (Config.mk w n t)))
@@ -325,7 +554,17 @@
 
 (a/theorem progress-val [w :- World, n :- Nat, t :- Tm]
   (=> (= Out (run1 w n t) Out.val) (Progress (Config.mk w n t)))
-  (intro hq) (exact (Progress.value w n t (run1-val w n t hq))))
+  (intro hq) (exact (Progress.value w n t hq)))
+
+(a/theorem progress-chk [w :- World, n :- Nat, t :- Tm, ns :- (List Nat), n2 :- Nat, e2 :- Tm]
+  (=> (= Out (run1 w n t) (Out.chk ns n2 e2)) (Progress (Config.mk w n t)))
+  (intro hq)
+  (cases ns)
+  (have hs (= (Option Config) (step (Config.mk w n t)) (Option.some Config (Config.mk w n2 e2))))
+  (simp [step, hq, stepOut, chkStep])
+  (exact (Progress.steps (Config.mk w n t) (Config.mk w n2 e2)
+           (Step.mk (Config.mk w n t) (Config.mk w n2 e2) hs)))
+  (exact (Progress.extrusion w n t head tail n2 e2 hq)))
 
 (a/theorem progress [w :- World, n :- Nat, t :- Tm, hw :- (WSW w), ht :- (WS 0 t)]
   (Progress (Config.mk w n t))
@@ -335,7 +574,8 @@
   (revert heq) (apply progress-next)
   (revert heq) (apply progress-eff)
   (have hs (Not (= Stuck s Stuck.scope))) (rw [heq] at hok) (cases hok) (assumption)
-  (revert heq) (apply progress-stuck) (assumption))
+  (revert heq) (apply progress-stuck) (assumption)
+  (revert heq) (apply progress-chk))
 
 ;; ---------------------------------------------------------------------------
 ;; (d) The s-m-n law for the trivial specializer, as step equivalence.
@@ -359,12 +599,12 @@
                       vx :- (= Bool (isVal x) Bool.true)]
   (Step (Config.mk w n (Tm.app (Tm.specialize p m) x))
         (Config.mk w n (Tm.app (Tm.lam (Tm.app (Tm.app p m) (Tm.var 0))) x)))
-  (have rp (= Out (run1 w n p) Out.val)) (exact (isVal-run1 w n p vp))
-  (have rm (= Out (run1 w n m) Out.val)) (exact (isVal-run1 w n m vm))
-  (have rx (= Out (run1 w n x) Out.val)) (exact (isVal-run1 w n x vx))
+  (have rp (= Out (ev w n p 0) Out.val)) (exact (isVal-run1 w n p vp))
+  (have rm (= Out (ev w n m 0) Out.val)) (exact (isVal-run1 w n m vm))
+  (have rx (= Out (ev w n x 0) Out.val)) (exact (isVal-run1 w n x vx))
   (have r1 (= (Option Config) (step (Config.mk w n (Tm.app (Tm.specialize p m) x)))
               (Option.some Config (Config.mk w n (Tm.app (Tm.lam (Tm.app (Tm.app p m) (Tm.var 0))) x)))))
-  (simp [step, stepOut, run1, seq2, frame, rp, rm, rx])
+  (simp only [step, run1, ev]) (rw [rp, rm, rx])
   (exact (Step.mk _ _ r1)))
 
 ;; ... which, applied to a value, beta-reduces to (p m x): p and m are closed.
@@ -372,13 +612,15 @@
                       hp :- (WS 0 p), hm :- (WS 0 m), vx :- (= Bool (isVal x) Bool.true)]
   (Step (Config.mk w n (Tm.app (Tm.lam (Tm.app (Tm.app p m) (Tm.var 0))) x))
         (Config.mk w n (Tm.app (Tm.app p m) x)))
-  (have rx (= Out (run1 w n x) Out.val)) (exact (isVal-run1 w n x vx))
+  (have rx (= Out (ev w n x 0) Out.val)) (exact (isVal-run1 w n x vx))
   (have cp (= Tm (substF x p 0) p)) (exact (substF-closed x p 0 hp))
   (have cm (= Tm (substF x m 0) m)) (exact (substF-closed x m 0 hm))
   (have r2 (= (Option Config) (step (Config.mk w n (Tm.app (Tm.lam (Tm.app (Tm.app p m) (Tm.var 0))) x)))
               (Option.some Config (Config.mk w n (Tm.app (Tm.app p m) x)))))
-  (simp [step, stepOut, run1, seq2, frame, rx, beta, subst, substF, substVar, cp, cm])
-  (rw [cp, cm])
+  ;; ansatz-specific: `simp [ev, ..]` leaves the level abstraction
+  ;; `(fun l => ..) 0` unreduced, so the outcome is unfolded by hand and the
+  ;; rest closes by rw (which tries rfl).
+  (simp only [step, run1]) (simp only [ev]) (rw [rx]) (rw [cp, cm])
   (exact (Step.mk _ _ r2)))
 
 ;; s-m-n (MC I eq. 12, trivial specializer): ((specialize p m) x) reduces to (p m x).

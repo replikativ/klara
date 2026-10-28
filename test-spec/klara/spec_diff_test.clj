@@ -225,8 +225,16 @@
    :eq-on-code
    "T0's = is clojure.core/= on any values; the spec's = is defined on datums only (:prim-type otherwise)"})
 
+(defn in-fragment?
+  "Programs whose op names fall in an ambient namespace of klara.core
+  (world host exn time stage auth) are outside the formal fragment: the
+  spec has no ambient operations except as unhandled `perform nil`, and
+  the authority operations of S6 (`:auth/*`) are not modelled."
+  [{:keys [program]}]
+  (not-any? #(and (keyword? %) (c/ambient? %)) (tree-seq coll? seq program)))
+
 (defn compare-all []
-  (vec (for [p (load-programs)]
+  (vec (for [p (load-programs) :when (in-fragment? p)]
          (let [s (run-spec p) t (run-t0 p)]
            {:name (:name p) :spec s :t0 t :expect (:expect p)
             :agree (= s t) :known (known-differences (:name p))}))))
