@@ -354,3 +354,12 @@
   (let [b (or (when (closure? f) (closure-basis f)) *basis* w/empty-root)]
     (binding [*basis* b]
       (drive (call-value* f args {:locals [] :basis b :mint b} '())))))
+
+;; ---------------------------------------------------------------------------
+;; printing (the REPL and code printer rely on these)
+;; ---------------------------------------------------------------------------
+
+(defmethod print-method Closure [_ ^java.io.Writer w] (.write w "#<fn>"))
+(defmethod print-method Pap [_ ^java.io.Writer w] (.write w "#<fn>"))
+(defmethod print-method Instance [_ ^java.io.Writer w] (.write w "#<handler>"))
+(defmethod print-method Cont [_ ^java.io.Writer w] (.write w "#<continuation>"))
