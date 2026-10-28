@@ -234,16 +234,22 @@ definition of affinity.
    boundary contracts; a JVM emitter test showing no allocation in an affine
    loop.
 
+The first S10 milestone implements item 1 at the store/host API boundary;
+items 2–7 remain unfinished. See
+[`doc/background/impl/S10.md`](../doc/background/impl/S10.md) for the exact
+boundary, tests, and the reason owned operations are not yet exposed as
+language effects.
+
 ## 8. Obligations
 
 | Id | Obligation | Status |
 |---|---|---|
-| AF1 | Owned transitions preserve value semantics (erase annotations ⇒ same observations) | Open |
+| AF1 | Owned transitions preserve value semantics (erase annotations ⇒ same observations) | Store-level functional reference tested in S10; language erasure open |
 | AF2 | The checker is sound: `⊢ r : affine` ⇒ the handler never fails on `r` | Open |
 | AF3 | Check erasure: `⟦erase(r)⟧ = ⟦r⟧` for checked regions | Open (follows from AF2) |
-| AF4 | Forks reject full shares and split read fractions; mass of fractions conserved | Open |
+| AF4 | Forks reject full shares and split read fractions; mass of fractions conserved | Store transitions tested (S10): nested forks, shots, adoption/discard, seeded walk; language integration open |
 | AF5 | Boundary contracts catch every violated assumption at the dynamic/static boundary | Open |
-| AF6 | No continuation is captured through a frame holding a full share | Open |
+| AF6 | No continuation is captured through a frame holding a full share | Full-share fork and second-shot admission tested at store level (S10); general-effect capture restriction open |
 | AF7 | In-place representation on each emitter is observationally equal to the functional update | Open |
 | AF8 | Inferred and declared modes agree on accepted regions | Open |
 | AF9 | Transients of every persistent collection are owned regions: edit tokens bound to the owned authority, never to a host thread; `persistent!` is freeze | Open (PSS uses a thread token today) |

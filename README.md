@@ -40,6 +40,9 @@ What makes it different from Clojure:
 - authorities and forks (RFC 0001) enforced dynamically in T0: authority
   tokens in a store, the `fork` form with `adopt!`, settlement that fails
   closed, fork-resume admission, deferred irreversible effects (S6);
+- owned cells and fractional read loans in that authority store (S10,
+  first milestone); affine surface syntax, effect restrictions and static
+  checking are not yet connected to T0;
 - the generator-independent parts of a compiling tier (S7): executable
   validity checked once per basis root, speculative executables whose
   guards inside the body deopt to T0 from frame states (effects already
