@@ -1,0 +1,11 @@
+{:paths ["src"]
+ :deps {org.clojure/clojure {:mvn/version "1.12.0"}
+        org.replikativ/ansatz {:local/root "../../ansatz"}}
+ :aliases
+ {:test {:extra-paths ["test"]
+         :jvm-opts ["--enable-native-access=ALL-UNNAMED" "-Xss16m"]
+         :main-opts ["-m" "klara.spec.run-tests"]}
+  :repl {:extra-paths ["test"]
+         :extra-deps {nrepl/nrepl {:mvn/version "1.3.0"}}
+         :jvm-opts ["--enable-native-access=ALL-UNNAMED" "-Xss16m"]
+         :main-opts ["-m" "nrepl.cmdline" "--port" "7891"]}}}
