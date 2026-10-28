@@ -23,7 +23,10 @@
     (prim op a b)               op in + - * = <
     (perform h :op v)           h a capability; h = nil for an ambient op
     (handle [h] body {:return (fn [x] r) :op1 (fn [v k] e) ...})
-    (specialize p m)"
+    (specialize p m)
+    (code e)                    staging (S5): bracket
+    (esc e)                     splice (inside code)
+    (run e)                     run closed code"
   (:require [klara.spec.core :as k]))
 
 ;; ---------------------------------------------------------------------------
@@ -35,7 +38,10 @@
 
 (def ^:private tm-tag
   {:var 0 :lit 1 :lam 2 :app 3 :let 4 :if 5 :letrec 6 :resolve 7 :prim 8
-   :perform 9 :handle 10 :specialize 11 :fix 12 :cap 13 :handling 14})
+   :perform 9 :handle 10 :specialize 11 :fix 12 :cap 13 :handling 14
+   :code 15 :esc 16 :run 17 :gvar 18 :nlam 19 :nlet 20 :nletrec 21 :nhandle 22})
+
+(def ^:private tag-name (zipmap (vals tm-tag) (keys tm-tag)))
 
 (defn- tm [tag & fields] (into [(tm-tag tag)] fields))
 
@@ -117,6 +123,9 @@
                      (parse* ctx (conj env x) r)
                      (handler-clause ctx env clauses)))
         specialize (let [[p m] args] (tm :specialize (parse* ctx env p) (parse* ctx env m)))
+        code (tm :code (parse* ctx env (first args)))
+        esc (tm :esc (parse* ctx env (first args)))
+        run (tm :run (parse* ctx env (first args)))
         ;; application, curried
         (reduce (fn [f a] (tm :app f (parse* ctx env a)))
                 (parse* ctx env head) args)))
@@ -137,14 +146,42 @@
 ;; ---------------------------------------------------------------------------
 ;; Running and observing
 
+(defn decode-datum [[tag x]]
+  (case (int tag) 0 nil 1 x 2 (let [i (bigint x)] (if (< (abs i) Long/MAX_VALUE) (long i) i))))
+
+(defn tm->edn
+  "A de Bruijn Tm as readable EDN: [:lam [:app [:var 0] [:lit 1]]]. Op tags
+  and world ids stay numbers. Used to compare generated code with T0."
+  [t]
+  (let [[tag & fs] t
+        nm (tag-name (int tag))]
+    (case nm
+      :lit [:lit (decode-datum (first fs))]
+      (:var :resolve :gvar :cap) [nm (long (first fs))]
+      :prim [:prim ({nil '+ 1 '- 2 '* 3 '= 4 '<} (some-> (first fs) int)) (tm->edn (nth fs 1)) (tm->edn (nth fs 2))]
+      :perform (into [:perform (long (first fs))] (map tm->edn (rest fs)))
+      (:handling :nlam :nlet :nletrec :nhandle) (into [nm (long (first fs))] (map tm->edn (rest fs)))
+      (into [nm] (map tm->edn fs)))))
+
+(defn decode-code
+  "Observation of a code value: its term in de Bruijn form, or :klara/open-code
+  when it mentions a generated name that no binder inside it binds."
+  [u]
+  (let [d (k/toDB u)]
+    (if ((k/wsbF d) 0)
+      {:klara/code (tm->edn d)}
+      :klara/open-code)))
+
 (defn decode-value [v]
   (case (int (first v))
-    1 (let [[_ [tag x]] v] (case (int tag) 0 nil 1 x 2 (let [i (bigint x)] (if (< (abs i) Long/MAX_VALUE) (long i) i))))
+    1 (decode-datum (second v))
     (2 12) :klara/fn
     13 :klara/cap
+    15 (decode-code (second v))
     {:klara/term v}))
 
-(def ^:private stuck-name {0 :scope 1 :not-fn 2 :prim-type 3 :bad-target 4 :unbound})
+(def ^:private stuck-name {0 :scope 1 :not-fn 2 :prim-type 3 :bad-target 4 :unbound
+                           5 :stage 6 :lift 7 :scope-extrusion})
 
 (defn observe
   "Classify a terminal configuration."
@@ -160,7 +197,9 @@
             {:stuck :unhandled-instance :op (op-name op)}))
       3 (let [[_ [s id]] out]
           (cond-> {:stuck (stuck-name (int s))}
-            (= 4 (int s)) (assoc :id (get (zipmap (vals ids) (keys ids)) id id)))))))
+            (= 4 (int s)) (assoc :id (get (zipmap (vals ids) (keys ids)) id id))))
+      ;; a splice of code that mentions a dead generated name
+      4 {:stuck :scope-extrusion})))
 
 (defn run
   "Run program `form` (with optional world map) for at most `fuel` steps.
