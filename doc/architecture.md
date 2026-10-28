@@ -429,3 +429,48 @@ Implementation steps and where they stand:
 | S3 | map/filter/reduce fusion as a law-licensed rewrite with an ansatz certificate | done (`background/impl/S3.md`) |
 | staging | code values, `code`/`esc`/`run`/`lift`, let-insertion, the REPL and transcript harness | implemented (`guide/05-staging.md`); not yet in the formal spec |
 | next | authority accounting (RFC 0001), op classes, a T1 emitter | design |
+
+## JIT primitives the staging mechanism must provide (from research notes K and M, 2026-10-28)
+
+Notes K (GraalVM/Truffle) and M (V8) arrive independently at the same list:
+
+1. **Per-root validity caching.** Worlds are immutable, so an executable's
+   validity depends only on the basis root: check once per root, cache the
+   verdict. Avoids both per-entry re-checking of every global (S1 today) and
+   V8-style killing of dependent code (which breaks gate R1).
+2. **Frame states and `deopt`.** Entry-only guards can speculate on arguments,
+   captures and handlers but not on intermediate values, where most speed
+   comes from. Generated code carries frame states and rebuilds a T0 machine
+   state on a cold path (T0 continuations are data, so no special emitter is
+   needed). The same mechanism serves deopt, capturing a continuation for a
+   general effect, forking, and inspection.
+3. **Site identity and feedback.** Content-addressed CodeIds merge identical
+   code at different call sites, so feedback is keyed by (CodeId, site);
+   monotone, capped. Feedback is a separate predictor rung (3a): always on,
+   nanoseconds.
+4. **Assumptions in code values**, re-checked at install; pinned bases make
+   V8-style lazy deopt (stack patching) unnecessary as long as assumptions
+   range only over world cells, shape versions and immutable data.
+5. **`run` that compiles and installs**, with pure specialization jobs
+   installed by compare-and-set (concurrent, never on the critical path).
+6. **OSR** via self tail calls through the entry hook, taking the
+   interpreter's loop bindings.
+7. **Aging/eviction** and at most ~4 cache entries per function.
+8. **Post-PE optimization matters most** (K, PLDI 2017 measurements): escape
+   analysis gives an order of magnitude, assumption folding 2–3×; partial
+   evaluation alone removes little. Klara's `specialize` must feed a real
+   optimizer, not stop at partial application.
+
+On the JVM, HotSpot is the optimizing tier; Klara's T2 fills the
+Maglev-like mid-tier slot. No separate mid tier.
+
+## Web targets (research note L)
+
+JS first: collapsed ES modules (closed-world, every baked assumption
+recorded, results identical to T0) and a dynamic mode in which the JVM
+compiles each definition to a module the page loads by URL (works under a
+strict CSP; the compiler is never shipped). WasmGC for numeric kernels only.
+Avoid ClojureScript's top-level registration pattern, the main source of its
+payload. Multi-shot effects need CPS or replay on every web target (JSPI and
+Wasm stack switching are one-shot). Size precedents: squint 2.0 KB gzip hello
+world, cljs advanced ~23 KB, immutable.js Map alone 18.6 KB.
