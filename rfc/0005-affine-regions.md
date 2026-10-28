@@ -260,3 +260,18 @@ definition of affinity.
    (Carp/Rust style, later)?
 5. Native lowering: which subset of the checker's derivations can be handed
    to metacarp so Carp's checker re-verifies rather than trusts (note N)?
+
+## 10. Decisions (Christian, 2026-10-28)
+
+- **Surface**: carpaccio style (`defaffine`-like forms) and metadata hints on
+  symbols (`^:own`, `^:borrow`, `^:move`).
+- **No reliance on metacarp for affinity.** Klara has its own checker, with
+  its rules written in Klara's docs and spec and its derivations as
+  inspectable EDN data. The JVM (via Clojure) is the first and reference
+  emitter; metacarp remains an optional native emitter later. Reason: metacarp
+  is an external native dependency requiring a C compiler, and Klara's
+  semantics must be transparent and self-contained.
+- **Borrow lifetimes**: lexical first; named lifetimes later (when views or
+  slices into owned buffers need to be returned from functions).
+- Open, under discussion: effects inside islands (Q2), top-level strictness
+  (Q3).
