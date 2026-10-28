@@ -41,9 +41,9 @@ What makes it different from Clojure:
 - authorities and forks (RFC 0001) enforced dynamically in T0: authority
   tokens in a store, the `fork` form with `adopt!`, settlement that fails
   closed, fork-resume admission, deferred irreversible effects (S6);
-- owned cells and fractional read loans in that authority store (S10,
-  first milestone); affine surface syntax, effect restrictions and static
-  checking are not yet connected to T0;
+- affine regions (S10): owned cells and fractional lexical read loans,
+  effect admission before capture, parameter contracts, an EDN checker for
+  a first fragment, checked erasure and licensed JVM buffer updates;
 - the generator-independent parts of a compiling tier (S7): executable
   validity checked once per basis root, speculative executables whose
   guards inside the body deopt to T0 from frame states (effects already
@@ -51,8 +51,8 @@ What makes it different from Clojure:
 - the formal small-step semantics of the core in ansatz, with determinism,
   progress, preservation of scoping and the s-m-n law proved (`spec/`).
 
-What is **design only**: the static affine layer and `fork-following` of
-RFC 0001, authorities in the formal semantics, effect
+What is **design only**: broader affine inference and owned boundary erasure,
+`fork-following` of RFC 0001, authorities in the formal semantics, effect
 general compiled effect handling (RFC 0002), full T1/T2 coverage and unboxed
 layouts, the predictor ladder, adequacy
 of a denotational model, and hosts other than the JVM. The guide marks

@@ -240,13 +240,13 @@ normally (example 7 relies on this).
 
 ## Not yet implemented
 
-- **Operation classes.** RFC 0002 classifies each operation as
-  tail-resumptive, abortive or general at definition time, so that the
-  compiler can turn the first two into direct calls and confine
-  continuation capture to narrow regions. T0 captures continuations for
-  every perform; there is no `defeffect` declaration yet.
-- **Dispatch erasure** by specializing a region per handler context.
-- **The authority restriction on multi-shot resumption** (RFC 0001): a
-  continuation that holds a resource should not be resumed twice. T0 does
-  not check it.
+- **Operation declarations.** There is no `defeffect` declaration yet.
+  The compiler recognizes a structural tail/abort fragment. T0 uses a
+  conservative structural classifier before capture in owned regions;
+  general clauses cannot capture a full write share (see chapter 9).
+- **General dispatch erasure** by specializing a region per handler context.
+  The compiler already emits direct calls for its lexical tail/abort fragment.
 - `:time/*` operations, `finally`.
+
+Resource/evidence/full-owned fork-resume restrictions are enforced by T0
+(RFC 0001, S6/S10); chapter 4 covers admission and settlement.
