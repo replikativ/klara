@@ -7,6 +7,22 @@
 (def pure-functions
   (into {} (for [s (keys c/prims)] [(symbol "clojure.core" (name s)) s])))
 
+(def ^:private scalar-classes
+  (set (map class [true 1 (int 1) (short 1) (byte 1) 1.0 (float 1.0)
+                   1N 1M 1/2 (biginteger 1) "" \a :k 's])))
+(def ^:private collection-classes
+  (set (map class [[] {} #{} (list 1) '() (vec (range 40)) (into {} (map #(vector % %) (range 40)))])))
+
+(defn value?
+  "Closed immutable host data admitted by the erased boundary. Exact
+  classes exclude user implementations of collection/number protocols;
+  lazy sequences and arbitrary host objects fall back before effects."
+  [v]
+  (or (nil? v) (contains? scalar-classes (class v))
+      (and (contains? collection-classes (class v))
+           (if (map? v) (every? (fn [[k x]] (and (value? k) (value? x))) v)
+             (every? value? v)))))
+
 (defn check
   "Return an EDN derivation or nil (:inferred, default). :declared throws
   diagnostics with a source path. Parameters are copyable inputs; owned
@@ -37,9 +53,7 @@
                        (case (:op t)
                          :quote (do
                                   ;; Host objects (including authority tokens) are not static constants.
-                                  (when-not (every? #(or (nil? %) (boolean? %) (number? %) (string? %)
-                                                        (char? %) (keyword? %) (symbol? %) (coll? %))
-                                                   (tree-seq coll? seq (:datum t)))
+                                  (when-not (value? (:datum t))
                                     (fail p "opaque constant")) value)
                          :local (let [v (nth env (- (count env) 1 (:index t)))]
                                   (when (owned? v) (live! v p)) v)
@@ -129,7 +143,7 @@
            (copyable! result [])
            (when (some #(= :live (:status %)) (vals @state))
              (fail [] "owned place must be frozen or dropped before region exit"))
-           {:checker version :code-id (c/code-id term) :rules @rules :exit @state})))
+           {:checker version :inputs :closed-immutable-data :code-id (c/code-id term) :rules @rules :exit @state})))
      (catch clojure.lang.ExceptionInfo e
        (when (= mode :declared) (throw e))))))
 

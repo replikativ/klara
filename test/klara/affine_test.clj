@@ -164,4 +164,79 @@
     (is (= [[2]]
            (run '(fork [a (let [o (own 1)]
                            (update! o (fn [v] (+ v 1)))
-                           [(freeze o)])])))))))
+                           [(freeze o)])]))))))
+
+(deftest seeded-af1-af3-observation-traces
+  ;; Ordered persistent snapshots are observable traces in the pure static
+  ;; fragment. Compare against an independently functional accumulator.
+  (let [random (java.util.Random. 105)]
+    (dotimes [_ 40]
+      (let [steps (vec (repeatedly (+ 1 (.nextInt random 12)) #(.nextInt random 100)))
+            form (list 'fn []
+                       (list 'let ['o (list 'own [])]
+                         (list 'let
+                           (vec (mapcat (fn [i n]
+                                          [(symbol (str "write" i)) (list 'update! 'o 'conj n)
+                                           (symbol (str "snapshot" i)) (list 'read 'o)]) (range) steps))
+                           (list 'vector
+                                 (cons 'vector (map #(symbol (str "snapshot" %)) (range (count steps))))
+                                 (list 'freeze 'o)))))
+            term (x/expand-expr form w/empty-root) d (affine/check term :declared)
+            expected [(vec (rest (reductions conj [] steps))) steps]]
+        (binding [a/*store* (a/new-store)]
+          (is (= expected (ev/call-value (ev/run term) [])))
+          (doseq [in-place? [true false]]
+            (is (= expected ((eval (:form (erase/erase term d {:in-place? in-place?}))))))))))))
+
+(deftest opaque-inputs-keep-boundary-checks
+  (let [events (atom [])
+        probe (reify clojure.lang.Counted
+                (count [_] (swap! events conj :count) 2))
+        term (x/expand-expr '(fn [probe]
+                              (let [o (own 0)]
+                                (update! o + (count probe)) (freeze o))) w/empty-root)
+        d (affine/check term :declared) erased (eval (:form (erase/erase term d)))]
+    (is (false? (affine/value? probe)))
+    (binding [a/*store* (a/new-store)]
+      (is (= 2 (ev/call-value (ev/run term) [probe])))
+      (is (= [:count] @events))
+      (reset! events [])
+      (is (= 2 (erased probe)))
+      (is (= [:count] @events)))))
+
+(deftest captured-borrow-cancels-nested-forks
+  (binding [a/*store* (a/new-store)]
+    (is (= [42]
+           (run '(let [o (own [42])]
+                   (handle [h {:abort (fn [k] :done)}]
+                     (borrow [x o]
+                       (fork [a (do (read x) (perform h :abort)) b (read x)])))
+                   (freeze o)))))
+    (is (= [42]
+           (run '(let [o (own [42])]
+                   (handle [h {:escape (fn [k] k)}]
+                     (borrow [x o]
+                       (fork [a (do (read x) (perform h :escape)) b (read x)])))
+                   (freeze o)))))))
+
+(deftest lexical-borrow-of-fork-fractions
+  (binding [a/*store* (a/new-store)]
+    (is (= [[42 42] 42]
+           (run '(let [o (own 42)]
+                   (let [results (borrow [x o]
+                                   (fork [a (borrow [y x] (read y))
+                                          b ((fn [^:borrow y] (read y)) x)]))]
+                     [results (freeze o)])))))))
+
+(deftest erased-errors-match-t0
+  (doseq [form ['(fn [] (let [o (own [9223372036854775807])]
+                         (update! o (fn [v] (assoc v 0 (inc (nth v 0)))))
+                         (freeze o)))
+               '(fn [] (let [o (own 0)] (update! o (fn [v] (/ v 0))) (freeze o)))]]
+    (let [term (x/expand-expr form w/empty-root) d (affine/check term :declared)
+          observe (fn [f] (try (f) :unexpected-success
+                              (catch Throwable e [(class e) (ex-message e)])))
+          checked (binding [a/*store* (a/new-store)]
+                    (observe #(ev/call-value (ev/run term) [])))]
+      (doseq [in-place? [true false]]
+        (is (= checked (observe (eval (:form (erase/erase term d {:in-place? in-place?}))))))))))

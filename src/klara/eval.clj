@@ -980,7 +980,7 @@
     (let [frames (all-frames k)]
       (case op
         :own/borrow (let [[token body] args
-                          loan (a/borrow-owned! token 1 frames)]
+                          loan (a/borrow-owned! token frames)]
                       (call-value* body [loan] env (conj k {:tag :borrow :loan loan :env env})))
         :auth/fork (let [[opts thunks body-fn] args
                          thunks (vec thunks)

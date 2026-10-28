@@ -711,7 +711,9 @@
   "Lend exact rational fraction q of t to a lexical scope. Returns a read
   token, even when q = 1. The caller MUST return it with return-owned! on
   normal and exceptional scope exit. Nested read loans are supported."
-  [t q frames]
+  ([t frames]
+   (borrow-owned! t (get-in (usable t (ctx-chain frames) #{:owned} "borrow") [:payload :share]) frames))
+  ([t q frames]
   (when-not (and (rational? q) (< 0 q) (<= q 1))
     (fail "borrow requires a rational fraction in (0,1]"))
   (let [chain (ctx-chain frames)
@@ -735,7 +737,7 @@
                                      (assoc-in [:payload :lent cid] q)))))))
         cid (:next n)]
     (when-let [ctx (first chain)] (swap! (:owned ctx) conj cid))
-    (Auth. cid :owned)))
+    (Auth. cid :owned))))
 
 (defn return-owned!
   "Close a lexical read loan exactly once, restoring its parent's share.

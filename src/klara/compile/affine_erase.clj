@@ -39,6 +39,11 @@
                                            (some? (increment-index (second (:args t)) (count v)))))) uses))]
         [path {:rep :long-vector :length (count v)}]))))
 
+(defn fallback
+  "Opaque inputs retain T0's dynamic checks and effect admission."
+  [term args]
+  (ev/call-value (ev/run term) args))
+
 (defn erase
   "Verify a derivation, then emit check-free Clojure forms. :in-place? false
   selects the functional boxed representation for differential testing.
@@ -70,8 +75,11 @@
                                    (vec (repeatedly (:arity t) #(gensym "raw"))) ps)
                              b (:form (emit (:body t) (into env (map #(hash-map :form %) ps)) (conj p :body) true))]
                          {:form (list 'fn raw
-                                      (if (= ps raw) b
-                                        (list 'let (vec (mapcat (fn [p r] [p (list 'long r)]) ps raw)) b)))})
+                                      (list 'if
+                                            (if (empty? env) (list 'every? 'klara.affine/value? raw) true)
+                                            (if (= ps raw) b
+                                              (list 'let (vec (mapcat (fn [p r] [p (list 'long r)]) ps raw)) b))
+                                            (list 'klara.compile.affine-erase/fallback (list 'quote t) raw)))})
                    :letrec
                    (let [f (first (:inits t)) call (:body t)
                          ps (vec (repeatedly (:arity f) #(gensym "index")))
