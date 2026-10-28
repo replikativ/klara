@@ -187,4 +187,6 @@
 
 (ev/register-reference-handler!
  :world/invalidate
- (fn [[sym] _] (invalidate! (current-world) sym)))
+ (fn [args _]
+   (let [[target sym] (if (= 2 (count args)) args [nil (first args)])]
+     (invalidate! (if target (:world (fiber-of target)) (current-world)) sym))))
