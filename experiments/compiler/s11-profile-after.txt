@@ -1,0 +1,22 @@
+[0.002s][warning][perf,memops] Cannot use file /tmp/hsperfdata_christian-weilbach/2 because it is locked by another process (errno = 11)
+#'klara.compile-bench/run!
+#'klara.compile-profile/run!
+{:java 25.0.1, :clojure 1.12.4, :warmup 10000, :batches 9, :calls 10000}
+{:input 0, :form (clojure.core/fn [v3486] (clojure.core/let [initial3492 v3486 initial3493 (quote 0)] (if (clojure.core/and (clojure.core/instance? Long initial3492) (clojure.core/instance? Long initial3493)) (clojure.core/loop [v3490 (clojure.core/long initial3492) v3491 (clojure.core/long initial3493)] (if (clojure.core/> v3490 (quote 0)) (recur (clojure.core/dec v3490) (clojure.core/+ v3491 v3490)) v3491)) (clojure.core/letfn [(v3489 [v3490 v3491] (if (clojure.core/or (clojure.core/and klara.stage/*feedback* (clojure.core/not (klara.stage/speculate? klara.stage/*feedback* [dc881bc439b17e1971eb939d5934b2de84a0bc693091224427d10b5830dfd729 (quote [:body :body :body :inits 0 :body])]))) (clojure.core/and (clojure.core/instance? java.lang.Long v3490) (clojure.core/instance? java.lang.Long v3491))) (if (clojure.core/> v3490 (quote 0)) (recur (clojure.core/dec v3490) (clojure.core/+ v3491 v3490)) v3491) (klara.eval/deopt! 0 [v3486 (quote 0) v3490 v3491])))] (v3489 initial3492 initial3493)))))}
+:plain {:ns 50.6419, :bytes 0.0056}
+:emitted {:ns 19.1968, :bytes 0.0056}
+:wrapper {:ns 35.5464, :bytes 0.0056}
+:entry {:ns 1444.0086, :bytes 576.0056}
+:compiled {:ns 4034.6867, :bytes 4408.0056}
+{:input 200, :form (clojure.core/fn [v3520] (clojure.core/let [initial3526 v3520 initial3527 (quote 0)] (if (clojure.core/and (clojure.core/instance? Long initial3526) (clojure.core/instance? Long initial3527)) (clojure.core/loop [v3524 (clojure.core/long initial3526) v3525 (clojure.core/long initial3527)] (if (clojure.core/> v3524 (quote 0)) (recur (clojure.core/dec v3524) (clojure.core/+ v3525 v3524)) v3525)) (clojure.core/letfn [(v3523 [v3524 v3525] (if (clojure.core/or (clojure.core/and klara.stage/*feedback* (clojure.core/not (klara.stage/speculate? klara.stage/*feedback* [dc881bc439b17e1971eb939d5934b2de84a0bc693091224427d10b5830dfd729 (quote [:body :body :body :inits 0 :body])]))) (clojure.core/and (clojure.core/instance? java.lang.Long v3524) (clojure.core/instance? java.lang.Long v3525))) (if (clojure.core/> v3524 (quote 0)) (recur (clojure.core/dec v3524) (clojure.core/+ v3525 v3524)) v3525) (klara.eval/deopt! 0 [v3520 (quote 0) v3524 v3525])))] (v3523 initial3526 initial3527)))))}
+:plain {:ns 106.1971, :bytes 24.0056}
+:emitted {:ns 98.631, :bytes 24.0056}
+:wrapper {:ns 104.3808, :bytes 24.0056}
+:entry {:ns 279.9671, :bytes 528.0056}
+:compiled {:ns 1535.8035, :bytes 4432.0056}
+{:input 2000, :form (clojure.core/fn [v3554] (clojure.core/let [initial3560 v3554 initial3561 (quote 0)] (if (clojure.core/and (clojure.core/instance? Long initial3560) (clojure.core/instance? Long initial3561)) (clojure.core/loop [v3558 (clojure.core/long initial3560) v3559 (clojure.core/long initial3561)] (if (clojure.core/> v3558 (quote 0)) (recur (clojure.core/dec v3558) (clojure.core/+ v3559 v3558)) v3559)) (clojure.core/letfn [(v3557 [v3558 v3559] (if (clojure.core/or (clojure.core/and klara.stage/*feedback* (clojure.core/not (klara.stage/speculate? klara.stage/*feedback* [dc881bc439b17e1971eb939d5934b2de84a0bc693091224427d10b5830dfd729 (quote [:body :body :body :inits 0 :body])]))) (clojure.core/and (clojure.core/instance? java.lang.Long v3558) (clojure.core/instance? java.lang.Long v3559))) (if (clojure.core/> v3558 (quote 0)) (recur (clojure.core/dec v3558) (clojure.core/+ v3559 v3558)) v3559) (klara.eval/deopt! 0 [v3554 (quote 0) v3558 v3559])))] (v3557 initial3560 initial3561)))))}
+:plain {:ns 847.322, :bytes 19.6608}
+:emitted {:ns 784.3181, :bytes 24.0056}
+:wrapper {:ns 794.2006, :bytes 24.0056}
+:entry {:ns 266.7446, :bytes 528.0056}
+:compiled {:ns 2027.3535, :bytes 4432.0056}
