@@ -273,5 +273,34 @@ definition of affinity.
   semantics must be transparent and self-contained.
 - **Borrow lifetimes**: lexical first; named lifetimes later (when views or
   slices into owned buffers need to be returned from functions).
-- Open, under discussion: effects inside islands (Q2), top-level strictness
-  (Q3).
+- **Effects inside islands (Q2)**: only tail-resumptive and abortive
+  operations for now; one-shot general effects (`await` for I/O into owned
+  buffers) later; multi-shot only with an explicit copy per resumption, if ever.
+- **Tracking (Q3)**: opt-in per value — only values created as owned are
+  tracked; a strict opt-out (Carp/Rust) mode may come later per module.
+
+## 11. Direction: language-level accounting (concept, not v1)
+
+Christian wants general accounting on the language level, as `kontor` does
+for dvergr. The resource-algebra reading of §2 already points there:
+
+- **Every authority kind is an account type**: a commutative monoid of
+  quantities plus a conservation law. Evidence (mass) and budget (vectors)
+  already are; owned shares (fractions) are too.
+- **Operations are postings**: fork splits a balance into child accounts,
+  settlement closes them, spending debits; the double-entry invariant
+  (debits = credits) is exactly the conservation obligations AU6 and budget
+  conservation. The authority store's receipts are the journal.
+- **Parametric (quantitative) ownership**: ownership types indexed by an
+  amount — `own[q]`, a budget `{:cpu 3 :eur 0.5}`, an evidence mass — are
+  graded/quantitative types (QTT, Granule; research note E). Leasing has a
+  price: a borrow can post a fee to a budget account for its duration.
+  (Veit's ownership annotations in metacarp are reportedly parametric in a
+  similar way — to look at when this is designed.)
+- **One ledger semantics** for the language (authorities) and for the
+  product (kontor/dvergr accounts) would let agents' spending, inference
+  evidence and memory ownership be audited with the same tools.
+
+This deserves its own RFC once affine regions exist; it is recorded here so
+the owned kind is designed as one account type among others, not a special
+case.
