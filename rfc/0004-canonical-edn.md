@@ -55,6 +55,38 @@ with documented exceptions where Klara keeps Clojure's distinctions (the open
 questions below). Klara's own collections' `hashCode` (Tier H contract) may be
 derived from the same normalization.
 
+## Building on hasch and boring (added 2026-10-28)
+
+Klara should build on replikativ's existing libraries rather than invent a
+new encoding:
+
+- **hasch** (`../hasch`, Christian's library; EPL-1.0 with a few outside
+  contributors, so Klara depends on it as a separate module unless it is
+  relicensed) already gives cross-platform (JVM/JS) deterministic hashing of
+  EDN, distinct tags for seqs and vectors, and **structural (merkle) hashing**
+  in `hasch.core`: replacing any subtree by its `HashRef` leaves the parent
+  hash unchanged. That property is valuable for Klara (incremental hashing of
+  worlds, code and receipts; hashing a stored value without loading it) and is
+  kept.
+- **boring** (deterministic CBOR, RFC 8949) is the natural wire format.
+
+Gaps between hasch and this RFC, to resolve in hasch (or a versioned hasch
+mode) rather than in Klara:
+
+1. **Numbers.** `hasch.core` encodes numbers via `pr-str`, so `1`, `(int 1)`
+   and `1N` may hash differently although they are Klara-`=`. Needs the
+   normalization in the table above.
+2. **Commutative combination.** hasch combines map entries and set elements by
+   **XOR of their hashes** (`benc.cljc`, `xor-hashes`). XOR (like any linear
+   combination) admits generalized-birthday collision construction (Wagner
+   2002) for adversarially chosen collections. For certificates and receipts,
+   which are security-relevant, combine the **sorted child hashes** instead
+   (hash of the concatenation of sorted entry hashes). This keeps the merkle
+   property — the parent depends only on child hashes, so `HashRef`
+   substitution still works — while removing the linear structure.
+3. **Metadata exclusion and code values** (α-canonical terms) as in the table.
+4. **Versioning tag** in every hash.
+
 ## Alternatives considered
 
 - **Clojure `hash`**: in-memory, 32-bit, platform-specific; not for storage.
@@ -81,8 +113,10 @@ derived from the same normalization.
 
 ## Open questions
 
-1. Lists vs vectors: Clojure's `=` equates `(1 2)` and `[1 2]`. Should identity
-   distinguish them (safer for code, which uses lists) or follow `=`?
+1. Lists vs vectors: Clojure's `=` equates `(1 2)` and `[1 2]`. hasch already
+   distinguishes them (separate tags); keep that (safer for code, which uses
+   lists)?
 2. BigDecimal scale: `1.0M` vs `1.00M` are not `=` in Clojure; keep scale?
 3. Strings: apply Unicode NFC or hash bytes as given?
-4. Deterministic CBOR as the concrete wire format, or a Klara-specific one?
+4. Wire format: deterministic CBOR via boring (recommended).
+5. Fix the gaps in hasch itself (a new versioned mode) or wrap it in Klara?

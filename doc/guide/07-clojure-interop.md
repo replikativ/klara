@@ -170,3 +170,12 @@ branches — until Klara's own compiler hosts them without the Clojure jar
 REPL commands are keywords in the `repl` namespace (`:repl/world`,
 `:repl/fork`, …), following clojure.main's `:repl/quit`; every other keyword
 is an ordinary value, as the first transcript above shows.
+
+## Surface syntax skins (planned)
+
+Klara's canonical syntax is S-expressions. Readable skins are a rendering
+concern, not a semantic one: **superficie** (`replikativ/superficie`, a
+bidirectional renderer between Clojure and a Python-like surface) can serve as
+a Klara skin for reading and writing. Because identity is computed on the
+α-canonical core term, the same program written in either skin has the same
+CodeId and the same certificates.
