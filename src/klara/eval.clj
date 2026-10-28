@@ -8,9 +8,27 @@
   env is {:locals [v ..] :basis root :mint root|nil}; kont is a list of
   frames (top first). Every frame is plain data, so a captured
   continuation is a vector of frames and resuming it pushes them back:
-  handlers are deep, resumption is multi-shot (T0 places no authority
-  restriction on it yet). Calls in tail position push no frame, so self
-  tail calls through letrec run in constant space (doc/01-core-v2 §1).
+  handlers are deep, resumption is multi-shot. Calls in tail position
+  push no frame, so self tail calls through letrec run in constant space
+  (doc/01-core-v2 §1).
+
+  AUTHORITY (RFC 0001, S6; the store and split rules are klara.authority).
+  - Resuming a continuation a SECOND time is fork-resume: it is refused
+    when the continuation captured a resource or evidence authority or
+    an open fork (found by walking its frames: locals, collections,
+    metadata, closures, nested continuations), and otherwise runs under
+    a :shot branch context, which splits the other kinds when they are
+    used (so an authority reached by a lookup after capture is checked
+    at its use).
+  - (perform :auth/fork opts thunks body) runs each thunk under a
+    {:tag :branch} frame of its own context, then the body with the
+    branch values under a {:tag :fork-scope} frame; returning through the
+    scope settles the group (adopted branch merged, others discarded).
+    An exception unwinding through a branch or scope frame discards the
+    group before it propagates (cancellation).
+  - An irreversible host call (klara.authority/irreversible?) reaching
+    the reference handler inside a fork branch is deferred as an intent;
+    under a {:tag :direct} frame it runs and leaves a receipt.
 
   EFFECTS (RFC 0002).
   - (handle :lexical ...) creates a fresh handler INSTANCE, binds it in
@@ -46,6 +64,7 @@
   guards hold; otherwise the generic path runs."
   (:require [clojure.main]
             [clojure.string]
+            [klara.authority :as a]
             [klara.core :as core]
             [klara.code :as code]
             [klara.world :as w]))
@@ -63,7 +82,8 @@
   performed no effect before declining (host executables perform none)."}
   deopt (Object.))
 
-(declare call-value call-value* locus-rec-call stage-perform start-code step-build step-ret-stage)
+(declare call-value call-value* locus-rec-call stage-perform auth-perform start-code step-build
+         step-ret-stage all-frames resume-blocker close-then-ret fork-continue)
 
 (defmacro ^:private ifn-via-call-value []
   `(~@(for [n (range 9)
@@ -83,7 +103,7 @@
 ;; Partial application: the reference meaning of specialize.
 (deftype-ifn Pap [f statics])
 
-(defrecord Cont [frames])
+(defrecord Cont [frames shots])           ; shots: atom counting resumptions
 (defrecord Instance [id mode])
 ;; The memoizing generator bound by with-genletrec (genletrec, S4).
 (deftype LocusRec [id])
@@ -183,27 +203,68 @@
           [(conj captured f) (pop k) f]
           (recur (pop k) (conj captured f)))))))
 
+(defn- unwind-frame? [f] (contains? #{:branch :fork-scope} (:tag f)))
+
+(defn- find-raise-frame
+  "Split kont at the first dynamic handler of :exn/raise or the first
+  branch/scope frame an exception must settle on its way out."
+  [k]
+  (loop [k k captured []]
+    (when (seq k)
+      (let [f (peek k)]
+        (cond
+          (and (= :handle (:tag f)) (= :dynamic (:mode f)) (contains? (:clauses f) :exn/raise))
+          [(conj captured f) (pop k) f]
+          (unwind-frame? f) [nil (pop k) f]
+          :else (recur (pop k) (conj captured f)))))))
+
+(defn- unwind!
+  "Settle the fork group of an unwind frame passed by an exception: a
+  fork is discarded, a shot ends."
+  [f outer]
+  (let [frames (all-frames outer)]
+    (if (= :branch (:tag f))
+      (let [ctx (:ctx f)]
+        (a/close-group! (:group ctx) frames (if (= :shot (:mode ctx)) :exit :abort)))
+      (a/close-group! (:group f) frames :abort))))
+
+(defn- reference-call
+  "Run reference handler h. An irreversible host call is deferred inside
+  a fork branch and leaves a receipt under a capability (RFC 0001)."
+  [h op args env k]
+  (let [[m x] (when (and (= :host/call op) (a/irreversible? (first args)))
+                (a/effect-mode (all-frames k)))]
+    (if (= :defer m)
+      [:ret (a/defer! x op args) env k]
+      (try (when (= :direct m) (a/direct-receipt! x (first args) (rest args)))
+           [:ret (h args env) env k]
+           (catch Throwable t (raise t env k))))))
+
 (defn- do-perform [target op args env k]
   (if target
     (if-let [[captured outer f] (and (instance? Instance target)
                                      (find-frame k #(= (:id target) (:id %))))]
       (if-let [cl (get (:clauses f) op)]
-        (call-value* cl (conj (vec args) (->Cont captured)) env outer)
+        (call-value* cl (conj (vec args) (->Cont captured (atom 0))) env outer)
         (raise (ex-info (str "klara: instance does not handle " op) {:op op}) env k))
       (raise (ex-info (str "klara: unhandled lexical effect " op
                            " (instance out of extent, or behind a host frame)")
                       {:op op :klara/error :unhandled}) env k))
     (if-let [[captured outer f]
-             (find-frame k #(and (= :dynamic (:mode %)) (contains? (:clauses %) op)))]
-      (call-value* (get (:clauses f) op) (conj (vec args) (->Cont captured)) env outer)
+             (if (= :exn/raise op)
+               (find-raise-frame k)
+               (find-frame k #(and (= :dynamic (:mode %)) (contains? (:clauses %) op))))]
+      (if (unwind-frame? f)
+        (do (try (unwind! f outer) (catch clojure.lang.ExceptionInfo _ nil))
+            (do-perform nil op args env outer))
+        (call-value* (get (:clauses f) op) (conj (vec args) (->Cont captured (atom 0))) env outer))
       (if (= :exn/raise op)
         (let [ex (first args)]
           (throw (if (instance? Throwable ex)
                    ex
                    (ex-info "klara: uncaught exception" {:klara/exn ex}))))
         (if-let [h (or (reference-handlers op) (@extra-handlers op))]
-          (try [:ret (h args env) env k]
-               (catch Throwable t (raise t env k)))
+          (reference-call h op args env k)
           (raise (ex-info (str "klara: no handler for " op) {:op op}) env k))))))
 
 ;; ---------------------------------------------------------------------------
@@ -253,7 +314,12 @@
       (enter-closure f args env k))
 
     (instance? Cont f)
-    [:ret (first args) env (into k (rseq (:frames f)))]
+    (if (= 1 (swap! (:shots f) inc))
+      [:ret (first args) env (into k (rseq (:frames f)))]
+      ;; fork-resume: a second resumption runs under a shot context
+      (if-let [why (resume-blocker (:frames f))]
+        (raise (ex-info (str "klara: " why) {:klara/error :authority}) env k)
+        [:ret (first args) env (into (conj k (assoc (a/shot-frame) :env env)) (rseq (:frames f)))]))
 
     (pap? f)
     (if-let [exe (enter-hook (pap-fn f) (pap-statics f) args
@@ -301,6 +367,7 @@
     :perform (cond
                (:target node) (do-perform (first vals) (:name node) (rest vals) env k)
                (= "stage" (namespace (:name node))) (stage-perform (:name node) vals env k)
+               (= "auth" (namespace (:name node))) (auth-perform (:name node) vals env k)
                :else (binding [*outer-k* (conj *outer-k* k)]
                        (do-perform nil (:name node) vals env k)))
     :specialize [:ret (Pap. (first vals) (vec (rest vals))) env k]
@@ -351,6 +418,12 @@
       :handle (if-let [r (:return f)]
                 (call-value* r [v] (:env f) k)
                 [:ret v nil k])
+      :branch (if (= :shot (:mode (:ctx f)))
+                (close-then-ret (:group (:ctx f)) v (:env f) k)
+                [:ret v nil k])
+      :fork-run (fork-continue f v k)
+      :fork-scope (close-then-ret (:group f) v (:env f) k)
+      :direct [:ret v nil k]
       (step-ret-stage f v k))))
 
 ;; ---------------------------------------------------------------------------
@@ -649,6 +722,107 @@
           (let [h (code/fresh "h")]
             (swap! (:state lf) #(-> % (assoc-in [:table key] h) (update :order conj h)))
             (call-value* f [key] env (conj k {:tag :locus-rec-bind :id (.-id g) :name h :env env}))))))))
+
+;; ---------------------------------------------------------------------------
+;; authority (S6): fork, adopt, direct, fork-resume admission
+;; ---------------------------------------------------------------------------
+;;
+;; Frames:
+;;   {:tag :fork-run ..}    collects branch values, starts the next branch
+;;   {:tag :branch :ctx c}  a branch context (fork or shot); klara.authority
+;;                          reads the chain of these from the continuation
+;;   {:tag :fork-scope ..}  the body that sees the branches; returning
+;;                          through it settles the group
+;;   {:tag :direct ..}      irreversible effects run under a capability
+
+(defn- close-then-ret [g v env k]
+  (try (a/close-group! g (all-frames k) :exit)
+       [:ret v env k]
+       (catch clojure.lang.ExceptionInfo e (raise e env k))))
+
+(defn- run-branch [g i vals thunks body-fn env k]
+  (call-value* (nth thunks i) [] env
+               (conj k
+                     {:tag :fork-run :group g :i i :vals vals :thunks thunks :body-fn body-fn :env env}
+                     {:tag :branch :ctx (a/group-ctx g i) :env env})))
+
+(defn- fork-scope [g vals body-fn env k]
+  (if body-fn
+    (call-value* body-fn (a/branches g vals) env (conj k {:tag :fork-scope :group g :env env}))
+    (close-then-ret g (vec vals) env k)))
+
+(defn- fork-continue [f v k]
+  (let [{:keys [group i vals thunks body-fn env]} f]
+    (if-not (a/group-open? group)
+      (raise (ex-info "klara: the fork has closed (a continuation captured in a branch was resumed after it)"
+                      {:klara/error :authority})
+             env k)
+      (let [vals (conj vals v)
+            i (inc i)]
+        (if (< i (count thunks))
+          (run-branch group i vals thunks body-fn env k)
+          (fork-scope group vals body-fn env k))))))
+
+(defn- auth-perform
+  "Ambient authority operations. They are not handled by user handlers:
+  an authority's state lives in the store, never in a handler."
+  [op args env k]
+  (try
+    (let [frames (all-frames k)]
+      (case op
+        :auth/fork (let [[opts thunks body-fn] args
+                         thunks (vec thunks)
+                         g (a/open-fork! opts (count thunks) frames)]
+                     (if (seq thunks)
+                       (run-branch g 0 [] thunks body-fn env k)
+                       (fork-scope g [] body-fn env k)))
+        :auth/adopt [:ret (a/adopt! (first args)) env k]
+        :auth/direct (let [[cap thunk] args
+                           id (a/check-capability! cap frames)]
+                       (call-value* thunk [] env (conj k {:tag :direct :cap cap :cap-id id :env env})))
+        :auth/use (let [[r f & more] args]
+                    (call-value* f (into [(a/op! :auth/payload [r] frames)] more) env k))
+        [:ret (a/op! op args frames) env k]))
+    (catch clojure.lang.ExceptionInfo e (raise e env k))))
+
+(def ^:private skip-frame-keys
+  #{:tag :node :body :todo :id :mode :names :outer :inner :done :state :bindings :ctx :group
+    :cap-id :level :name :op})
+
+(defn- resume-blocker
+  "nil if a continuation with these frames may be resumed again; else
+  why not. Walks everything the frames hold: locals, collections and
+  their metadata, closures' captures, partial applications, nested
+  continuations, branch values. Lazy sequences and host objects (atoms)
+  are not entered: an authority reached through them is checked when it
+  is used, by the shot context."
+  [frames]
+  (let [seen (java.util.IdentityHashMap.)
+        found (volatile! nil)]
+    (letfn [(walk [x]
+              (when (and (nil? @found) (some? x) (not (plain-data? x)) (nil? (.put seen x true)))
+                (cond
+                  (a/auth? x) (vreset! found (a/resume-blocker x))
+                  (closure? x) (run! walk (closure-locals x))
+                  (pap? x) (do (walk (pap-fn x)) (run! walk (pap-statics x)))
+                  (instance? Cont x) (run! frame (:frames x))
+                  (a/branch? x) (walk (:value x))
+                  (or (vector? x) (map? x) (set? x) (list? x))
+                  (do (walk (meta x)) (run! walk x))
+                  (instance? clojure.lang.IMeta x) (walk (meta x)))))
+            (frame [f]
+              (when (nil? @found)
+                (case (:tag f)
+                  :branch (when (and (= :fork (:mode (:ctx f))) (a/ctx-open? (:ctx f)))
+                            (vreset! found "fork-resume: the continuation captured a running fork branch; it can be resumed only once"))
+                  (:fork-run :fork-scope)
+                  (when (a/group-open? (:group f))
+                    (vreset! found "fork-resume: the continuation captured an open fork; it can be resumed only once"))
+                  nil)
+                (doseq [[kk vv] f :when (not (skip-frame-keys kk))]
+                  (if (= :env kk) (some-> vv :locals walk) (walk vv)))))]
+      (run! frame frames)
+      @found)))
 
 ;; states: [:eval term env k] | [:build term env k] | [:ret value _ k]
 ;;         | [:finish node vals env k]

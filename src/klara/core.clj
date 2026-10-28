@@ -47,7 +47,7 @@
   #{:local :quote :fn :app :let :if :letrec :resolve :prim :perform :handle
     :specialize :code :esc})
 
-(def ambient-namespaces #{"world" "host" "exn" "time" "stage"})
+(def ambient-namespaces #{"world" "host" "exn" "time" "stage" "auth"})
 
 (defn ambient? [kw]
   (and (keyword? kw) (contains? ambient-namespaces (namespace kw))))

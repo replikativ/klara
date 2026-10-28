@@ -25,6 +25,7 @@
   (test/klara/transcript_test.clj) is built on it."
   (:require [clojure.pprint :as pp]
             [clojure.string :as str]
+            [klara.authority :as a]
             [klara.code :as code]
             [klara.world :as w]
             [klara.expand :as x]
@@ -34,10 +35,12 @@
            [java.io StringReader]))
 
 (defn session
-  "A fresh REPL session: one empty world named main."
+  "A fresh REPL session: one empty world named main, and its own
+  authority store (klara.authority)."
   []
   {:worlds (atom {"main" {:world (w/make-world) :parent nil}})
-   :current (atom "main")})
+   :current (atom "main")
+   :store (a/new-store)})
 
 (defn- current-world [s] (:world (get @(:worlds s) @(:current s))))
 (defn- current-root [s] (w/snapshot (current-world s)))
@@ -186,7 +189,7 @@
   "Evaluate one top-level form (or command); returns the printed output."
   [s form arg]
   (let [out (java.io.StringWriter.)
-        res (binding [*out* out]
+        res (binding [*out* out a/*store* (:store s)]
               (try
                 (cond
                   (keyword? form) (run-command s form arg)
