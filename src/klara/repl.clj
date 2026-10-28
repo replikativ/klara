@@ -1,0 +1,252 @@
+(ns klara.repl
+  "An interactive Klara REPL over T0: read (Clojure syntax), expand,
+  evaluate, print. `clojure -M:repl` starts it; the prompt is `k=>`.
+
+  A SESSION holds named worlds (forks) and the name of the current one.
+  Every top-level form is expanded and evaluated against the current
+  world's root. A (def ..) or (defmacro ..) is published with
+  klara.defs/define! and its dependents are invalidated at once (the
+  REPL is a convenience layer: it repairs instead of leaving dependents
+  pending; the report is printed as `;; stale: ..` / `;; cutoff: ..`).
+
+  Commands are keywords at top level:
+    :world            definitions of the current world, with versions
+    :basis            current world name and root version
+    :fork <name>      fork the current world as <name> and switch to it
+    :switch <name>    switch to world <name>
+    :expand <form>    show the core term of <form>, printed as source
+    :code <form>      evaluate <form> to a code value, pretty-print it
+    :help             this list
+
+  Errors print as `!! <kind>: <message>` and never end the session.
+
+  `eval-string` runs a string of forms in a session and returns the
+  printed output (lines joined by newlines); the transcript harness
+  (test/klara/transcript_test.clj) is built on it."
+  (:require [clojure.pprint :as pp]
+            [clojure.string :as str]
+            [klara.code :as code]
+            [klara.world :as w]
+            [klara.expand :as x]
+            [klara.eval :as ev]
+            [klara.defs :as d])
+  (:import [clojure.lang LineNumberingPushbackReader]
+           [java.io StringReader]))
+
+(defn session
+  "A fresh REPL session: one empty world named main."
+  []
+  {:worlds (atom {"main" {:world (w/make-world) :parent nil}})
+   :current (atom "main")})
+
+(defn- current-world [s] (:world (get @(:worlds s) @(:current s))))
+(defn- current-root [s] (w/snapshot (current-world s)))
+
+;; ---------------------------------------------------------------------------
+;; printing
+;; ---------------------------------------------------------------------------
+
+(defn print-value
+  "The printed form of a Klara value. Closures print as #<fn>, code
+  values as Klara source (klara.code)."
+  [v]
+  (binding [*print-length* nil *print-level* nil *print-meta* false]
+    (if (instance? Throwable v)
+      (str "#<" (.getSimpleName (class v)) " " (pr-str (ex-message v)) ">")
+      (pr-str v))))
+
+(defn- strip-prefix [msg]
+  (some-> msg (str/replace #"^(klara|expand|define!)(\.[a-z]+)?: " "")))
+
+(defn error-kind
+  "[kind message] of a throwable, for `!! kind: message`."
+  [^Throwable t]
+  (let [data (ex-data t)
+        msg (or (ex-message t) (str t))
+        k (:klara/error data)]
+    (cond
+      (keyword? k) [(name k) (strip-prefix msg)]
+      (str/starts-with? msg "expand:") ["expand" (strip-prefix msg)]
+      (:klara/read data) ["read" msg]
+      (contains? data :klara/exn) ["exn" (str "uncaught " (print-value (:klara/exn data)))]
+      (str/starts-with? msg "klara") ["eval" (strip-prefix msg)]
+      (instance? clojure.lang.ExceptionInfo t) ["ex-info" msg]
+      :else [(.getSimpleName (class t)) msg])))
+
+(defn format-error [t]
+  (let [[k m] (error-kind t)] (str "!! " k ": " m)))
+
+;; ---------------------------------------------------------------------------
+;; evaluation of one top-level form
+;; ---------------------------------------------------------------------------
+
+(defn- def-form? [form]
+  (and (seq? form) (contains? '#{def defmacro} (first form))))
+
+(defn- define [s form]
+  (let [wo (current-world s)
+        {:keys [name]} (d/define! wo form)
+        rep (d/invalidate! wo name)
+        line (fn [k] (when-let [xs (seq (get rep k))]
+                       (str ";; " (clojure.core/name k) ": " (str/join " " xs))))]
+    (str/join "\n" (remove nil? [(str "#'" name) (line :stale) (line :cutoff)]))))
+
+(defn- eval-form [s form]
+  (let [root (current-root s)]
+    (ev/run (x/expand-expr form root) {:basis root})))
+
+(defn- pretty [form]
+  (str/trimr (with-out-str
+               (binding [pp/*print-right-margin* 72 *print-meta* false]
+                 (pp/with-pprint-dispatch pp/code-dispatch (pp/pprint form))))))
+
+(def help-text
+  (str/join "\n"
+            [":world            definitions of the current world, with versions"
+             ":basis            current world name and root version"
+             ":fork <name>      fork the current world as <name> and switch to it"
+             ":switch <name>    switch to world <name>"
+             ":expand <form>    show the core term of <form>, printed as source"
+             ":code <form>      evaluate <form> to a code value and pretty-print it"
+             ":help             this list"]))
+
+(defn- world-listing [s]
+  (let [root (current-root s)
+        defs (sort-by key (:defs root))]
+    (if (empty? defs)
+      ";; no definitions"
+      (str/join "\n"
+                (for [[sym e] defs]
+                  (str sym " " (clojure.core/name (:kind e)) " v" (:version e)
+                       (when (> (count (:history e)) 1) (str " (" (count (:history e)) " versions)"))
+                       (when (w/pending? root e) " pending")))))))
+
+(defn- basis-line [s]
+  (let [nm @(:current s)
+        {:keys [parent]} (get @(:worlds s) nm)]
+    (str nm " v" (:version (current-root s))
+         (when parent (str " (forked from " parent ")")))))
+
+(defn- fork! [s nm]
+  (let [nm (str nm)]
+    (when (contains? @(:worlds s) nm)
+      (throw (ex-info (str "a world named " nm " exists") {:klara/error :repl})))
+    (let [from @(:current s)]
+      (swap! (:worlds s) assoc nm {:world (w/fork (current-world s)) :parent from})
+      (reset! (:current s) nm)
+      (str "forked " from " -> " nm))))
+
+(defn- switch! [s nm]
+  (let [nm (str nm)]
+    (when-not (contains? @(:worlds s) nm)
+      (throw (ex-info (str "no world named " nm) {:klara/error :repl})))
+    (reset! (:current s) nm)
+    (str "switched to " nm)))
+
+(def ^:private commands-with-arg #{:fork :switch :expand :code})
+
+(defn- run-command [s cmd arg]
+  (case cmd
+    :help help-text
+    :world (world-listing s)
+    :basis (basis-line s)
+    :fork (fork! s arg)
+    :switch (switch! s arg)
+    :expand (if (def-form? arg)
+              (let [res (x/expand-recorded arg (current-root s))]
+                (str "(" (first arg) " " (:name res) " "
+                     (print-value (code/core->form (:term res))) ")"))
+              (print-value (code/core->form (x/expand-expr arg (current-root s)))))
+    :code (let [v (eval-form s arg)]
+            (if (code/code? v)
+              (pretty (code/code->form v))
+              (throw (ex-info (str ":code expects a code value, got " (print-value v))
+                              {:klara/error :repl}))))
+    (throw (ex-info (str "unknown command " cmd " (try :help)") {:klara/error :repl}))))
+
+(defn- eval-top
+  "Evaluate one top-level form (or command); returns the printed output."
+  [s form arg]
+  (let [out (java.io.StringWriter.)
+        res (binding [*out* out]
+              (try
+                (cond
+                  (keyword? form) (run-command s form arg)
+                  (def-form? form) (define s form)
+                  :else (print-value (eval-form s form)))
+                (catch Throwable t (format-error t))))
+        printed (str out)]
+    (str/join "\n" (remove str/blank? [(str/trimr printed) res]))))
+
+;; ---------------------------------------------------------------------------
+;; reading
+;; ---------------------------------------------------------------------------
+
+(def ^:private eof (Object.))
+
+(defn- read-form [rdr]
+  (try
+    (binding [*read-eval* false
+              *ns* (create-ns 'klara.user)]
+      (read {:eof eof :read-cond :allow} rdr))
+    (catch Throwable t
+      (throw (ex-info (or (ex-message (or (.getCause t) t)) (str t)) {:klara/read true})))))
+
+(defn eval-reader
+  "Read and evaluate every form from rdr; calls emit with each output."
+  [s rdr emit]
+  (loop []
+    (let [form (try (read-form rdr) (catch Throwable t t))]
+      (cond
+        (identical? eof form) nil
+        (instance? Throwable form) (emit (format-error form))
+        :else
+        (let [arg (when (contains? commands-with-arg form)
+                    (let [a (try (read-form rdr) (catch Throwable t t))]
+                      (cond (identical? eof a) ::missing
+                            (instance? Throwable a) a
+                            :else a)))]
+          (cond
+            (= ::missing arg) (emit (str "!! repl: " form " needs an argument"))
+            (instance? Throwable arg) (emit (format-error arg))
+            :else (do (emit (eval-top s form arg)) (recur))))))))
+
+(defn eval-string
+  "Evaluate the forms in string text in session s; returns everything
+  printed, lines joined by newlines."
+  [s text]
+  (let [outs (atom [])]
+    (eval-reader s (LineNumberingPushbackReader. (StringReader. text))
+                 #(swap! outs conj %))
+    (str/join "\n" (remove str/blank? @outs))))
+
+;; ---------------------------------------------------------------------------
+;; interactive loop
+;; ---------------------------------------------------------------------------
+
+(defn- skip-line [^LineNumberingPushbackReader rdr]
+  (loop [] (let [c (.read rdr)] (when-not (or (= c -1) (= c (int \newline))) (recur)))))
+
+(defn repl
+  "Interactive loop on *in* / *out*."
+  []
+  (let [s (session)
+        rdr (LineNumberingPushbackReader. (java.io.InputStreamReader. System/in))]
+    (println "Klara REPL over T0. :help lists commands; Ctrl-D exits.")
+    (loop []
+      (print "k=> ") (flush)
+      (let [form (try (read-form rdr) (catch Throwable t t))]
+        (cond
+          (identical? eof form) (println)
+          (instance? Throwable form) (do (println (format-error form)) (skip-line rdr) (recur))
+          :else
+          (let [arg (when (contains? commands-with-arg form)
+                      (try (read-form rdr) (catch Throwable t t)))]
+            (cond
+              (identical? eof arg) (println)
+              (instance? Throwable arg) (do (println (format-error arg)) (skip-line rdr) (recur))
+              :else (let [o (eval-top s form arg)]
+                      (when-not (str/blank? o) (println o))
+                      (recur)))))))))
+
+(defn -main [& _] (repl) (shutdown-agents))
