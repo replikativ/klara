@@ -102,7 +102,38 @@
       (symbol? form) (list 'quote form)
       :else form)))
 
-(def builtin-macros {'qq (fn [[_ template]] (qq-build template))})
+;; Staging operations (S4). code and esc are special forms (they change
+;; the level); run, lift and genlet are ambient operations of the stage
+;; namespace, so a dynamic handler can observe or override them, and
+;; being built-in macros rather than special forms they can be shadowed
+;; by a local or a world definition.
+(defn- stage-op [op]
+  (fn [[nm & args]]
+    (when-not (= 1 (count args))
+      (throw (ex-info (str "expand: " nm " takes one argument") {:form (cons nm args)})))
+    (list 'perform op (first args))))
+
+(defn- with-genletrec [[_ binder & body :as form]]
+  (when-not (and (vector? binder) (= 1 (count binder)) (symbol? (first binder)))
+    (throw (ex-info "expand: with-genletrec takes [g] and a body" {:form form})))
+  (list 'perform :stage/locus-rec (list* 'fn* binder body)))
+
+(def builtin-macros {'qq (fn [[_ template]] (qq-build template))
+                     'run (stage-op :stage/run)
+                     'lift (stage-op :stage/lift)
+                     'genlet (stage-op :stage/genlet)
+                     'with-genletrec with-genletrec})
+
+(def staging-builtins
+  "Functions over code values, resolved after prims (klara.code)."
+  {'code-size 'klara.code/code-size
+   'code? 'klara.code/code?
+   'closed? 'klara.code/closed?})
+
+(defn- named
+  "Attach source binder names (printing only; not part of identity)."
+  [t names]
+  (vary-meta t assoc :klara/names (mapv #(symbol (name %)) names)))
 
 ;; ---------------------------------------------------------------------------
 ;; context: one per expansion session
@@ -200,7 +231,7 @@
         (= :def (:kind e)) (c/resolve* bare)
         (= :macro (:kind e)) (throw (ex-info (str "expand: macro " bare " used as value")
                                              {:sym bare}))
-        :else (if-let [q (host-fn bare)]
+        :else (if-let [q (or (staging-builtins bare) (host-fn bare))]
                 (c/perform nil :host/var (c/quote* q))
                 (unbound! bare))))))
 
@@ -216,11 +247,12 @@
   (cond
     (empty? forms) (c/quote* nil)
     (empty? (rest forms)) (expand (first forms) ctx env)
-    :else (c/let1 (expand (first forms) ctx env)
-                  (expand-body (rest forms) ctx (push-local env (gensym "_"))))))
+    :else (named (c/let1 (expand (first forms) ctx env)
+                         (expand-body (rest forms) ctx (push-local env (gensym "_"))))
+                 '[_])))
 
-(defn- wrap-lets [inits body]
-  (reduce (fn [b init] (c/let1 init b)) body (reverse inits)))
+(defn- wrap-lets [inits body names]
+  (reduce (fn [b [init nm]] (named (c/let1 init b) [nm])) body (reverse (map vector inits names))))
 
 (defn- expand-bindings
   "Sequential let* discipline: one fresh scope per pair; the value is
@@ -240,8 +272,8 @@
                env' (conj inits v') (conj xs x') (conj rs r))))))
 
 (defn- expand-let* [[_ bindings & body] ctx env]
-  (let [[inits env' body'] (expand-bindings bindings body ctx env)]
-    (wrap-lets inits (expand-body body' ctx env'))))
+  (let [[inits env' body' xs] (expand-bindings bindings body ctx env)]
+    (wrap-lets inits (expand-body body' ctx env') xs)))
 
 (defn- expand-lambda
   "One parameter scope; supports & rest. recur-r is the recur target."
@@ -251,8 +283,9 @@
         ps (cond-> (vec fixed) rest-p (conj rest-p))
         env' (reduce (fn [e p] (first (bind-local ctx e (add-scope p sc)))) env ps)
         body' (map #(add-scope % sc) body)]
-    (c/lam (count fixed) (boolean rest-p)
-           (expand-body body' ctx (assoc env' :recur recur-r)))))
+    (named (c/lam (count fixed) (boolean rest-p)
+                  (expand-body body' ctx (assoc env' :recur recur-r)))
+           ps)))
 
 (defn- has-recur?
   "Conservative scan for recur outside nested fn*/loop* forms."
@@ -278,7 +311,8 @@
             _ (when self (bind! ctx self r))
             body (if fname (map #(add-scope % sc) body) body)
             params (if fname (add-scope params sc) params)]
-        (c/letrec [(expand-lambda params body ctx (push-local env r) r)] (c/local 0)))
+        (named (c/letrec [(expand-lambda params body ctx (push-local env r) r)] (c/local 0))
+               [(or fname 'recur)]))
       (expand-lambda params body ctx env nil))))
 
 (defn- expand-loop* [[_ bindings & body] ctx env]
@@ -287,7 +321,9 @@
         env2 (push-local env1 lp)
         lam (expand-lambda xs body' ctx env2 lp)]
     (wrap-lets inits
-               (c/letrec [lam] (apply c/app (c/local 0) (map #(local-term env2 %) rs))))))
+               (named (c/letrec [lam] (apply c/app (c/local 0) (map #(local-term env2 %) rs)))
+                      '[loop])
+               xs)))
 
 (defn- strip-fn-name [f]
   (if (and (seq? f) (contains? '#{fn* fn clojure.core/fn} (first f)) (symbol? (second f)))
@@ -301,7 +337,8 @@
         inits (mapv (fn [[_ v]] (expand (add-scope (strip-fn-name v) sc) ctx env')) pairs)]
     (when-not (every? #(= :fn (:op %)) inits)
       (throw (ex-info "expand: letfn* inits must be plain fns" {:form bindings})))
-    (c/letrec inits (expand-body (map #(add-scope % sc) body) ctx env'))))
+    (named (c/letrec inits (expand-body (map #(add-scope % sc) body) ctx env'))
+           (map first pairs))))
 
 (def ^:private catch-all '#{Throwable Exception Object java.lang.Throwable
                             java.lang.Exception java.lang.Object :default})
@@ -321,7 +358,8 @@
         (reduce (fn [else [_ cls e & cbody]]
                   (let [sc (fresh-scope! ctx)
                         [cenv' _] (bind-local ctx cenv (add-scope e sc))
-                        handler (c/let1 ex (expand-body (map #(add-scope % sc) cbody) ctx cenv'))
+                        handler (named (c/let1 ex (expand-body (map #(add-scope % sc) cbody) ctx cenv'))
+                                       [e])
                         test (if (contains? catch-all cls)
                                (c/quote* true)
                                (c/perform nil :host/call (c/quote* 'clojure.core/instance?)
@@ -329,7 +367,7 @@
                     (c/if* test handler else)))
                 (c/perform nil :exn/raise ex)
                 (reverse clauses))]
-    (c/handle :dynamic {:exn/raise (c/lam 2 clause-body)}
+    (c/handle :dynamic {:exn/raise (named (c/lam 2 clause-body) '[ex k])}
               (expand-body body ctx (push-local env (gensym "inst"))))))
 
 (defn- expand-handle [[_ spec & more] ctx env]
@@ -341,7 +379,8 @@
     (if h
       (let [sc (fresh-scope! ctx)
             [env' _] (bind-local ctx env (add-scope h sc))]
-        (c/handle mode clauses ret (expand-body (map #(add-scope % sc) body) ctx env')))
+        (named (c/handle mode clauses ret (expand-body (map #(add-scope % sc) body) ctx env'))
+               [h]))
       (c/handle mode clauses ret (expand-body body ctx (push-local env (gensym "inst")))))))
 
 (defn- expand-perform [[_ a & more] ctx env]
@@ -352,7 +391,14 @@
 
 (def special-forms
   '#{quote if do let* loop* recur fn* letfn* throw try handle perform prim
-     specialize def})
+     specialize def code esc})
+
+(defn- level [env] (or (:level env) 0))
+
+(defn- one-arg [form]
+  (when-not (= 2 (count form))
+    (throw (ex-info (str "expand: " (first form) " takes one form") {:form form})))
+  (second form))
 
 (defn- expand-special [bare form ctx env]
   (let [ex #(expand % ctx env)]
@@ -373,7 +419,11 @@
       perform (expand-perform form ctx env)
       prim (apply c/prim (second form) (map ex (drop 2 form)))
       specialize (apply c/specialize (map ex (rest form)))
-      def (throw (ex-info "expand: def is only allowed at top level" {:form form})))))
+      def (throw (ex-info "expand: def is only allowed at top level" {:form form}))
+      code (c/code* (expand (one-arg form) ctx (assoc env :level (inc (level env)) :recur nil)))
+      esc (if (pos? (level env))
+            (c/esc (expand (one-arg form) ctx (assoc env :level (dec (level env)) :recur nil)))
+            (throw (ex-info "expand: esc outside code" {:form form}))))))
 
 ;; ---------------------------------------------------------------------------
 ;; macro calls (flip discipline) with the optional sub-expansion memo
@@ -434,6 +484,8 @@
           (cond
             (builtin-macros bare) (call-macro (builtin-macros bare) bare form ctx env)
             (c/prims bare) (apply c/prim bare (args))
+            (staging-builtins bare)
+            (apply c/perform nil :host/call (c/quote* (staging-builtins bare)) (args))
             (host-macro bare) (call-macro (host-transformer (host-macro bare)) bare form ctx env)
             (host-fn bare) (apply c/perform nil :host/call (c/quote* (host-fn bare)) (args))
             :else (unbound! bare)))))))

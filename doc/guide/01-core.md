@@ -153,15 +153,15 @@ true
 The expander turns every surface form into core terms. It is hygienic
 (scope sets), resolves locals to de Bruijn indices and records what it read
 from the world. The REPL command `:expand` shows the core term of a form,
-printed back as Klara source with generated local names:
+printed back as Klara source (locals get numbered names):
 
 ```klara-repl
 k=> :expand (let [x 1] (when (pos? x) :yes))
 (let [x_1 1] (if (pos? x_1) :yes))
 k=> :expand (loop [i 0] (if (< i 3) (recur (inc i)) i))
-(let [x_1 0] (letfn [(x_2 [x_3] (if (< x_3 3) (x_2 (inc x_3)) x_3))] (x_2 x_1)))
+(let [i_1 0] (letfn [(loop_2 [i_3] (if (< i_3 3) (loop_2 (inc i_3)) i_3))] (loop_2 i_1)))
 k=> :expand (try (/ 1 0) (catch ArithmeticException e :div0))
-(handle :dynamic #:exn{:raise (fn [x_1 x_2] (if (instance? (perform :host/class (quote ArithmeticException)) x_1) (let [x_3 x_1] :div0) (throw x_1)))} (/ 1 0))
+(handle :dynamic #:exn{:raise (fn [ex_1 k_2] (if (instance? (perform :host/class (quote ArithmeticException)) ex_1) (let [e_3 ex_1] :div0) (throw ex_1)))} (/ 1 0))
 ```
 
 `when` is a clojure.core macro: the expander runs it (with hygiene) and

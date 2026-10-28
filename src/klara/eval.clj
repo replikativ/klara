@@ -44,7 +44,10 @@
   application value (s-m-n). On entry to a closure or partial application
   the optional *entry-hook* (klara.stage) may supply an executable whose
   guards hold; otherwise the generic path runs."
-  (:require [klara.core :as core]
+  (:require [clojure.main]
+            [clojure.string]
+            [klara.core :as core]
+            [klara.code :as code]
             [klara.world :as w]))
 
 (def ^:dynamic *fiber* nil)
@@ -60,7 +63,7 @@
   performed no effect before declining (host executables perform none)."}
   deopt (Object.))
 
-(declare call-value call-value*)
+(declare call-value call-value* locus-rec-call stage-perform start-code step-build step-ret-stage)
 
 (defmacro ^:private ifn-via-call-value []
   `(~@(for [n (range 9)
@@ -82,6 +85,8 @@
 
 (defrecord Cont [frames])
 (defrecord Instance [id mode])
+;; The memoizing generator bound by with-genletrec (genletrec, S4).
+(deftype LocusRec [id])
 
 (defn closure? [x] (instance? Closure x))
 (defn closure-term [^Closure c] (.-term c))
@@ -114,8 +119,16 @@
 
 (defn- raise [ex env k] (do-perform nil :exn/raise [ex] env k))
 
+(def ^:dynamic *outer-k*
+  "Continuations of the machines suspended behind host frames, innermost
+  first. A Klara closure called by host code (map, reduce, ..) runs in a
+  nested machine; staging consults these frames so that code built in
+  such a callback still sees the binders and let-insertion loci of the
+  code being generated around the host call (S4)."
+  ())
+
 (defn- host-apply [f args env k]
-  (try [:ret (apply f args) env k]
+  (try [:ret (binding [*outer-k* (conj *outer-k* k)] (apply f args)) env k]
        (catch Throwable t (raise t env k))))
 
 (defn- host-var [sym]
@@ -251,6 +264,8 @@
                       #(call-value* (pap-fn f) (into (vec (pap-statics f)) args) env k))
       (call-value* (pap-fn f) (into (vec (pap-statics f)) args) env k))
 
+    (instance? LocusRec f) (locus-rec-call f args env k)
+
     (ifn? f) (host-apply f args env k)
 
     :else (raise (ex-info "klara: not a function" {:value f}) env k)))
@@ -283,9 +298,11 @@
   (case (:op node)
     :app (call-value* (first vals) (rest vals) env k)
     :prim (host-apply (core/prims (:name node)) vals env k)
-    :perform (if (:target node)
-               (do-perform (first vals) (:name node) (rest vals) env k)
-               (do-perform nil (:name node) vals env k))
+    :perform (cond
+               (:target node) (do-perform (first vals) (:name node) (rest vals) env k)
+               (= "stage" (namespace (:name node))) (stage-perform (:name node) vals env k)
+               :else (binding [*outer-k* (conj *outer-k* k)]
+                       (do-perform nil (:name node) vals env k)))
     :specialize [:ret (Pap. (first vals) (vec (rest vals))) env k]
     :handle (let [ks (handle-keys node)
                   clauses (zipmap ks vals)
@@ -297,7 +314,10 @@
 
 (defn- step-eval [c env k]
   (case (:op c)
-    :local   [:ret (lookup env (:index c)) env k]
+    :local   (let [v (lookup env (:index c))]
+               ;; a binder of generated code seen from level 0 is its code
+               [:ret (if (code/code-var? v) (code/->code (code/var-term (code/code-var-name v))) v)
+                env k])
     :quote   [:ret (:datum c) env k]
     :fn      [:ret (Closure. c (:locals env) (:mint env)) env k]
     :resolve (resolve-global env (:id c) k)
@@ -312,6 +332,8 @@
     :prim       (eval-list c (:args c) env k)
     :perform    (eval-list c (cond->> (:args c) (:target c) (into [(:target c)])) env k)
     :specialize (eval-list c (into [(:fn c)] (:args c)) env k)
+    :code       (start-code c env k)
+    :esc        (raise (ex-info "klara: esc outside code" {:klara/error :stage}) env k)
     :handle     (eval-list c (cond-> (mapv (:clauses c) (handle-keys c))
                                (:return c) (conj (:return c)))
                            env k)))
@@ -328,9 +350,308 @@
                 [:finish (:node f) vals (:env f) k]))
       :handle (if-let [r (:return f)]
                 (call-value* r [v] (:env f) k)
-                [:ret v nil k]))))
+                [:ret v nil k])
+      (step-ret-stage f v k))))
 
-;; states: [:eval term env k] | [:ret value _ k] | [:finish node vals env k]
+;; ---------------------------------------------------------------------------
+;; staging (S4): building code, splicing, run, lift, genlet, genletrec
+;; ---------------------------------------------------------------------------
+;;
+;; (code e) evaluates by BUILDING e: the machine walks e's term at level
+;; 1 in mode :build and returns an s-term (klara.code). A binder met at
+;; level >= 1 gets a fresh name; its slot in the environment holds a
+;; CodeVar marker, so a reference at level >= 1 emits the variable and a
+;; reference from level 0 (inside esc) yields the variable's code. A
+;; level-0 value referenced at level 1 is lifted implicitly (cross-stage
+;; persistence, same rules as lift). (esc e) at level 1 evaluates e at
+;; level 0 and splices the resulting code value.
+;;
+;; Build frames live on the continuation like every other frame:
+;;   {:tag :blist ..}     a node whose children are being built; it
+;;                        declares the fresh names of its binders
+;;   {:tag :locus ..}     a let-insertion point: the top of every code
+;;                        bracket and the body of every generated binder;
+;;                        genlet adds bindings to it (an atom)
+;;   {:tag :code-done}    wraps the finished s-term as a code value
+;;   {:tag :splice ..}    receives the code value of a level-1 esc
+;;   {:tag :wrap :op ..}  rebuilds a nested :code / :esc (levels > 1)
+;;   {:tag :locus-rec ..} with-genletrec: memo table and letrec bindings
+;;
+;; A generated name is ALIVE while a frame declaring it is on the
+;; continuation (or on a continuation suspended behind a host frame,
+;; *outer-k*). This is BER MetaOCaml's dynamic scope-extrusion check:
+;; splicing code that mentions a dead name, or running open code, is a
+;; detected error rather than silently wrong code.
+
+(defn- all-frames
+  "Frames of the current continuation followed by those of the machines
+  suspended behind host frames, innermost first."
+  [k]
+  (apply concat k *outer-k*))
+
+(defn- frame-names [f]
+  (case (:tag f)
+    :blist (:names f)
+    :locus (map first @(:bindings f))
+    :locus-rec (vals (:table @(:state f)))
+    nil))
+
+(defn- alive-names [frames] (into #{} (mapcat frame-names) frames))
+
+(defn- stage-error [msg & [kind data]]
+  (ex-info msg (merge {:klara/error (or kind :stage)} data)))
+
+(defn- check-alive
+  "nil, or the extrusion error for the first free name of s-term t not
+  alive in frames."
+  [t frames what]
+  (let [alive (alive-names frames)]
+    (when-let [g (first (remove alive (code/free-vars t)))]
+      (code/extrusion-error g what))))
+
+(defn- new-locus [] {:tag :locus :bindings (atom [])})
+
+(defn- start-code [c env k]
+  [:build (:body c) (assoc env :level 1) (conj k {:tag :code-done} (new-locus))])
+
+;; cross-stage persistence ----------------------------------------------------
+
+(defn- plain-data? [v]
+  (or (nil? v) (boolean? v) (number? v) (string? v) (keyword? v) (symbol? v) (char? v)))
+
+(defn- host-fn-name [f]
+  (let [n (clojure.main/demunge (.getName (class f)))]
+    (clojure.string/replace n #"--\d+$" "")))
+
+(declare lift-term)
+
+(defn- resource-error [v]
+  (stage-error (str "cannot lift a value holding a resource ("
+                    (cond (instance? Instance v) "a handler instance"
+                          (instance? Cont v) "a continuation"
+                          (instance? LocusRec v) "a genletrec generator"
+                          :else (.getSimpleName (class v)))
+                    "); only data and functions over data persist into code")
+               :lift {:value v}))
+
+(defn- lift-closure [f seen]
+  (code/core->s (closure-term f)
+                (fn [i]
+                  (let [ls (closure-locals f)
+                        v (nth ls (- (count ls) 1 i))]
+                    (when (code/code-var? v)
+                      (throw (stage-error "cannot lift a closure that mentions a variable of generated code" :lift)))
+                    (lift-term v seen)))))
+
+(defn- scan-resources
+  "Throw the lift error for the first resource reachable from v."
+  [v seen]
+  (cond
+    (or (plain-data? v) (contains? seen v)) nil
+    (record? v) (throw (resource-error v))
+    (closure? v) (doseq [l (closure-locals v)] (scan-resources l (conj seen v)))
+    (pap? v) (doseq [x (cons (pap-fn v) (pap-statics v))] (scan-resources x (conj seen v)))
+    (coll? v) (doseq [x v] (scan-resources x seen))
+    (code/code-var? v) nil
+    (fn? v) nil
+    :else (throw (resource-error v))))
+
+(defn lift-term
+  "The s-term that rebuilds present value v in generated code: data as a
+  literal, closures as their code over lifted captures, partial
+  applications as specialize, host functions and self-referential
+  closures as opaque constants. Values holding resources (atoms, handler
+  instances, continuations, other host objects) and code values are
+  refused."
+  ([v] (lift-term v #{}))
+  ([v seen]
+   (cond
+     (code/code? v) (throw (stage-error "cannot lift a code value (splice it with esc instead)" :lift))
+     (plain-data? v) {:op :quote :datum v}
+     (record? v) (throw (resource-error v))
+     (and (coll? v) (every? plain-data? (remove coll? (tree-seq coll? seq v)))
+          (or (map? v) (vector? v) (set? v) (seq? v)))
+     {:op :quote :datum v}
+     (vector? v) {:op :prim :name 'vector :args (mapv #(lift-term % seen) v)}
+     (set? v) {:op :prim :name 'hash-set :args (mapv #(lift-term % seen) v)}
+     (map? v) {:op :prim :name 'hash-map :args (vec (mapcat (fn [[a b]] [(lift-term a seen) (lift-term b seen)]) v))}
+     (seq? v) {:op :prim :name 'list :args (mapv #(lift-term % seen) v)}
+     (closure? v)
+     (if (contains? seen v)
+       (throw (ex-info "cycle" {::cycle true}))
+       (try (lift-closure v (conj seen v))
+            (catch clojure.lang.ExceptionInfo e
+              (if (::cycle (ex-data e))
+                (do (scan-resources v #{}) {:op :quote :datum v :csp "fn"})
+                (throw e)))))
+     (pap? v) {:op :specialize :fn (lift-term (pap-fn v) seen)
+               :args (mapv #(lift-term % seen) (pap-statics v))}
+     (fn? v) {:op :quote :datum v :csp (host-fn-name v)}
+     :else (throw (resource-error v)))))
+
+(defn- csp [v env k]
+  (try [:ret (lift-term v) nil k]
+       (catch clojure.lang.ExceptionInfo e
+         (raise (if (code/code? v)
+                  (stage-error "a code value is used inside code without esc" :stage)
+                  e)
+                env k))))
+
+;; building -------------------------------------------------------------------
+
+(defn- next-child [fr k]
+  (if-let [[child under?] (first (:todo fr))]
+    (let [more (rest (:todo fr))
+          fr' (assoc fr :todo more)
+          env (if under? (:inner fr) (:outer fr))
+          locus? (and under? (not (and (= :letrec (:op (:node fr))) (seq more))))]
+      [:build child env (cond-> (conj k fr') locus? (conj (new-locus)))])
+    [:ret (code/reassemble (:node fr) (:done fr) (:names fr)) nil k]))
+
+(defn- step-build [c env k]
+  (let [lvl (:level env)]
+    (case (:op c)
+      :local (let [v (lookup env (:index c))]
+               (if (code/code-var? v)
+                 [:ret (code/var-term (code/code-var-name v)) nil k]
+                 (csp v env k)))
+      (:quote :resolve) [:ret c nil k]
+      :code [:build (:body c) (assoc env :level (inc lvl)) (conj k {:tag :wrap :op :code})]
+      :esc (if (= 1 lvl)
+             [:eval (:body c) (assoc env :level 0) (conj k {:tag :splice :env env})]
+             [:build (:body c) (assoc env :level (dec lvl)) (conj k {:tag :wrap :op :esc})])
+      (let [names (mapv code/fresh (code/binder-bases c (code/binder-arity c)))
+            inner (reduce (fn [e nm] (push e (code/->code-var nm lvl))) env names)]
+        (next-child {:tag :blist :node c :names names :outer env :inner inner
+                     :done [] :todo (code/parts c)}
+                    k)))))
+
+(defn- wrap-bindings [bindings body]
+  (reduce (fn [b [nm t]] {:op :let :names [nm] :init t :body b}) body (rseq bindings)))
+
+(defn- find-locus-rec [frames id]
+  (first (keep-indexed (fn [i f] (when (and (= :locus-rec (:tag f)) (= id (:id f))) [i f]))
+                       frames)))
+
+(defn- step-ret-stage [f v k]
+  (case (:tag f)
+    :blist (next-child (update f :done conj v) k)
+    :locus [:ret (wrap-bindings @(:bindings f) v) nil k]
+    :code-done [:ret (code/->code v) nil k]
+    :wrap [:ret {:op (:op f) :body v} nil k]
+    :splice (let [env (:env f)]
+              (if-not (code/code? v)
+                (raise (stage-error (str "esc expects a code value, got " (pr-str v))) env k)
+                (let [t (code/code-term v)]
+                  (if-let [e (check-alive t (all-frames k) "where it is spliced")]
+                    (raise e env k)
+                    [:ret t nil k]))))
+    :locus-rec (let [{:keys [order bindings]} @(:state f)]
+                 (cond
+                   (not (code/code? v))
+                   (raise (stage-error "with-genletrec: the body must produce code") (:env f) k)
+                   (empty? order) [:ret v nil k]
+                   :else [:ret (code/->code {:op :letrec :names order
+                                             :inits (mapv bindings order)
+                                             :body (code/code-term v)})
+                          nil k]))
+    :locus-rec-bind
+    (let [env (:env f)
+          frames (all-frames k)
+          [i lf] (find-locus-rec frames (:id f))]
+      (cond
+        (not (and (code/code? v) (= :fn (:op (code/code-term v)))))
+        (raise (stage-error "genletrec: the generator must produce the code of a fn") env k)
+        (nil? lf) (raise (stage-error "genletrec: generator used outside its with-genletrec") env k)
+        :else
+        (if-let [e (check-alive (code/code-term v) (drop i frames)
+                                "at the with-genletrec that binds it")]
+          (raise e env k)
+          (do (swap! (:state lf) assoc-in [:bindings (:name f)] (code/code-term v))
+              [:ret (code/->code (code/var-term (:name f))) nil k]))))))
+
+;; stage operations -----------------------------------------------------------
+
+(defn- trivial-code? [t]
+  (or (#{:var :resolve} (:op t))
+      (and (= :quote (:op t)) (or (:csp t) (not (coll? (:datum t)))))))
+
+(defn- genlet-target
+  "Index (in frames) of the outermost locus that still has every name in
+  fv in scope, or nil when there is no locus."
+  [frames fv]
+  (loop [fs (seq frames) i 0 target nil]
+    (if-let [f (first fs)]
+      (let [hit? (some (set fv) (frame-names f))]
+        (case (:tag f)
+          :locus (if hit? i (recur (next fs) (inc i) i))
+          (:blist :locus-rec) (if hit? target (recur (next fs) (inc i) target))
+          (recur (next fs) (inc i) target)))
+      target)))
+
+(defn- genlet [c env k]
+  (if-not (code/code? c)
+    (raise (stage-error (str "genlet expects a code value, got " (pr-str c))) env k)
+    (let [t (code/code-term c)
+          frames (all-frames k)]
+      (if (trivial-code? t)
+        [:ret c env k]
+        (if-let [e (check-alive t frames "where genlet is called")]
+          (raise e env k)
+          (if-let [i (genlet-target frames (code/free-vars t))]
+            (let [nm (code/fresh "t")]
+              (swap! (:bindings (nth frames i)) conj [nm t])
+              [:ret (code/->code (code/var-term nm)) env k])
+            [:ret c env k]))))))
+
+(defn- run-code [c env k]
+  (if-not (code/code? c)
+    (raise (stage-error (str "run expects a code value, got " (pr-str c))) env k)
+    (let [t (try (code/s->core (code/code-term c)) (catch clojure.lang.ExceptionInfo e e))]
+      (if (instance? Throwable t)
+        (raise t env k)
+        (if-let [es (seq (core/wf-errors t))]
+          (raise (stage-error (str "run: ill-formed code: " (:error (first es)))) env k)
+          [:eval t {:locals [] :basis (:basis env) :mint (:mint env)} k])))))
+
+(defn- stage-perform
+  "Ambient stage operations. A dynamic handler for the operation wins (so
+  generators can be instrumented); otherwise the reference meaning."
+  [op args env k]
+  (if (find-frame k #(and (= :dynamic (:mode %)) (contains? (:clauses %) op)))
+    (do-perform nil op args env k)
+    (let [[a] args]
+      (case op
+        :stage/run (run-code a env k)
+        :stage/lift (try [:ret (code/->code (lift-term a)) env k]
+                         (catch clojure.lang.ExceptionInfo e (raise e env k)))
+        :stage/genlet (genlet a env k)
+        :stage/locus-rec
+        (let [lr (LocusRec. (Object.))
+              fr {:tag :locus-rec :id (.-id lr) :env env
+                  :state (atom {:table {} :order [] :bindings {}})}]
+          (call-value* a [lr] env (conj k fr)))
+        (raise (ex-info (str "klara: no handler for " op) {:op op}) env k)))))
+
+(defn- locus-rec-call
+  "(g f key): the code of the function generated for key, generating it
+  with (f key) the first time (BER MetaOCaml's mkgenlet)."
+  [^LocusRec g args env k]
+  (if-not (= 2 (count args))
+    (raise (stage-error "a genletrec generator takes a generator fn and a key") env k)
+    (let [[f key] args
+          [_ lf] (find-locus-rec (all-frames k) (.-id g))]
+      (if-not lf
+        (raise (stage-error "genletrec generator used outside its with-genletrec"
+                            :scope-extrusion) env k)
+        (if-let [h (get-in @(:state lf) [:table key])]
+          [:ret (code/->code (code/var-term h)) env k]
+          (let [h (code/fresh "h")]
+            (swap! (:state lf) #(-> % (assoc-in [:table key] h) (update :order conj h)))
+            (call-value* f [key] env (conj k {:tag :locus-rec-bind :id (.-id g) :name h :env env}))))))))
+
+;; states: [:eval term env k] | [:build term env k] | [:ret value _ k]
+;;         | [:finish node vals env k]
 (defn drive
   "Run the machine from state to a final value."
   [state]
@@ -338,6 +659,7 @@
     (let [[mode c x k] state]
       (case mode
         :eval (recur (step-eval c x k))
+        :build (recur (step-build c x k))
         :finish (let [[_ node vals env k] state] (recur (finish node vals env k)))
         :ret (if (empty? k) c (recur (step-ret c k)))))))
 
@@ -374,3 +696,4 @@
 (defmethod print-method Pap [_ ^java.io.Writer w] (.write w "#<fn>"))
 (defmethod print-method Instance [_ ^java.io.Writer w] (.write w "#<handler>"))
 (defmethod print-method Cont [_ ^java.io.Writer w] (.write w "#<continuation>"))
+(defmethod print-method LocusRec [_ ^java.io.Writer w] (.write w "#<genletrec>"))
