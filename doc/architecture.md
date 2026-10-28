@@ -493,3 +493,36 @@ and tagged literals (`#inst`, `#uuid`, plus Klara tags). Two consequences:
   lacks: JSON-LD (globally resolvable IRIs, W3C PROV vocabularies) for
   exporting provenance to external systems; JSON for web interop. They are
   projections of the EDN data, never the source of truth.
+
+## Languages as world values: the language lattice (draft, 2026-10-28)
+
+Christian's framing, to be refined with research note O (Racket):
+
+- **Languages are first-class world values**, versioned and forkable like
+  code; their histories are exposed through geschichte's git interface.
+- **EDN with persistent-memory semantics is the centre.** Languages are
+  built around it and may support only a subset of it. A language L has a
+  value domain V_L; between two languages, values in the shared subset
+  V_L ∩ V_M cross **without checks or conversion**, so lifting (in the
+  multi-stage sense of Amin and Rompf) is the identity. A boundary check is a
+  membership test for the shared subset — the same object as a staging guard:
+  when types or other predictors establish membership statically, the check
+  is erased.
+- **Three boundary cases** between an inner language L and the host M:
+  1. *L is a sublanguage of M* (same semantics, fewer capabilities): run L's
+     programs on M itself, in a forked world under a restricted handler stack
+     and authority set. No interpretive layer; isolation comes from forks and
+     authorities, not from nesting interpreters. This is what dvergr and
+     spindel already do for nested sci rooms: they do not interpret the sci
+     interpreter, they run the top-level interpreter in an isolated fork.
+  2. *L shares values with M but has different semantics* (another evaluation
+     order, numeric model, a Datalog engine): `interpret_L` written in Klara,
+     specialized per fragment by staging (first Futamura projection);
+     boundary checks only for values outside the shared subset.
+  3. *L has foreign values* (host objects, language-specific
+     representations): an explicit translation with conversion cost; staging
+     can still fuse conversions away.
+- Case 1 requires that "the same language" includes the same effects and
+  world semantics, and that isolation also covers host interop
+  (irreversible effects deferred per RFC 0001); otherwise a nested
+  environment could escape through the host.
