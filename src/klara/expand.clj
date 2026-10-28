@@ -113,6 +113,23 @@
       (throw (ex-info (str "expand: " nm " takes one argument") {:form (cons nm args)})))
     (list 'perform op (first args))))
 
+(defn- speculate-macro
+  "(speculate test fast i [live ..]) in speculative code (S7): fast when
+  test holds, else deopt to frame state i of the executable, passing the
+  live values its frame state names. Nothing is allocated on the fast
+  path, and fast stays in tail position (recur works)."
+  [[nm & args :as form]]
+  (when-not (= 4 (count args))
+    (throw (ex-info (str "expand: " nm " takes a test, a fast branch, a frame-state index and live values")
+                    {:form form})))
+  (let [[test fast i live] args]
+    (list 'if test fast (list 'perform :stage/deopt i live))))
+
+(defn- deopt-macro [[nm & args :as form]]
+  (when-not (= 2 (count args))
+    (throw (ex-info (str "expand: " nm " takes a frame-state index and live values") {:form form})))
+  (list* 'perform :stage/deopt args))
+
 (defn- with-genletrec [[_ binder & body :as form]]
   (when-not (and (vector? binder) (= 1 (count binder)) (symbol? (first binder)))
     (throw (ex-info "expand: with-genletrec takes [g] and a body" {:form form})))
@@ -155,6 +172,8 @@
                             'lift (stage-op :stage/lift)
                             'genlet (stage-op :stage/genlet)
                             'with-genletrec with-genletrec
+                            'speculate speculate-macro
+                            'deopt! deopt-macro
                             'fork fork-macro
                             'direct direct-macro}
                            (update-vals auth-ops auth-op)))

@@ -40,6 +40,10 @@ What makes it different from Clojure:
 - authorities and forks (RFC 0001) enforced dynamically in T0: authority
   tokens in a store, the `fork` form with `adopt!`, settlement that fails
   closed, fork-resume admission, deferred irreversible effects (S6);
+- the generator-independent parts of a compiling tier (S7): executable
+  validity checked once per basis root, speculative executables whose
+  guards inside the body deopt to T0 from frame states (effects already
+  performed are not repeated), deopt feedback keyed by (CodeId, site);
 - the formal small-step semantics of the core in ansatz, with determinism,
   progress, preservation of scoping and the s-m-n law proved (`spec/`).
 

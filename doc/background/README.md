@@ -14,4 +14,4 @@ description. For the language as it stands, start with `../../README.md` and
 - `04-demo-plan.md` — the wandler-with-staging demo plan
 - `research/` — research notes A–J
 - `reviews/` — external critiques (Codex)
-- `impl/` — implementation reports S1 (runtime slice), S3 (certified fusion), S4 (staging) and S6 (authority)
+- `impl/` — implementation reports S1 (runtime slice), S3 (certified fusion), S4 (staging), S6 (authority) and S7 (validity, frame states, deopt)

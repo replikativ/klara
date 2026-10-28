@@ -11,8 +11,8 @@
      :klara g :prefix [..] ; Klara code entered in the same machine
      :certificate {..}}
 
-  Guards, all checked on ENTRY (never later — live frames cannot be
-  converted, so failure means the generic path runs from the start):
+  Guards, all checked on ENTRY (a guard on an intermediate value is a
+  speculation point inside the body, below):
 
     [:world sym value-id]   the entry basis still answers sym this way
     [:world sym :absent]    the entry basis does not define sym
@@ -33,6 +33,28 @@
   by the [:world ..] guards on entry; `invalidate!` additionally sweeps
   entries whose recorded reads fail in a given root.
 
+  PER-ROOT VALIDITY (S7). Roots are immutable, so whether an
+  executable's [:world ..] guards hold depends only on the root. Entry
+  checks them once per (executable, root) and memoizes the verdict on
+  the installed executable (a few most recent roots, held weakly and
+  compared by identity); every later entry under that root costs one
+  identity comparison. Publication does no work for executables, and no
+  dependents are walked: the cost moves to the first entry under a new
+  root, once per executable entered there. Runtime guards ([:arg ..]
+  [:captures ..] [:statics ..] [:unhandled ..]) are checked on every
+  entry.
+
+  SPECULATION AND DEOPT (S7). A speculative executable (`speculative`)
+  carries FRAME STATES: descriptions of the generic code's T0 state at a
+  guard point inside the body. When the guard fails, the code calls
+  deopt! with the frame state's index and its live values; klara.eval
+  rebuilds the generic machine state (environment, continuation frames,
+  pending handlers, elided closures and instances) and resumes T0 there,
+  so effects already performed are not repeated. See klara.eval
+  `materialize` for the frame-state format. Deopts are counted as
+  FEEDBACK keyed by (CodeId, site): monotone counters, capped, consulted
+  by `speculate?`.
+
   INSTALL is certificate-checked. A certificate names the CodeId, the
   assumption set, the checker and its version, and provenance; install
   rejects it unless the CodeId and assumption set match the executable,
@@ -42,9 +64,13 @@
   :klara/trivial and :klara/trusted-handwritten accept after the common
   checks; S3 registers :ansatz/kernel (klara.fusion), which re-elaborates
   the source and rechecks the theorem in the ansatz kernel."
-  (:require [klara.core :as c]
+  (:require [klara.authority :as a]
+            [klara.core :as c]
             [klara.world :as w]
-            [klara.eval :as ev]))
+            [klara.eval :as ev])
+  (:import [java.lang.ref WeakReference]
+           [java.util.concurrent ConcurrentHashMap]
+           [java.util.concurrent.atomic AtomicLong LongAdder]))
 
 (defn nat-list?
   "nil, or a vector or list (realized, so checking it runs no code) whose
@@ -60,12 +86,72 @@
    :number number? :vector vector? :map map? :string string? :keyword keyword?
    :nat-list nat-list?})
 
-(defn make-cache [] (atom {:entries {} :stats {:hits 0 :misses 0 :fallbacks 0}}))
+;; ---------------------------------------------------------------------------
+;; feedback: monotone capped counters keyed by (CodeId, site)
+;; ---------------------------------------------------------------------------
+
+(def feedback-cap
+  "Counters saturate here: every chain of observations is finite."
+  1000000)
+
+(defn make-feedback [] (ConcurrentHashMap.))
+
+(defn observe!
+  "Count one observation of kind (e.g. :deopt) at site [code-id site-id].
+  Monotone: counters only grow, and saturate at feedback-cap."
+  [^ConcurrentHashMap fb site kind]
+  (let [^AtomicLong n (.computeIfAbsent fb [site kind]
+                                        (reify java.util.function.Function
+                                          (apply [_ _] (AtomicLong.))))]
+    (when (< (.get n) feedback-cap) (.incrementAndGet n))
+    nil))
+
+(defn observed
+  "The count of kind at site (0 if never observed)."
+  [^ConcurrentHashMap fb site kind]
+  (if-let [^AtomicLong n (.get fb [site kind])] (min feedback-cap (.get n)) 0))
+
+(defn feedback
+  "Snapshot {[site kind] n}."
+  [^ConcurrentHashMap fb]
+  (into {} (map (fn [[k ^AtomicLong n]] [k (min feedback-cap (.get n))])) fb))
+
+(defn join-feedback
+  "The join of two snapshots (pointwise max): how a fork's feedback
+  would be merged back into its parent's."
+  [a b]
+  (merge-with max a b))
+
+(defn speculate?
+  "The speculation decision: speculate at site unless it has deopted
+  max-deopts times (default 3); then the site is poisoned for good,
+  since counters never decrease."
+  ([fb site] (speculate? fb site 3))
+  ([fb site max-deopts] (< (observed fb site :deopt) max-deopts)))
+
+;; ---------------------------------------------------------------------------
+;; the cache
+;; ---------------------------------------------------------------------------
+
+(def ^:private counter-keys [:hits :misses :fallbacks :revalidations :deopts])
+
+(defn make-cache []
+  (atom {:entries {}
+         :counters (zipmap counter-keys (repeatedly #(LongAdder.)))
+         :feedback (make-feedback)}))
+
+(defn- count! [c k] (.increment ^LongAdder (get (:counters c) k)))
 
 (defn clear! "Delete every executable (R3)." [cache]
   (swap! cache assoc :entries {}) cache)
 
-(defn stats [cache] (:stats @cache))
+(defn stats
+  "{:hits :misses :fallbacks :revalidations :deopts}. Revalidations count
+  (executable, root) pairs whose world guards were actually checked."
+  [cache]
+  (update-vals (:counters @cache) #(.sum ^LongAdder %)))
+
+(defn cache-feedback [cache] (:feedback @cache))
 (defn executables [cache] (for [[_ m] (:entries @cache) [_ exe] m] exe))
 
 ;; ---------------------------------------------------------------------------
@@ -119,6 +205,95 @@
               :checker-version "s1-placeholder-0" :provenance provenance}]
     (assoc cert :digest (digest cert))))
 
+(defn frame-states-digest
+  "Hash of an executable's frame states and generic code (nil if none);
+  certified with the executable, so they cannot be swapped afterwards."
+  [{:keys [frame-states generic]}]
+  (when frame-states
+    (c/sha256 (binding [*print-meta* false *print-length* nil *print-level* nil]
+                (pr-str (c/canonical [generic frame-states]))))))
+
+;; frame-state validation --------------------------------------------------------
+
+(defn- binders-entering
+  "How many binders a step from node into its key k pushes."
+  [node k]
+  (case [(:op node) k]
+    [:fn :body] (+ (:arity node) (if (:rest? node) 1 0))
+    [:let :body] 1
+    [:handle :body] 1
+    ([:letrec :inits] [:letrec :body]) (count (:inits node))
+    0))
+
+(defn scope-depth
+  "Number of locals the term at path (get-in style, from the fn term)
+  sees beyond the closure's captures."
+  [term path]
+  (loop [node term path (seq path) d 0]
+    (if-not path
+      d
+      (let [k (first path)]
+        (recur (get node k) (next path) (+ d (long (if (map? node) (binders-entering node k) 0))))))))
+
+(defn- slots-of
+  "Every slot of a frame state (nested ones included)."
+  [fs]
+  (let [top (concat (:env fs)
+                    (when (= :ret (first (:at fs))) [(second (:at fs))])
+                    (mapcat (fn [fr] (concat (when (vector? (:env fr)) (:env fr)) (:vals fr)
+                                             (vals (:clauses fr)) (keep fr [:instance :return])))
+                            (:kont fs)))]
+    (mapcat #(tree-seq (fn [sl] (= :vector (first sl))) second %) top)))
+
+(def ^:private frame-ops
+  "Frame template tag -> the ops of the node such a frame belongs to."
+  {:let #{:let} :if #{:if} :handle #{:handle}
+   :list #{:app :prim :perform :handle :specialize}})
+
+(defn- frame-state-error
+  "nil, or why frame state fs cannot describe a state of generic code
+  (the fn term) whose closures capture ncap locals."
+  [generic ncap fs]
+  (let [node? #(and (map? %) (contains? c/forms (:op %)))
+        at (fn [p] (get-in generic p))
+        [mode x] (:at fs)]
+    (cond
+      (not (#{:eval :ret} mode)) [:bad-position (:at fs)]
+      (and (= :eval mode) (not (node? (at x)))) [:no-node x]
+      (and (= :eval mode) (not= (count (:env fs)) (+ ncap (scope-depth generic x))))
+      [:env-shape {:path x :expected (+ ncap (scope-depth generic x)) :actual (count (:env fs))}]
+      :else
+      (or (some (fn [{:keys [tag path env fn] :as fr}]
+                  (let [g (or fn generic) nd (get-in g path)]
+                    (cond
+                      (not (frame-ops tag)) [:bad-frame tag]
+                      (not (node? nd)) [:no-node path]
+                      (not ((frame-ops tag) (:op nd))) [:frame-node-mismatch tag (:op nd)]
+                      (and (integer? env) (nil? fn)
+                           (not= env (+ ncap (scope-depth generic path))))
+                      [:frame-env-shape {:path path :expected (+ ncap (scope-depth generic path)) :actual env}]
+                      (and (integer? env) (> env (count (:env fs)))) [:frame-env-shape {:path path}])))
+                (:kont fs))
+          (some (fn [[kind v :as sl]]
+                  (cond
+                    (not (#{:live :const :local :closure :letrec :instance :vector} kind)) [:bad-slot sl]
+                    ;; an authority baked into a frame state would be revived by
+                    ;; every deopt: authorities reach a frame state only as live values
+                    (and (= :const kind) (some a/auth? (tree-seq coll? seq v))) [:authority-constant]))
+                (slots-of fs))))))
+
+(defn frame-states-error
+  "nil if every frame state of exe is well-shaped, else a reason."
+  [{:keys [code-id generic frame-states guards]}]
+  (when frame-states
+    (let [ncap (some (fn [[k v]] (when (= :captures k) v)) guards)]
+      (cond
+        (not= code-id (some-> generic c/code-id)) :generic-mismatch
+        (nil? ncap) :missing-captures-guard
+        :else (some (fn [[i fs]] (when-let [e (frame-state-error generic (count ncap) fs)]
+                                   (ex-info "bad frame state" {:index i :error e})))
+                    (map-indexed vector frame-states))))))
+
 (defn check-certificate
   "nil if the executable's certificate is acceptable, else a reason."
   [{:keys [code-id guards certificate] :as exe}]
@@ -127,38 +302,98 @@
       (nil? cert) :missing-certificate
       (not= cid code-id) :code-id-mismatch
       (not= as (set guards)) :assumption-mismatch
+      (not= (:frame-states cert) (frame-states-digest exe)) :frame-state-mismatch
       (not (contains? @checkers checker)) :untrusted-checker
       (nil? provenance) :missing-provenance
       (not= (:digest cert) (digest cert)) :digest-mismatch
       :else ((get @checkers checker) exe))))
 
+(defn- world-guard? [g] (= :world (nth g 0)))
+
+(defn- prepare
+  "The installed form: guards split into world guards (a function of the
+  root, memoized per root) and runtime guards, plus the memo."
+  [exe]
+  (let [gs (vec (:guards exe))]
+    (assoc exe
+           ::world (filterv world-guard? gs)
+           ::runtime (filterv (complement world-guard?) gs)
+           ::memo (atom []))))
+
 (defn install!
-  "Install exe after checking its certificate; throws on rejection."
+  "Install exe after checking its certificate (and frame states); throws
+  on rejection."
   [cache exe]
-  (when-let [reason (check-certificate exe)]
+  (when-let [reason (or (check-certificate exe)
+                        (when-let [e (frame-states-error exe)]
+                          (if (keyword? e) e :bad-frame-state)))]
     (throw (ex-info (str "stage: certificate rejected: " (name reason))
-                    {:reason reason :code-id (:code-id exe)})))
-  (swap! cache assoc-in [:entries (:code-id exe) (set (:guards exe))] exe)
+                    (cond-> {:reason reason :code-id (:code-id exe)}
+                      (= :bad-frame-state reason) (merge (ex-data (frame-states-error exe)))))))
+  (swap! cache assoc-in [:entries (:code-id exe) (set (:guards exe))] (prepare exe))
   exe)
 
 ;; ---------------------------------------------------------------------------
 ;; entry and invalidation
 ;; ---------------------------------------------------------------------------
 
+;; CodeIds of closure terms on the entry path: a small direct-mapped table
+;; keyed by term identity, so entry does not hash or compare the term
+;; (code-id's own memo compares equal-but-distinct terms structurally).
+(def ^:private cid-table (object-array 512))
+
+(defn- term-code-id [t]
+  (let [i (bit-and (System/identityHashCode t) 511)
+        e (aget ^objects cid-table i)]
+    (if (and e (identical? t (nth e 0)))
+      (nth e 1)
+      (let [cid (c/code-id t)]
+        (aset ^objects cid-table i [t cid])
+        cid))))
+
+(def ^:private memo-size 4)
+
+(defn- memo-verdict [entries root]
+  (loop [es (seq entries)]
+    (when es
+      (let [[^WeakReference r v] (first es)]
+        (if (identical? root (.get r)) v (recur (next es)))))))
+
+(defn valid-in?
+  "Do exe's world guards hold in root? Checked once per (exe, root) and
+  memoized on the installed executable; c (the cache value) counts the
+  checks actually performed."
+  [c exe root]
+  (let [memo (::memo exe)
+        v (memo-verdict @memo root)]
+    (if v
+      (identical? v :valid)
+      (let [ok (every? #(guard-holds? % {:basis root}) (::world exe))
+            verdict (if ok :valid :invalid)]
+        (count! c :revalidations)
+        (swap! memo (fn [es] (into [[(WeakReference. root) verdict]]
+                                   (comp (remove (fn [[^WeakReference r]] (nil? (.get r))))
+                                         (take (dec memo-size)))
+                                   es)))
+        ok))))
+
 (defn enter
   "The executable for closure f entered with statics and args under
   basis with continuation kont, or nil (generic fallback)."
   [cache f statics args basis kont]
   (when (ev/closure? f)
-    (let [cid (c/code-id (ev/closure-term f))
-          cands (get-in @cache [:entries cid])]
+    (let [c @cache
+          cands (get (:entries c) (term-code-id (ev/closure-term f)))]
       (if (empty? cands)
-        (do (swap! cache update-in [:stats :misses] inc) nil)
+        (do (count! c :misses) nil)
         (let [ctx {:basis basis :captures (ev/closure-locals f) :statics statics
                    :args (vec args) :kont kont}
-              exe (some (fn [[_ exe]] (when (every? #(guard-holds? % ctx) (:guards exe)) exe))
+              exe (some (fn [[_ exe]]
+                          (when (and (valid-in? c exe basis)
+                                     (every? #(guard-holds? % ctx) (::runtime exe)))
+                            exe))
                         cands)]
-          (swap! cache update-in [:stats (if exe :hits :fallbacks)] inc)
+          (count! c (if exe :hits :fallbacks))
           exe)))))
 
 (defn invalidate!
@@ -176,11 +411,21 @@
                    es)))
     @n))
 
+(defn record-deopt!
+  "T0's deopt hook for cache: count the deopt and observe it as feedback
+  at (CodeId, the frame state's :site)."
+  [cache exe fs _live]
+  (let [c @cache]
+    (count! c :deopts)
+    (some-> (:deopts exe) (swap! inc))
+    (observe! (:feedback c) [(:code-id exe) (:site fs)] :deopt)))
+
 (defmacro with-cache
-  "Evaluate body with cache as T0's entry hook."
+  "Evaluate body with cache as T0's entry hook (and deopt hook)."
   [cache & body]
   `(let [c# ~cache]
-     (binding [ev/*entry-hook* (fn [f# s# a# b# k#] (enter c# f# s# a# b# k#))]
+     (binding [ev/*entry-hook* (fn [f# s# a# b# k#] (enter c# f# s# a# b# k#))
+               ev/*deopt-hook* (fn [e# fs# l#] (record-deopt! c# e# fs# l#))]
        ~@body)))
 
 ;; ---------------------------------------------------------------------------
@@ -209,3 +454,39 @@
   (let [cid (c/code-id (ev/closure-term f))]
     {:code-id cid :guards (set guards) :run run
      :certificate (certify cid guards :klara/trusted-handwritten provenance)}))
+
+(def deopt!
+  "Called by a host executable (:run) at a failed guard: (deopt! i live)
+  leaves the executable and resumes generic T0 at its frame state i,
+  with live the vector of values the frame state's [:live j] slots
+  name. Never returns."
+  ev/deopt!)
+
+(defn speculative
+  "A speculative executable for closure f. code is either a Klara
+  closure entered in the same machine (effects keep working; a failed
+  guard performs (deopt! i [live ..]), the surface form of `speculate`)
+  or a host fn of the arguments (it may call klara.stage/deopt!, but
+  must perform no Klara effect). frame-states is a vector; frame state i
+  describes where generic f's code resumes when deopt i is taken (format:
+  klara.eval/materialize). guards must include [:captures ..]. The
+  obligation, carried by the trusted-handwritten certificate, is that
+  code agrees with f under guards until a deopt, and that each frame
+  state is exact: the state it rebuilds is the one f's generic code is
+  in at that point of the same run."
+  [f code frame-states guards provenance]
+  (let [term (ev/closure-term f)
+        cid (c/code-id term)
+        klara? (ev/closure? code)]
+    (when (and klara? (not (identical? (ev/closure-basis code) (ev/closure-basis f))))
+      (throw (ex-info "stage: a speculative closure must have its generic closure's basis" {})))
+    (let [exe (cond-> {:code-id cid :guards (set guards) :generic term
+                       :frame-states (vec frame-states)}
+                klara? (assoc :klara code :prefix [])
+                (not klara?) (assoc :run code))]
+      (assoc exe :certificate
+             (let [cert (-> {:code-id cid :assumptions (set guards)
+                             :checker :klara/trusted-handwritten
+                             :checker-version "s7-placeholder-0" :provenance provenance}
+                            (assoc :frame-states (frame-states-digest exe)))]
+               (assoc cert :digest (digest cert)))))))
