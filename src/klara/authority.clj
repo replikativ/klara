@@ -272,6 +272,8 @@
       (or (nth (:children l) i)
           (fail "resource authority was not transferred to this branch (a fork must transfer it to exactly one branch)"))
       (let [st (state pid)]
+        (when (and (= :shot (:mode @g)) (#{:resource :evidence} (:kind st)))
+          (children-for g st))          ; refuses with the fork-resume reason
         (when-not (= :open (:status st))
           (fail (str "authority is " (name (:status st))
                      (when-let [op (:operation st)] (str " (" (name op) ")")))
@@ -286,9 +288,10 @@
 (defn- resolve-id
   "The id of the token through which code under chain uses token id."
   [id chain]
-  (let [scope (:scope (state id))]
+  (let [{:keys [scope status]} (state id)]
     (cond
       (= scope (:id (first chain))) id
+      (not (#{:open :advancing} status)) id     ; settled: the use reports how
       (empty? chain)
       (fail "authority belongs to a branch that is not running here (escaped from a fork, or a sibling branch)")
       :else
@@ -340,7 +343,7 @@
       {:execute? false :result (:result st)}
 
       :else
-      (fail (str (name op) ": authority is " (name (:status st))
+      (fail (str (name op) "!: authority is " (name (:status st))
                  (when-let [o (:operation st)] (str " (" (name o) ")")))
             {:status (:status st) :operation (:operation st)}))))
 
@@ -416,6 +419,8 @@
 ;; fork groups
 ;; ---------------------------------------------------------------------------
 
+(defn group-ctx [g i] (nth (:ctxs @g) i))
+
 (defn open-fork!
   "A group of n branch contexts for a fork under chain. opts: :coupled
   (true, or a collection of randomness authorities), :transfer {resource
@@ -445,9 +450,12 @@
         g (atom {:n n :mode :fork :transfer transfer :shares shares :coupled coupled
                  :leases {} :adopted nil :closed false})]
     (swap! g assoc :ctxs (mapv #(new-ctx :fork g %) (range n)))
+    ;; a transfer is an explicit move: the parent is leased at once
+    (doseq [[id i] transfer]
+      (let [c (group-ctx g i)]
+        (swap! (:subst c) assoc id (derive! c id))))
     g))
 
-(defn group-ctx [g i] (nth (:ctxs @g) i))
 
 (defn branches [g vals]
   (vec (map-indexed (fn [i v] (Branch. (group-ctx g i) i v)) vals)))
@@ -797,7 +805,7 @@
   minted by `capability`)."
   [cap frames]
   (let [st (usable cap (ctx-chain frames) #{:resource} "direct")]
-    (when-not (contains? (:payload st) :klara/capability)
+    (when-not (and (map? (:payload st)) (contains? (:payload st) :klara/capability))
       (fail "direct needs a capability (made by `capability`), not a plain resource"))
     (:id st)))
 
