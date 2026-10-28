@@ -140,3 +140,29 @@ here is clojure.core's.
   Clojure's interfaces (prototype in `experiments/kmap/`).
 - Recording clojure.core macro reads: redefining a host macro does not
   invalidate Klara code that used it.
+
+## Klara as a reader dialect: the `:klara` feature
+
+Klara reads Clojure syntax with reader conditionals enabled and answers to
+the feature `:klara`. While Klara is hosted on the JVM, the reader also
+reports Clojure's platform feature `:clj`, so `:clj` branches act as the
+fallback. A `.cljc` library can therefore diverge for Klara where it needs
+to — Java interop, mutable fields, protocol internals — by putting a
+`:klara` branch **before** its `:clj` branch (the first matching branch
+wins, as with babashka's `:bb`):
+
+```klara-repl
+k=> [#?(:klara :klara-branch :clj :clj-branch)]
+[:klara-branch]
+k=> [#?(:clj :clj-branch :klara :klara-branch)]
+[:clj-branch]
+k=> [#?(:cljs :cljs-only :default :fallback)]
+[:fallback]
+```
+
+This is the porting path for the replikativ libraries Klara depends on
+(raster, ansatz, spindel, datahike): they run *linked* first, then *hosted*
+through Klara's expander, and the parts that must differ get `:klara`
+branches — until Klara's own compiler hosts them without the Clojure jar
+(self-hosting). Java source in a library (for example ansatz's kernel in
+`src-java/`) stays a JVM-host dependency and needs a port for other hosts.

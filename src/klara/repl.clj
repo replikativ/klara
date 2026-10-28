@@ -204,11 +204,18 @@
 
 (def ^:private eof (Object.))
 
+(def reader-features
+  "Reader-conditional features Klara answers to. The JVM reader always adds
+  :clj (the platform feature), so in a .cljc form a :klara branch must come
+  before a :clj branch to be chosen; :clj branches serve as the fallback
+  while Klara is hosted on the JVM."
+  #{:klara})
+
 (defn- read-form [rdr]
   (try
     (binding [*read-eval* false
               *ns* (create-ns 'klara.user)]
-      (read {:eof eof :read-cond :allow} rdr))
+      (read {:eof eof :read-cond :allow :features reader-features} rdr))
     (catch Throwable t
       (throw (ex-info (or (ex-message (or (.getCause t) t)) (str t)) {:klara/read true})))))
 
