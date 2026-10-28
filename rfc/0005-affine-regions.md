@@ -1,6 +1,6 @@
 # RFC 0005: Affine regions, and moving checks across binding times
 
-- Status: draft (semantics first; implementation plan in §7)
+- Status: implemented for the first S10 fragment; formal proofs and broader lowering open
 - Owner(s): Christian Weilbach; open questions on native lowering with Veit Heller
 - Builds on: RFC 0001 (authority, S6), RFC 0002 (effects), research notes B (memory model), J (type systems as predictors), N (metacarp unification)
 - Obligations: AF1–AF8 below
@@ -234,24 +234,27 @@ definition of affinity.
    boundary contracts; a JVM emitter test showing no allocation in an affine
    loop.
 
-The first S10 milestone implements item 1 at the store/host API boundary;
-items 2–7 remain unfinished. See
+S10 implements the authority store, T0 effect admission and lexical cleanup,
+the owned surface and parameter contracts, an EDN checker for a first
+fragment, derivation-checked erasure and a narrow JVM buffer emitter.
+Static boundaries and arbitrary effects are excluded conservatively;
+opaque inputs fall back before effects. The ansatz store semantics and
+kernel proofs remain open. See
 [`doc/background/impl/S10.md`](../doc/background/impl/S10.md) for the exact
-boundary, tests, and the reason owned operations are not yet exposed as
-language effects.
+fragment, measured allocation slope and remaining obligations.
 
 ## 8. Obligations
 
 | Id | Obligation | Status |
 |---|---|---|
-| AF1 | Owned transitions preserve value semantics (erase annotations ⇒ same observations) | Store-level functional reference tested in S10; language erasure open |
-| AF2 | The checker is sound: `⊢ r : affine` ⇒ the handler never fails on `r` | Open |
-| AF3 | Check erasure: `⟦erase(r)⟧ = ⟦r⟧` for checked regions | Open (follows from AF2) |
-| AF4 | Forks reject full shares and split read fractions; mass of fractions conserved | Store transitions tested (S10): nested forks, shots, adoption/discard, seeded walk; language integration open |
-| AF5 | Boundary contracts catch every violated assumption at the dynamic/static boundary | Open |
-| AF6 | No continuation is captured through a frame holding a full share | Full-share fork and second-shot admission tested at store level (S10); general-effect capture restriction open |
-| AF7 | In-place representation on each emitter is observationally equal to the functional update | Open |
-| AF8 | Inferred and declared modes agree on accepted regions | Open |
+| AF1 | Owned transitions preserve value semantics (erase annotations ⇒ same observations) | Language-level functional reference and 40 seeded snapshot traces tested in S10; general theorem open |
+| AF2 | The checker is sound: `⊢ r : affine` ⇒ the handler never fails on `r` | Conservative first-fragment checker implemented and rejection tested; kernel soundness proof open |
+| AF3 | Check erasure: `⟦erase(r)⟧ = ⟦r⟧` for checked regions | T0 vs boxed/buffer erasure values, errors and ordered snapshot traces tested; general theorem open |
+| AF4 | Forks reject full shares and split read fractions; mass of fractions conserved | Store conservation suite and T0 nested read-borrow forks tested; formal proof open |
+| AF5 | Boundary contracts catch every violated assumption at the dynamic/static boundary | Dynamic own/borrow/move parameter contracts and opaque-input fallback tested; erasure of owned boundaries excluded |
+| AF6 | No continuation is captured through a frame holding a full share | T0 pre-capture clause admission, context-chain/host-frame checks and second-shot rejection tested; conservative structural fragment |
+| AF7 | In-place representation on each emitter is observationally equal to the functional update | JVM literal Long-vector increment-at-index lowering tested; allocation slope measured zero; other update patterns/emitters open |
+| AF8 | Inferred and declared modes agree on accepted regions | One checker serves inferred/declared modes; accepted EDN derivations compared in tests |
 | AF9 | Transients of every persistent collection are owned regions: edit tokens bound to the owned authority, never to a host thread; `persistent!` is freeze | Open (PSS uses a thread token today) |
 
 ## 9. Open questions

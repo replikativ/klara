@@ -1,0 +1,1 @@
+{:java "25.0.1", :warmup {:calls 300, :iterations 100000}, :samples {0 [656 656 656 656 656 656 656 656 656], 1000 [680 680 680 680 680 680 680 680 680], 1000000 [680 680 680 680 680 680 680 680 680]}, :median-bytes-per-call {0 656, 1000 680, 1000000 680}, :extra-bytes-for-million-iterations 24, :extra-bytes-from-1000-to-million 0, :buffers 1}

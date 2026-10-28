@@ -18,13 +18,13 @@ Each chapter ends with what is *not* implemented. Blocks tagged
 |---|---|---|---|
 | 1 | [The core](01-core.md) | values, functions, the twelve core forms, how Clojure syntax expands into them, code identity | implemented (T0) |
 | 2 | [The world](02-world.md) | definitions, recorded reads, redefinition at the REPL, the pending state, bases | implemented |
-| 3 | [Effects](03-effects.md) | `perform`/`handle`, lexical vs ambient handlers, state, generators, `choose`/`observe`, exceptions, the host boundary | implemented; operation classes are design |
-| 4 | [Forks and authority](04-forks.md) | snapshot forks, fork-resume, authorities, `fork`, settlement, deferred effects (RFC 0001) | implemented in T0 (S6); static affine layer is design |
+| 3 | [Effects](03-effects.md) | `perform`/`handle`, lexical vs ambient handlers, state, generators, `choose`/`observe`, exceptions, the host boundary | implemented; conservative clause admission for owned regions |
+| 4 | [Forks and authority](04-forks.md) | snapshot forks, fork-resume, authorities, `fork`, settlement, deferred effects (RFC 0001) | implemented in T0 (S6); first affine fragment in S10 |
 | 5 | [Staging](05-staging.md) | code values, `code`/`esc`/`run`/`lift`, let-insertion | implemented (written by the staging work) |
 | 6 | [Certified optimization](06-certified-optimization.md) | the specialization cache, guards, shape claims, fusion with ansatz certificates | implemented for map/filter/reduce |
 | 7 | [Clojure interop](07-clojure-interop.md) | calling Clojure and Java, linked vs hosted code, the naming rule, Tier H quirks | partly implemented |
 | 8 | [Compilation](08-compilation.md) | guarded compilation, scalar replacement, fallback | implemented for a conservative subset (S8) |
-| 9 | [Affine regions](09-affine.md) | owned cells, fractional borrows, functional update, freeze | authority store implemented; surface and checker are design |
+| 9 | [Affine regions](09-affine.md) | owned cells, fractional borrows, functional update, freeze | T0 surface/contracts; first checker/erasure fragment; licensed JVM buffer |
 
 ## How to read it
 

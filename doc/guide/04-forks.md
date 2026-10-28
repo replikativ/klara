@@ -299,7 +299,7 @@ through the world, is checked when it is used, as in a fork.
 | AU4 snapshot isolation | **implemented** for worlds; tested |
 | AU5 deferred intents run iff the branch is adopted | **enforced** for host calls classified irreversible; tested |
 | AU6 evidence mass conserved across fork/resample/discard | **checked** by the store (split, join, fork, discard); property test |
-| AU7 a static affine layer erases the dynamic checks | not implemented |
+| AU7 a static affine layer erases the dynamic checks | first owned-cell fragment tested (S10); broader authority checking remains open |
 
 Linked Clojure state that is not wrapped in an authority (an atom read and
 written through `deref` and host calls other than the irreversible ones,
