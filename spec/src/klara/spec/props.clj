@@ -11,12 +11,14 @@
 (a/inductive Step [] :in Prop :indices [c Config c2 Config]
   (mk [c Config] [c2 Config] [h (= (Option Config) (step c) (Option.some Config c2))] :where [c c2]))
 
-;; Well-scoped worlds. (A well-scoped configuration is stated directly as
-;; WSW w /\ WS 0 t: an indexed `WSC (Config.mk w n t)` hits an ansatz recursor
-;; generation error, see README.)
+;; Well-scoped worlds and configurations.
 (a/inductive WSW [] :in Prop :indices [w World]
   (empty :where [World.empty])
   (bind [id Nat] [v Tm] [rest World] [hv (WS 0 v)] [hr (WSW rest)] :where [(World.bind id v rest)]))
+
+;; Needs ansatz >= 55f52be (Prop elimination follows elim_only_at_universe_zero).
+(a/inductive WSC [] :in Prop :indices [c Config]
+  (mk [w World] [n Nat] [t Tm] [hw (WSW w)] [ht (WS 0 t)] :where [(Config.mk w n t)]))
 
 ;; Outcome invariant: a step stays closed, an effect carries a closed argument
 ;; and a context closed but for its hole, and a stuck state is a named one.
@@ -398,3 +400,27 @@
   (Star (Config.mk w n (Tm.app (Tm.app p m) x)) c3)
   (exact (star-det _ _ c3 (star-det _ _ c3 hs ht (smn-step1 w n p m x vp vm vx)) ht
            (smn-step2 w n p m x hp hm vx))))
+
+;; ---------------------------------------------------------------------------
+;; The headline statements on configurations.
+
+(a/theorem preservation-config [c :- Config, c2 :- Config, hs :- (Step c c2), hc :- (WSC c)]
+  (WSC c2)
+  (cases hc :with
+    [(mk w n t hw ht)
+     (cases c2 :with
+       [(mk w2 n2 t2)
+        (have hp (And (WSW w2) (WS 0 t2))) (exact (preservation w n t w2 n2 t2 hs hw ht))
+        (obtain [h1 h2] := hp)
+        (exact (WSC.mk w2 n2 t2 h1 h2))])]))
+
+(a/theorem progress-config [c :- Config, hc :- (WSC c)]
+  (Progress c)
+  (cases hc :with [(mk w n t hw ht) (exact (progress w n t hw ht))]))
+
+;; Type safety: a closed configuration never reaches the unnamed stuck state.
+(a/theorem safety [c :- Config, c2 :- Config, hc :- (WSC c), hs :- (Star c c2)]
+  (Progress c2)
+  (induction hs)
+  (all_goals (try (exact (progress-config _ hc))))
+  (exact (ih_hs (preservation-config _ _ h hc))))

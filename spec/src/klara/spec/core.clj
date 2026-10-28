@@ -150,22 +150,20 @@
     [(lit d) (match d [nil false] [(bool b) b] [(int i) true])]
     [_ true]))
 
-;; Integer comparisons. ansatz-specific: `(== i k)` / `(< i k)` on Int elaborate
-;; to `Decidable.decide`, which ansatz's codegen cannot compile, and a `match`
-;; on Int's constructors miscompiles (Int is a JVM number at runtime). So we go
-;; through Int.natAbs, which compiles. Lean would write `decide (i = k)`, `decide (i < k)`.
-(a/defn intEq [i :- Int, k :- Int] Bool (Nat.beq (Int.natAbs (- i k)) 0))
+;; Integer comparisons. `(== i k)` elaborates to `decide` over DecidableEq
+;; and compiles (ansatz >= 72bd88d). `(< i k)` on Int does not compile yet
+;; (ansatz: "native primitive 'Int.decLt' has no Clojure runtime lowering"), and
+;; a `match` on Int's constructors miscompiles (Int is a JVM number at runtime),
+;; so `intLt` goes through Int.natAbs. Lean would write `decide (i < k)`.
+(a/defn intEq [i :- Int, k :- Int] Bool (== i k))
 ;; i < k  iff  x = k - i is positive  iff  x + |x| is nonzero
 (a/defn intLt [i :- Int, k :- Int] Bool
   (Nat.blt 0 (Int.natAbs (+ (- k i) (Int.ofNat (Int.natAbs (- k i)))))))
 
-(a/defn boolEq [b :- Bool, c :- Bool] Bool
-  (match b [true c] [false (match c [true false] [false true])]))
-
 (a/defn datumEq [x :- Datum, y :- Datum] Bool
   (match x
     [nil (match y [nil true] [_ false])]
-    [(bool b) (match y [(bool c) (boolEq b c)] [_ false])]
+    [(bool b) (match y [(bool c) (== b c)] [_ false])]
     [(int i) (match y [(int k) (intEq i k)] [_ false])]))
 
 ;; Arithmetic on ints; `eq` is Clojure `=` on datums.
