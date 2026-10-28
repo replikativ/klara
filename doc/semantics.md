@@ -42,8 +42,8 @@ over these twelve; `doc/guide/01-core.md` lists the expansions.
 
 T0 has two more forms for staging, `code` (a bracket: its body is code
 one level up) and `esc` (a splice back down, ill-formed outside `code`),
-plus ambient operations `:stage/run`, `:stage/lift`, `:stage/genlet` and
-`:stage/genletrec`.
+plus ambient operations in the `stage` namespace (`:stage/run`,
+`:stage/lift`, `:stage/genlet`, …).
 They are not in the formal spec yet; `doc/guide/05-staging.md` describes
 them.
 
