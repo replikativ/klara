@@ -617,10 +617,10 @@
   (have cm (= Tm (substF x m 0) m)) (exact (substF-closed x m 0 hm))
   (have r2 (= (Option Config) (step (Config.mk w n (Tm.app (Tm.lam (Tm.app (Tm.app p m) (Tm.var 0))) x)))
               (Option.some Config (Config.mk w n (Tm.app (Tm.app p m) x)))))
-  ;; ansatz-specific: `simp [ev, ..]` leaves the level abstraction
-  ;; `(fun l => ..) 0` unreduced, so the outcome is unfolded by hand and the
-  ;; rest closes by rw (which tries rfl).
-  (simp only [step, run1]) (simp only [ev]) (rw [rx]) (rw [cp, cm])
+  ;; Generated matchers expose `ev w n x 0` before simplification; the legacy
+  ;; recursor exposes it afterward. Rewrite at whichever point it appears.
+  (simp only [step, run1]) (try (rw [rx])) (simp only [ev])
+  (try (rw [rx])) (rw [cp, cm])
   (exact (Step.mk _ _ r2)))
 
 ;; s-m-n (MC I eq. 12, trivial specializer): ((specialize p m) x) reduces to (p m x).
