@@ -76,7 +76,11 @@
                              b (:form (emit (:body t) (into env (map #(hash-map :form %) ps)) (conj p :body) true))]
                          {:form (list 'fn raw
                                       (list 'if
-                                            (if (empty? env) (list 'every? 'klara.affine/value? raw) true)
+                                            (if (empty? env)
+                                              (list 'and (list 'every? 'klara.affine/value? raw)
+                                                    (if unbox-parameters?
+                                                      (list 'every? (list 'fn ['x] (list 'instance? 'Long 'x)) raw)
+                                                      true)) true)
                                             (if (= ps raw) b
                                               (list 'let (vec (mapcat (fn [p r] [p (list 'long r)]) ps raw)) b))
                                             (list 'klara.compile.affine-erase/fallback (list 'quote t) raw)))})

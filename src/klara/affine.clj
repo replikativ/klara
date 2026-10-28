@@ -23,6 +23,23 @@
            (if (map? v) (every? (fn [[k x]] (and (value? k) (value? x))) v)
              (every? value? v)))))
 
+(defn- self-tail? [t index tail?]
+  (case (:op t)
+    :quote true
+    :local (not= index (:index t))
+    :app (and (or (and tail? (= (c/local index) (:fn t)))
+                   (self-tail? (:fn t) index false))
+              (every? #(self-tail? % index false) (:args t)))
+    :let (and (self-tail? (:init t) index false)
+              (self-tail? (:body t) (inc index) tail?))
+    :if (and (self-tail? (:test t) index false)
+             (self-tail? (:then t) index tail?) (self-tail? (:else t) index tail?))
+    :fn (self-tail? (:body t) (+ index (:arity t) (if (:rest? t) 1 0)) false)
+    :letrec (let [i (+ index (count (:inits t)))]
+              (and (every? #(self-tail? % i false) (:inits t))
+                   (self-tail? (:body t) i tail?)))
+    (every? #(self-tail? % index false) (c/children t))))
+
 (defn check
   "Return an EDN derivation or nil (:inferred, default). :declared throws
   diagnostics with a source path. Parameters are copyable inputs; owned
@@ -82,8 +99,11 @@
                          :letrec (let [f (first (:inits t)) before @state
                                        loop-f {:kind :loop :arity (:arity f) :state before}
                                        e (conj env loop-f)]
-                                   (when (or pure? (not= 1 (count (:inits t))) (:rest? f))
-                                     (fail p "unsupported recursion"))
+                                   (when (or pure? (not= 1 (count (:inits t))) (:rest? f)
+                                             (not= :app (get-in t [:body :op]))
+                                             (not= (c/local 0) (get-in t [:body :fn]))
+                                             (not (self-tail? (:body f) (:arity f) true)))
+                                     (fail p "only direct-entry self-tail loops are checked"))
                                    (copyable! (walk (:body f) (into e (repeat (:arity f) value))
                                                     (conj p :inits 0 :body) false) p)
                                    (when-not (= before @state) (fail p "loop changes ownership"))
@@ -91,6 +111,13 @@
                          :perform
                          (let [op (:name t) args (:args t)
                                arg (fn [i] (walk (nth args i) env (conj p :args i) pure?))]
+                           (when-let [[minimum maximum]
+                                      ({:own/alloc [1 1] :own/borrow [2 2] :own/read [1 1]
+                                        :own/update [2 nil] :own/move [1 1] :own/freeze [1 1]
+                                        :own/drop [1 1]} op)]
+                             (when (or (< (count args) minimum)
+                                       (and maximum (> (count args) maximum)))
+                               (fail p "owned operation arity")))
                            (when (:target t) (fail p "user effect"))
                            (when (and pure? (not= op :host/var)) (fail p "effect in a pure callback"))
                            (case op

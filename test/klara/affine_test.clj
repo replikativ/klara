@@ -75,7 +75,8 @@
       (let [term (x/expand-expr form w/empty-root) d (check term :declared)]
         (is (= d (check term :inferred)))
         (is (= d (clojure.edn/read-string (pr-str d))))))
-    (doseq [form ['(let [o (own 0)] (freeze o) (read o))
+    (doseq [form ['(freeze) '(move) '(read) '(borrow [x 1] x)
+                 '(let [o (own 0)] (freeze o) (read o))
                  '(let [o (own 0) p (move o)] (read o))
                  '(let [o (own 0)] (borrow [x o] (update! x inc)) (freeze o))
                  '(let [o (own 0)] (freeze o) (freeze o))
@@ -134,6 +135,8 @@
       (is (= :affine-erase (get-in exe [:pass-log 0 :pass])))
       (is (= 1 (count (:representations exe))))
       (is (nil? (stage/check-certificate exe)))
+      (binding [a/*store* (a/new-store)]
+        (is (= [2] ((eval (:form exe)) 1.5))))
       (is (= :invalid-affine-derivation
              (stage/check-certificate (assoc-in exe [:derivation :rules] []))))
       (stage/install! cache exe)
@@ -240,3 +243,12 @@
                     (observe #(ev/call-value (ev/run term) [])))]
       (doseq [in-place? [true false]]
         (is (= checked (observe (eval (:form (erase/erase term d {:in-place? in-place?}))))))))))
+
+(deftest non-tail-and-indirect-loop-entry-stay-dynamic
+  (doseq [form ['(fn [] (let [o (own 0)]
+                         (letfn [(f [n] (if (zero? n) 0 (inc (f (dec n)))))] (f 3))
+                         (freeze o)))
+               '(fn [] (let [o (own 0)]
+                         (letfn [(f [n] n)] (inc (f 3)))
+                         (freeze o)))]]
+    (is (nil? (affine/check (x/expand-expr form w/empty-root))))))
