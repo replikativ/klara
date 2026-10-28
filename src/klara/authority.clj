@@ -181,11 +181,12 @@
 ;; component arithmetic (budgets)
 ;; ---------------------------------------------------------------------------
 
-(defn- n*
-  "Exact product; integral results as longs (shares print as 5, not 5N)."
-  [a b]
-  (let [x (* a b)]
-    (if (and (instance? clojure.lang.BigInt x) (< (abs (double x)) 9.0E18)) (long x) x)))
+(defn- nrm
+  "Exact arithmetic keeps ratios; integral results as longs (1, not 1N)."
+  [x]
+  (if (and (instance? clojure.lang.BigInt x) (< (abs (double x)) 9.0E18)) (long x) x))
+
+(defn- n* [a b] (nrm (* a b)))
 
 (defn- c+ [a b] (merge-with + a b))
 (defn- c- [a b] (merge-with + a (update-vals b -)))
@@ -194,8 +195,8 @@
 
 (defn- remaining* [{:keys [kind payload]}]
   (case kind
-    :evidence (- (:mass payload) (:spent payload) (:moved payload))
-    :budget (c- (c- (:mass payload) (:spent payload)) (:moved payload))
+    :evidence (nrm (- (:mass payload) (:spent payload) (:moved payload)))
+    :budget (update-vals (c- (c- (:mass payload) (:spent payload)) (:moved payload)) nrm)
     nil))
 
 ;; ---------------------------------------------------------------------------
@@ -714,7 +715,7 @@
         (when (empty? sts) (fail "join: needs at least one evidence authority"))
         (when-not (apply distinct? (map :id sts))
           (fail "join: the same evidence authority appears twice"))
-        (let [r (reduce + (map remaining* sts))]
+        (let [r (nrm (reduce + (map remaining* sts)))]
           (doseq [st sts]
             (put! (:id st) #(-> % (update-in [:payload :moved] + (remaining* st))
                                 (assoc :status :settled :operation :join))))
