@@ -74,6 +74,7 @@
   (:require [clojure.main]
             [clojure.string]
             [klara.authority :as a]
+            [klara.effect-class :as effect-class]
             [klara.core :as core]
             [klara.code :as code]
             [klara.world :as w]))
@@ -103,7 +104,7 @@
   deopt (Object.))
 
 (declare call-value call-value* locus-rec-call stage-perform auth-perform start-code step-build
-         step-ret-stage all-frames resume-blocker close-then-ret fork-continue)
+         step-ret-stage all-frames resume-blocker close-then-ret fork-continue cleanup-captured!)
 
 (defmacro ^:private ifn-via-call-value []
   `(~@(for [n (range 9)
@@ -223,7 +224,7 @@
           [(conj captured f) (pop k) f]
           (recur (pop k) (conj captured f)))))))
 
-(defn- unwind-frame? [f] (contains? #{:branch :fork-scope} (:tag f)))
+(defn- unwind-frame? [f] (contains? #{:branch :fork-scope :borrow :capture-exit} (:tag f)))
 
 (defn- find-raise-frame
   "Split kont at the first dynamic handler of :exn/raise or the first
@@ -243,10 +244,31 @@
   fork is discarded, a shot ends."
   [f outer]
   (let [frames (all-frames outer)]
-    (if (= :branch (:tag f))
-      (let [ctx (:ctx f)]
+    (case (:tag f)
+      :borrow (when (= :open (:status (a/state (:loan f)))) (a/return-owned! (:loan f)))
+      :capture-exit (cleanup-captured! (:frames f) outer)
+      :branch (let [ctx (:ctx f)]
         (a/close-group! (:group ctx) frames (if (= :shot (:mode ctx)) :exit :abort)))
       (a/close-group! (:group f) frames :abort))))
+
+(defn- cleanup-captured! [frames outer]
+  (doseq [f frames :when (unwind-frame? f)]
+    (when (or (#{:borrow :capture-exit} (:tag f))
+              (and (:group f) (a/group-open? (:group f)))
+              (and (:ctx f) (a/ctx-open? (:ctx f))))
+      (unwind! f outer))))
+
+(defn- dispatch-clause [cl args captured outer env k]
+  (let [kind (when (closure? cl) (effect-class/classify (closure-term cl)))
+        borrowed? (some #(= :borrow (:tag %)) captured)]
+    (if (and (not (#{:tail :abortive} kind)) (a/full-owned-held? (all-frames k)))
+      (raise (ex-info "klara: general effect cannot capture a full owned write share"
+                      {:klara/error :authority}) env k)
+      (if (= :abortive kind)
+        (do (when borrowed? (cleanup-captured! captured outer))
+            (call-value* cl (conj (vec args) nil) env outer))
+        (call-value* cl (conj (vec args) (->Cont captured (atom 0))) env
+                     (cond-> outer borrowed? (conj {:tag :capture-exit :frames captured :env env})))))))
 
 (defn- reference-call
   "Run reference handler h. An irreversible host call is deferred inside
@@ -265,7 +287,7 @@
     (if-let [[captured outer f] (and (instance? Instance target)
                                      (find-frame k #(= (:id target) (:id %))))]
       (if-let [cl (get (:clauses f) op)]
-        (call-value* cl (conj (vec args) (->Cont captured (atom 0))) env outer)
+        (dispatch-clause cl args captured outer env k)
         (raise (ex-info (str "klara: instance does not handle " op) {:op op}) env k))
       (raise (ex-info (str "klara: unhandled lexical effect " op
                            " (instance out of extent, or behind a host frame)")
@@ -277,7 +299,7 @@
       (if (unwind-frame? f)
         (do (try (unwind! f outer) (catch clojure.lang.ExceptionInfo _ nil))
             (do-perform nil op args env outer))
-        (call-value* (get (:clauses f) op) (conj (vec args) (->Cont captured (atom 0))) env outer))
+        (dispatch-clause (get (:clauses f) op) args captured outer env k))
       (if (= :exn/raise op)
         (let [ex (first args)]
           (throw (if (instance? Throwable ex)
@@ -370,12 +392,17 @@
       (enter-closure f args env k))
 
     (instance? Cont f)
+    (if (some #(and (= :borrow (:tag %))
+                    (not= :open (:status (a/state (:loan %))))) (:frames f))
+      (raise (ex-info "klara: continuation outlived its lexical borrow" {:klara/error :authority}) env k)
     (if (= 1 (swap! (:shots f) inc))
       [:ret (first args) env (into k (rseq (:frames f)))]
       ;; fork-resume: a second resumption runs under a shot context
-      (if-let [why (resume-blocker (:frames f))]
+      (if-let [why (or (when (a/full-owned-held? (all-frames k))
+                           "fork-resume: running context holds a full owned write share")
+                         (resume-blocker (:frames f)))]
         (raise (ex-info (str "klara: " why) {:klara/error :authority}) env k)
-        [:ret (first args) env (into (conj k (assoc (a/shot-frame) :env env)) (rseq (:frames f)))]))
+        [:ret (first args) env (into (conj k (assoc (a/shot-frame) :env env)) (rseq (:frames f)))])))
 
     (pap? f)
     (if-let [exe (enter-hook (pap-fn f) (pap-statics f) args
@@ -434,7 +461,7 @@
     :perform (cond
                (:target node) (do-perform (first vals) (:name node) (rest vals) env k)
                (= "stage" (namespace (:name node))) (stage-perform (:name node) vals env k)
-               (= "auth" (namespace (:name node))) (auth-perform (:name node) vals env k)
+               (#{"auth" "own"} (namespace (:name node))) (auth-perform (:name node) vals env k)
                :else (binding [*outer-k* (conj *outer-k* k)]
                        (do-perform nil (:name node) vals env k)))
     :specialize [:ret (Pap. (first vals) (vec (rest vals))) env k]
@@ -476,6 +503,8 @@
               (if-let [todo (seq (:todo f))]
                 [:eval (first todo) (:env f) (conj k (assoc f :vals vals :todo (rest todo)))]
                 [:finish (:node f) vals (:env f) k]))
+      :borrow (do (unwind! f k) [:ret v (:env f) k])
+      :capture-exit (do (cleanup-captured! (:frames f) k) [:ret v (:env f) k])
       :handle (if-let [r (:return f)]
                 (call-value* r [v] (:env f) k)
                 [:ret v nil k])
@@ -946,6 +975,9 @@
   (try
     (let [frames (all-frames k)]
       (case op
+        :own/borrow (let [[token body] args
+                          loan (a/borrow-owned! token 1 frames)]
+                      (call-value* body [loan] env (conj k {:tag :borrow :loan loan :env env})))
         :auth/fork (let [[opts thunks body-fn] args
                          thunks (vec thunks)
                          g (a/open-fork! opts (count thunks) frames)]
@@ -974,7 +1006,8 @@
   is used, by the shot context."
   [frames]
   (let [seen (java.util.IdentityHashMap.)
-        found (volatile! nil)]
+        found (volatile! (when (a/full-owned-held? frames)
+                           "fork-resume: context holds a full owned write share"))]
     (letfn [(walk [x]
               (when (and (nil? @found) (some? x) (not (plain-data? x)) (nil? (.put seen x true)))
                 (cond
