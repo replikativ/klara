@@ -154,20 +154,41 @@
     (swap! g assoc :ctxs [c])
     {:tag :branch :ctx c}))
 
+(defn- mint-in
+  "Pure: store s with a new token; the new id is (:next s')."
+  [s kind payload scope extra]
+  (let [id (inc (:next s))]
+    (-> s
+        (assoc :next id)
+        (assoc-in [:tokens id] (merge {:id id :kind kind :status :open :scope scope
+                                       :gen 0 :payload payload :origin :mint}
+                                      extra)))))
+
 (defn- mint! [kind payload chain & [extra]]
   (let [ctx (first chain)
-        st (swap! *store*
-                  (fn [s]
-                    (let [id (inc (:next s))]
-                      (-> s
-                          (assoc :next id)
-                          (assoc-in [:tokens id]
-                                    (merge {:id id :kind kind :status :open :scope (:id ctx)
-                                            :gen 0 :payload payload :origin :mint}
-                                           extra))))))
-        id (:next st)]
+        id (:next (swap! *store* mint-in kind payload (:id ctx) extra))]
     (when ctx (swap! (:owned ctx) conj id))
     (Auth. id kind)))
+
+(defn- not-open [what st]
+  (fail (str what ": authority is " (name (:status st))
+             (when-let [op (:operation st)] (str " (" (name op) ")")))
+        {:status (:status st) :operation (:operation st)}))
+
+(defn- swap-open!
+  "Atomically apply f to the state of token id if it is still open (f may
+  refuse by throwing). Returns [old-state new-state]."
+  [id what f]
+  (let [[o n] (swap-vals! *store*
+                          (fn [s]
+                            (let [t (get-in s [:tokens id])]
+                              (if (= :open (:status t))
+                                (assoc-in s [:tokens id] (update (f t) :gen inc))
+                                s))))
+        old (get-in o [:tokens id])]
+    (if (= :open (:status old))
+      [old (get-in n [:tokens id])]
+      (not-open what old))))
 
 ;; ---------------------------------------------------------------------------
 ;; keys (MINSTD, as in examples/klara)
@@ -333,12 +354,17 @@
   "open -> advancing (preflight). Repeating a completed merge or discard
   returns its result; anything else on a non-open authority fails."
   [id op]
-  (let [st (state id)]
+  (let [[o _] (swap-vals! *store*
+                          (fn [s]
+                            (if (= :open (get-in s [:tokens id :status]))
+                              (update-in s [:tokens id]
+                                         #(-> % (assoc :status :advancing :operation op :phase :preflight)
+                                              (dissoc :last-error) (update :gen inc)))
+                              s)))
+        st (get-in o [:tokens id])]
     (cond
       (= :open (:status st))
-      (do (put! id #(-> % (assoc :status :advancing :operation op :phase :preflight)
-                        (dissoc :last-error)))
-          {:execute? true})
+      {:execute? true}
 
       (and (= :settled (:status st)) (= op (:operation st)) (#{:merge :discard} op))
       {:execute? false :result (:result st)}
@@ -670,31 +696,32 @@
       :auth/rand-key (let [k (mod (long a) M)] (mint! :randomness {:key (if (zero? k) 1 k)} chain))
 
       :auth/consume (let [st (usable a chain #{:resource} "consume!")]
-                      (put! (:id st) (settled :consume nil))
-                      (:payload st))
+                      (:payload (first (swap-open! (:id st) "consume!" (settled :consume nil)))))
       :auth/payload (:payload (usable a chain #{:resource} "use!"))
 
       :auth/draw (let [st (usable a chain #{:randomness} "draw!")
-                       k (next-key (get-in st [:payload :key]))]
-                   (put! (:id st) #(assoc-in % [:payload :key] k))
-                   (/ k M))
+                       [_ n] (swap-open! (:id st) "draw!" #(update-in % [:payload :key] next-key))]
+                   (/ (get-in n [:payload :key]) M))
 
       :auth/spend
       (let [st (usable a chain #{:evidence :budget} "spend!")]
         (if (= :evidence (:kind st))
           (do (when-not (and (number? b) (not (neg? b))) (fail "spend!: evidence is spent by a nonnegative amount"))
-              (when (> b (remaining* st))
-                (fail (str "spend!: evidence overspent (" b " > " (remaining* st) " remaining)")))
-              (put! (:id st) #(update-in % [:payload :spent] + b))
+              (swap-open! (:id st) "spend!"
+                          (fn [t]
+                            (when (> b (remaining* t))
+                              (fail (str "spend!: evidence overspent (" b " > " (remaining* t) " remaining)")))
+                            (update-in t [:payload :spent] + b)))
               b)
           (let [amt (if (number? b) {:units b} b)
-                rem (c- (remaining* st) amt)
-                hard (get-in st [:payload :hard])]
-            (when-let [c (first (filter #(neg? (get rem % 0)) (sort hard)))]
-              (fail (str "spend!: hard budget component " c " would be overspent")
-                    {:component c}))
-            (put! (:id st) #(update-in % [:payload :spent] c+ amt))
-            rem)))
+                [_ n] (swap-open! (:id st) "spend!"
+                                  (fn [t]
+                                    (let [rem (c- (remaining* t) amt)]
+                                      (when-let [c (first (filter #(neg? (get rem % 0)) (sort (get-in t [:payload :hard]))))]
+                                        (fail (str "spend!: hard budget component " c " would be overspent")
+                                              {:component c}))
+                                      (update-in t [:payload :spent] c+ amt))))]
+            (remaining* n))))
 
       :auth/remaining (remaining* (usable a chain #{:evidence :budget} "remaining"))
 
@@ -704,10 +731,30 @@
                      (and (sequential? b) (seq b) (every? #(and (number? %) (not (neg? %))) b)
                           (pos? (reduce + b))) b
                      :else (fail "split: give a positive count or a vector of weights"))
-            s (reduce + ws)
-            r (remaining* st)]
-        (put! (:id st) #(-> % (update-in [:payload :moved] + r) (assoc :status :settled :operation :split)))
-        (mapv #(mint! :evidence {:mass (n* r (/ % s)) :spent 0 :moved 0} chain {:origin :split}) ws))
+            sum (reduce + ws)
+            ctx (first chain)
+            ids (volatile! [])
+            [o _] (swap-vals! *store*
+                              (fn [s]
+                                (vreset! ids [])
+                                (let [t (get-in s [:tokens (:id st)])
+                                      r (remaining* t)]
+                                  (if-not (= :open (:status t))
+                                    s
+                                    (reduce (fn [s w]
+                                              (let [s (mint-in s :evidence {:mass (n* r (/ w sum)) :spent 0 :moved 0}
+                                                               (:id ctx) {:origin :split})]
+                                                (vswap! ids conj (:next s))
+                                                s))
+                                            (update-in s [:tokens (:id st)]
+                                                       #(-> % (update-in [:payload :moved] + r)
+                                                            (assoc :status :settled :operation :split)
+                                                            (update :gen inc)))
+                                            ws)))))]
+        (when-not (= :open (get-in o [:tokens (:id st) :status]))
+          (not-open "split" (get-in o [:tokens (:id st)])))
+        (when ctx (swap! (:owned ctx) into @ids))
+        (mapv #(Auth. % :evidence) @ids))
 
       :auth/join
       (let [ts (vec a)
@@ -715,11 +762,25 @@
         (when (empty? sts) (fail "join: needs at least one evidence authority"))
         (when-not (apply distinct? (map :id sts))
           (fail "join: the same evidence authority appears twice"))
-        (let [r (nrm (reduce + (map remaining* sts)))]
-          (doseq [st sts]
-            (put! (:id st) #(-> % (update-in [:payload :moved] + (remaining* st))
-                                (assoc :status :settled :operation :join))))
-          (mint! :evidence {:mass r :spent 0 :moved 0} chain {:origin :join})))
+        (let [ctx (first chain)
+              ids (map :id sts)
+              [o n] (swap-vals! *store*
+                                (fn [s]
+                                  (let [ts (map #(get-in s [:tokens %]) ids)]
+                                    (if-not (every? #(= :open (:status %)) ts)
+                                      s
+                                      (mint-in (reduce (fn [s t]
+                                                         (update-in s [:tokens (:id t)]
+                                                                    #(-> % (update-in [:payload :moved] + (remaining* t))
+                                                                         (assoc :status :settled :operation :join)
+                                                                         (update :gen inc))))
+                                                       s ts)
+                                               :evidence {:mass (nrm (reduce + (map remaining* ts))) :spent 0 :moved 0}
+                                               (:id ctx) {:origin :join})))))]
+          (when-let [t (first (remove #(= :open (:status %)) (map #(get-in o [:tokens %]) ids)))]
+            (not-open "join" t))
+          (when ctx (swap! (:owned ctx) conj (:next n)))
+          (Auth. (:next n) :evidence)))
 
       :auth/branch
       (do (when-not (and (map? a) (seq a)) (fail "branch! takes a map of system ids to worlds"))

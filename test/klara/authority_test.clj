@@ -376,3 +376,22 @@
       (is (re-find #"adoption incomplete: intent 2 of 3"
                    (err s '(fork [x (do (swap! log conj :a) (reset! 42 0) (swap! log conj :c))] (adopt! x)))))
       (is (= :a (peek (k! s '(deref log))))))))
+
+;; ---------------------------------------------------------------------------
+;; the store linearizes uses across host threads
+;; ---------------------------------------------------------------------------
+
+(deftest concurrent-uses
+  (let [s (session)]
+    (k! s '(def r (resource :once)))
+    (k! s '(def e (evidence 1)))
+    (let [run (fn [n form]
+                (let [start (promise)
+                      fs (doall (for [_ (range n)]
+                                  (future @start (not= ::failed (try (k! s form) (catch Throwable _ ::failed))))))]
+                  (deliver start true)
+                  (count (filter true? (map deref fs)))))]
+      (is (= 1 (run 16 '(consume! r))) "one consume! succeeds, however many threads race")
+      (is (= 64 (run 100 '(spend! e 1/64))) "evidence is never overspent")
+      (is (= 0 (k! s '(remaining e))))
+      (is (conserved? s)))))
