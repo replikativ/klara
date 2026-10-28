@@ -1,0 +1,95 @@
+;; Klara Core test programs, as data. Surface grammar: see klara.spec.interp.
+;; :expect is the observation of the reference semantics (klara.spec.core/step,
+;; compiled by ansatz): {:value v} or {:stuck kind ...}. Closures observe as
+;; :klara/fn, capabilities as :klara/cap. Meant to be run differentially
+;; against the T0 interpreter (klara/src) as well.
+[{:name :arith
+  :program (prim + 1 2)
+  :expect {:value 3}}
+ {:name :curried-application
+  :program ((fn [x y] (prim - x y)) 10 3)
+  :expect {:value 7}}
+ {:name :negative-ints
+  :program (prim * (prim - 2 5) 7)
+  :expect {:value -21}}
+ {:name :comparison
+  :program (if (prim < -5 3) (prim = nil nil) false)
+  :expect {:value true}}
+ {:name :truthiness
+  :program (if nil 1 (if 0 2 3))
+  :expect {:value 2}}
+ {:name :factorial
+  :program (letrec [fact (fn [n] (if (prim = n 0) 1 (prim * n (fact (prim - n 1)))))] (fact 20))
+  :expect {:value 2432902008176640000}}
+ {:name :sum-loop
+  :program (letrec [sum (fn [acc i] (if (prim = i 0) acc (sum (prim + acc i) (prim - i 1))))] (sum 0 100))
+  :expect {:value 5050}}
+ {:name :closure-value
+  :program (fn [x] x)
+  :expect {:value :klara/fn}}
+ {:name :resolve
+  :world {:x 41}
+  :program (prim + (resolve :x) 1)
+  :expect {:value 42}}
+ {:name :resolve-fn
+  :world {:inc (fn [x] (prim + x 1))}
+  :program ((resolve :inc) 41)
+  :expect {:value 42}}
+ {:name :unbound-global
+  :world {:x 1}
+  :program (prim + (resolve :y) 1)
+  :expect {:stuck :unbound :id :y}}
+ {:name :tail-resumptive-handler
+  :program (handle [h] (prim + 1 (perform h :get nil)) {:get (fn [v k] (k 41))})
+  :expect {:value 42}}
+ {:name :deep-handler
+  :program (handle [s] (prim + (perform s :a nil) (perform s :a nil)) {:a (fn [v k] (k 5))})
+  :expect {:value 10}}
+ {:name :abort-handler
+  :program (handle [e] (prim + 1 (perform e :raise 7)) {:raise (fn [v k] (prim * v 100))})
+  :expect {:value 700}}
+ {:name :return-clause
+  :program (handle [h] 20 {:return (fn [x] (prim * x 2))})
+  :expect {:value 40}}
+ {:name :multi-shot
+  :program (handle [c] (if (perform c :flip nil) 10 20) {:flip (fn [v k] (prim + (k true) (k false)))})
+  :expect {:value 30}}
+ {:name :state-handler
+  :program ((handle [s]
+              (let [a (perform s :get nil)
+                    u (perform s :put (prim + a 1))
+                    b (perform s :get nil)]
+                (prim * b 10))
+              {:return (fn [x] (fn [st] x))
+               :get (fn [v k] (fn [st] ((k st) st)))
+               :put (fn [v k] (fn [st] ((k nil) v)))})
+            4)
+  :expect {:value 50}}
+ {:name :lexical-targeting
+  ;; the inner instance b also defines :ask, but the perform names instance a
+  :program (handle [a] (handle [b] (perform a :ask nil) {:ask (fn [v k] (k 1))}) {:ask (fn [v k] (k 2))})
+  :expect {:value 2}}
+ {:name :handler-op-tags
+  :program (handle [h] (prim - (perform h :x nil) (perform h :y nil)) {:x (fn [v k] (k 10)) :y (fn [v k] (k 3))})
+  :expect {:value 7}}
+ {:name :ambient-unhandled
+  :program (prim + 1 (perform nil :print 5))
+  :expect {:stuck :unhandled-op :op :print}}
+ {:name :escaped-capability
+  :program (let [c (handle [h] h {})] (perform c :op 1))
+  :expect {:stuck :unhandled-instance :op :op}}
+ {:name :specialize
+  :program ((specialize (fn [a b] (prim - a b)) 10) 3)
+  :expect {:value 7}}
+ {:name :specialize-value
+  :program (specialize (fn [a b] a) 1)
+  :expect {:value :klara/fn}}
+ {:name :not-a-function
+  :program (1 2)
+  :expect {:stuck :not-fn}}
+ {:name :prim-type-error
+  :program (prim + true 1)
+  :expect {:stuck :prim-type}}
+ {:name :bad-perform-target
+  :program (perform 5 :x 1)
+  :expect {:stuck :bad-target}}]

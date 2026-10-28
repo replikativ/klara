@@ -96,3 +96,27 @@
                      hv :- (WS 0 v), ht :- (WS (+ n 1) t), hj :- (<= j n)]
   (WS n (subst j v t))
   (exact (ws-substF v hv t n j ht hj)))
+
+;; Substitution at or above the scope of a term is the identity.
+(a/theorem substVar-closed [v :- Tm, i :- Nat, j :- Nat, hi :- (< i j)] (= Tm (substVar v i j) (Tm.var i))
+  (simp [substVar])
+  (split_ifs)
+  (all_goals (try (dsimp)))
+  (all_goals (simp_all [Nat.beq_eq, Nat.blt_eq]))
+  (all_goals (try (omega))))
+
+(a/theorem substF-closed-var [v :- Tm, i :- Nat, j :- Nat]
+  (=> (WS j (Tm.var i)) (= Tm (substF v (Tm.var i) j) (Tm.var i)))
+  (intro h)
+  (have hi (< i j)) (exact (ws-var-inv j i h))
+  (exact (substVar-closed v i j hi)))
+
+(a/theorem substF-closed [v :- Tm, t :- Tm]
+  (forall [j :- Nat] (=> (WS j t) (= Tm (substF v t j) t)))
+  (induction t)
+  (all_goals (intro j))
+  (all_goals (try (apply substF-closed-var)))
+  (all_goals (intro h))
+  (all_goals (cases h))
+  (all_goals (simp [substF]))
+  (all_goals (try (simp_all))))

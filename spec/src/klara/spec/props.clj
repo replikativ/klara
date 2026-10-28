@@ -269,3 +269,132 @@
   (cases hs)
   (simp [step] at h)
   (exact (stepOut-ok w (run1 w n t) w2 n2 t2 (run1-ok w hw n t ht) hw h)))
+
+(a/theorem resolveResult-ne [n :- Nat, id :- Nat, r :- (Option Tm)] (Not (= Out (resolveResult n id r) Out.val))
+  (intro h) (cases r) (all_goals (simp [resolveResult] at h)) (all_goals (cases h)))
+
+(a/theorem run1-val [w :- World, n :- Nat, t :- Tm, hq :- (= Out (run1 w n t) Out.val)]
+  (= Bool (isVal t) true)
+  (cases t)
+  (all_goals (try (rfl)))
+  (all_goals (try (simp [run1] at hq)))
+  (all_goals (exfalso) (revert hq))
+  (all_goals (first (apply seq2-ne) (apply seq1-ne) (apply handlingOut-ne) (apply resolveResult-ne)))
+  (all_goals (try (first (apply beta-ne) (apply primStep-ne) (apply performStep-ne))))
+  (all_goals (intro hh) (cases hh)))
+
+(a/theorem isVal-run1 [w :- World, n :- Nat, t :- Tm, h :- (= Bool (isVal t) Bool.true)]
+  (= Out (run1 w n t) Out.val)
+  (cases t)
+  (all_goals (try (simp [isVal] at h)))
+  (all_goals (simp [run1])))
+
+;; ---------------------------------------------------------------------------
+;; (b) Progress modulo named stuck states.
+;;
+;; A closed configuration is a value, steps, is an effect no handler instance
+;; in its context catches (an ambient op at top level, or a capability that
+;; escaped its instance), or is a named error. The unnamed failure `scope`
+;; is excluded.
+
+(a/inductive Progress [] :in Prop :indices [c Config]
+  (value [w World] [n Nat] [t Tm] [h (= Bool (isVal t) Bool.true)] :where [(Config.mk w n t)])
+  (steps [c Config] [c2 Config] [h (Step c c2)] :where [c])
+  (unhandled [w World] [n Nat] [t Tm] [tg (Option Nat)] [op Nat] [v Tm] [k Tm]
+             [h (= Out (run1 w n t) (Out.eff tg op v k))] :where [(Config.mk w n t)])
+  (error [w World] [n Nat] [t Tm] [s Stuck] [h (= Out (run1 w n t) (Out.stuck s))]
+         [hs (Not (= Stuck s Stuck.scope))] :where [(Config.mk w n t)]))
+
+(a/theorem progress-next [w :- World, n :- Nat, t :- Tm, n2 :- Nat, e2 :- Tm]
+  (=> (= Out (run1 w n t) (Out.next n2 e2)) (Progress (Config.mk w n t)))
+  (intro hq)
+  (have hs (= (Option Config) (step (Config.mk w n t)) (Option.some Config (Config.mk w n2 e2))))
+  (simp [step, hq, stepOut])
+  (exact (Progress.steps (Config.mk w n t) (Config.mk w n2 e2)
+           (Step.mk (Config.mk w n t) (Config.mk w n2 e2) hs))))
+
+(a/theorem progress-eff [w :- World, n :- Nat, t :- Tm, tg :- (Option Nat), op :- Nat, v :- Tm, k :- Tm]
+  (=> (= Out (run1 w n t) (Out.eff tg op v k)) (Progress (Config.mk w n t)))
+  (intro hq) (exact (Progress.unhandled w n t tg op v k hq)))
+
+(a/theorem progress-stuck [w :- World, n :- Nat, t :- Tm, s :- Stuck, hs :- (Not (= Stuck s Stuck.scope))]
+  (=> (= Out (run1 w n t) (Out.stuck s)) (Progress (Config.mk w n t)))
+  (intro hq) (exact (Progress.error w n t s hq hs)))
+
+(a/theorem progress-val [w :- World, n :- Nat, t :- Tm]
+  (=> (= Out (run1 w n t) Out.val) (Progress (Config.mk w n t)))
+  (intro hq) (exact (Progress.value w n t (run1-val w n t hq))))
+
+(a/theorem progress [w :- World, n :- Nat, t :- Tm, hw :- (WSW w), ht :- (WS 0 t)]
+  (Progress (Config.mk w n t))
+  (have hok (OK (run1 w n t))) (exact (run1-ok w hw n t ht))
+  (cases heq (run1 w n t))
+  (revert heq) (apply progress-val)
+  (revert heq) (apply progress-next)
+  (revert heq) (apply progress-eff)
+  (have hs (Not (= Stuck s Stuck.scope))) (rw [heq] at hok) (cases hok) (assumption)
+  (revert heq) (apply progress-stuck) (assumption))
+
+;; ---------------------------------------------------------------------------
+;; (d) The s-m-n law for the trivial specializer, as step equivalence.
+
+(a/inductive Star [] :in Prop :indices [c Config c2 Config]
+  (refl [c Config] :where [c c])
+  (step [c Config] [c2 Config] [c3 Config] [h (Step c c2)] [hs (Star c2 c3)] :where [c c3]))
+
+;; By determinism, a run that reaches a terminal configuration passes through
+;; every successor.
+(a/theorem star-det [c :- Config, c1 :- Config, c3 :- Config, hs :- (Star c c3),
+                     ht :- (forall [d :- Config] (Not (Step c3 d))), h1 :- (Step c c1)]
+  (Star c1 c3)
+  (cases hs :with
+    [(refl x) (exfalso) (exact (ht c1 h1))]
+    [(step x y z hxy hyz) (have he (= Config c1 y)) (exact (step-det x c1 y h1 hxy)) (rw [he]) (exact hyz)]))
+
+;; (specialize p m) steps to (fn [y] (p m y)) ...
+(a/theorem smn-step1 [w :- World, n :- Nat, p :- Tm, m :- Tm, x :- Tm,
+                      vp :- (= Bool (isVal p) Bool.true), vm :- (= Bool (isVal m) Bool.true),
+                      vx :- (= Bool (isVal x) Bool.true)]
+  (Step (Config.mk w n (Tm.app (Tm.specialize p m) x))
+        (Config.mk w n (Tm.app (Tm.lam (Tm.app (Tm.app p m) (Tm.var 0))) x)))
+  (have rp (= Out (run1 w n p) Out.val)) (exact (isVal-run1 w n p vp))
+  (have rm (= Out (run1 w n m) Out.val)) (exact (isVal-run1 w n m vm))
+  (have rx (= Out (run1 w n x) Out.val)) (exact (isVal-run1 w n x vx))
+  (have r1 (= (Option Config) (step (Config.mk w n (Tm.app (Tm.specialize p m) x)))
+              (Option.some Config (Config.mk w n (Tm.app (Tm.lam (Tm.app (Tm.app p m) (Tm.var 0))) x)))))
+  (simp [step, stepOut, run1, seq2, frame, rp, rm, rx])
+  (exact (Step.mk _ _ r1)))
+
+;; ... which, applied to a value, beta-reduces to (p m x): p and m are closed.
+(a/theorem smn-step2 [w :- World, n :- Nat, p :- Tm, m :- Tm, x :- Tm,
+                      hp :- (WS 0 p), hm :- (WS 0 m), vx :- (= Bool (isVal x) Bool.true)]
+  (Step (Config.mk w n (Tm.app (Tm.lam (Tm.app (Tm.app p m) (Tm.var 0))) x))
+        (Config.mk w n (Tm.app (Tm.app p m) x)))
+  (have rx (= Out (run1 w n x) Out.val)) (exact (isVal-run1 w n x vx))
+  (have cp (= Tm (substF x p 0) p)) (exact (substF-closed x p 0 hp))
+  (have cm (= Tm (substF x m 0) m)) (exact (substF-closed x m 0 hm))
+  (have r2 (= (Option Config) (step (Config.mk w n (Tm.app (Tm.lam (Tm.app (Tm.app p m) (Tm.var 0))) x)))
+              (Option.some Config (Config.mk w n (Tm.app (Tm.app p m) x)))))
+  (simp [step, stepOut, run1, seq2, frame, rx, beta, subst, substF, substVar, cp, cm])
+  (rw [cp, cm])
+  (exact (Step.mk _ _ r2)))
+
+;; s-m-n (MC I eq. 12, trivial specializer): ((specialize p m) x) reduces to (p m x).
+(a/theorem smn [w :- World, n :- Nat, p :- Tm, m :- Tm, x :- Tm,
+                hp :- (WS 0 p), hm :- (WS 0 m),
+                vp :- (= Bool (isVal p) Bool.true), vm :- (= Bool (isVal m) Bool.true),
+                vx :- (= Bool (isVal x) Bool.true)]
+  (Star (Config.mk w n (Tm.app (Tm.specialize p m) x)) (Config.mk w n (Tm.app (Tm.app p m) x)))
+  (exact (Star.step _ _ _ (smn-step1 w n p m x vp vm vx)
+           (Star.step _ _ _ (smn-step2 w n p m x hp hm vx) (Star.refl _)))))
+
+;; Step equivalence: both sides reach the same terminal configurations.
+(a/theorem smn-equiv [w :- World, n :- Nat, p :- Tm, m :- Tm, x :- Tm, c3 :- Config,
+                      hp :- (WS 0 p), hm :- (WS 0 m),
+                      vp :- (= Bool (isVal p) Bool.true), vm :- (= Bool (isVal m) Bool.true),
+                      vx :- (= Bool (isVal x) Bool.true),
+                      ht :- (forall [d :- Config] (Not (Step c3 d))),
+                      hs :- (Star (Config.mk w n (Tm.app (Tm.specialize p m) x)) c3)]
+  (Star (Config.mk w n (Tm.app (Tm.app p m) x)) c3)
+  (exact (star-det _ _ c3 (star-det _ _ c3 hs ht (smn-step1 w n p m x vp vm vx)) ht
+           (smn-step2 w n p m x hp hm vx))))
