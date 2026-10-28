@@ -44,7 +44,9 @@
       "mutual tail calls in constant space")
   (is (= 499999500000 (run '(loop [i 0 acc 0] (if (< i 1000000) (recur (inc i) (+ acc i)) acc)))))
   (is (= 1000000 (run '((fn count-up [i] (if (< i 1000000) (count-up (inc i)) i)) 0)))
-      "self tail call through a named fn"))
+      "self tail call through a named fn")
+  (is (= 10 (run '(loop [i 0] (let [j (inc i)] (if (< j 10) (recur j) j)))))
+      "recur through a let in tail position, as in Clojure"))
 
 (def state-handler
   '{:get (fn [k] (fn [s] ((k s) s)))

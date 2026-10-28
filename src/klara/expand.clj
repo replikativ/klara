@@ -241,7 +241,7 @@
 
 (defn- expand-let* [[_ bindings & body] ctx env]
   (let [[inits env' body'] (expand-bindings bindings body ctx env)]
-    (wrap-lets inits (expand-body body' ctx (assoc env' :recur nil)))))
+    (wrap-lets inits (expand-body body' ctx env'))))
 
 (defn- expand-lambda
   "One parameter scope; supports & rest. recur-r is the recur target."
