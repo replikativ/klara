@@ -118,11 +118,46 @@
     (throw (ex-info "expand: with-genletrec takes [g] and a body" {:form form})))
   (list 'perform :stage/locus-rec (list* 'fn* binder body)))
 
-(def builtin-macros {'qq (fn [[_ template]] (qq-build template))
-                     'run (stage-op :stage/run)
-                     'lift (stage-op :stage/lift)
-                     'genlet (stage-op :stage/genlet)
-                     'with-genletrec with-genletrec})
+;; Authority operations (RFC 0001, S6) are ambient operations of the auth
+;; namespace; fork and direct also delay their bodies.
+(defn- auth-op [op]
+  (fn [[_ & args]] (list* 'perform op args)))
+
+(defn- fork-macro
+  "(fork opts? [b1 e1 b2 e2 ..] body..): run each ei as a branch; the body
+  sees the branches (bi, with (:value bi)) and may (adopt! bi). Without
+  a body the result is the vector of branch values, all discarded. opts
+  is a map expression or the keyword :coupled."
+  [[_ & args :as form]]
+  (let [[opts args] (cond (vector? (first args)) [nil args]
+                          (= :coupled (first args)) [{:coupled true} (rest args)]
+                          :else [(first args) (rest args)])
+        [bv & body] args]
+    (when-not (and (vector? bv) (even? (count bv)) (every? symbol? (take-nth 2 bv)))
+      (throw (ex-info "expand: fork takes options, a vector [name expr ..] and a body" {:form form})))
+    (list 'perform :auth/fork opts
+          (cons 'clojure.core/vector (map (fn [e] (list 'fn* [] e)) (take-nth 2 (rest bv))))
+          (when (seq body) (list* 'fn* (vec (take-nth 2 bv)) body)))))
+
+(defn- direct-macro [[_ cap & body]]
+  (list 'perform :auth/direct cap (list* 'fn* [] body)))
+
+(def auth-ops
+  '{resource :auth/resource, capability :auth/capability, consume! :auth/consume
+    use! :auth/use, evidence :auth/evidence, budget :auth/budget, rand-key :auth/rand-key
+    draw! :auth/draw, spend! :auth/spend, remaining :auth/remaining, split :auth/split
+    join :auth/join, branch! :auth/branch, system :auth/system, merge! :auth/merge
+    discard! :auth/discard, advance! :auth/advance, transfer! :auth/transfer
+    partition! :auth/partition, status :auth/status, adopt! :auth/adopt, receipts :auth/receipts})
+
+(def builtin-macros (merge {'qq (fn [[_ template]] (qq-build template))
+                            'run (stage-op :stage/run)
+                            'lift (stage-op :stage/lift)
+                            'genlet (stage-op :stage/genlet)
+                            'with-genletrec with-genletrec
+                            'fork fork-macro
+                            'direct direct-macro}
+                           (update-vals auth-ops auth-op)))
 
 (def staging-builtins
   "Functions over code values, resolved after prims (klara.code)."

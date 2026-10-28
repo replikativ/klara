@@ -205,7 +205,7 @@ RFC 0002, which adds dynamic handlers for ambient operations.
 | | Lexical instance | Dynamic handler |
 |---|---|---|
 | surface | `(handle [h {:op f .. :return r}] body)` | `(handle :dynamic {:ns/op f ..} body)` |
-| handles | user operations (no namespace in `world host exn time stage`) | ambient operations only (`:world/*`, `:host/*`, `:exn/*`, `:time/*`, `:stage/*`) |
+| handles | user operations (no namespace in `world host exn time stage auth`) | ambient operations only (`:world/*`, `:host/*`, `:exn/*`, `:time/*`, `:stage/*`; `:auth/*` are ambient but never handled by user handlers) |
 | found by | the instance value: `(perform h :op ..)` searches the continuation for that instance only | dynamic search for the nearest frame with a clause for the op |
 | if none | error "unhandled lexical effect" (the spec's *unhandled instance*) | the **reference handler** answers |
 | why | no accidental handling by an unrelated library handler (EF4) | the platform (or a test) can reinterpret world, host and time access |
@@ -213,7 +213,11 @@ RFC 0002, which adds dynamic handlers for ambient operations.
 A clause receives the operation's arguments and the continuation `k`.
 Not calling `k` aborts to the `handle` frame; calling it resumes with the
 handler reinstalled (deep). Continuations are vectors of data frames, so
-T0 permits multi-shot resumption; RFC 0001's restriction is not enforced.
+T0 permits multi-shot resumption. Since S6 a second resumption is a
+fork-resume: it is refused when the continuation captured a resource or
+evidence authority, and otherwise runs under a branch context that splits
+the authorities it uses (RFC 0001; `doc/guide/04-forks.md`). The formal
+semantics does not model authorities yet.
 The well-formedness check (`klara.core/wf-errors`) rejects a lexical
 handler of an ambient operation, a dynamic handler of a user operation and
 an untargeted perform of a user operation.

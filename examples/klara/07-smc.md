@@ -9,7 +9,9 @@ times, once per child; splittable random keys; evidence bookkeeping by
 **Exercises:** the handler rules `Handle`, `Op` and `return`
 (`doc/semantics.md` §3): deep handlers and multi-shot continuations;
 lexical targeting (EF4, RFC 0002); the evidence rule of RFC 0001 (AU6:
-mass is conserved across the population, not per particle).
+mass is conserved across the population, not per particle) and its
+fork-resume rule (a continuation is resumed more than once only when what
+it captured can be split), both checked by T0's authority store (S6).
 
 **Runs on:** T0 only. Nothing here is compiled; the 1000-particle run takes
 about a second.
@@ -169,6 +171,46 @@ k=> (mapv (fn [seed] (double (:p-true (smc (fn [m] (hmm m ys)) 200 seed)))) [1 2
 The estimates scatter around 0.885 and tighten with more particles. Every
 run is reproducible: the only randomness is the key.
 
+## What fork-resume checks
+
+Resampling resumes one continuation several times. T0 allows this only
+when everything the continuation captured can be split. These particles
+hold plain values, so every resumption above was admitted. A particle that
+holds a resource, here a log file, may be resumed once, but resampling it
+into two children is refused before the second child runs:
+
+```klara-repl
+k=> (def log (resource :log))
+#'log
+k=> (def p1 ((particle (fn [m] (let [f log] [(hmm m ys) f]))) 7))
+#'p1
+k=> (:w (resume p1 (split-key 7 0)))
+9/10
+k=> (:w (resume p1 (split-key 7 1)))
+!! authority: fork-resume: the continuation captured a resource authority, which cannot be split implicitly; it can be resumed only once
+```
+
+Evidence is splittable, but not implicitly: how much mass each child gets
+depends on how many children there are, which a continuation cannot know.
+The population does it explicitly, as `smc` does with plain numbers: join
+the weights, then split the total. As authorities, the parts are used up
+by the join, so no weight can be counted twice:
+
+```klara-repl
+k=> (def ws (mapv (fn [w] (evidence w)) [1/10 3/10 2/5 1/5]))
+#'ws
+k=> (def total (join ws))
+#'total
+k=> (remaining total)
+1
+k=> (mapv (fn [e] (remaining e)) (split total 4))
+[1/4 1/4 1/4 1/4]
+k=> (status (first ws))
+{:kind :evidence, :status :settled, :operation :join}
+k=> (join ws)
+!! authority: join: authority is settled (join)
+```
+
 ## What to notice
 
 - **The model knows nothing about inference.** `hmm` performs two
@@ -180,11 +222,12 @@ run is reproducible: the only randomness is the key.
   intercept these performs (EF4; `doc/guide/03-effects.md`).
 - **Fork-resume.** A particle is a continuation plus a key and a weight. The
   same continuation is resumed once per child. In T0 continuations are
-  vectors of data frames, so this is cheap and safe.
-- **Not yet enforced:** RFC 0001 allows multi-shot resumption only when the
-  captured computation holds no authority that cannot be split (a file, a
-  channel). T0 does not check this. Here the particles hold only values, so
-  the restriction would be satisfied.
+  vectors of data frames, so this is cheap; every resumption after the
+  first is checked (previous section).
+- **Weights and keys are still plain numbers here.** The loop does its
+  bookkeeping by hand, which is correct by construction; moving `:w` to
+  evidence authorities and the key to a `rand-key` would let the store
+  check it too, at the cost of a store transition per particle and step.
 - `mapv` and `map-indexed` are clojure.core functions called with Klara
   closures. The closures run in nested machines; this is fine because the
   handler is *inside* each particle. A perform aimed at a handler outside

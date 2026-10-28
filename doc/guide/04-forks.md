@@ -3,10 +3,12 @@
 Klara's central workflow is to fork a running world, work in the branch,
 and then adopt or discard the result: try an edit without disturbing the
 running system, run a counterfactual simulation, compare two strategies on
-the same random numbers. This chapter shows what a fork is today
-(**implemented**: snapshot forks of the world, bases, fork-resume of
-continuations) and what RFC 0001 adds on top (**design**: authorities that
-cannot be duplicated, deferred irreversible effects, settlement).
+the same random numbers. This chapter shows snapshot forks of the world,
+fork-resume of continuations, and the authority model of RFC 0001:
+authorities that cannot be duplicated, the `fork` form with adoption,
+settlement, and deferred irreversible effects. All of it runs in T0
+(the reference interpreter, step S6); what is still design is listed at
+the end.
 
 ## Snapshot forks (implemented)
 
@@ -93,65 +95,216 @@ k=> (handle [h {:split (fn [k] [(k :left) (k :right)])}]
 ```
 
 Particle filters resample this way (`examples/klara/07-smc.md`). In T0,
-continuations are vectors of data frames, so resuming one twice is safe.
-On a compiled host, RFC 0002 plans to resume CPS-compiled regions directly
-and to replay from a savepoint behind host frames, never to clone JVM
-frames.
+continuations are vectors of data frames, so resuming one twice is cheap.
+The second resumption is a *fork-resume*: it is allowed only when every
+authority the continuation captured can be split (see below). On a
+compiled host, RFC 0002 plans to resume CPS-compiled regions directly and
+to replay from a savepoint behind host frames, never to clone JVM frames.
 
-## Authority (design: RFC 0001)
+## Authority (implemented: RFC 0001)
 
 Forking data is easy because data can be shared. The trouble is everything
 that must not be duplicated: a file handle, a database branch that will be
 merged, the weight of an observation, a budget, a random stream. RFC 0001
 calls these **authorities**.
 
-- **Data is aliasable; authority is not.** Any value may be referenced any
-  number of times. An authority is a token with a lifecycle
-  (open → advancing → settled | incomplete) and can be used up exactly once.
-- **A fork splits every authority** the forked computation holds, by kind:
+**Data is aliasable; authority is not.** An authority is an ordinary value
+that may be referenced any number of times. What cannot be duplicated is
+its *use*: each authority has exactly one state, kept in an authority
+store, with the lifecycle open → advancing → settled | incomplete.
 
-  | Authority | Split at fork |
-  |---|---|
-  | resource (file, channel, Java object) | none: transfer only; a fork that needs it in both branches is rejected |
-  | branchable system (world, datahike, yggdrasil) | one branch per side; settlement authority partitioned |
-  | evidence (an observation's likelihood) | mass-preserving split; populations join, then split |
-  | budget (time, memory, money) | split; hard components cannot be overspent |
-  | randomness (a splittable key) | split; shared only in a `:coupled` fork |
-
-- **Irreversible effects are deferred.** Inside a fork, host I/O (sending an
-  email) is queued as an intent, executed if the branch is adopted and
-  dropped if it is discarded.
-- **Settlement** of each authority happens exactly once and fails closed.
-- **Multi-shot resumption** is allowed only when the captured computation's
-  authorities can be split.
-
-The surface is not fixed. A sketch of the city example of
-`doc/background/02-examples.md`:
-
-```klara-repl :norun
-k=> (fork :coupled [w (scenario/close city :milaneo)]
-      (within {:rel 0.01}
-        (- (spending city :mitte) (spending w :mitte))))
-{:value 2925.4 :guarantee :statistical :receipt {..}}
+```klara-repl
+k=> (def r (resource "report.txt"))
+#'r
+k=> [r r {:again r}]
+[#<resource> #<resource> {:again #<resource>}]
+k=> (status r)
+{:kind :resource, :status :open}
+k=> (consume! r)
+"report.txt"
+k=> (consume! r)
+!! authority: consume!: authority is settled (consume)
 ```
 
-This block cannot run: `fork` as a form, `:coupled`, `within` and receipts
-do not exist yet. `examples/klara/08-coupled-fork.md` writes the same
-experiment with what exists, passing the shared key by hand.
+Copying `r` into a vector three times was fine; consuming it twice was
+not. Because the check happens at the use, it does not matter how the
+second use reached the authority: through another local, a nested
+collection, metadata, a closure or a lookup in the world
+(`test/klara/authority_test.clj` tries each).
+
+There are five kinds. `resource` wraps a host object (consume it with
+`consume!`, use it with `use!`); `evidence` holds likelihood mass (`spend!`,
+`remaining`, `split`, `join`); `budget` holds components such as time and
+money (`spend!`, `remaining`); `rand-key` is a splittable random key
+(`draw!`); `branch!` makes a branchable authority over worlds (`system`,
+`merge!`, `discard!`, `advance!`, `partition!`). `transfer!` moves any of
+them to a new owner and makes the old value stale.
+
+### The fork form
+
+`(fork opts? [name expr ..] body..)` runs each `expr` as a branch, then
+the body, in which each name is bound to its branch. `(:value b)` is the
+branch's result. The body may `(adopt! b)` one branch; when the body
+returns, the adopted branch is kept and the others are discarded. Without
+a body, `fork` returns the branch values and discards every branch.
+
+A fork **splits every authority** a branch uses, by kind, when the branch
+first uses it:
+
+| Authority | Split at fork |
+|---|---|
+| resource (file, channel, Java object) | none: transfer only (`:transfer {r i}`); a fork that needs it in two branches is rejected |
+| branchable system (world, datahike, yggdrasil) | one branch per side; adopting merges it, the others are discarded |
+| evidence (an observation's likelihood) | mass split by `:shares` (equal by default); populations join, then split |
+| budget (time, memory, money) | split by `:shares`; hard components cannot be overspent |
+| randomness (a splittable key) | split; shared only in a `:coupled` fork |
+
+Evidence spent in a discarded branch is refunded; evidence spent in the
+adopted branch is committed. Each branch can spend only its share:
+
+```klara-repl
+k=> (def e (evidence 1))
+#'e
+k=> (fork [a (spend! e 1/4) b (remaining e)])
+[1/4 1/2]
+k=> (remaining e)
+1
+k=> (fork [a (spend! e 1/4) b (remaining e)] (adopt! a) (:value b))
+1/2
+k=> (remaining e)
+3/4
+```
+
+A resource goes to exactly one branch, and only when the fork says so:
+
+```klara-repl
+k=> (def f (resource :file))
+#'f
+k=> (fork [a (consume! f) b :other])
+!! authority: resource authority was not transferred to this branch (a fork must transfer it to exactly one branch)
+k=> (fork {:transfer {f 0}} [a (consume! f) b :other])
+[:file :other]
+k=> (status f)
+{:kind :resource, :status :settled, :operation :consume}
+```
+
+Consuming a resource cannot be undone, so it stays consumed although the
+branch was discarded. A random key is split per branch unless the fork is
+`:coupled`; a budget's hard components are split, its traded ones may be
+overspent and are charged to the parent either way:
+
+```klara-repl
+k=> (def g (rand-key 42))
+#'g
+k=> (fork [a (draw! g) b (draw! g)])
+[1424098507/2147483647 1606704301/2147483647]
+k=> (fork :coupled [a (draw! g) b (draw! g)])
+[1789310095/2147483647 1789310095/2147483647]
+k=> (def b (budget {:seconds 10 :euros 4} #{:seconds}))
+#'b
+k=> (fork [x (spend! b {:seconds 6}) y 0])
+!! authority: spend!: hard budget component :seconds would be overspent
+k=> (fork [x (spend! b {:seconds 4}) y (spend! b {:euros 3})])
+[{:seconds 1, :euros 2} {:seconds 5, :euros -1}]
+k=> (remaining b)
+{:seconds 6, :euros 1}
+```
+
+`examples/klara/08-coupled-fork.md` uses a coupled fork for a
+counterfactual with common random numbers.
+
+### Irreversible effects are deferred
+
+Inside a branch, a host effect classified as irreversible (`println`,
+`spit`, `swap!`, `reset!` and a few more) is not performed. It is queued
+as an intent, run when the branch is adopted and dropped when it is
+discarded. Acting at once needs a `capability`, which is a resource and so
+goes to one branch only; each such action leaves a receipt.
+
+```klara-repl
+k=> (fork [a (println "send offer A") b (println "send offer B")] (adopt! b) :sent)
+send offer B
+:sent
+k=> (fork [a (println "send offer A")])
+[#<intent clojure.core/println>]
+k=> (def io (capability :mail))
+#'io
+k=> (fork {:transfer {io 0}} [a (direct io (println "logged now")) b :quiet])
+logged now
+[nil :quiet]
+k=> (select-keys (last (receipts)) [:kind :op :args])
+{:kind :direct, :op clojure.core/println, :args ["logged now"]}
+```
+
+### Settlement
+
+A branchable authority governs branches of one or more systems. It is
+settled exactly once, by `merge!` or `discard!`; repeating the same
+settlement returns its result, anything else is refused:
+
+```klara-repl
+k=> (def city (perform :world/fork))
+#'city
+k=> (def h (branch! {:city city}))
+#'h
+k=> (perform :world/eval-in (system h :city) '(def shops 2))
+shops
+k=> (merge! h)
+{:merged [:city]}
+k=> (perform :world/eval-in city 'shops)
+2
+k=> (discard! h)
+!! authority: discard!: authority is settled (merge)
+```
+
+Settlement fails closed, following spindel's `ForkHandle`: a failure in the
+read-only preflight (a conflict with a parent write) reopens the
+authority; a failure after the first durable write leaves it
+`:incomplete`, refusing any further settlement until it is recovered
+explicitly. `partition!` splits one authority into parts that cover its
+systems disjointly and exhaustively, and consumes the original;
+`advance!` brings the parent's writes into the branch under an
+`:advancing` lease.
+
+### Fork-resume and authorities
+
+A continuation resumed a second time runs as a branch too. Randomness is
+split per resumption and a budget is borrowed, but a captured resource or
+evidence authority cannot be split implicitly (for evidence, the number
+of resumptions is unknown; split it explicitly before resuming), so the
+second resumption is refused:
+
+```klara-repl
+k=> (let [f (resource :file)]
+      (handle [h {:split (fn [k] [(k :left) (k :right)])}]
+        (let [x (perform h :split)] [x (status f)])))
+!! authority: fork-resume: the continuation captured a resource authority, which cannot be split implicitly; it can be resumed only once
+k=> (let [g (rand-key 7)]
+      (handle [h {:split (fn [k] [(k :left) (k :right)])}]
+        (let [x (perform h :split)] [x (draw! g)])))
+[[:left 337897/2147483647] [:right 2041524840/2147483647]]
+```
+
+The check walks what the continuation holds (locals, collections,
+metadata, closures). An authority it reaches only later, for example
+through the world, is checked when it is used, as in a fork.
 
 ### What is and is not enforced today
 
 | Obligation (RFC 0001) | Status |
 |---|---|
-| AU1 no program duplicates an authority | **not enforced**: there are no authority tokens; a continuation holding a Java object can be resumed twice |
-| AU2 settlement exactly once, fails closed | holds in spindel; not ported |
-| AU3 partition is disjoint and exhaustive | holds in spindel; not ported |
+| AU1 no program duplicates an authority | **enforced dynamically** in T0; adversarial suite in `authority_test` |
+| AU2 settlement exactly once, fails closed | **enforced** for branchable authorities and every consuming operation; spindel's tests ported |
+| AU3 partition is disjoint and exhaustive | **enforced** (`partition!`, and the adopt-one/discard-rest settlement of a fork) |
 | AU4 snapshot isolation | **implemented** for worlds; tested |
-| AU5 deferred intents run iff the branch is adopted | not implemented; host effects in a fork run immediately |
-| AU6 evidence mass conserved across fork/resample | by construction in example 7's handler; not checked by the runtime |
+| AU5 deferred intents run iff the branch is adopted | **enforced** for host calls classified irreversible; tested |
+| AU6 evidence mass conserved across fork/resample/discard | **checked** by the store (split, join, fork, discard); property test |
 | AU7 a static affine layer erases the dynamic checks | not implemented |
 
-A fork today is therefore safe for **values and world definitions**. Linked
-Clojure state (atoms, Java objects, I/O) is shared by all forks, as RFC 0001
-documents for compatibility level L0. A forked branch is not adopted or
-discarded either; an unused fork is simply garbage.
+Linked Clojure state that is not wrapped in an authority (an atom read and
+written through `deref` and host calls other than the irreversible ones,
+a Java object) is still shared by all forks, as RFC 0001 documents for
+compatibility level L0. `fork-following` (an overlay over the live
+parent), receipts that Simmis review can consume, `within` and a
+compensation story for effects that cannot be deferred remain design;
+`doc/background/impl/S6.md` lists the open decisions.
