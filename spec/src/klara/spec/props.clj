@@ -49,8 +49,8 @@
   (simp only [lookup])
   (split)
   (all_goals (dsimp) (intro h2))
-  (exact (ih_hr _ _ h2))
-  (cases h2) (assumption))
+  (cases h2) (assumption)
+  (exact (ih_hr _ _ h2)))
 
 (a/theorem frame-ok [o :- Out, fr :- (=> Tm Tm), ho :- (OK o),
                      h0 :- (forall [e :- Tm] (=> (WS 0 e) (WS 0 (fr e)))),
