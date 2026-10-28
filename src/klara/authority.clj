@@ -16,6 +16,8 @@
     :evidence    likelihood mass {:mass :spent :moved}; spend, split, join
     :budget      components {:mass {c n} :spent {c n} :moved {c n} :hard #{c}}
     :randomness  a splittable key {:key k}; draw
+    :owned       a functional cell {:cell v :share q :lent {loan-id q}
+                                    :permission :write|:read}; RFC 0005
     :branchable  settlement authority over branches of systems (worlds)
                  {:systems {sid {:parent World :child World :base root}}};
                  merge, discard, transfer, partition, advance (spindel's
@@ -231,6 +233,22 @@
       (let [s (reduce + ws)] (mapv #(/ % s) ws))
       (vec (repeat n (/ 1 n))))))
 
+(defn- full-owned? [st]
+  (and (= :owned (:kind st))
+       (= :write (get-in st [:payload :permission]))
+       (= 1 (get-in st [:payload :share]))
+       (empty? (get-in st [:payload :lent]))))
+
+(defn full-owned-held?
+  "Whether the running context chain holds a live full write share.
+  Includes an update's lease: a callback cannot fork around its write."
+  [frames]
+  (let [scopes (conj (set (map :id (ctx-chain frames))) nil)]
+    (boolean
+     (some #(and (contains? scopes (:scope %))
+                 (#{:open :advancing} (:status %)) (full-owned? %))
+           (vals (:tokens @*store*))))))
+
 (defn- children-for
   "Mint the n children of parent state st for group g. Returns
   [child-ids-or-nil lease-extra parent-update-fn]."
@@ -244,6 +262,19 @@
                                                        :derived-from pid})]
                   (auth-id t)))]
     (case (:kind st)
+      :owned
+      (let [{:keys [share cell]} (:payload st)
+            ws (if shot? [1] (weights g pid))]
+        (when (full-owned? st)
+          (fail "fork: a full owned write share cannot be split"))
+        (when-not (and (pos? share) (every? #(and (rational? %) (pos? %)) ws))
+          (fail "fork: owned read shares need positive rational fractions"))
+        [(mapv (fn [i wt]
+                 (kmint i {:cell cell :share (* share wt) :lent {} :permission :read}))
+               (range n) ws)
+         {:lent share}
+         #(assoc-in % [:payload :share] 0)])
+
       :resource
       (if shot?
         (fail "fork-resume: a resumed continuation uses a resource authority; it can be resumed only once")
@@ -453,6 +484,8 @@
   (true, or a collection of randomness authorities), :transfer {resource
   branch-index}, :shares {evidence-or-budget [weight ..]}."
   [opts n frames]
+  (when (full-owned-held? frames)
+    (fail "fork: a full owned write share cannot be split"))
   (let [chain (ctx-chain frames)
         opts (or opts {})
         _ (when-not (map? opts) (fail "fork options must be a map"))
@@ -550,22 +583,33 @@
                         (ex-message e))
                    {:klara/error :incomplete}))))))
 
+(declare return-owned!)
+
+(defn- close-owned-loans! [id]
+  (doseq [cid (keys (get-in (state id) [:payload :lent]))]
+    (close-owned-loans! cid)
+    (return-owned! (Auth. cid :owned))))
+
 (defn- settle-child! [id]
+  (when (= :owned (:kind (state id))) (close-owned-loans! id))
   (put! id (fn [s]
              (cond-> (if (#{:open :advancing} (:status s))
                        (assoc s :status :settled :operation :fork-exit)
                        s)
-               (= :evidence (:kind s)) (assoc-in [:payload :moved] (get-in s [:payload :mass]))))))
+               (= :evidence (:kind s)) (assoc-in [:payload :moved] (get-in s [:payload :mass]))
+               (= :owned (:kind s)) (assoc-in [:payload :share] 0)))))
 
 (defn- discard-owned! [id]
   (let [s (state id)]
+    (when (= :owned (:kind s)) (close-owned-loans! id))
     (when (and (= :evidence (:kind s)) (= :mint (:origin s)))
       (swap! *store* update-in [:minted :evidence] - (get-in s [:payload :mass])))
     (put! id (fn [s]
                (cond-> (if (#{:open :advancing} (:status s))
                          (assoc s :status :settled :operation :discard)
                          s)
-                 (= :evidence (:kind s)) (assoc-in [:payload :moved] (get-in s [:payload :mass])))))))
+                 (= :evidence (:kind s)) (assoc-in [:payload :moved] (get-in s [:payload :mass]))
+                 (= :owned (:kind s)) (assoc-in [:payload :share] 0))))))
 
 (defn- rescope! [id chain]
   (let [p (first chain)]
@@ -591,6 +635,7 @@
               a (when adopted (nth ch adopted))
               reopen #(-> % (assoc :status :open) (dissoc :operation))]
           (case kind
+            :owned (put! pid #(-> % (assoc-in [:payload :share] lent) reopen))
             :evidence
             (put! pid #(-> %
                            (update-in [:payload :moved] - lent)
@@ -624,6 +669,7 @@
           (doseq [c children :when c] (settle-child! c))))
       (doseq [[j ctx] (map-indexed vector ctxs)
               id @(:owned ctx)]
+        (when (= :owned (:kind (state id))) (close-owned-loans! id))
         (if (= j adopted) (rescope! id chain) (discard-owned! id)))
       (when (and adopted (not shot?) (empty? @errors))
         (let [intents @(:intents (nth ctxs adopted))]
@@ -644,9 +690,132 @@
   else the reason."
   [t]
   (when-let [st (get-in @*store* [:tokens (auth-id t)])]
-    (when (and (#{:open :advancing} (:status st)) (#{:resource :evidence} (:kind st)))
-      (str "fork-resume: the continuation captured " (if (= :resource (:kind st)) "a resource" "an evidence")
-           " authority, which cannot be split implicitly; it can be resumed only once"))))
+    (when (#{:open :advancing} (:status st))
+      (cond
+        (full-owned? st) "fork-resume: the continuation captured a full owned write share"
+        (#{:resource :evidence} (:kind st))
+        (str "fork-resume: the continuation captured " (if (= :resource (:kind st)) "a resource" "an evidence")
+             " authority, which cannot be split implicitly; it can be resumed only once")))))
+
+;; ---------------------------------------------------------------------------
+;; owned cells (RFC 0005). These are store transitions; the evaluator must
+;; arrange lexical loan cleanup and restrict effects before exposing them.
+;; ---------------------------------------------------------------------------
+
+(defn- require-full [st what]
+  (when-not (full-owned? st)
+    (fail (str what " requires the full owned write share (no outstanding lends)")))
+  st)
+
+(defn borrow-owned!
+  "Lend exact rational fraction q of t to a lexical scope. Returns a read
+  token, even when q = 1. The caller MUST return it with return-owned! on
+  normal and exceptional scope exit. Nested read loans are supported."
+  [t q frames]
+  (when-not (and (rational? q) (< 0 q) (<= q 1))
+    (fail "borrow requires a rational fraction in (0,1]"))
+  (let [chain (ctx-chain frames)
+        st (usable t chain #{:owned} "borrow")
+        pid (:id st)
+        [_ n] (swap-vals!
+               *store*
+               (fn [s]
+                 (let [p (get-in s [:tokens pid])
+                       share (get-in p [:payload :share])]
+                   (when-not (= :open (:status p)) (not-open "borrow" p))
+                   (when (> q share) (fail "borrow exceeds the available owned share"))
+                   (let [s' (mint-in s :owned
+                                     {:cell (get-in p [:payload :cell]) :share q
+                                      :lent {} :permission :read}
+                                     (:scope p) {:origin :loan :loan-parent pid})
+                         cid (:next s')]
+                     (update-in s' [:tokens pid]
+                                #(-> % (update :gen inc)
+                                     (update-in [:payload :share] - q)
+                                     (assoc-in [:payload :lent cid] q)))))))
+        cid (:next n)]
+    (when-let [ctx (first chain)] (swap! (:owned ctx) conj cid))
+    (Auth. cid :owned)))
+
+(defn return-owned!
+  "Close a lexical read loan exactly once, restoring its parent's share.
+  Refuses active subloans or fork leases. Escaped aliases become settled.
+  Use the original loan token, after closing forks nested in its scope."
+  [t]
+  (let [cid (token-id t "return borrow")]
+    (swap! *store*
+           (fn [s]
+             (let [c (get-in s [:tokens cid])
+                   pid (:loan-parent c)
+                   p (get-in s [:tokens pid])
+                   q (get-in p [:payload :lent cid])]
+               (when-not (= :open (:status c)) (not-open "return borrow" c))
+               (when-not (and (= :owned (:kind c)) pid q)
+                 (fail "return borrow expects an outstanding owned loan"))
+               (when-not (= :open (:status p)) (not-open "return borrow parent" p))
+               (when-not (and (empty? (get-in c [:payload :lent]))
+                              (= q (get-in c [:payload :share])))
+                 (fail "return borrow has outstanding lends"))
+               (-> s
+                   (update-in [:tokens cid] #(-> % (update :gen inc)
+                                                (assoc :status :settled :operation :return-borrow)
+                                                (assoc-in [:payload :share] 0)))
+                   (update-in [:tokens pid] #(-> % (update :gen inc)
+                                                (update-in [:payload :share] + q)
+                                                (update-in [:payload :lent] dissoc cid)))))))
+    nil))
+
+(defn with-owned-borrow
+  "Host reference for a lexical loan. Machine glue must use a cleanup
+  frame instead of this host callback to permit Klara effects in body."
+  [t q frames body]
+  (let [loan (borrow-owned! t q frames)]
+    (try (body loan) (finally (return-owned! loan)))))
+
+(defn- update-owned! [t f args frames]
+  (let [st (usable t (ctx-chain frames) #{:owned} "update!")
+        id (:id st)
+        [old _] (swap-open! id "update!"
+                           #(-> (require-full % "update!")
+                                (assoc :status :advancing :operation :update)))
+        reopen #(-> % (assoc :status :open) (dissoc :operation))]
+    ;; f is called ONCE outside swap!, under a lease. A failed functional
+    ;; update has published no cell change and can safely reopen the token.
+    (try
+      (let [v (apply f (get-in old [:payload :cell]) args)]
+        (put! id #(-> % (assoc-in [:payload :cell] v) reopen))
+        t)
+      (catch Throwable e
+        (put! id reopen)
+        (throw e)))))
+
+(defn- move-owned! [t frames]
+  (let [chain (ctx-chain frames)
+        st (usable t chain #{:owned} "move")
+        id (:id st)
+        [_ n] (swap-vals!
+               *store*
+               (fn [s]
+                 (let [p (get-in s [:tokens id])]
+                   (when-not (= :open (:status p)) (not-open "move" p))
+                   (require-full p "move")
+                   (-> (mint-in s :owned (:payload p) (:scope p) {:origin :move})
+                       (update-in [:tokens id]
+                                  #(-> % (update :gen inc)
+                                       (assoc :status :settled :operation :move)
+                                       (assoc-in [:payload :share] 0)))))))
+        cid (:next n)]
+    (when-let [ctx (first chain)] (swap! (:owned ctx) conj cid))
+    (Auth. cid :owned)))
+
+(defn- settle-owned! [t op frames]
+  (let [st (usable t (ctx-chain frames) #{:owned} (name op))
+        [old _] (swap-open! (:id st) (name op)
+                           #(-> (require-full % (name op))
+                                (assoc :status :settled :operation op)
+                                (assoc-in [:payload :share] 0)
+                                (assoc-in [:payload :cell] nil)))]
+    (when (= :freeze op) (get-in old [:payload :cell]))))
 
 ;; ---------------------------------------------------------------------------
 ;; the operations (ambient :auth/*)
@@ -682,6 +851,15 @@
   (let [chain (ctx-chain frames)
         [a b] args]
     (case op
+      :own/alloc (mint! :owned {:cell a :share 1 :lent {} :permission :write} chain)
+      :own/read (let [st (usable a chain #{:owned} "read")]
+                  (when-not (pos? (get-in st [:payload :share]))
+                    (fail "read requires a positive owned share"))
+                  (get-in st [:payload :cell]))
+      :own/update (update-owned! a b (drop 2 args) frames)
+      :own/move (move-owned! a frames)
+      :own/freeze (settle-owned! a :freeze frames)
+      :own/drop (settle-owned! a :drop frames)
       :auth/resource (mint! :resource a chain)
       :auth/capability (mint! :resource {:klara/capability a} chain)
       :auth/evidence (do (when-not (and (number? a) (not (neg? a)))
