@@ -131,6 +131,15 @@
     (throw (ex-info "code-size expects a code value" {:klara/error :stage :value c})))
   (size (code-term c)))
 
+(defn code-vector
+  "The code of a vector whose elements are the given code values: an
+  n-ary splice for an n known only at generation time. The elements'
+  free names are checked when the result is spliced or run."
+  [cs]
+  (when-not (every? code? cs)
+    (throw (ex-info "code-vector expects code values" {:klara/error :stage})))
+  (->code {:op :prim :name 'vector :args (mapv code-term cs)}))
+
 (defn closed? "A code value without free names." [c]
   (and (code? c) (empty? (free-vars (code-term c)))))
 
@@ -283,7 +292,9 @@
                                            nms (:inits t)))
                           (f body)))))
       :app (apply list (f (:fn t)) (map f (:args t)))
-      :prim (apply list (:name t) (map f (:args t)))
+      :prim (if (= 'vector (:name t))
+              (mapv f (:args t))
+              (apply list (:name t) (map f (:args t))))
       :specialize (apply list 'specialize (f (:fn t)) (map f (:args t)))
       :perform (perform-form t rn)
       :handle (let [cl (cond-> (into (sorted-map) (map (fn [[k v]] [k (f v)])) (:clauses t))

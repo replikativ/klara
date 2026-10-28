@@ -128,6 +128,7 @@
   "Functions over code values, resolved after prims (klara.code)."
   {'code-size 'klara.code/code-size
    'code? 'klara.code/code?
+   'code-vector 'klara.code/code-vector
    'closed? 'klara.code/closed?})
 
 (defn- named
