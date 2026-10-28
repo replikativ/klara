@@ -32,7 +32,8 @@ What makes it different from Clojure:
   and **T0**, a reference interpreter with lexical and dynamic effect
   handlers (S1);
 - an explicit, guarded Clojure compiling tier for a conservative subset,
-  with tested inlining, scalar replacement and lexical tail/abort handlers (S8);
+  with tested inlining, scalar replacement, lexical tail/abort handlers,
+  and generated mid-body numeric guards with T0 deopt frame states (S9);
 - a REPL whose transcripts in this repository are tests;
 - staged code values (`code`/`esc`/`run`/`lift`, let-insertion);
 - one certified optimization: map/filter/reduce fusion proved in the

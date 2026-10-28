@@ -168,3 +168,14 @@
           world (setup program) cache (stage/make-cache)]
       (stage/install! cache (cc/compile-def world 'f {}))
       (is (= (observe world '(f 42) (stage/make-cache)) (observe world '(f 42) cache))))))
+
+(deftest duplicated-closures-have-distinct-binders
+  ;; This structural regression fails before freshening even when host lexical
+  ;; scope happens to mask a duplicated name in a particular emitted program.
+  (let [t (ir/named (x/expand-expr
+                     '(fn [n] (let [f (fn [a] (let [b (+ a n)] (* b b)))]
+                                (+ (f 2) (f 3)))) w/empty-root))
+        a (:term (escape/run t))
+        binders (mapcat #(case (:op %) :fn (:params %) :let [(:name %)]
+                              :letrec (:names %) :handle [(:name %)] []) (ir/nodes a))]
+    (is (= (count binders) (count (set binders))))))

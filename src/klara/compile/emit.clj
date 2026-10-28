@@ -5,7 +5,7 @@
   unwind only their own instance. Self tail recursion uses JVM recur.
   General effects, ambient operations and escaping functions stay in T0."
   (:require [klara.compile.ir :as ir] [klara.eval :as ev]
-            [klara.compile.runtime :as runtime]))
+            [klara.compile.runtime :as runtime] [klara.stage :as stage]))
 
 (defn unsupported [t reason]
   (throw (ex-info (str "compile: " reason) {:klara/error :compile :reason reason :op (:op t)})))
@@ -16,6 +16,15 @@
       :quote (list 'quote (:datum t))
       :local (let [v (get env (:name t))]
                (if (symbol? v) v (unsupported t "function or handler escapes its local extent")))
+      :numeric-guard
+      (let [[a b] (mapv go (:args t))
+            both? (ir/trivial? (second (:args t)))]
+        `(if (and stage/*feedback*
+                  (not (stage/speculate? stage/*feedback* [~(:code-id t) '~(:site t)])))
+           (+ ~a ~b)
+           (if (and (instance? Long ~a) ~(if both? `(instance? Long ~b) true))
+             (+ (long ~a) ~(if both? `(long ~b) b))
+             (ev/deopt! 0 [~@(mapv go (:live t))]))))
       :prim (list* (symbol "clojure.core" (name (:name t))) (mapv go (:args t)))
       :let (let [s (:name t)]
              `(let [~s ~(go (:init t))] ~(emit-expr (:body t) (assoc env s s) tail? self)))

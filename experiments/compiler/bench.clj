@@ -1,5 +1,5 @@
 (ns klara.compile-bench
-  "Reproducible S8 end-to-end cache-entry benchmarks. Run with
+  "S9 end-to-end cache-entry benchmarks against T0 and plain Clojure. Run with
   clojure -M -e '(load-file \"experiments/compiler/bench.clj\") (klara.compile-bench/run!)'.
   Seven batches of twenty calls after one hundred warmup calls; medians
   are milliseconds per call. Compilation median is five compilations."
@@ -19,6 +19,21 @@
    :tail-effects '(fn [n] (handle [h {:weight (fn [x k] (k (* x 2)))}]
                            (loop [i n s 0]
                              (if (> i 0) (recur (dec i) (+ s (perform h :weight i))) s))))})
+
+(def clojure-functions
+  ;; Written independently of the compiler. Use ordinary Clojure locals,
+  ;; collections and calls, with the lexical :weight clause as a local fn.
+  {:numeric (fn [n] (loop [i n s 0] (if (> i 0) (recur (dec i) (+ s i)) s)))
+   :collections (fn [n] (loop [i n s 0]
+                         (if (> i 0)
+                           (let [v [i (+ i 1)] m {:a (first v) :b (second v)}]
+                             (recur (dec i) (+ s (get m :a) (get m :b)))) s)))
+   :closures (fn [n] (loop [i n s 0]
+                      (if (> i 0) (let [f (fn [x] (+ x i))]
+                                    (recur (dec i) (+ s (f 1) (f 2)))) s)))
+   :tail-effects (fn [n] (let [weight (fn [x] (* x 2))]
+                           (loop [i n s 0]
+                             (if (> i 0) (recur (dec i) (+ s (weight i))) s))))})
 
 (defn median [xs] (nth (vec (sort xs)) (quot (count xs) 2)))
 (defn timed [f n]
@@ -40,9 +55,11 @@
           _ (stage/install! cache exe)
           generic #(binding [ev/*entry-hook* nil] (ev/call-value f [200]))
           compiled #(stage/with-cache cache (ev/call-value f [200]))
+          plain #((clojure-functions label) 200)
           expected (generic)]
-      (assert (= expected (compiled)))
-      (let [t0 (measure generic) t1 (measure compiled)]
+      (assert (= expected (compiled) (plain)))
+      (let [t0 (measure generic) t1 (measure compiled) host (measure plain)]
         (println {:benchmark label :result expected :T0-ms t0 :compiled-ms t1
-                  :speedup (/ t0 t1) :compile-ms (median (map :compile-ms exes))
+                  :T0/compiled (/ t0 t1) :clojure-ms host :compiled/clojure (/ t1 host)
+                  :compile-ms (median (map :compile-ms exes))
                   :allocations-removed (:allocations-removed exe)})))))
