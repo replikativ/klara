@@ -28,9 +28,9 @@ k=> (defn hmm [m ys]
         (if (empty? (rest ys))
           x
           (recur (perform m :choose (if x 4/5 1/5)) (rest ys)))))
-hmm
+#'hmm
 k=> (def ys [true true false true true])
-ys
+#'ys
 ```
 
 `(perform m :choose p)` asks for a Boolean that is `true` with probability
@@ -46,13 +46,13 @@ share a stream unless asked to (example 8 asks to).
 
 ```klara-repl
 k=> (def M 2147483647)
-M
+#'M
 k=> (defn next-key [key] (mod (* 48271 key) M))
-next-key
+#'next-key
 k=> (defn split-key [key i] (next-key (mod (+ (* 1000003 key) i 1) M)))
-split-key
+#'split-key
 k=> (defn uniform [key] (/ key M))
-uniform
+#'uniform
 ```
 
 ## The particle handler
@@ -79,9 +79,9 @@ k=> (defn particle [model]
                              (fn [key] {:k k :key key :w (if y p (- 1 p))}))
                   :return  (fn [x] (fn [key] {:done x :key key}))}]
         (model m)))
-particle
+#'particle
 k=> (def p0 ((particle (fn [m] (hmm m ys))) 7))
-p0
+#'p0
 k=> (:w p0)
 9/10
 ```
@@ -93,7 +93,7 @@ the next `observe` and suspends again:
 
 ```klara-repl
 k=> (defn resume [p key] (((:k p) nil) key))
-resume
+#'resume
 k=> (:w (resume p0 (split-key 7 0)))
 9/10
 ```
@@ -120,7 +120,7 @@ k=> (defn resample [ps u]
               (if (< acc pos)
                 (recur j (inc i) (+ acc (:w (nth ps (inc i)))) out)
                 (recur (inc j) i acc (conj out (nth ps i)))))))))
-resample
+#'resample
 k=> (defn smc [model n key]
       (loop [ps (mapv (fn [i] ((particle model) (split-key key i))) (range n))
              key key
@@ -134,7 +134,7 @@ k=> (defn smc [model n key]
             (recur (vec (map-indexed (fn [i p] (resume p (split-key (:key p) i))) kids))
                    key2
                    (* z (/ total n)))))))
-smc
+#'smc
 ```
 
 ## Checking against the exact answer
@@ -155,7 +155,7 @@ k=> (defn exact [ys]
                     false (/ (+ (* (g true) 1/5) (* (g false) 4/5)) s)}
                    (rest ys)
                    (* z s))))))
-exact
+#'exact
 k=> (exact ys)
 {:p-true 279711/316123, :z 0.030347808}
 k=> (double (:p-true (exact ys)))

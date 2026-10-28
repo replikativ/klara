@@ -24,21 +24,21 @@ customers from a key and totals what they spend in one district.
 
 ```klara-repl
 k=> (def M 2147483647)
-M
+#'M
 k=> (defn next-key [key] (mod (* 48271 key) M))
-next-key
+#'next-key
 k=> (defn split-key [key i] (next-key (mod (+ (* 1000003 key) i 1) M)))
-split-key
+#'split-key
 k=> (defn uniform [key] (/ key M))
-uniform
+#'uniform
 k=> (def shops [[:mitte 3] [:west 2] [:milaneo 5]])
-shops
+#'shops
 k=> (defn pick [u]
       (let [total (reduce + (map second shops))]
         (loop [ss shops acc 0]
           (let [[shop a] (first ss) acc (+ acc (/ a total))]
             (if (or (< u acc) (empty? (rest ss))) shop (recur (rest ss) acc))))))
-pick
+#'pick
 k=> (defn spending [key n district]
       (loop [i 0 key key total 0]
         (if (= i n)
@@ -47,7 +47,7 @@ k=> (defn spending [key n district]
                 k2 (next-key k1)
                 shop (pick (uniform k1))]
             (recur (inc i) k2 (if (= shop district) (+ total 10 (mod k2 20)) total))))))
-spending
+#'spending
 k=> [(spending 42 500 :mitte) (spending 42 500 :milaneo)]
 [3084 4735]
 ```
@@ -60,7 +60,7 @@ parent. Writing to the fork does not touch the session's world.
 
 ```klara-repl
 k=> (def closed (perform :world/fork))
-closed
+#'closed
 k=> (perform :world/eval-in closed '(def shops [[:mitte 3] [:west 2]]))
 shops
 k=> shops
@@ -76,7 +76,7 @@ them; one and the same definition value now runs under two bases.
 
 ```klara-repl
 k=> (def spending-closed (perform :world/eval-in closed 'spending))
-spending-closed
+#'spending-closed
 k=> [(spending-closed 42 500 :mitte) (spending-closed 42 500 :milaneo)]
 [5780 0]
 ```
@@ -91,16 +91,16 @@ branch gets its own split of the key.
 
 ```klara-repl
 k=> (defn coupled [key] (- (spending-closed key 500 :mitte) (spending key 500 :mitte)))
-coupled
+#'coupled
 k=> (defn independent [key]
       (- (spending-closed (split-key key 1) 500 :mitte) (spending (split-key key 2) 500 :mitte)))
-independent
+#'independent
 k=> (defn summary [xs]
       (let [n (count xs)
             mean (/ (reduce + xs) n)
             var (/ (reduce + (map (fn [x] (* (- x mean) (- x mean))) xs)) (dec n))]
         {:mean (Math/round (double mean)) :sd (Math/round (Math/sqrt var))}))
-summary
+#'summary
 k=> (summary (mapv coupled (range 1 41)))
 {:mean 2940, :sd 152}
 k=> (summary (mapv independent (range 1 41)))

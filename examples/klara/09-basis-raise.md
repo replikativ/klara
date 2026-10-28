@@ -28,12 +28,12 @@ never happens in the middle of a step.
 
 ```klara-repl
 k=> (defn step [s] (+ s 1))
-step
+#'step
 k=> (defn sim [g s]
       (let [cmd (perform g :yield s)]
         (when (= cmd :raise) (perform :world/raise-basis))
         (sim g ((perform :world/resolve 'step) s))))
-sim
+#'sim
 ```
 
 ## Start it in its own fiber
@@ -46,14 +46,14 @@ simulation reaches its first safe point.
 
 ```klara-repl
 k=> (def fib (perform :world/fiber))
-fib
+#'fib
 k=> (def job (perform :world/call-in fib
                (fn [] (handle [g {:yield (fn [s k] {:state s :k k})}] (sim g 0)))))
-job
+#'job
 k=> (:state job)
 0
 k=> (def job (perform :world/call-in fib (:k job) :go))
-job
+#'job
 k=> (:state job)
 1
 ```
@@ -65,11 +65,11 @@ once. The suspended simulation is pinned and keeps the old one:
 
 ```klara-repl
 k=> (defn step [s] (+ s 10))
-step
+#'step
 k=> (step 1)
 11
 k=> (def job (perform :world/call-in fib (:k job) :go))
-job
+#'job
 k=> (:state job)
 2
 ```
@@ -79,11 +79,11 @@ then on it uses the new `step`:
 
 ```klara-repl
 k=> (def job (perform :world/call-in fib (:k job) :raise))
-job
+#'job
 k=> (:state job)
 12
 k=> (def job (perform :world/call-in fib (:k job) :go))
-job
+#'job
 k=> (:state job)
 22
 ```

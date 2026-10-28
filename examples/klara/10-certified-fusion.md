@@ -22,7 +22,7 @@ the proof environment, which takes a second or two.
 
 ```klara-repl
 k=> (def S (klara.fusion/session))
-S
+#'S
 k=> (:name (klara.fusion/define! S '(def keep? (fn [x] (even? x)))))
 keep?
 k=> (:name (klara.fusion/define! S '(def p (fn [xs] (reduce + 0 (map (fn [x] (* x x)) (filter keep? xs)))))))
