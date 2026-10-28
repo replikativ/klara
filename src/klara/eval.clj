@@ -61,7 +61,16 @@
   SPECIALIZE has its reference meaning: (specialize f a ..) is a partial
   application value (s-m-n). On entry to a closure or partial application
   the optional *entry-hook* (klara.stage) may supply an executable whose
-  guards hold; otherwise the generic path runs."
+  guards hold; otherwise the generic path runs.
+
+  DEOPT (S7). A speculative executable carries frame states (see
+  `materialize`). Its Klara code runs under an {:tag :exe} marker frame
+  (pushed once: a self tail call through the hook finds it on top and
+  pushes nothing, so loops stay in constant space); (perform :stage/deopt
+  i live) drops the residual's frames down to the marker and continues
+  with the generic state rebuilt from frame state i. A host executable
+  leaves by klara.eval/deopt!. Effects performed before the guard are
+  not repeated: generic execution resumes at the guard's position."
   (:require [clojure.main]
             [clojure.string]
             [klara.authority :as a]
@@ -76,6 +85,17 @@
   kont is the caller's continuation (frames top first), so guards can
   inspect the handler context the call runs in."
   nil)
+
+(def ^:dynamic *deopt-hook*
+  "nil, or (fn [exe frame-state live]) called on every deopt (klara.stage
+  counts it as feedback)."
+  nil)
+
+(defn deopt!
+  "Called by a host executable at a failed guard: resume generic T0 at
+  the executable's frame state i with the live values live."
+  [i live]
+  (throw (ex-info "klara: deopt" {::deopt [i (vec live)]})))
 
 (defonce ^{:doc "Returned by a host executable (:run) to decline at entry: the
   generic path then runs from the start. Only sound for executables that
@@ -290,19 +310,55 @@
                      :mint (or (closure-basis f) (:mint env))}
          k]))))
 
+(declare materialize)
+
+(defn- exe-frame
+  "k with the marker of speculative executable exe on top (unless the
+  same marker already is: a tail call into exe again)."
+  [exe k]
+  (let [f (peek k)]
+    (if (and f (= :exe (:tag f)) (identical? (:frame-states exe) (:frame-states (:exe f))))
+      k
+      (conj k {:tag :exe :code-id (:code-id exe) :exe exe}))))
+
+(defn- deopt-state
+  "The generic machine state for deopt i of exe with live values, over
+  continuation k; env supplies the basis and mint."
+  [exe i live env k]
+  (if-let [fs (get (:frame-states exe) i)]
+    (do (when *deopt-hook* (*deopt-hook* exe fs live))
+        (materialize (:generic exe) fs live env k))
+    (raise (ex-info (str "klara: no frame state " i) {:klara/error :stage}) env k)))
+
 (defn- run-executable
   "An executable either names Klara code entered in THIS machine
   (:klara closure + :prefix arguments; effects keep working) or a host
   function (:run; a host frame, so it must not perform Klara effects).
   A host function may return `deopt`; then generic, a thunk producing the
-  generic machine state, runs instead (replay from entry)."
-  [exe args env k generic]
+  generic machine state, runs instead (replay from entry, so only sound
+  before any effect). It may also call deopt! at a frame state; then
+  generic T0 resumes there, in genv (the env the generic code would
+  have had: its basis and mint)."
+  [exe args env k generic genv]
   (if-let [g (:klara exe)]
-    (enter-closure g (into (vec (:prefix exe)) args) env k)
-    (let [st (host-apply (:run exe) args env k)]
-      (if (and (= :ret (nth st 0)) (identical? deopt (nth st 1)))
-        (do (some-> (:deopts exe) (swap! inc)) (generic))
-        st))))
+    (enter-closure g (into (vec (:prefix exe)) args) env
+                   (if (:frame-states exe) (exe-frame exe k) k))
+    (let [r (try [:ok (binding [*outer-k* (conj *outer-k* k)] (apply (:run exe) args))]
+                 (catch Throwable t [:exn t]))
+          v (nth r 1)]
+      (if (= :ok (nth r 0))
+        (if (identical? deopt v)
+          (do (some-> (:deopts exe) (swap! inc)) (generic))
+          [:ret v env k])
+        (if-let [[i live] (::deopt (ex-data v))]
+          (deopt-state exe i live genv k)
+          (raise v env k))))))
+
+(defn- entry-env
+  "The basis and mint the generic code of closure f runs under."
+  [f env]
+  (let [b (closure-basis f)]
+    {:locals [] :basis (or b (:basis env)) :mint (or b (:mint env))}))
 
 (defn call-value*
   "Apply value f to args: returns the next machine state."
@@ -310,7 +366,7 @@
   (cond
     (closure? f)
     (if-let [exe (enter-hook f [] args (or (closure-basis f) (:basis env)) k)]
-      (run-executable exe args env k #(enter-closure f args env k))
+      (run-executable exe args env k #(enter-closure f args env k) (entry-env f env))
       (enter-closure f args env k))
 
     (instance? Cont f)
@@ -327,7 +383,8 @@
                                  (:basis env))
                              k)]
       (run-executable exe args env k
-                      #(call-value* (pap-fn f) (into (vec (pap-statics f)) args) env k))
+                      #(call-value* (pap-fn f) (into (vec (pap-statics f)) args) env k)
+                      (if (closure? (pap-fn f)) (entry-env (pap-fn f) env) env))
       (call-value* (pap-fn f) (into (vec (pap-statics f)) args) env k))
 
     (instance? LocusRec f) (locus-rec-call f args env k)
@@ -359,6 +416,16 @@
      (conj k {:tag :list :node node :env env :vals [] :todo (rest terms)})]))
 
 (defn- handle-keys [node] (sort (keys (:clauses node))))
+
+(defn- list-terms
+  "The subterms a node evaluates left to right before it finishes."
+  [c]
+  (case (:op c)
+    (:app :specialize) (into [(:fn c)] (:args c))
+    :prim (:args c)
+    :perform (cond->> (:args c) (:target c) (into [(:target c)]))
+    :handle (cond-> (mapv (:clauses c) (handle-keys c))
+              (:return c) (conj (:return c)))))
 
 (defn- finish [node vals env k]
   (case (:op node)
@@ -395,15 +462,9 @@
                    ls (into (:locals env) cs)]
                (deliver p ls)
                [:eval (:body c) (assoc env :locals ls) k])
-    :app        (eval-list c (into [(:fn c)] (:args c)) env k)
-    :prim       (eval-list c (:args c) env k)
-    :perform    (eval-list c (cond->> (:args c) (:target c) (into [(:target c)])) env k)
-    :specialize (eval-list c (into [(:fn c)] (:args c)) env k)
+    (:app :prim :perform :specialize :handle) (eval-list c (list-terms c) env k)
     :code       (start-code c env k)
-    :esc        (raise (ex-info "klara: esc outside code" {:klara/error :stage}) env k)
-    :handle     (eval-list c (cond-> (mapv (:clauses c) (handle-keys c))
-                               (:return c) (conj (:return c)))
-                           env k)))
+    :esc        (raise (ex-info "klara: esc outside code" {:klara/error :stage}) env k)))
 
 (defn- step-ret [v k]
   (let [f (peek k) k (pop k)]
@@ -424,6 +485,7 @@
       :fork-run (fork-continue f v k)
       :fork-scope (close-then-ret (:group f) v (:env f) k)
       :direct [:ret v nil k]
+      :exe [:ret v nil k]
       (step-ret-stage f v k))))
 
 ;; ---------------------------------------------------------------------------
@@ -687,6 +749,119 @@
           (raise (stage-error (str "run: ill-formed code: " (:error (first es)))) env k)
           [:eval t {:locals [] :basis (:basis env) :mint (:mint env)} k])))))
 
+(def ^:private deopt-barrier-tags
+  "Frames a deopt may not drop: they hold fork, capability or staging
+  state that has no generic counterpart to rebuild (dropping a branch
+  frame would leave its group open; rebuilding it would duplicate it)."
+  #{:branch :fork-run :fork-scope :direct :blist :locus :code-done :splice :wrap
+    :locus-rec :locus-rec-bind})
+
+(defn- deopt-in-machine
+  "(perform :stage/deopt i live) inside a speculative executable's Klara
+  code: drop the residual's frames down to its marker, resume generic."
+  [i live env k]
+  (loop [kk k]
+    (let [f (peek kk)]
+      (cond
+        (nil? f)
+        (raise (stage-error "deopt! outside a speculative executable (or behind a host frame)") env k)
+        (= :exe (:tag f)) (deopt-state (:exe f) i (vec live) env (pop kk))
+        (deopt-barrier-tags (:tag f))
+        (raise (stage-error (str "deopt! across a " (name (:tag f))
+                                 " frame of the speculative code")) env k)
+        :else (recur (pop kk))))))
+
+;; frame states ---------------------------------------------------------------
+
+(declare slot-val)
+
+(defn- node-at [term path]
+  (let [n (get-in term path)]
+    (if (and (map? n) (:op n))
+      n
+      (throw (stage-error (str "frame state: no term at " (pr-str path)))))))
+
+(defn- env-slots
+  "The locals vector described by slots (outermost first). Slots may
+  name earlier locals; [:letrec path i] slots of one group share a
+  promise, as letrec's own closures do."
+  [term slots live mint]
+  (loop [ss (seq slots) ls [] groups {}]
+    (if-not ss
+      ls
+      (let [[kind p i :as sl] (first ss)]
+        (if (= :letrec kind)
+          (let [cs (or (groups p)
+                       (let [pr (promise)
+                             cs (mapv #(Closure. % (delay @pr) mint) (:inits (node-at term p)))]
+                         (deliver pr (into ls cs))
+                         cs))]
+            (recur (next ss) (conj ls (nth cs i)) (assoc groups p cs)))
+          (recur (next ss) (conj ls (slot-val term sl live ls mint)) groups))))))
+
+(defn- slot-val [term [kind a :as sl] live locals mint]
+  (case kind
+    :live (nth live a)
+    :const a
+    :local (nth locals a)
+    :closure (Closure. (node-at term a) locals mint)
+    :instance (->Instance (Object.) a)
+    :vector (mapv #(slot-val term % live locals mint) a)
+    (throw (stage-error (str "frame state: bad slot " (pr-str sl))))))
+
+(defn- frame-of [term {:keys [tag path env] :as tpl} live locals envm]
+  (let [term (or (:fn tpl) term)
+        mint (:mint envm)
+        fl (if (vector? env) (env-slots term env live mint) (subvec locals 0 env))
+        fenv (assoc envm :locals fl)
+        node (node-at term path)
+        sv #(slot-val term % live fl mint)]
+    (case tag
+      :let {:tag :let :body (:body node) :env fenv}
+      :if {:tag :if :node node :env fenv}
+      :list (let [vals (mapv sv (:vals tpl))]
+              {:tag :list :node node :env fenv :vals vals
+               :todo (drop (inc (count vals)) (list-terms node))})
+      :handle (let [inst (slot-val term (:instance tpl) live locals mint)]
+                {:tag :handle :id (:id inst) :mode (:mode node) :env fenv
+                 :clauses (update-vals (:clauses tpl) sv)
+                 :return (some-> (:return tpl) sv)}))))
+
+(defn materialize
+  "The T0 machine state that frame state fs describes, for generic code
+  term (a :fn term), live values live, over continuation k; env gives
+  the basis and mint. A frame state is data:
+
+    {:site s                       ; feedback site within the CodeId
+     :at [:eval path]              ; resume by evaluating the term at path
+       | [:ret slot]               ;   or by returning a value into :kont
+     :env [slot ..]                ; the generic locals, outermost first:
+                                   ;   captures, parameters, binders
+     :kont [frame ..]}             ; generic frames, outermost first
+
+  A slot is [:live j] (the j-th live value), [:const v], [:local j] (a
+  local already rebuilt), and, for allocations the specialized code
+  elided (virtual objects): [:closure path] (the fn at path over the
+  locals so far), [:letrec path i] (the i-th closure of the letrec at
+  path, its group sharing one environment), [:instance mode] (a fresh
+  handler instance) and [:vector [slot ..]].
+
+  A frame is {:tag t :path p :env n ..} with n the length of its
+  environment (a prefix of :env) or a vector of slots (with :fn term,
+  for an inlined caller's frame): :let and :if; :list (an :app, :prim,
+  :perform, :handle or :specialize node with :vals [slot ..], the
+  subterm values computed so far); :handle (:instance slot, :clauses
+  {op slot}, :return slot), a handler the specialized code erased."
+  [term fs live env k]
+  (let [mint (:mint env)
+        locals (env-slots term (:env fs) live mint)
+        envm {:locals locals :basis (:basis env) :mint mint}
+        k (reduce (fn [k tpl] (conj k (frame-of term tpl live locals envm))) k (:kont fs))
+        [mode x] (:at fs)]
+    (case mode
+      :eval [:eval (node-at term x) envm k]
+      :ret [:ret (slot-val term x live locals mint) envm k])))
+
 (defn- stage-perform
   "Ambient stage operations. A dynamic handler for the operation wins (so
   generators can be instrumented); otherwise the reference meaning."
@@ -699,6 +874,7 @@
         :stage/lift (try [:ret (code/->code (lift-term a)) env k]
                          (catch clojure.lang.ExceptionInfo e (raise e env k)))
         :stage/genlet (genlet a env k)
+        :stage/deopt (deopt-in-machine a (second args) env k)
         :stage/locus-rec
         (let [lr (LocusRec. (Object.))
               fr {:tag :locus-rec :id (.-id lr) :env env
@@ -787,7 +963,7 @@
 
 (def ^:private skip-frame-keys
   #{:tag :node :body :todo :id :mode :names :outer :inner :done :state :bindings :ctx :group
-    :cap-id :level :name :op})
+    :cap-id :level :name :op :exe :code-id})
 
 (defn- resume-blocker
   "nil if a continuation with these frames may be resumed again; else
