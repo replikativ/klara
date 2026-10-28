@@ -666,3 +666,49 @@
   (induction hs)
   (all_goals (try (exact (progress-config _ hc))))
   (exact (ih_hs (preservation-config _ _ h hc))))
+
+;; ---------------------------------------------------------------------------
+;; (e) run of quoted code: for an escape-free, binder-free term t,
+;; (run (code t)) steps to t in one step. Building such a term creates no
+;; names, so the code value is t itself, and run's closedness check passes.
+
+(a/inductive Quotable [] :in Prop :indices [t Tm]
+  (lit [d Datum] :where [(Tm.lit d)])
+  (resolve [id Nat] :where [(Tm.resolve id)])
+  (app [f Tm] [x Tm] [hf (Quotable f)] [hx (Quotable x)] :where [(Tm.app f x)])
+  (if_ [c Tm] [u Tm] [e Tm] [hc (Quotable c)] [hu (Quotable u)] [he (Quotable e)] :where [(Tm.if_ c u e)])
+  (prim [op PrimOp] [x Tm] [y Tm] [hx (Quotable x)] [hy (Quotable y)] :where [(Tm.prim op x y)])
+  (perform [op Nat] [h Tm] [x Tm] [hh (Quotable h)] [hx (Quotable x)] :where [(Tm.perform op h x)])
+  (specialize [p Tm] [m Tm] [hp (Quotable p)] [hm (Quotable m)] :where [(Tm.specialize p m)]))
+
+(a/theorem quotable-built [w :- World, n :- Nat, t :- Tm, l :- Nat, h :- (Quotable t)]
+  (= Out (ev w n t (+ l 1)) Out.val)
+  (induction h)
+  (all_goals (simp only [ev]))
+  (all_goals (try (simp only [atZero])))
+  (all_goals (try (rw [ih_hf, ih_hx])))
+  (all_goals (try (rw [ih_hc, ih_hu, ih_he])))
+  (all_goals (try (rw [ih_hx, ih_hy])))
+  (all_goals (try (rw [ih_hh, ih_hx])))
+  (all_goals (try (rw [ih_hp, ih_hm])))
+  (all_goals (try (rfl))))
+
+(a/theorem quotable-toDB [t :- Tm, h :- (Quotable t)] (= Tm (toDB t) t)
+  (induction h)
+  (all_goals (simp [toDB]))
+  (all_goals (try (simp_all))))
+
+(a/theorem quotable-wsb [t :- Tm, h :- (Quotable t)] (forall [m :- Nat] (= Bool (wsbF t m) true))
+  (induction h)
+  (all_goals (intro m))
+  (all_goals (simp [wsbF]))
+  (all_goals (try (simp_all))))
+
+(a/theorem run-quote [w :- World, n :- Nat, t :- Tm, h :- (Quotable t)]
+  (Step (Config.mk w n (Tm.run_ (Tm.code t))) (Config.mk w n t))
+  (have hb (= Out (ev w n t 1) Out.val)) (exact (quotable-built w n t 0 h))
+  (have hd (= Tm (toDB t) t)) (exact (quotable-toDB t h))
+  (have hw (= Bool (wsbF t 0) true)) (exact (quotable-wsb t h 0))
+  (have r (= (Option Config) (step (Config.mk w n (Tm.run_ (Tm.code t)))) (Option.some Config (Config.mk w n t))))
+  (simp only [step, run1]) (try (simp only [ev])) (rw [hb]) (try (rw [hd])) (try (rw [hw])) (try (rfl))
+  (exact (Step.mk _ _ r)))
