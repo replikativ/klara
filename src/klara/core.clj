@@ -32,7 +32,7 @@
   generated code readably; never part of identity).
 
   perform with :target nil is an AMBIENT effect (namespaces world, host,
-  exn, time) found by dynamic search; with a target it names a lexical
+  exn, time, stage, auth) found by dynamic search; with a target it names a lexical
   handler instance (RFC 0002). handle in :lexical mode binds the instance
   it creates; in :dynamic mode it also binds it (uniform indexing) but is
   found by operation name.

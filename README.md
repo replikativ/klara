@@ -35,10 +35,14 @@ What makes it different from Clojure:
 - staged code values (`code`/`esc`/`run`/`lift`, let-insertion);
 - one certified optimization: map/filter/reduce fusion proved in the
   [ansatz](https://github.com/replikativ/ansatz) kernel (S3);
+- authorities and forks (RFC 0001) enforced dynamically in T0: authority
+  tokens in a store, the `fork` form with `adopt!`, settlement that fails
+  closed, fork-resume admission, deferred irreversible effects (S6);
 - the formal small-step semantics of the core in ansatz, with determinism,
   progress, preservation of scoping and the s-m-n law proved (`spec/`).
 
-What is **design only**: authority accounting for forks (RFC 0001), effect
+What is **design only**: the static affine layer and `fork-following` of
+RFC 0001, authorities in the formal semantics, effect
 operation classes and compiled effect handling (RFC 0002), any compiler
 tier beyond T0 and the one fusion rewrite, the predictor ladder, adequacy
 of a denotational model, and hosts other than the JVM. The guide marks

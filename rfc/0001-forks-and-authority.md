@@ -2,7 +2,7 @@
 
 - Status: draft
 - Owner(s): Christian Weilbach
-- Experiments: X1 (v0), spindel #41/#43 (affine settlement, partition), sci forking runtime, W4/W5 (planned)
+- Experiments: X1 (v0), spindel #41/#43 (affine settlement, partition), sci forking runtime, S6 (T0 enforcement, `doc/background/impl/S6.md`), W4/W5 (planned)
 - Obligations: AU1–AU7 below
 
 ## Motivation
@@ -69,13 +69,30 @@ making this safe failed:
 
 | Id | Obligation | Status | Check / falsifier |
 |---|---|---|---|
-| AU1 | No program duplicates an authority (dynamic check) | Conj | adversarial suite: duplicate locals, nested collections, metadata, escaping closures, lookup after capture, repeated resume, cancellation (Codex experiment 1) |
-| AU2 | Settlement exactly once, fails closed | Holds in spindel (tests) | port spindel's tests to the Klara reference machine |
-| AU3 | Partition is disjoint and exhaustive and consumes the parent | Holds in spindel (tests) | same |
-| AU4 | Snapshot fork: no parent write after the fork is visible in the branch | Conj | litmus tests on spindel with pinned roots |
-| AU5 | Deferred intents execute iff the branch is adopted | Open | trace tests with adopt/discard/cancel |
-| AU6 | Evidence mass is conserved across fork/resample/discard | Holds operationally (foerster) | property test over SMC runs |
+| AU1 | No program duplicates an authority (dynamic check) | Holds in T0 (tests, S6); conjectured in general | adversarial suite in `test/klara/authority_test.clj`: duplicate locals, nested collections, metadata, escaping closures, lookup after capture, repeated resume, cancellation (Codex experiment 1). Falsifier: a program that performs two successful uses of one consuming authority, or uses a resource in two branches |
+| AU2 | Settlement exactly once, fails closed | Holds in spindel and in T0 (tests, S6) | spindel's ForkHandle tests ported to T0 (`settlement-exactly-once`, `fail-closed`): repeat returns the result, merge/discard exclusive, preflight failure reopens, failure after a durable write leaves `:incomplete`, `:advancing` lease excludes settlement |
+| AU3 | Partition is disjoint and exhaustive and consumes the parent | Holds in spindel and in T0 (tests, S6) | `partition-disjoint-exhaustive`: overlap, omission, unknown system, one part, missing owner rejected without consuming; a fork settles every branch once, adopting at most one (`fork-partitions-settlement`) |
+| AU4 | Snapshot fork: no parent write after the fork is visible in the branch | Holds for T0 worlds (tests); conjectured in general | `r4_test`, `world_ops_test`; litmus tests on spindel with pinned roots |
+| AU5 | Deferred intents execute iff the branch is adopted | Holds in T0 for host calls classified irreversible (tests, S6) | `intents-run-iff-adopted`, `cancellation`: adopt/discard/cancel, nested forks, order, receipts, capability. Gap: an unclassified host effect runs at once |
+| AU6 | Evidence mass is conserved across fork/resample/discard | Holds operationally (foerster); checked by the T0 store (S6) | `evidence-conservation`: held mass equals minted mass after every step of a 200-step random walk over fork/split/join/spend/adopt/discard/cancel |
 | AU7 | Static affine layer erases dynamic checks without changing traces | Open | differential test with the layer on/off |
+
+### Decisions made by the T0 implementation (S6)
+
+- The authority state lives in a **store**, not in values; an authority value
+  is an id. Branches **resolve** an authority when they use it and derive
+  their own child lazily by the split rule, so aliases reached by any route
+  are checked at the use (Codex §1's "alias the reference, prove authority
+  non-duplication").
+- **Fork-resume** splits randomness and borrows budget per resumption, but
+  refuses captured resource and evidence authorities: an evidence split needs
+  the number of children, which a continuation does not know (populations
+  join, then split explicitly).
+- Exceptions unwinding through a fork **discard** it (cancellation); a user
+  effect that aborts past a fork without resuming leaves its parents leased
+  (`:advancing`), which fails closed.
+- Fork-resumed continuations do **not** defer irreversible effects; only
+  `fork` branches do (see `doc/background/impl/S6.md` for the open questions).
 
 ## Compatibility
 
