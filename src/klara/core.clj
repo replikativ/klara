@@ -21,6 +21,15 @@
                      :return t|nil :body t}         body binds 1 (instance)
     {:op :specialize :fn t :args [t ..]}            s-m-n; reference
                                                     meaning = closure
+    {:op :code       :body t}                       bracket: a code value
+    {:op :esc        :body t}                       splice (inside :code)
+
+  :code and :esc are the staging forms (doc/background/01-core-v2.md §6,
+  S4): the body of :code is one level up, :esc moves one level down and
+  is ill-formed at level 0. run, lift and genlet are ambient operations
+  of the stage namespace, not forms. Binder nodes may carry
+  :klara/names in METADATA (source binder names, used only to print
+  generated code readably; never part of identity).
 
   perform with :target nil is an AMBIENT effect (namespaces world, host,
   exn, time) found by dynamic search; with a target it names a lexical
@@ -36,9 +45,9 @@
 
 (def forms
   #{:local :quote :fn :app :let :if :letrec :resolve :prim :perform :handle
-    :specialize})
+    :specialize :code :esc})
 
-(def ambient-namespaces #{"world" "host" "exn" "time"})
+(def ambient-namespaces #{"world" "host" "exn" "time" "stage"})
 
 (defn ambient? [kw]
   (and (keyword? kw) (contains? ambient-namespaces (namespace kw))))
@@ -81,11 +90,15 @@
   ([mode clauses return body]
    {:op :handle :mode mode :clauses clauses :return return :body body}))
 (defn specialize [f & args] {:op :specialize :fn f :args (vec args)})
+(defn code* [body] {:op :code :body body})
+(defn esc [body] {:op :esc :body body})
 
 ;; ---------------------------------------------------------------------------
 ;; well-formedness: structure, scoping (indices in range), letrec inits
 ;; are fns, ambient/lexical discipline of perform and handle
 ;; ---------------------------------------------------------------------------
+
+(def ^:private ^:dynamic *level* 0)
 
 (defn- wf* [t depth path errs]
   (let [err (fn [errs msg] (conj errs {:path path :error msg :term t}))
@@ -142,7 +155,11 @@
                                       errs (if (map? clauses) clauses {}))
                       errs (if return (sub errs :return return depth) errs)]
                   (sub errs :body body (inc depth)))
-        :specialize (-> errs (sub :fn (:fn t) depth) (subs :args (:args t) depth))))))
+        :specialize (-> errs (sub :fn (:fn t) depth) (subs :args (:args t) depth))
+        :code (binding [*level* (inc *level*)] (sub errs :body (:body t) depth))
+        :esc (if (pos? *level*)
+               (binding [*level* (dec *level*)] (sub errs :body (:body t) depth))
+               (err errs "esc outside code"))))))
 
 (defn wf-errors
   "Well-formedness errors of term t under depth enclosing binders."
@@ -204,7 +221,8 @@
     :perform (cond->> (:args t) (:target t) (into [(:target t)]))
     :handle (cond-> (into (vec (vals (:clauses t))) [(:body t)])
               (:return t) (conj (:return t)))
-    :specialize (into [(:fn t)] (:args t))))
+    :specialize (into [(:fn t)] (:args t))
+    (:code :esc) [(:body t)]))
 
 (defn free-globals
   "Symbols a term resolves in the world."

@@ -56,7 +56,7 @@
 ;; structure of s-terms (and core terms: the same shapes, :var vs :local)
 ;; ---------------------------------------------------------------------------
 
-(defn- binder-arity [t]
+(defn binder-arity [t]
   (case (:op t)
     :fn (+ (:arity t) (if (:rest? t) 1 0))
     :let 1
@@ -123,6 +123,17 @@
   [t]
   (reduce + 1 (map (comp size first) (parts t))))
 
+(defn code-size
+  "Number of nodes of a code value's term: the size measure used to
+  compare generators (e.g. with and without let-insertion)."
+  [c]
+  (when-not (code? c)
+    (throw (ex-info "code-size expects a code value" {:klara/error :stage :value c})))
+  (size (code-term c)))
+
+(defn closed? "A code value without free names." [c]
+  (and (code? c) (empty? (free-vars (code-term c)))))
+
 ;; ---------------------------------------------------------------------------
 ;; s-term <-> core term
 ;; ---------------------------------------------------------------------------
@@ -150,7 +161,7 @@
          (with-meta out {:klara/names (mapv (comp symbol :base) ns)})
          out)))))
 
-(defn- binder-bases [t n]
+(defn binder-bases [t n]
   (let [ns (:klara/names (meta t))]
     (mapv (fn [i] (or (some-> (get ns i) name) (if (= :handle (:op t)) "h" "x"))) (range n))))
 
