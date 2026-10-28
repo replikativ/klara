@@ -76,7 +76,7 @@
     :letrec (conj (mapv (fn [i] [i true]) (:inits t)) [(:body t) true])
     :if [[(:test t) false] [(:then t) false] [(:else t) false]]
     :app (mapv (fn [c] [c false]) (into [(:fn t)] (:args t)))
-    (:prim) (mapv (fn [c] [c false]) (:args t))
+    (:prim :recur) (mapv (fn [c] [c false]) (:args t))
     :specialize (mapv (fn [c] [c false]) (into [(:fn t)] (:args t)))
     :perform (mapv (fn [c] [c false]) (cond->> (:args t) (:target t) (into [(:target t)])))
     :handle (-> (mapv (fn [k] [(get (:clauses t) k) false]) (handle-keys t))
@@ -214,7 +214,7 @@
 
 (defn- quoted-sym [t] (when (and (= :quote (:op t)) (symbol? (:datum t))) (:datum t)))
 
-(declare ->form)
+(declare ->form binder-name)
 
 (defn- name-of [rn g]
   (or (get @rn g)
@@ -269,6 +269,43 @@
         (list 'with-genletrec [(name-of rn (first (:names lam)))] (f (:body lam))))
       :else (apply list 'perform op (map f args)))))
 
+(defn- self-var? [t h] (and (= :var (:op t)) (= h (:name t))))
+
+(defn- tail-only?
+  "Does name h occur in t only as the operator of calls in tail position?"
+  [t h tail?]
+  (cond
+    (self-var? t h) false
+    (and (= :app (:op t)) (self-var? (:fn t) h))
+    (and tail? (not-any? #(contains? (free-vars %) h) (:args t)))
+    :else
+    (case (:op t)
+      :if (and (tail-only? (:test t) h false) (tail-only? (:then t) h tail?)
+               (tail-only? (:else t) h tail?))
+      :let (and (tail-only? (:init t) h false) (tail-only? (:body t) h tail?))
+      (not (contains? (free-vars t) h)))))
+
+(defn- recurify [t h]
+  (cond
+    (and (= :app (:op t)) (self-var? (:fn t) h)) {:op :recur :args (:args t)}
+    (= :if (:op t)) (assoc t :then (recurify (:then t) h) :else (recurify (:else t) h))
+    (= :let (:op t)) (assoc t :body (recurify (:body t) h))
+    :else t))
+
+(defn- loop-form
+  "A letrec of one fn applied at once, recursing only in tail position,
+  prints as (loop [..] .. (recur ..)): the shape loop* expands to."
+  [t rn]
+  (let [[h] (:names t) lam (first (:inits t)) body (:body t)]
+    (when (and (= 1 (count (:names t))) (not (:rest? lam))
+               (= :app (:op body)) (self-var? (:fn body) h)
+               (= (:arity lam) (count (:args body)))
+               (not-any? #(contains? (free-vars %) h) (:args body))
+               (tail-only? (:body lam) h true))
+      (list 'loop (vec (mapcat (fn [p a] [(binder-name rn p (:body lam)) (->form a rn)])
+                               (:names lam) (:args body)))
+            (->form (recurify (:body lam) h) rn)))))
+
 (defn- ->form [t rn]
   (let [f #(->form % rn)]
     (case (:op t)
@@ -282,15 +319,17 @@
       :if (if (and (= :quote (:op (:else t))) (nil? (:datum (:else t))) (not (:csp (:else t))))
             (list 'if (f (:test t)) (f (:then t)))
             (list 'if (f (:test t)) (f (:then t)) (f (:else t))))
+      :recur (apply list 'recur (map f (:args t)))
       :letrec (let [ns (:names t)
                     body (:body t)]
+                (or (loop-form t rn)
                 (if (and (= 1 (count ns)) (= :var (:op body)) (= (first ns) (:name body)))
                   (let [nm (name-of rn (first ns)) lam (first (:inits t))]
                     (list 'fn nm (params lam rn) (f (:body lam))))
                   (let [nms (mapv #(name-of rn %) ns)]
                     (list 'letfn (vec (map (fn [nm lam] (list nm (params lam rn) (f (:body lam))))
                                            nms (:inits t)))
-                          (f body)))))
+                          (f body))))))
       :app (apply list (f (:fn t)) (map f (:args t)))
       :prim (if (= 'vector (:name t))
               (mapv f (:args t))
