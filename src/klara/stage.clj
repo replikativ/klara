@@ -94,6 +94,11 @@
   "Counters saturate here: every chain of observations is finite."
   1000000)
 
+(def ^:dynamic *feedback*
+  "Current cache feedback for emitted guards; nil outside with-cache.
+  This predictor never licenses an unchecked fast path."
+  nil)
+
 (defn make-feedback [] (ConcurrentHashMap.))
 
 (defn observe!
@@ -424,7 +429,8 @@
   "Evaluate body with cache as T0's entry hook (and deopt hook)."
   [cache & body]
   `(let [c# ~cache]
-     (binding [ev/*entry-hook* (fn [f# s# a# b# k#] (enter c# f# s# a# b# k#))
+     (binding [*feedback* (cache-feedback c#)
+               ev/*entry-hook* (fn [f# s# a# b# k#] (enter c# f# s# a# b# k#))
                ev/*deopt-hook* (fn [e# fs# l#] (record-deopt! c# e# fs# l#))]
        ~@body)))
 
