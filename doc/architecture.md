@@ -121,8 +121,8 @@ never sees a half-published state.
 | Tier | What | Written in |
 |---|---|---|
 | T0 | interpreter of K0 | Klara (portable) or a host seed (sci on JVM/JS, a small C interpreter natively) |
-| T1 | S8: Clojure-form emission for a conservative subset; full generic-call coverage remains design | Clojure seed compiler + public Clojure `eval` |
-| T2 | S8 front half: guarded inlining, local scalar replacement, lexical tail/abort lowering; shapes and unboxed layouts remain design | Clojure seed passes + host emitter |
+| T1 | S9: Clojure-form emission for a conservative subset; full generic-call coverage remains design | Clojure seed compiler + public Clojure `eval` |
+| T2 | S9: guarded inlining, scalar replacement, lexical tail/abort lowering, generated mid-body addition guards and T0 frame states; general shapes/layouts remain design | Clojure seed passes + host emitter |
 | T3 | certified kernels: law- or proof-licensed rewrites (wandler/raster style) | Klara + ansatz certificates |
 | collapse | AOT artifact under a closed-world manifest | the same pipeline with all cells declared static |
 
@@ -136,8 +136,8 @@ Per host:
 | | JVM | native (Chez) |
 |---|---|---|
 | T0 | sci-style interpreter (today: `klara.eval`, a CEK machine in Clojure) | Petite-style interpreter for huge/trivial forms |
-| T1 | S8: Clojure-compiled subset | Chez-compiled generic code, var indirection, no inlining across cells |
-| T2 | S8: guarded scalar passes; HotSpot optimization | Chez-compiled specialized code with guards (Klara supplies speculation; Chez has none) |
+| T1 | S9: Clojure-compiled subset | Chez-compiled generic code, var indirection, no inlining across cells |
+| T2 | S9: guarded scalar passes and generated deopt checkpoints; HotSpot optimization | Chez-compiled specialized code with guards (Klara supplies speculation; Chez has none) |
 | T3 | raster kernels (today: S3's fused host functions) | metacarp/carpaccio kernels |
 | continuations | selective CPS (measured 2.7× tax on transformed code) | segmented stacks (no tax on non-capturing code; needs no mutable-local lowering and an authority scan before a second resume) |
 
@@ -348,8 +348,8 @@ yet.*
 ```
 
 **Pass correctness.** Every compiler pass Kᵢ → Kᵢ₊₁ is a simulation.
-*No IR passes exist yet; S3's fusion is certified per pipeline, its
-elaborator and lowering are trusted and tested.*
+*S8/S9 compiler passes are differentially tested, not proved; S3 fusion
+is certified per pipeline, with trusted and tested elaboration/lowering.*
 ```
    Kᵢ term ──── pass ────▶ Kᵢ₊₁ term
      │                        │
@@ -371,7 +371,8 @@ once the specializer is; proved passes stay proved when specialized.
 **Guarded specialization.** Under the assumption set A (world cells,
 argument guards), the residual agrees with the generic program; when A
 fails, control returns to the generic path at region entry (replay)
-without repeating effects. *Tested (R3) in S1 and S3.*
+without repeating effects. S9 also emits mid-body guards with frame states
+that resume T0 after completed effects. *Tested (R3) in S1, S3, S7 and S9.*
 ```
    x ── guard_A(x)? ──yes──▶ residual(x) ─┐
         │                                  ├──▶ same observation
@@ -431,7 +432,8 @@ Implementation steps and where they stand:
 | S2 | small-step semantics for the 12 forms in ansatz | done (`spec/README.md`); differential run against T0 pending |
 | S3 | map/filter/reduce fusion as a law-licensed rewrite with an ansatz certificate | done (`background/impl/S3.md`) |
 | staging | code values, `code`/`esc`/`run`/`lift`, let-insertion, the REPL and transcript harness | implemented (`guide/05-staging.md`); not yet in the formal spec |
-| next | authority accounting (RFC 0001), op classes, a T1 emitter | design |
+| S6–S7 | dynamic authority accounting, per-root validity, deopt/materialization and feedback | implemented (`background/impl/S7.md`) |
+| S8–S9 | conservative compiler, generated frame states, random differential programs and Clojure comparisons | implemented (`background/impl/S9.md`); generic T1 and broader T2 remain design |
 
 ## JIT primitives the staging mechanism must provide (from research notes K and M, 2026-10-28)
 

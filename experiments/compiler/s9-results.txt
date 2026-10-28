@@ -1,0 +1,8 @@
+S9 final sample, 2026-10-28, after the test process finished.
+Command: clojure -M -e '(load-file "experiments/compiler/bench.clj") (klara.compile-bench/run!)'
+Shared machine; short warmup; no confidence intervals.
+{:java 25.0.1, :clojure 1.12.4, :input 200, :warmup 100, :batches 7, :calls-per-batch 20}
+{:T0-ms 4.5819928, :compile-ms 7.323586, :clojure-ms 0.0520644, :T0/compiled 77.94639008299892, :benchmark :closures, :result 40800, :compiled-ms 0.0587839, :allocations-removed 1, :compiled/clojure 1.1290613163697267}
+{:T0-ms 2.5656260499999997, :compile-ms 8.424317, :clojure-ms 0.026259949999999997, :T0/compiled 106.94364007344588, :benchmark :collections, :result 40400, :compiled-ms 0.02399045, :allocations-removed 2, :compiled/clojure 0.9135756160998023}
+{:T0-ms 0.86668845, :compile-ms 4.382796, :clojure-ms 0.0056555, :T0/compiled 48.28751427695908, :benchmark :numeric, :result 20100, :compiled-ms 0.0179485, :allocations-removed 0, :compiled/clojure 3.173636283264079}
+{:T0-ms 1.3864732, :compile-ms 5.337592, :clojure-ms 0.0083487, :T0/compiled 95.60796185261677, :benchmark :tail-effects, :result 40200, :compiled-ms 0.01450165, :allocations-removed 0, :compiled/clojure 1.7369949812545664}
