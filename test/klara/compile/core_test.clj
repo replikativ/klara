@@ -161,3 +161,10 @@
         (reset! trace [])
         (is (= a (observe world form cache)))
         (is (= [:first] ta @trace))))))
+
+(deftest boxed-vector-projection-keys
+  (doseq [key [(short 0) (byte 0) 0N (biginteger 0) (int 0) 0]]
+    (let [program (list 'fn ['x] (list 'let ['v ['x]] (list 'get 'v (list 'quote key))))
+          world (setup program) cache (stage/make-cache)]
+      (stage/install! cache (cc/compile-def world 'f {}))
+      (is (= (observe world '(f 42) (stage/make-cache)) (observe world '(f 42) cache))))))

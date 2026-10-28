@@ -53,7 +53,10 @@
               (and (= 'second n) (= 1 (count as))) 1
               (and (contains? '#{nth get} n) (= 2 (count as)) (= :quote (:op (second as)))) (:datum (second as)))]
       (cond
-        (and (= 'vector (:name init)) (integer? i) (<= 0 i) (< i size)) i
+        (and (= 'vector (:name init)) (integer? i) (<= 0 i) (< i size)
+             ;; get distinguishes boxed integral key classes: Short/Byte
+             ;; are absent, although nth coerces them. Require known keys.
+             (or (not= 'get n) (instance? Long i) (instance? Integer i))) i
         (and (= 'hash-map (:name init)) (= 'get n) (= 2 (count as))
              (= :quote (:op (second as))))
         (last (keep-indexed (fn [j [k _]] (when (= (:datum k) (:datum (second as))) (inc (* 2 j))))
