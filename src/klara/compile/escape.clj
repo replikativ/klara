@@ -5,7 +5,45 @@
   their arguments. Replacement is all-or-nothing; every use must be a
   recognized projection or direct local closure call. Preserve initializer
   order, including unused fields and exceptions. No partial escape analysis."
-  (:require [klara.compile.ir :as ir] [klara.core :as c]))
+  (:require [clojure.set :as set]
+            [klara.compile.ir :as ir] [klara.core :as c]))
+
+(defn alias-closure
+  "Bidirectional transitive aliases, ported from raster memory analysis."
+  [names aliases]
+  (loop [result (set names)]
+    (let [next (into result (mapcat #(get aliases % #{}) result))]
+      (if (= result next) result (recur next)))))
+
+(defn track-aliases [aliases name direct]
+  (let [all (alias-closure direct aliases)]
+    (reduce (fn [m other] (update m other (fnil conj #{}) name))
+            (assoc aliases name all) all)))
+
+(defn local-names [t]
+  (into #{} (keep #(when (= :local (:op %)) (:name %))) (ir/nodes t)))
+
+(defn analyze-let
+  "Forward alias closure and backward may-use sets for a sequential let
+  spine. Uses in nested functions count as live. last-use? means no alias
+  can be read after this initializer; it does not license moving effects."
+  [t]
+  (let [[bindings body] (loop [t t bs []]
+                          (if (= :let (:op t))
+                            (recur (:body t) (conj bs [(:name t) (:init t)])) [bs t]))
+        aliases (reduce (fn [m [s init]]
+                          (track-aliases m s (if (= :local (:op init)) #{(:name init)} #{})))
+                        {} bindings)
+        used-after (loop [i (dec (count bindings)) live (local-names body) result {}]
+                     (if (neg? i) result
+                         (let [[s init] (nth bindings i)]
+                           (recur (dec i) (set/union (disj live s) (local-names init))
+                                  (assoc result s live)))))]
+    {:aliases aliases :used-after used-after
+     :bindings (mapv (fn [[s _]]
+                       (let [as (alias-closure #{s} aliases)]
+                         {:binding s :aliases as
+                          :last-use? (empty? (set/intersection as (get used-after s)))})) bindings)}))
 
 (defn projection [t s init]
   (when (and (= :prim (:op t)) (= {:op :local :name s} (first (:args t))))
@@ -61,4 +99,5 @@
                                                 (ir/map-children replace b))) ]
                                 (reduce (fn [b [p a]] {:op :let :name p :init a :body b})
                                         (replace (:body t)) (reverse (map vector ps (:args init))))))))) t)))]
-      {:term (go term) :allocations-removed @removed :bindings @evidence})))
+      {:term (go term) :allocations-removed @removed :bindings @evidence
+       :liveness (mapv analyze-let (filter #(= :let (:op %)) (ir/nodes term)))})))

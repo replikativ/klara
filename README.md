@@ -31,6 +31,8 @@ What makes it different from Clojure:
   world reads), worlds with versioned publication, forks and pinned fibers,
   and **T0**, a reference interpreter with lexical and dynamic effect
   handlers (S1);
+- an explicit, guarded Clojure compiling tier for a conservative subset,
+  with tested inlining, scalar replacement and lexical tail/abort handlers (S8);
 - a REPL whose transcripts in this repository are tests;
 - staged code values (`code`/`esc`/`run`/`lift`, let-insertion);
 - one certified optimization: map/filter/reduce fusion proved in the
@@ -43,8 +45,8 @@ What makes it different from Clojure:
 
 What is **design only**: the static affine layer and `fork-following` of
 RFC 0001, authorities in the formal semantics, effect
-operation classes and compiled effect handling (RFC 0002), any compiler
-tier beyond T0 and the one fusion rewrite, the predictor ladder, adequacy
+general compiled effect handling (RFC 0002), full T1/T2 coverage and unboxed
+layouts, the predictor ladder, adequacy
 of a denotational model, and hosts other than the JVM. The guide marks
 every such feature where it comes up.
 

@@ -11,14 +11,13 @@
 (defn setup [form]
   (let [world (w/make-world)] (d/define! world (list 'def 'f form)) world))
 (defn observe [world form cache]
-  (binding [auth/*store* (auth/new-store)]
-    (try
-      (let [out (java.io.StringWriter.)
-            v (binding [*out* out]
-                (stage/with-cache cache
-                  (ev/run (x/expand-expr form (w/snapshot world)) {:basis (w/snapshot world)})))]
-        [:value v (str out)])
-      (catch Throwable t [:error (repl/error-kind t)]))))
+  (let [out (java.io.StringWriter.)]
+    (binding [auth/*store* (auth/new-store) *out* out]
+      (try
+        (let [v (stage/with-cache cache
+                  (ev/run (x/expand-expr form (w/snapshot world)) {:basis (w/snapshot world)}))]
+          [:value v (str out)])
+        (catch Throwable t [:error (repl/error-kind t) (str out)])))))
 
 (def programs
   ['(fn [n] (+ (* n n) 3))
@@ -90,7 +89,6 @@
 (deftest unsupported-control-stays-in-t0
   (doseq [program ['(fn [x] (handle [h {:choose (fn [k] (+ (k 1) (k 2)))}] (+ x (perform h :choose))))
                    '(fn [x] (println x))
-                   '(fn [x] (let [r (resource x)] (consume! r)))
                    '(fn [x] (fn [] x))]]
     (is (thrown? clojure.lang.ExceptionInfo (cc/compile-def (setup program) 'f {})))))
 
@@ -109,3 +107,57 @@
       (reset! trace [])
       (is (= a (observe world form cache)))
       (is (= [:first :second] ta @trace)))))
+
+(deftest authority-contexts
+  (let [world (setup '(fn [e] (do (spend! e 1/4) (remaining e))))
+        cache (stage/make-cache)]
+    (stage/install! cache (cc/compile-def world 'f {}))
+    (doseq [form ['(let [e (evidence 1)] [(f e) (remaining e)])
+                  '(let [e (evidence 1)]
+                     (fork [b (f e) c (f e)] (adopt! b))
+                     (remaining e))
+                  '(let [e (evidence 1/8)] (f e))]]
+      (is (= (observe world form (stage/make-cache)) (observe world form cache))))))
+
+(deftest definition-time-inlined-reads
+  (let [world (w/make-world) cache (stage/make-cache)]
+    (d/define! world '(def helper (fn [x] (+ x 1))))
+    (d/define! world '(def f (fn [x] (helper x))))
+    (stage/install! cache (cc/compile-def world 'f {}))
+    (stage/with-cache cache (d/define! world '(def derived (f 3))))
+    (is (some #(and (= :value (first %)) (= 'helper (second %)))
+              (:reads (w/entry* (w/snapshot world) 'derived))))
+    (d/define! world '(def helper (fn [x] (+ x 100))))
+    (d/invalidate! world 'helper)
+    (is (= 103 (:value (w/entry* (w/snapshot world) 'derived))))))
+
+(deftest alias-and-liveness-port
+  (let [term (ir/named (x/expand-expr '(let [a [1] b a c b] (first c)) w/empty-root))
+        analysis (escape/analyze-let term)
+        names (set (map :binding (:bindings analysis)))]
+    (is (= 3 (count names)))
+    (is (every? #(= names (:aliases %)) (:bindings analysis)))
+    (is (not-any? :last-use? (:bindings analysis))))
+  (is (= #{'a 'b 'c} (escape/alias-closure #{'a} {'a #{'b} 'b #{'a 'c} 'c #{'b}}))))
+
+(deftest r3-all-programs
+  (doseq [program programs]
+    (let [world (setup program) cache (stage/make-cache)]
+      (stage/install! cache (cc/compile-def world 'f {}))
+      (let [before (observe world '(f 4) cache)]
+        (is (pos? (:hits (stage/stats cache))))
+        (stage/clear! cache)
+        (is (= before (observe world '(f 4) cache)))))))
+
+(deftest traces-before-failure-and-abort
+  (doseq [program ['(fn [x y] (let [v [(count x) (/ 1 0)]] (first v)))
+                   '(fn [x y] (handle [h {:stop (fn [v k] (count v))}]
+                                [(perform h :stop x) (count y)]))]]
+    (let [world (setup program) cache (stage/make-cache) trace (atom [])
+          counted (fn [label] (reify clojure.lang.Counted (count [_] (swap! trace conj label) 1)))
+          form (list 'f (list 'quote (counted :first)) (list 'quote (counted :second)))]
+      (stage/install! cache (cc/compile-def world 'f {}))
+      (let [a (observe world form (stage/make-cache)) ta @trace]
+        (reset! trace [])
+        (is (= a (observe world form cache)))
+        (is (= [:first] ta @trace))))))

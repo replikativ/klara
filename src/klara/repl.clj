@@ -31,7 +31,9 @@
             [klara.world :as w]
             [klara.expand :as x]
             [klara.eval :as ev]
-            [klara.defs :as d])
+            [klara.defs :as d]
+            [klara.stage :as stage]
+            [klara.compile.core :as compiler])
   (:import [clojure.lang LineNumberingPushbackReader]
            [java.io StringReader]))
 
@@ -41,6 +43,7 @@
   []
   {:worlds (atom {"main" {:world (w/make-world) :parent nil}})
    :current (atom "main")
+   :cache (stage/make-cache)
    :store (a/new-store)})
 
 (defn- current-world [s] (:world (get @(:worlds s) @(:current s))))
@@ -130,6 +133,8 @@
              ":repl/switch <name>    switch to world <name>"
              ":repl/expand <form>    show the core term of <form>, printed as source"
              ":repl/code <form>      evaluate <form> to a code value and pretty-print it"
+             ":repl/compile <sym>     compile and install a definition"
+             ":repl/compiled          list installed executables"
              ":repl/help             this list"]))
 
 (defn- world-listing [s]
@@ -165,7 +170,7 @@
     (reset! (:current s) nm)
     (str "switched to " nm)))
 
-(def ^:private commands-with-arg #{:repl/fork :repl/switch :repl/expand :repl/code})
+(def ^:private commands-with-arg #{:repl/fork :repl/switch :repl/expand :repl/code :repl/compile})
 
 (defn- command?
   "REPL commands are keywords in the `repl` namespace, following clojure.main's
@@ -175,6 +180,16 @@
 
 (defn- run-command [s cmd arg]
   (case cmd
+    :repl/compile (let [exe (compiler/compile-def (current-world s) arg {})]
+                    (stage/install! (:cache s) exe)
+                    (str ";; compiled " arg ": "
+                         (str/join " -> " (map (comp name :pass) (:pass-log exe)))
+                         "\n;; guards " (count (:guards exe))
+                         "; allocations removed " (:allocations-removed exe)))
+    :repl/compiled (let [es (sort-by (juxt :name :code-id) (stage/executables (:cache s)))]
+                     (if (seq es)
+                       (str/join "\n" (map #(str (:name %) " :tested") es))
+                       ";; no compiled executables"))
     :repl/help help-text
     :repl/world (world-listing s)
     :repl/basis (basis-line s)
@@ -198,9 +213,10 @@
   (let [out (java.io.StringWriter.)
         res (binding [*out* out a/*store* (:store s)]
               (try
-                (cond
+                (stage/with-cache (:cache s)
+                 (cond
                   (command? form) (run-command s form arg)
-                  :else (eval-top-form s form))
+                  :else (eval-top-form s form)))
                 (catch Throwable t (format-error t))))
         printed (str out)]
     (str/join "\n" (remove str/blank? [(str/trimr printed) res]))))

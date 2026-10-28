@@ -23,6 +23,7 @@ Each chapter ends with what is *not* implemented. Blocks tagged
 | 5 | [Staging](05-staging.md) | code values, `code`/`esc`/`run`/`lift`, let-insertion | implemented (written by the staging work) |
 | 6 | [Certified optimization](06-certified-optimization.md) | the specialization cache, guards, shape claims, fusion with ansatz certificates | implemented for map/filter/reduce |
 | 7 | [Clojure interop](07-clojure-interop.md) | calling Clojure and Java, linked vs hosted code, the naming rule, Tier H quirks | partly implemented |
+| 8 | [Compilation](08-compilation.md) | guarded compilation, scalar replacement, fallback | implemented for a conservative subset (S8) |
 
 ## How to read it
 

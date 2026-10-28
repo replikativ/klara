@@ -4,7 +4,8 @@
   before execution. Lexical tail clauses call directly; abortive clauses
   unwind only their own instance. Self tail recursion uses JVM recur.
   General effects, ambient operations and escaping functions stay in T0."
-  (:require [klara.compile.ir :as ir] [klara.eval :as ev]))
+  (:require [klara.compile.ir :as ir] [klara.eval :as ev]
+            [klara.compile.runtime :as runtime]))
 
 (defn unsupported [t reason]
   (throw (ex-info (str "compile: " reason) {:klara/error :compile :reason reason :op (:op t)})))
@@ -54,12 +55,14 @@
                       (:value (ex-data ~e)) (throw ~e))))))
         (unsupported t "general/dynamic/return handler remains in T0"))
       :perform
-      (let [h (get env (get-in t [:target :name])) cl (get-in h [:clauses (:name t)])]
+      (if (and (nil? (:target t)) (runtime/authority-ops (:name t)))
+        `(runtime/authority-call ~(:name t) [~@(mapv go (:args t))])
+       (let [h (get env (get-in t [:target :name])) cl (get-in h [:clauses (:name t)])]
         (if (and cl (= (:arity cl) (count (:args t))) (not= :general (:class t)))
           (let [call (list* (:name cl) (mapv go (:args t)))]
             (if (= :abortive (:class cl))
               `(throw (ex-info "compiled handler abort" {:klara.compile/extent ~(:token h) :value ~call})) call))
-          (unsupported t "general or ambient operation remains in T0")))
+          (unsupported t "general or ambient operation remains in T0"))))
       (unsupported t (str "unsupported form " (:op t))))))
 
 (defn run [term]

@@ -2,7 +2,8 @@
   "K0 -> named K1 with operation-class evidence. Obligation: preserve
   binding, evaluation order and handler extent. Unknown operations remain
   :general and prevent emission; declarations alone are not evidence."
-  (:require [klara.core :as c]))
+  (:require [klara.core :as c]
+            [klara.compile.runtime :as runtime]))
 
 (defn map-children [f t]
   (case (:op t)
@@ -62,5 +63,7 @@
                        :body (go (:body t) (assoc handlers (:name t) classes))))
               (let [t (map-children #(go % handlers) t)]
                 (if (= :perform (:op t))
-                  (assoc t :class (get-in handlers [(get-in t [:target :name]) (:name t)] :general)) t))))]
+                  (assoc t :class (if (and (nil? (:target t)) (runtime/authority-ops (:name t)))
+                                    :tail-resumptive
+                                    (get-in handlers [(get-in t [:target :name]) (:name t)] :general))) t))))]
     (go t {})))

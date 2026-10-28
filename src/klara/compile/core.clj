@@ -30,9 +30,15 @@
            cert (-> (stage/certify cid guards :klara.compile/tested
                                   {:suite "test/klara/compile" :obligation :T0-observational-equivalence})
                     (assoc :kind :tested :checker-version "s8-1") (dissoc :digest))]
-       (merge out {:name sym :code-id cid :guards guards :ir (:term q)
+       (merge out {:run (fn [& args]
+                                ;; Definition-time execution must record reads
+                                ;; erased by inlining, even on a cache hit.
+                                (doseq [[_ s h] (:guards i)] (w/note-read! [:value s h]))
+                                (apply (:run out) args))
+                   :name sym :code-id cid :guards guards :ir (:term q)
                    :certificate (assoc cert :digest (stage/digest cert))
-                   :allocation-analysis (:bindings a) :allocations-removed (:allocations-removed a)
+                   :allocation-analysis (:bindings a) :liveness (:liveness a)
+                   :allocations-removed (:allocations-removed a)
                    :compile-ms (/ (- (System/nanoTime) start) 1e6)
                    :pass-log [{:pass :inline :changes (:changes i)}
                               {:pass :lower :classes (frequencies (keep :class (ir/nodes k1)))}
