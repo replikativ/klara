@@ -1,8 +1,7 @@
 (ns klara.compile.speculate-test
-  (:require [clojure.test :refer [deftest is testing]]
+  (:require [clojure.test :refer [deftest is]]
             [klara.compile.core-test :refer [setup observe]]
-            [klara.compile.core :as cc] [klara.stage :as s]
-            [klara.core :as c]))
+            [klara.compile.core :as cc] [klara.stage :as s]))
 
 (deftest generated-frames-reconstruct-virtual-objects
   (let [world (setup '(fn [n probe]
@@ -60,3 +59,28 @@
   (let [exe (cc/compile-def (setup '(fn [n] (let [y (* n 2)] (+ y 1)))) 'f)]
     (is (= :frame-state-mismatch
            (s/check-certificate (assoc-in exe [:frame-states 0 :env 0] [:const 0]))))))
+
+(deftest authorities-inside-virtual-objects
+  (let [world (setup '(fn [e n]
+                       (let [paid (spend! e 1/4) v [e]
+                             f (fn [x] (+ x (remaining e)))]
+                         (+ n (f (remaining (first v)))))))
+        exe (cc/compile-def world 'f) cache (s/make-cache)
+        form '(let [e (evidence 1)] [(f e 1.5) (remaining e)])]
+    (is (= 2 (:allocations-removed exe)))
+    (s/install! cache exe)
+    (is (= [:value [3.0 3/4] ""] (observe world form cache)))
+    (is (= 1 (:deopts (s/stats cache))))
+    (is (= (observe world form (s/make-cache)) (observe world form cache)))))
+
+(deftest unsupported-checkpoints-keep-ordinary-compilation
+  (doseq [program ['(fn [n] (let [m {:a n} y (get m :a)] (+ y 1)))
+                   '(fn [n] (let [v #{n} y (count v)] (+ y 1)))
+                   '(fn [n] (let [y n] (if (> y 0) (+ y 1) (+ y 2))))
+                   '(fn [n] (loop [i 2 s n] (if (> i 0) (recur (dec i) (+ s i)) s)))
+                   '(fn [n] (handle [h {:op (fn [x k] (k x))}]
+                              (let [y (perform h :op n)] (+ y 1))))]]
+    (let [world (setup program) exe (cc/compile-def world 'f) cache (s/make-cache)]
+      (is (nil? (:frame-states exe)))
+      (s/install! cache exe)
+      (is (= (observe world '(f 3) (s/make-cache)) (observe world '(f 3) cache))))))
