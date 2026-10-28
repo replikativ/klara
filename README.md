@@ -86,6 +86,7 @@ Then read `doc/guide/01-core.md`.
 | `src/klara/` | the implementation: `core` (12 forms), `expand`, `world`, `defs`, `eval` (T0), `stage` (cache), `fusion` (S3), `code` (staging), `repl` |
 | `test/klara/` | tests, including the transcript harness |
 | [`experiments/`](experiments/) | measurements behind design decisions (JVM effect-handler costs, a Klara map) |
+| [`notebooks/`](notebooks/) | Clay notebooks computed live from the code, e.g. the compiler walkthrough (`clojure -M:notebook`) |
 | [`doc/background/`](doc/background/README.md) | history: design iterations, research notes, reviews, implementation reports S1 and S3 |
 
 ## Design principles
