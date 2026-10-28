@@ -6,11 +6,12 @@ total `step` function is the spec. Compiled to Clojure by ansatz, the same funct
 also the reference interpreter. This follows research note A §4, "Spec structure" (1)–(2).
 
 ```
-clojure -M:test        # kernel-checks every definition and proof, then runs the 26 test programs
+clojure -M:test        # kernel-checks every definition and proof, then runs the 69 test programs
 clojure -M:repl        # nREPL on port 7891
 ```
 
-**Requires ansatz at or after `08bfad4`** (origin/main, 2026-10-27). `deps.edn` points at
+**S5 checked against ansatz `9ae5e34`** (about 30 s). The text below on
+`08bfad4` is S2's. **Requires ansatz at or after `08bfad4`** (origin/main, 2026-10-27). `deps.edn` points at
 `../../ansatz` through `:local/root`. When that checkout is older, override it, for example
 `clojure -Sdeps '{:aliases {:m {:override-deps {org.replikativ/ansatz {:local/root "<ansatz@08bfad4>"}}}}}' -M:test:m`.
 The whole development was checked against `08bfad4`. Everything except `WSC` and the
@@ -25,7 +26,8 @@ warm JVM.
 | `src/klara/spec/ws.clj` | `WS n t` (well-scopedness): weakening, substitution lemma, closed substitution is the identity |
 | `src/klara/spec/props.clj` | `Step` and `Star`, the outcome invariant `OK`, determinism, preservation, progress, safety, s-m-n |
 | `src/klara/spec/interp.clj` | Unverified bridge: named EDN surface → de Bruijn `Tm`, a driver loop, and observation of the result |
-| `test/klara/spec/programs.edn` | 26 programs as data, each with its expected observation |
+| `test/klara/spec/programs.edn` | 69 programs as data (43 of them staging, S5), each with its expected observation |
+| `../test-spec/klara/spec_diff_test.clj` | Differential test against T0 (`clojure -X:spec-diff` from the repository root) |
 
 **Syntax.** `Tm` is a de Bruijn inductive with the 12 forms: `var` (local), `lit` (quote of
 a datum: nil, Bool or Int), `lam`, `app`, `let_`, `if_`, `letrec`, `resolve`, `prim` (`+ - * = <`),
@@ -69,17 +71,43 @@ The other named stuck states are `notFn`, `primType`, `badTarget` and `unbound i
 **specialize.** It has its reference meaning: `(specialize p m)` with `p` and `m` values
 steps to `(fn [y] (p m y))`.
 
+## Staging (S5)
+
+Five source-level additions: `code t`, `esc t`, `run_ t`, and the runtime
+forms `gvar g` (a generated variable) and the n-forms `nlam`, `nlet`,
+`nletrec`, `nhandle` (binders opened with fresh names from the counter).
+The evaluator is `ev w n t : Nat → Out`, level-indexed in the style of
+λ○ / MetaML; `run1 w n t = ev w n t 0`. A splice yields the new outcome
+`chk ns n e`; n-form frames remove their names, and `chk (g :: _)` at the
+root is scope extrusion (BER MetaOCaml's dynamic check, phrased on the
+reified context). New stuck states: `stage`, `lift`, `extrusion`.
+`doc/semantics.md` §10 has the rules, the reasons for the locally-nameless
+choice, and the spec/T0 comparison.
+
+**Ambient operations and authority.** The spec has no namespace set: any
+`perform` whose target is `nil` is ambient (and stuck). T0's ambient set is
+`world host exn time stage auth` (`auth` added by S6). Authority operations
+are outside the formal fragment for now; the differential test skips any
+program that names an op in a `klara.core` ambient namespace
+(`in-fragment?`), so it follows that set automatically.
+
 ## Proof status
 
 | # | Statement | Status | Where |
 |---|---|---|---|
-| (a) | Determinism: `Step c c1 → Step c c2 → c1 = c2` | **Holds** | `props/step-det` |
+| (a) | Determinism: `Step c c1 → Step c c2 → c1 = c2` | **Holds** (staged calculus) | `props/step-det` |
+| | Outcome invariant at every level: `WS 0 t → OK (ev w n t l)` (preservation of well-scopedness across levels) | **Holds** (S5) | `props/ev-ok`, 20 case lemmas `ev-*-ok` |
+| | Progress now includes the scope-extrusion case `Progress.extrusion` (a splice of a dead name) | **Holds** (S5) | `props/progress`, `progress-chk` |
+| | Soundness of run's closedness check: `wsbF t m = true → WS m t` | **Holds** (S5) | `ws/wsbF-WS` |
+| (e) | run of quoted code, binder-free escape-free fragment: `Step (run_ (code t)) t` | **Holds** (S5) | `props/run-quote` |
+| | run of quoted code with binders: `run_ (code t) →* t` | **Open**: needs `close g (t[gvar g/0]) = t` for fresh `g`, i.e. a freshness invariant on the counter | |
 | (c) | Preservation of well-scopedness: `Step c c2 → WSC c → WSC c2` (closed world and closed term) | **Holds** | `props/preservation`, `preservation-config` |
 | (b) | Progress modulo named stuck states: `WSC c → Progress c`. A closed config is a value (`isVal`), steps, is an unhandled effect (ambient op or escaped capability), or is a named error ≠ `scope` | **Holds** | `props/progress`, `progress-config` |
 | (b+c) | Safety: `WSC c → Star c c2 → Progress c2` | **Holds** | `props/safety` |
 | (d) | s-m-n for the trivial specializer: for closed values p, m, x, `((specialize p m) x) →→ (p m x)` (two steps). Step equivalence follows: both sides reach the same terminal configurations | **Holds** | `props/smn`, `smn-equiv` |
 | | s-m-n for a non-value argument | **Open**, and false as an equation | `((specialize p m) e)` runs `e`'s effects before `(p m)`'s; `(p m e)` runs them after. The law holds at values, which is the data reading of MC I eq. 12 |
-| | `run1 t = val ↔ isVal t` | **Holds** | `run1-val`, `isVal-run1` |
+| | `isVal t → run1 t = val` | **Holds** | `isVal-run1` |
+| | `run1 t = val → isVal t` | **Dropped in S5** | code values are values with a recursive criterion; `Progress.value` is stated as `run1 = val` |
 | | Uniqueness of labels / that `cap l` targets exactly its own instance | **Open** | not stated; the fresh counter is monotone by construction |
 | | Adequacy, A-O3 injectivity of code identity, the authority/resource discipline (A-O4) | out of scope | |
 
@@ -129,7 +157,7 @@ real test of ansatz as the host.
 - specialize;
 - the type-error stuck states.
 
-These programs are meant to run differentially against the T0 interpreter in `klara/src`.
+These programs run differentially against the T0 interpreter (`clojure -X:spec-diff`, S5).
 The observation format is `{:value v}` or `{:stuck kind …}`; closures observe as
 `:klara/fn`. The runtime representation that `interp.clj` builds (tagged vectors, enum
 nil/index, `Option` as nil/`[x]`) is ansatz's current codegen representation. It is
@@ -138,6 +166,13 @@ documented at the top of that file and will need adjusting if ansatz changes it.
 Each step costs O(term size): `run1` re-traverses the term and eagerly computes the `done`
 outcomes. `fact 20` takes 104 steps and finishes instantly. This is fine for a reference
 oracle, not for the corpus at scale.
+
+**S5 effort.** About 3 h for the staged definitions, interpreter front end
+and proofs (86 kernel-checked theorems in ws + props), of which about 1 h
+went on two automation dead ends (below) rather than mathematics. The
+kill rule (2× S2's 3.5 h) was not triggered. The proofs that changed
+shape: `run1-ok` became `ev-ok` (induction generalised over the level,
+one lemma per constructor); every helper over `Out` gained a `chk` case.
 
 ## ansatz features used
 
@@ -196,6 +231,19 @@ The coordinator mentioned an outstanding ansatz task T37. I don't know which rep
 tracks. Nothing open blocks this development; items 2, 3, 4 (Int `<`, Int `match`) and 6
 only force the workarounds above.
 
+## ansatz reports from S5 (against 9ae5e34)
+
+The ansatz session (`ansatz-12`) was not reachable when S5 finished, so
+these are recorded here only. All are worked around.
+
+| # | Report | Workaround |
+|---|---|---|
+| 7 | `try (obtain [a b] := h)` on an equation (not an `And`) does not fail; it builds a proof the kernel rejects at the end ("Type mismatch in application of Eq.rec … Bool.noConfusionType") | `And.left`/`And.right` projections (`wsbF-WS`) |
+| 8 | `cases h` with `h : chkStep w ns n e = some c` (left side a stuck match on a variable) builds a kernel-rejected proof ("Type mismatch in application of False.elim") instead of failing | split `ns` first (`stepOut-ok`) |
+| 9 | Performance: `all_goals (first (apply l1) … (apply l20))` over a 23-constructor induction did not finish in 15 min; `apply` seems to unfold the structurally recursive `ev` on every head mismatch. The same proof dispatched in constructor order takes 2 s | goals discharged in order (`ev-ok`) |
+| 10 | `simp [ev, …]` leaves the level abstraction `((fun l => …) 0)` unreduced, so `simp [.., rx]` cannot rewrite `ev w n x 0` inside it | `simp only [ev]` then `rw` (`smn-step2`, `run-quote`) |
+| 2 | (S2, still open) structural recursion with a varying non-matched argument; rechecked on 9ae5e34 | the level is in the result type of `ev`, like `substF` |
+
 ## Next steps
 
 - Make the step relation rule-based (paper-style evaluation-context rules) and prove it
@@ -204,4 +252,6 @@ only force the workarounds above.
   instance.
 - Port Core.lean's footprint typing onto this syntax: the first slice of A-O4, and the
   real test of the kill rule.
-- Run `programs.edn` against T0 (`klara/src`, S1), and then against the v0 corpus.
+- Done in S5: `programs.edn` runs against T0 (`clojure -X:spec-diff`). Next: the v0 corpus.
+- Freshness invariant for generated names, then `run_ (code t) →* t` with binders.
+- Let-insertion (`genlet`) needs a store of insertion points in the configuration.

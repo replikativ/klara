@@ -86,13 +86,14 @@ k=> (run (code (sq 7)))
 49
 ```
 
-There is no reduction rule for `code` and `esc` in the formal spec yet
-(`doc/semantics.md` §1 lists them as T0 extensions). Informally, the relation
-to the spec is the following. A code value is a term with names. `run`
-accepts it only when it is closed, which is exactly the precondition `WS 0 t`
-under which the spec proves preservation and safety (`doc/semantics.md` §6).
-A program that never runs open code therefore never reaches the spec's only
-unnamed failure, `scope`. The relation to `specialize` is the s-m-n law.
+The formal spec has reduction rules for `code`, `esc` and `run`
+(`doc/semantics.md` §10, since S5), and its preservation and progress
+proofs cover them: a closed program never reaches the unnamed failure
+`scope`, and running open code or splicing a dead variable is a named
+stuck state. A differential test (`clojure -X:spec-diff`) runs the staging
+programs through the spec and through the interpreter and finds them in
+agreement, apart from four documented differences. `genlet`,
+`with-genletrec` and `lift` are not in the spec. The relation to `specialize` is the s-m-n law.
 `(specialize f a)` means `(fn [y] (f a y))`. A staged generator such as
 `(fn [a] (code (fn [y] (esc (f-gen a (code y))))))` computes a residual that
 agrees with it on value arguments, which is obligation O1 of
@@ -285,8 +286,8 @@ the generator would unfold `(g gen m)` forever. Examples 1 and 3 in
 
 ## Not yet implemented
 
-- **No formal rules.** `code`/`esc` are not in the ansatz spec. The
-  scope-extrusion check is a dynamic check in T0, not a theorem.
+- **Formal rules cover `code`/`esc`/`run` only.** Let-insertion and `lift`
+  are not in the ansatz spec (`doc/semantics.md` §10).
 - **No typed staging.** Nothing rejects ill-staged programs before they run.
   Errors are dynamic (`!! stage`, `!! scope-extrusion`).
 - **Let-insertion and multi-shot continuations.** Insertion points hold their

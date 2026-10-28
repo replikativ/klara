@@ -12,9 +12,10 @@ tables. There are two executable sources, and this text follows both:
   host interop, exceptions). T0 is what the REPL and the guide run.
 
 The specification covers a deliberately small calculus. Where T0 does
-more, §9 says how it extends the rules. Where the two should agree, the 26
-programs in `spec/test/klara/spec/programs.edn` are the shared corpus (the
-differential run against T0 is not yet automated).
+more, §9 says how it extends the rules. Where the two should agree, the 69
+programs in `spec/test/klara/spec/programs.edn` are the shared corpus.
+`clojure -X:spec-diff` runs every one of them through both and compares
+the observations; four deliberate differences are listed in §10.
 
 ## 1. Syntax: the twelve forms
 
@@ -40,12 +41,12 @@ functions and applications and turns a clause map `{:op clause ..}` into one
 clause that dispatches on the op tag. Every other surface form is a macro
 over these twelve; `doc/guide/01-core.md` lists the expansions.
 
-T0 has two more forms for staging, `code` (a bracket: its body is code
-one level up) and `esc` (a splice back down, ill-formed outside `code`),
-plus ambient operations in the `stage` namespace (`:stage/run`,
-`:stage/lift`, `:stage/genlet`, …).
-They are not in the formal spec yet; `doc/guide/05-staging.md` describes
-them.
+Both languages have two more forms for staging, `code` (a bracket: its
+body is code one level up) and `esc` (a splice back down, stuck outside
+`code`). The spec has `run_` as a third form; T0 has it as the ambient
+operation `:stage/run`, next to `:stage/lift` and `:stage/genlet`, which
+the spec does not model. §10 gives the staging rules;
+`doc/guide/05-staging.md` describes the forms for users.
 
 The spec adds three **runtime forms** that arise only by reduction, in the
 style of WebAssembly's administrative instructions:
@@ -149,6 +150,10 @@ A configuration with no step is exactly one of:
 | stuck `primType` | `E[prim op v₁ v₂]`, δ undefined | primitive outside its domain |
 | stuck `badTarget` | `E[perform op v x]`, v neither `cap l` nor `lit nil` | performing on a non-capability |
 | stuck `unbound id` | `E[resolve id]`, id ∉ dom w | world lookup failed |
+| stuck `stage` | `esc` at level 0, `esc`/`run_` of a non-code value, an n-form at level 0 | ill-staged program (§10) |
+| stuck `lift` | `cap l` or `handling` reached while building code | a capability would persist into code |
+| stuck `extrusion` | `E[run_ (code u)]`, u not closed | running open code |
+| scope extrusion at a splice | a splice whose code mentions a name not bound on the path to it (outcome `chk (g :: _)`) | a generated variable escaped its binder (§10) |
 | stuck `scope` | a free variable reached evaluation | excluded for closed terms (§6) |
 
 These are the **named stuck states**. `scope` is the only unnamed one, and
@@ -172,7 +177,8 @@ The law holds at values: for closed values `p`, `m`, `x`,
 ## 6. What is proved, and what is stated
 
 All theorems below are kernel-checked by ansatz (bundled Init only, about
-45 s on a warm JVM; `cd spec && clojure -M:test`). `WS n t` says all free
+30 s; `cd spec && clojure -M:test`). Since S5 they cover the staged
+calculus of §10: the step function evaluates at every level. `WS n t` says all free
 indices of `t` are below `n`; `WSC c` says the world's values and the term
 are closed.
 
@@ -180,10 +186,14 @@ are closed.
 |---|---|---|
 | **Determinism**: `Step c c₁ → Step c c₂ → c₁ = c₂` | proved | `step-det` |
 | **Preservation of scoping**: `Step c c₂ → WSC c → WSC c₂` | proved | `preservation`, `preservation-config` |
-| **Progress modulo named stuck states**: `WSC c →` `c` is a value, steps, is an unhandled effect, or is a named stuck state ≠ `scope` | proved | `progress`, `progress-config` |
+| **Progress modulo named stuck states**: `WSC c →` `c` is a value, steps, is an unhandled effect, is a scope extrusion at a splice, or is a named stuck state ≠ `scope` | proved | `progress`, `progress-config` |
+| **Preservation of scoping across levels**: the outcome invariant holds for `ev w n t l` at every level `l` | proved | `ev-ok` |
+| **run of quoted code**: for an escape-free, binder-free `t`, `run_ (code t) → t` in one step | proved | `run-quote` |
+| run of quoted code with binders: `run_ (code t) →* t` | open (needs a freshness invariant for generated names) | §10 |
 | **Safety**: `WSC c → Star c c₂ → Progress c₂` | proved | `safety` |
 | **s-m-n for values**: `app (specialize p m) x →→ app (app p m) x`, and both reach the same terminal configurations | proved | `smn`, `smn-equiv` |
-| `run1 t = val ↔ isVal t` | proved | `run1-val`, `isVal-run1` |
+| `isVal t → run1 t = val` (simple values) | proved | `isVal-run1` |
+| `run1 t = val → isVal t` | dropped in S5: code values are values but their valuehood is recursive; `Progress.value` now says `run1 t = val` | |
 | s-m-n for non-value arguments | false as an equation (§5) | |
 | uniqueness of labels; a capability's effect is handled by its own instance | open, not yet stated | |
 | **adequacy** (operational = denotational on observations, A1–A3) | stated, not proved; no denotational model of Core yet | research note A |
@@ -192,10 +202,9 @@ are closed.
 | the three annotation contracts (hints, checked claims, approximation) | stated | `background/01-core-v2.md` §7 |
 
 Because `step` is total, "a value, or steps, or stuck" is trivial. The
-content of progress is narrower: closed terms never produce `scope`; the
-value outcome coincides with the syntactic value predicate; every other
-outcome is named. One induction (`run1-ok`, the outcome invariant `OK`)
-carries both progress and preservation.
+content of progress is narrower: closed terms never produce `scope`, and
+every other outcome is named. One induction (`ev-ok`, the outcome
+invariant `OK`, at every level) carries both progress and preservation.
 
 ## 7. Handlers and capabilities in the full language (T0)
 
@@ -271,7 +280,7 @@ The architecture states each correctness claim as a commuting square
 | `notFn`, `primType`, `badTarget`, `unbound` | raised as `:exn/raise` with messages "not a function", the host exception, "unhandled lexical effect", "unbound x"; unbound names are usually rejected earlier by the expander |
 | — | self tail calls in constant space |
 | — | the specialization cache hook on closure entry (`klara.stage`) |
-| — | staging forms `code`/`esc` and the `:stage/*` operations |
+| `code`, `esc`, `run_`; CSP by substitution | `code`, `esc`, `:stage/run`, `:stage/lift`, `:stage/genlet`, `with-genletrec`; CSP by `lift` (§10) |
 
 **Bases.** A closure created at run time carries the root it was created
 under and resolves world names against it (a closure is a value). World
@@ -281,3 +290,81 @@ whoever resolves them, so one definition value runs correctly in two forks
 current root is **pending**: resolving it raises a `:pending` error rather
 than running a stale expansion. `doc/guide/02-world.md` explains this with
 examples.
+
+## 10. Staging: `code`, `esc`, `run_` (S5)
+
+The rules follow the level-indexed small-step semantics of λ○ (Davies,
+*A temporal-logic approach to binding-time analysis*, LICS 1996) and
+MetaML (Taha's thesis; Moggi, Taha, Benaissa, Sheard, *An idealized
+MetaML*, ESOP 1999): at level 0 terms evaluate; at level `l ≥ 1` (inside
+`l` brackets) nothing reduces except under `esc`. Generated binders get
+fresh names, and the scope-extrusion check is BER MetaOCaml's dynamic one
+(Kiselyov, *The design and implementation of BER MetaOCaml*, FLOPS 2014):
+a splice is legal only while every generated variable it mentions is still
+bound by a binder under construction. The relation is the graph of the
+compiled `step`; `ev w n t l` is the outcome of `t` at level `l`.
+
+**Syntax** (new `Tm` forms):
+```
+t ::= … | code t | esc t | run_ t                 source
+        | gvar g                                  generated variable (a name)
+        | nlam g b | nlet g e b                   binders opened with name g
+        | nletrec g fb b | nhandle g b r o        (names g, g+1, …)
+```
+The n-forms bind no de Bruijn index: their bodies mention `gvar g`
+instead (locally nameless). So substitution stays the closed-value
+substitution of §2, and evaluation contexts never pass under a de Bruijn
+binder. The fresh-name supply is the configuration's counter `n`, shared
+with handler labels.
+
+**Values at level `l ≥ 1`**: a term with no `esc` at level 1, no source
+binder (every binder opened) and no `cap`/`handling`. A code value is
+`code u` with `u` a level-1 value.
+
+**Rules.** Contexts extend those of §2 by `code E` (E at level `l+1`),
+`esc E` (E at level `l−1`), `run_ E`, and, at levels ≥ 1, every argument
+position left to right (`app E t`, `app v E`, `if_ E t e`, `if_ v E e`, …,
+`nlam g E`, `nlet g E b`, `nlet g v E`, `nhandle g b r E`, …; a handle's
+op clause is built first, then its return clause, then its body, as in T0).
+
+| Rule | Level | Redex | Reduct |
+|---|---|---|---|
+| open-lam | ≥ 1 | `lam b` | `nlam g b[gvar g/0]`, n ↦ n+1 |
+| open-let | ≥ 1 | `let_ e b` | `nlet g e b[gvar g/0]`, n ↦ n+1 |
+| open-letrec | ≥ 1 | `letrec fb b` | `nletrec g fb[gvar g/0][gvar g+1/0] b[gvar g+1/0]`, n ↦ n+2 |
+| open-handle | ≥ 1 | `handle b r o` | `nhandle g b[gvar g] r[gvar g+1] o[gvar g+2, g+3, g+4]`, n ↦ n+5 |
+| var-code | 0 | `gvar g` | `code (gvar g)` (a generated variable used at level 0 is its code) |
+| splice | 1 | `esc (code u)` | `u`, provided the names `fnames u` are alive (below) |
+| run | 0 | `run_ (code u)` | `toDB u` if it is closed, else stuck `extrusion` |
+
+`toDB` turns every n-form back into its binder (closing the names into
+indices); `wsbF` decides closedness. Persistence of level-0 values into
+code (CSP) is plain substitution: a value substituted under `code` is
+built like source, so an integer becomes a literal and a closure becomes
+its code. A recursive closure `fix fb` is a level-≥1 value (opaque, like
+T0's `#<csp fn>`); `cap l` and `handling` at level ≥ 1 are stuck `lift`.
+
+**Liveness.** The splice rule produces the outcome `chk ns n u` rather
+than `next n u`. Every n-form frame on the way to the root removes its own
+names from `ns`; at the root, `chk [] n u` steps and `chk (g :: _) n u` is
+the named terminal state *scope extrusion*. A name is therefore alive
+exactly when its n-form is on the evaluation path, which is T0's check
+(a `:blist` frame declaring the name is on the continuation). A
+continuation captured inside a binder carries the n-form frame, so
+resuming it makes the name alive again (program `:resume-inside-binder`).
+Open code reaches a dead splice only through a side channel; in the spec
+that is a handler that aborts out of a binder (`:extrusion-at-splice`).
+
+**Not modelled.** `genlet`, `with-genletrec` and `lift` as an operation;
+`:stage/*` dynamic handlers; typed staging. Let-insertion is left out:
+it needs a mutable insertion point per locus, i.e. a store in the
+configuration, which is not cheap here.
+
+**Spec vs T0** (`clojure -X:spec-diff`, 69 programs, 65 agree):
+
+| Program | Spec | T0 | Classification |
+|---|---|---|---|
+| `:bad-perform-target` | stuck `badTarget` | "unhandled lexical effect" | deliberate (T0 merges the two messages) |
+| `:csp-code-value` | nested quotation `(+ 1 (code 1))` | stage error | deliberate: T0 refuses a code value at level 1 without `esc` |
+| `:csp-closure-over-code-var` | the closure is re-read at level 1 | `lift` error | deliberate: T0 refuses; the spec's re-reading changes the closure's meaning (it returned code, its copy returns the variable) |
+| `:eq-on-code` | stuck `primType` | `false` | deliberate: T0's `=` is `clojure.core/=` on all values |
