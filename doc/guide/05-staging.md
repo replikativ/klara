@@ -19,7 +19,7 @@ worked examples are in `examples/staging/`. The design is
 |---|---|---|
 | `(code e)` | the code of `e`, not evaluated: a code value | `.< e >.` |
 | `(esc e)` | inside `code`: evaluate `e` now and splice the code value it returns | `.~e` |
-| `(run c)` | compile and evaluate closed code `c` under the current basis | `Runcode.run` |
+| `(run c)` | evaluate closed code `c` in T0 under the current basis | `Runcode.run` |
 | `(lift v)` | the code that rebuilds the present value `v` | `Lifts`, CSP |
 | `(genlet c)` | let-bind `c` at the highest enclosing let-insertion point; returns the code of the variable | `genlet` |
 | `(with-genletrec [g] body)` | a locus for a generated `letfn` group; `(g gen key)` memoizes generated functions | `with_locus_rec`, `mkgenlet` |
@@ -95,8 +95,8 @@ programs through the spec and through the interpreter and finds them in
 agreement, apart from four documented differences. `genlet`,
 `with-genletrec` and `lift` are not in the spec. The relation to `specialize` is the s-m-n law.
 `(specialize f a)` means `(fn [y] (f a y))`. A staged generator such as
-`(fn [a] (code (fn [y] (esc (f-gen a (code y))))))` computes a residual that
-agrees with it on value arguments, which is obligation O1 of
+`(fn [a] (code (fn [y] (esc (f-gen a (code y))))))` must compute a residual that
+agrees with it on value arguments; this generator-correctness obligation is O1 of
 `research/C-staging.md`. The law holds at values only: `doc/semantics.md` §5
 explains why an effectful argument breaks it.
 
@@ -158,9 +158,9 @@ k=> (let [c (code 1)] (code (+ 1 c)))
 !! stage: a code value is used inside code without esc
 ```
 
-Authorities in the sense of RFC 0001 are not implemented yet. Today "resource"
-means a host object that is not data, plus the Klara values that stand for
-control (instances, continuations).
+RFC 0001 authorities are implemented in T0 (chapter 4). The lifting check
+is conservative: it refuses records, non-data host objects, and Klara control
+values rather than deriving or transferring authority into generated code.
 
 ## Scope extrusion
 
@@ -227,7 +227,10 @@ The closed expression floats out of the `fn`. The one that mentions `x` stops
 just inside `fn [x]`. A variable or a constant is not bound at all. Because a
 binding may float above conditionals and functions, it is evaluated even on
 paths that do not use it: let-insertion is for pure, cheap-to-evaluate-early
-expressions. A let-inserted name is alive as long as its insertion point is,
+expressions that also terminate and do not introduce failures when evaluated
+early. Purity alone does not justify moving a computation out of an unchosen
+branch or an uncalled function. A let-inserted name is alive as long as its
+insertion point is,
 and the scope check covers it. `genlet` outside any `code` returns its argument
 unchanged.
 
@@ -293,8 +296,10 @@ the generator would unfold `(g gen m)` forever. Examples 1 and 3 in
 - **Let-insertion and multi-shot continuations.** Insertion points hold their
   bindings in a mutable cell. Resuming a continuation twice inside one code
   bracket accumulates the bindings of both runs.
-- **No authority accounting in `lift`.** "Resource" is approximated by
-  "non-data host object or control value" until RFC 0001 is implemented.
+- **No authority-aware staging theorem.** RFC 0001 authority accounting is
+  implemented in T0, but `lift` still conservatively rejects records and
+  non-data host/control objects. It does not split authority or prove that
+  reconstructed and opaque closures preserve authority and basis semantics.
 - **No syntax values or `quote-syntax`.** Macros still receive plain data.
   Code values are a separate kind and are not macro input.
 - **Run uses T0.** `run` evaluates generated code in the reference

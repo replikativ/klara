@@ -74,9 +74,10 @@ k=> @counter
 1
 ```
 
-The fork's `swap!` changed the parent's atom. RFC 0001 plans to make hosted
-atoms branchable cells and to treat Java objects as resources (authority
-that is transferred, never duplicated); neither exists yet. Loading a
+The fork's `swap!` changed the parent's atom. Explicit resource wrappers and
+transfer-only authority are implemented (RFC 0001; chapter 4), but raw hosted
+atoms are not automatically branchable cells, and Java objects are not
+automatically wrapped. Loading a
 Clojure namespace as hosted code (`require-hosted`) is also design only;
 today hosted code is what you define at the REPL or with
 `klara.defs/define!`.

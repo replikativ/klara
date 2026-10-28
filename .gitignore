@@ -3,3 +3,6 @@ target/
 *.log
 doc/reviews/tmp/
 .nrepl-port
+
+# Private literature working copy and paper scratch files
+paper/tmp/

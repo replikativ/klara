@@ -14,7 +14,7 @@ the end.
 
 A fork is a new world whose root starts as the parent's current root and
 remembers that root as its pinned parent. Because roots are immutable and
-share structure, forking costs nothing. After the fork, each side's
+share structure, forking shares the root rather than copying all definitions. After the fork, each side's
 publications are invisible to the other.
 
 The REPL can fork its current world and switch between worlds:

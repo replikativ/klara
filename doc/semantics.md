@@ -65,10 +65,16 @@ argument, 0 the continuation).
 
 ## 2. Values, configurations, contexts
 
+The value grammar below is the ordinary `isVal` fragment. With staging,
+built code is also a value, recognized by `ev` returning `Out.val` (§10).
+`WSW` requires world entries to be de Bruijn closed, not necessarily values.
+`WSC` checks this scoping property; it does not establish freshness or
+uniqueness of labels and generated names relative to the counter.
+
 ```
 values       v ::= lit d | lam b | fix fb | cap l
-configs      C ::= ⟨w, n, t⟩       w: world (finite map id ↦ closed value)
-                                   n: next fresh handler label
+configs      C ::= ⟨w, n, t⟩       w: world (association list id ↦ closed term)
+                                   n: next handler label / generated name
                                    t: closed term
 contexts     E ::= □ | E t | v E | let_ E b | if_ E t e
                  | prim op E t | prim op v E
@@ -123,8 +129,12 @@ are the functions in `core.clj` that implement them.
 
    E is l-free        k = lam (handling l E[var 0] r o)
   ───────────────────────────────────────────────────────────────── (Op)   [handleEff]
-   handling l E[perform op (cap l) v] r o  →  o[k/0][v/1][op/2]
+   handling l E[perform op (cap l) v] r o  →  o[k/0][v/0][lit (int op)/0]
 ```
+
+The three substitutions in `Op` all use index 0: each substitution removes
+a binder and lowers the remaining indices. The operation tag is injected as
+an integer literal, as in the spec’s `handleEff`.
 
 `Handle` allocates a fresh label and substitutes its capability for the
 handler variable. `Op` fires at the nearest instance with the performed
@@ -133,9 +143,9 @@ through every `handling` frame and grows the captured context. The
 continuation `k` reinstalls `handling l …` around the captured context,
 which makes handlers **deep**, and `k` is an ordinary value that may be
 called any number of times, which makes resumption **multi-shot** in the
-reference semantics. (Fork authority, RFC 0001, will restrict multi-shot
-resumption to computations whose authorities can be split; nothing
-enforces this yet.)
+small-step specification. T0 enforces authority restrictions on repeated
+resumption (RFC 0001, S6) and capture through owned regions (RFC 0005, S10).
+Those checks are not modeled by this specification.
 
 ## 4. Terminal configurations
 

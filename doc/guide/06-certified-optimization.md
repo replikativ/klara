@@ -15,8 +15,10 @@ explains the machinery.
 
 Every closure entry in T0 consults the cache (`klara.stage`). Executables
 are keyed by the CodeId of the function and by their **assumption set**.
-Guards are checked on entry only, never later, because live frames cannot
-be converted afterwards:
+The cache checks these guards on entry. S3 fusion uses entry fallback and
+may replay only its pure pipeline. The compile tier additionally supports
+mid-body guards with explicit frame-state reconstruction (S7–S11; chapter 8),
+resuming T0 at the source position without replaying prior effects:
 
 | Guard | Holds when |
 |---|---|

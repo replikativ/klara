@@ -125,8 +125,9 @@ k=> (fact 20)
 | 11 | handle | `(handle [h {:op f ..}] body)`, `(handle :dynamic {..} body)` | install a handler (chapter 3) |
 | 12 | specialize | `(specialize f a ..)` | s-m-n: fix some arguments (below) |
 
-T0 adds two forms for staging, `code` and `esc`, which chapter 5 covers;
-they are not yet part of the formal spec.
+Both T0 and the formal spec add `code` and `esc` for staging, covered in
+chapter 5. Since S5 the spec also models `run_` (T0 uses `:stage/run`),
+including dynamic scope-extrusion checks and scoping preservation.
 
 ```klara-repl
 k=> (prim + 1 2)
