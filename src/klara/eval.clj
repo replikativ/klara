@@ -50,8 +50,15 @@
 (def ^:dynamic *fiber* nil)
 (def ^:dynamic *basis* nil)
 (def ^:dynamic *entry-hook*
-  "nil, or (fn [f statics args basis]) -> executable map or nil."
+  "nil, or (fn [f statics args basis kont]) -> executable map or nil.
+  kont is the caller's continuation (frames top first), so guards can
+  inspect the handler context the call runs in."
   nil)
+
+(defonce ^{:doc "Returned by a host executable (:run) to decline at entry: the
+  generic path then runs from the start. Only sound for executables that
+  performed no effect before declining (host executables perform none)."}
+  deopt (Object.))
 
 (declare call-value call-value*)
 
@@ -179,8 +186,8 @@
 ;; application
 ;; ---------------------------------------------------------------------------
 
-(defn- enter-hook [f statics args basis]
-  (when *entry-hook* (*entry-hook* f statics args basis)))
+(defn- enter-hook [f statics args basis k]
+  (when *entry-hook* (*entry-hook* f statics args basis k)))
 
 (defn- enter-closure
   "The generic path: bind arguments, run the body under the closure's
@@ -201,19 +208,24 @@
 (defn- run-executable
   "An executable either names Klara code entered in THIS machine
   (:klara closure + :prefix arguments; effects keep working) or a host
-  function (:run; a host frame, so it must not perform Klara effects)."
-  [exe args env k]
+  function (:run; a host frame, so it must not perform Klara effects).
+  A host function may return `deopt`; then generic, a thunk producing the
+  generic machine state, runs instead (replay from entry)."
+  [exe args env k generic]
   (if-let [g (:klara exe)]
     (enter-closure g (into (vec (:prefix exe)) args) env k)
-    (host-apply (:run exe) args env k)))
+    (let [st (host-apply (:run exe) args env k)]
+      (if (and (= :ret (nth st 0)) (identical? deopt (nth st 1)))
+        (do (some-> (:deopts exe) (swap! inc)) (generic))
+        st))))
 
 (defn call-value*
   "Apply value f to args: returns the next machine state."
   [f args env k]
   (cond
     (closure? f)
-    (if-let [exe (enter-hook f [] args (or (closure-basis f) (:basis env)))]
-      (run-executable exe args env k)
+    (if-let [exe (enter-hook f [] args (or (closure-basis f) (:basis env)) k)]
+      (run-executable exe args env k #(enter-closure f args env k))
       (enter-closure f args env k))
 
     (instance? Cont f)
@@ -222,8 +234,10 @@
     (pap? f)
     (if-let [exe (enter-hook (pap-fn f) (pap-statics f) args
                              (or (when (closure? (pap-fn f)) (closure-basis (pap-fn f)))
-                                 (:basis env)))]
-      (run-executable exe args env k)
+                                 (:basis env))
+                             k)]
+      (run-executable exe args env k
+                      #(call-value* (pap-fn f) (into (vec (pap-statics f)) args) env k))
       (call-value* (pap-fn f) (into (vec (pap-statics f)) args) env k))
 
     (ifn? f) (host-apply f args env k)

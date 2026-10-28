@@ -19,6 +19,9 @@
     [:arg i pred]           argument i satisfies pred (see `preds`)
     [:captures locals]      the closure captured exactly these values
     [:statics vals]         the partial application fixed these values
+    [:unhandled ops]        no dynamic handler for any of ops is active in
+                            the caller's continuation (the reference
+                            handler answers them, as the executable assumes)
 
   The cache is keyed by (CodeId, assumption set). T0 consults it through
   klara.eval/*entry-hook*; no hit means the generic closure body runs.
@@ -34,15 +37,28 @@
   assumption set, the checker and its version, and provenance; install
   rejects it unless the CodeId and assumption set match the executable,
   the checker is trusted, and the digest over those fields is intact.
-  S1 certificates are placeholders (checker :klara/trusted-handwritten
-  or :klara/trivial); S3 replaces them by ansatz certificates."
+  Checkers are a registry (`register-checker!`): a checker is a function
+  of the executable returning nil or a rejection reason. S1's
+  :klara/trivial and :klara/trusted-handwritten accept after the common
+  checks; S3 registers :ansatz/kernel (klara.fusion), which re-elaborates
+  the source and rechecks the theorem in the ansatz kernel."
   (:require [klara.core :as c]
             [klara.world :as w]
             [klara.eval :as ev]))
 
+(defn nat-list?
+  "nil, or a vector or list (realized, so checking it runs no code) whose
+  elements are non-negative Longs: the runtime check of the shape claim
+  (List Nat) on the JVM."
+  [x]
+  (or (nil? x)
+      (and (or (vector? x) (list? x))
+           (every? #(and (instance? Long %) (>= (long %) 0)) x))))
+
 (def preds
   {:any (constantly true) :long #(instance? Long %) :double #(instance? Double %)
-   :number number? :vector vector? :map map? :string string? :keyword keyword?})
+   :number number? :vector vector? :map map? :string string? :keyword keyword?
+   :nat-list nat-list?})
 
 (defn make-cache [] (atom {:entries {} :stats {:hits 0 :misses 0 :fallbacks 0}}))
 
@@ -56,13 +72,19 @@
 ;; guards
 ;; ---------------------------------------------------------------------------
 
-(defn guard-holds? [[kind a b] {:keys [basis captures statics args]}]
+(defn- dynamically-handled? [kont ops]
+  (some (fn [f] (and (= :handle (:tag f)) (= :dynamic (:mode f))
+                     (some #(contains? (:clauses f) %) ops)))
+        kont))
+
+(defn guard-holds? [[kind a b] {:keys [basis captures statics args kont]}]
   (case kind
     :world (let [e (w/entry* basis a)]
              (if (= :absent b) (nil? e) (and e (= b (:value-id e)) (not (w/pending? basis e)))))
     :arg (and (< a (count args)) ((preds b) (nth args a)))
     :captures (= a captures)
-    :statics (= a statics)))
+    :statics (= a statics)
+    :unhandled (not (dynamically-handled? kont a))))
 
 (defn world-guards
   "[:world ..] guards for every global the code resolves, read in basis."
@@ -75,10 +97,20 @@
 ;; certificates
 ;; ---------------------------------------------------------------------------
 
-(def trusted-checkers #{:klara/trivial :klara/trusted-handwritten})
+(defonce ^{:doc "checker keyword -> (fn [exe]) returning nil (accept) or a reason."}
+  checkers
+  (atom {:klara/trivial (constantly nil)
+         :klara/trusted-handwritten (constantly nil)}))
 
-(defn- digest [{:keys [code-id assumptions checker checker-version]}]
-  (c/sha256 (pr-str [code-id (sort-by pr-str assumptions) checker checker-version])))
+(defn register-checker! [k f] (swap! checkers assoc k f) k)
+
+(defn digest
+  "Hash over every certificate field except :digest and :payload (the
+  payload holds host objects such as kernel terms; a checker binds them to
+  hashed fields itself)."
+  [cert]
+  (c/sha256 (binding [*print-meta* false *print-length* nil *print-level* nil]
+              (pr-str (c/canonical (dissoc cert :digest :payload))))))
 
 (defn certify
   "A placeholder certificate for (code-id, guards)."
@@ -89,15 +121,16 @@
 
 (defn check-certificate
   "nil if the executable's certificate is acceptable, else a reason."
-  [{:keys [code-id guards certificate]}]
+  [{:keys [code-id guards certificate] :as exe}]
   (let [{cid :code-id as :assumptions :keys [checker provenance] :as cert} certificate]
     (cond
       (nil? cert) :missing-certificate
       (not= cid code-id) :code-id-mismatch
       (not= as (set guards)) :assumption-mismatch
-      (not (contains? trusted-checkers checker)) :untrusted-checker
+      (not (contains? @checkers checker)) :untrusted-checker
       (nil? provenance) :missing-provenance
-      (not= (:digest cert) (digest cert)) :digest-mismatch)))
+      (not= (:digest cert) (digest cert)) :digest-mismatch
+      :else ((get @checkers checker) exe))))
 
 (defn install!
   "Install exe after checking its certificate; throws on rejection."
@@ -114,15 +147,15 @@
 
 (defn enter
   "The executable for closure f entered with statics and args under
-  basis, or nil (generic fallback)."
-  [cache f statics args basis]
+  basis with continuation kont, or nil (generic fallback)."
+  [cache f statics args basis kont]
   (when (ev/closure? f)
     (let [cid (c/code-id (ev/closure-term f))
           cands (get-in @cache [:entries cid])]
       (if (empty? cands)
         (do (swap! cache update-in [:stats :misses] inc) nil)
         (let [ctx {:basis basis :captures (ev/closure-locals f) :statics statics
-                   :args (vec args)}
+                   :args (vec args) :kont kont}
               exe (some (fn [[_ exe]] (when (every? #(guard-holds? % ctx) (:guards exe)) exe))
                         cands)]
           (swap! cache update-in [:stats (if exe :hits :fallbacks)] inc)
@@ -147,7 +180,7 @@
   "Evaluate body with cache as T0's entry hook."
   [cache & body]
   `(let [c# ~cache]
-     (binding [ev/*entry-hook* (fn [f# s# a# b#] (enter c# f# s# a# b#))]
+     (binding [ev/*entry-hook* (fn [f# s# a# b# k#] (enter c# f# s# a# b# k#))]
        ~@body)))
 
 ;; ---------------------------------------------------------------------------
