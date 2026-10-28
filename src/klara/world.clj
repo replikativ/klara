@@ -1,6 +1,6 @@
 (ns klara.world
   "Worlds as immutable values with versioned definitions (doc/01-core-v2.md
-  §2, doc/05-architecture.md §2 'World').
+  §2, doc/architecture.md §2 'World').
 
   A ROOT is a persistent value
 
