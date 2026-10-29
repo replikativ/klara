@@ -1,0 +1,46 @@
+;; No ownership annotations in the kernel. The seed can remain shared by its
+;; caller: inference creates private storage, never mutates a persistent input.
+(def make-counter
+  (fn [seed]
+    (code
+      (fn [n split]
+        (loop [i 0 acc (esc (lift seed))]
+          (if (< i n)
+            (if (< i split)
+              (recur (inc i) (assoc acc 0 (inc (nth acc 0))))
+              (recur (inc i) (assoc acc 1 (inc (nth acc 1)))))
+            acc))))))
+
+(def counter-code (make-counter [0 0]))
+(def counter (run counter-code))
+
+;; Same authority-fork / prepare / adopt / install protocol as S23.
+(def refine-counter
+  (fn [source]
+    (let [candidate
+          (fork [job (perform :stage/prepare-affine source)] (adopt! job))]
+      (perform :stage/install candidate))))
+
+;; State is persistent, explicitly returned and passed to the next batch.
+;; One attempt per controller, at most the supplied number of preparations.
+;; The source lives in the controller, so counts cannot silently change source.
+(def counter-controller
+  (fn [source budget]
+    {:source source :budget budget :hits 0 :attempted false :publication nil}))
+
+(def operate-counter
+  (fn [controller inputs threshold]
+    (let [source (:source controller) f (run source)]
+      (loop [state controller xs inputs values []]
+        (if (empty? xs)
+          {:controller state :values values}
+          (let [args (first xs) value (f (first args) (second args))
+                hits (if (= :long (perform :stage/layout args))
+                       (min threshold (inc (:hits state))) (:hits state))
+                compile-now (and (not (:attempted state)) (> (:budget state) 0)
+                                 (>= hits threshold))
+                state2 (assoc state :hits hits)
+                state3 (if compile-now
+                         (assoc state2 :attempted true :budget (dec (:budget state))
+                                       :publication (refine-counter source)) state2)]
+            (recur state3 (rest xs) (conj values value))))))))

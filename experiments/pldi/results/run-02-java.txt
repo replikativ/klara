@@ -1,0 +1,1 @@
+WARNING: bean already refers to: #'clojure.core/bean in namespace: klara.pldi.worker, being replaced by: #'klara.pldi.worker/bean

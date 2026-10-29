@@ -1,0 +1,26 @@
+;; Load example10 first. The compiler adapter supplies the independently
+;; checked helper/loop/private-state witnesses; the user controls when to try.
+(def refine-with-proof
+  (fn [source]
+    (let [candidate
+          (fork [job (perform :stage/prepare-affine-proved source)] (adopt! job))]
+      (perform :stage/install candidate))))
+
+;; The same refine function may run at startup or after runtime observations.
+(def proof-controller
+  (fn [source budget]
+    {:source source :budget budget :hits 0 :attempted false :publication nil}))
+(def operate-with-proof
+  (fn [state n threshold]
+    (let [source (:source state)
+          value ((run source) n)
+          observed (and (= :long (perform :stage/layout [n])) (>= n 0))
+          hits (if observed (min threshold (inc (:hits state))) (:hits state))
+          due (and (not (:attempted state)) (> (:budget state) 0) (>= hits threshold))
+          next-state (assoc state :hits hits)]
+      {:value value
+       :controller
+       (if due
+         (assoc next-state :attempted true :budget (dec (:budget state))
+                           :publication (refine-with-proof source))
+         next-state)})))

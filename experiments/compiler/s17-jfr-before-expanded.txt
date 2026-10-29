@@ -1,0 +1,104 @@
+Execution sample top frames
+          48 java.lang.ThreadLocal.get() line: 171
+          42 clojure.lang.LazySeq.realize() line: 97
+          37 java.util.concurrent.atomic.AtomicBoolean.get() line: 84
+          35 clojure.lang.RT.seq(Object) line: 557
+          30 clojure.lang.LazySeq.realize() line: 86
+          25 clojure.lang.RT.seqFrom(Object) line: 563
+          24 clojure.lang.RT.boundedLength(ISeq, int) line: 1810
+          22 clojure.lang.Cons.next() line: 41
+          21 clojure.lang.LazySeq.seq() line: 104
+          17 clojure.lang.PersistentHashMap.hash(Object) line: 122
+          17 user$eval4423$fn__4424$v4411__4425.invoke(Object, Object) line: 1
+          17 clojure.lang.AFn.applyToHelper(IFn, ISeq) line: 156
+          17 klara.stage$call_compiled.invokeStatic(Object, Object, Object) line: 472
+          13 klara.stage$make_world_call_site$fn__2839.invoke(Object, Object) line: 493
+          10 clojure.core$deref.invokeStatic(Object) line: 2337
+           9 clojure.lang.RestFn.applyTo(ISeq) line: 133
+           7 clojure.lang.AFn.applyToHelper(IFn, ISeq) line: 154
+           7 clojure.lang.LazySeq.force() line: 50
+           7 clojure.lang.PersistentHashMap$BitmapIndexedNode.find(int, int, Object, Object) line: 790
+           7 clojure.lang.PersistentVector.seq() line: 289
+           6 clojure.lang.ArraySeq.next() line: 77
+           6 clojure.lang.RT.nth(Object, int) line: 917
+           6 klara.stage$make_world_call_site$fn__2839.invoke() line: 482
+           5 clojure.lang.Util.hasheq(Object) line: 173
+           5 clojure.lang.RT.count(Object) line: 662
+Allocation sample classes (counts, NOT bytes)
+         398 clojure.lang.PersistentVector$ChunkedSeq (classLoader = app)
+         210 clojure.lang.MapEntry (classLoader = app)
+         149 clojure.lang.LazySeq (classLoader = app)
+         147 java.util.concurrent.locks.ReentrantLock$NonfairSync (classLoader = bootstrap)
+         145 java.lang.Object[] (classLoader = bootstrap)
+         114 java.lang.Long (classLoader = bootstrap)
+         106 clojure.lang.PersistentVector (classLoader = app)
+         104 clojure.lang.ArraySeq (classLoader = app)
+          79 clojure.lang.Cons (classLoader = app)
+          70 clojure.core$map$fn__5956 (classLoader = app)
+          66 java.util.concurrent.locks.ReentrantLock (classLoader = bootstrap)
+          41 clojure.lang.PersistentHashMap$INode[] (classLoader = app)
+          37 clojure.core$concat$fn__5575 (classLoader = app)
+          32 klara.stage$make_entry_site$fn__2815$fn__2816 (classLoader = clojure.lang.DynamicClassLoader)
+          19 clojure.lang.PersistentHashMap$BitmapIndexedNode (classLoader = app)
+          17 clojure.lang.PersistentHashMap$NodeSeq (classLoader = app)
+          14 clojure.lang.PersistentHashMap (classLoader = app)
+           6 clojure.lang.Box (classLoader = app)
+           5 clojure.lang.Var$TBox (classLoader = app)
+           5 clojure.lang.PersistentHashMap$ArrayNode (classLoader = app)
+           1 byte[] (classLoader = bootstrap)
+           1 clojure.asm.Label (classLoader = app)
+           1 int[] (classLoader = bootstrap)
+           1 java.util.concurrent.atomic.AtomicReference (classLoader = bootstrap)
+           1 clojure.lang.Var$Frame (classLoader = app)
+First Klara/Var push allocation frame (sample counts)
+         677 klara.stage$make_entry_site$fn__2815.invoke(Object, Object, Object) line: 448
+         299 klara.stage$make_world_call_site$fn__2839.invoke(Object, Object) line: 493
+         174 klara.stage$make_world_call_site$fn__2839.invoke() line: 482
+         166 klara.eval$invoke_direct.invokeStatic(Object, Object, Object) line: 397
+         140 klara.stage$call_compiled.invokeStatic(Object, Object, Object) line: 472
+          84 clojure.lang.Var.pushThreadBindings(Associative) line: 330
+          66 klara.eval$invoke_direct.invoke(Object, Object, Object) line: 390
+          32 klara.stage$make_entry_site$fn__2815.invoke(Object, Object, Object) line: 447
+          25 clojure.lang.Var.pushThreadBindings(Associative) line: 322
+          20 klara.compile_admission$run_BANG_$fn__4293$fn__4294$fn__4316.invoke() line: 40
+          19 klara.compile_admission$run_BANG_$fn__4293$fn__4294$fn__4314.invoke() line: 39
+          13 klara.eval$call_value.invokeStatic(Object, Object) line: 1098
+          11 klara.compile_admission$run_BANG_$fn__4293$fn__4294$fn__4339.invoke() line: 48
+           6 klara.stage$observed.invokeStatic(Object, Object, Object) line: 116
+           5 klara.stage$speculate_QMARK_.invokeStatic(Object, Object, Object) line: 137
+           3 klara.stage$make_world_call_site$fn__2839.invoke(Object, Object) line: 496
+           2 klara.compile_admission$run_BANG_$fn__4293$fn__4294$fn__4304.invoke() line: 34
+           2 klara.compile_admission$run_BANG_$fn__4293$fn__4294$fn__4310.invoke() line: 37
+           2 klara.compile_admission$run_BANG_$fn__4293$fn__4294$fn__4333.invoke() line: 45
+           2 klara.eval$call_value.invokeStatic(Object, Object) line: 1099
+           2 klara.eval.Closure.invoke(Object) line: 125
+           1 klara.compile_admission$run_BANG_$fn__4293$fn__4294$fn__4306.invoke() line: 35
+           1 klara.compile_admission$run_BANG_$plus__4279.invoke(Object) line: 20
+           1 klara.compile_admission$run_BANG_$fn__4285.invoke(Object) line: 22
+           1 klara.compile_admission$run_BANG_$fn__4293$fn__4294$fn__4312.invoke() line: 38
+Sampled allocation weight by first Klara/Var frame (estimated bytes)
+  6049214771 klara.stage$make_entry_site$fn__2815.invoke(Object, Object, Object) line: 448
+  2397405901 klara.stage$make_world_call_site$fn__2839.invoke() line: 482
+  1649345331 klara.eval$invoke_direct.invokeStatic(Object, Object, Object) line: 397
+  1366083482 klara.stage$make_world_call_site$fn__2839.invoke(Object, Object) line: 493
+  1336334643 klara.stage$call_compiled.invokeStatic(Object, Object, Object) line: 472
+   465281434 klara.stage$make_entry_site$fn__2815.invoke(Object, Object, Object) line: 447
+   279727821 clojure.lang.Var.pushThreadBindings(Associative) line: 330
+   267207373 klara.eval$invoke_direct.invoke(Object, Object, Object) line: 390
+   217998950 klara.compile_admission$run_BANG_$fn__4293$fn__4294$fn__4333.invoke() line: 45
+   204786893 klara.compile_admission$run_BANG_$fn__4293$fn__4294$fn__4339.invoke() line: 48
+    76860621 clojure.lang.Var.pushThreadBindings(Associative) line: 322
+    51170509 klara.compile_admission$run_BANG_$fn__4293$fn__4294$fn__4316.invoke() line: 40
+    49807360 klara.compile_admission$run_BANG_$fn__4293$fn__4294$fn__4314.invoke() line: 39
+    38812058 klara.eval$call_value.invokeStatic(Object, Object) line: 1098
+    13775565 klara.stage$observed.invokeStatic(Object, Object, Object) line: 116
+    13631488 klara.stage$speculate_QMARK_.invokeStatic(Object, Object, Object) line: 137
+     8178893 klara.stage$make_world_call_site$fn__2839.invoke(Object, Object) line: 496
+     5452595 klara.eval$call_value.invokeStatic(Object, Object) line: 1099
+     5452595 klara.eval.Closure.invoke(Object) line: 125
+     5242880 klara.compile_admission$run_BANG_$fn__4293$fn__4294$fn__4304.invoke() line: 34
+     5242880 klara.compile_admission$run_BANG_$fn__4293$fn__4294$fn__4310.invoke() line: 37
+     2726298 clojure.lang.Var.pushThreadBindings(Associative) line: 332
+     2621440 klara.compile_admission$run_BANG_$fn__4293$fn__4294$fn__4306.invoke() line: 35
+     2621440 klara.compile_admission$run_BANG_$plus__4279.invoke(Object) line: 20
+     2621440 klara.compile_admission$run_BANG_$fn__4285.invoke(Object) line: 22

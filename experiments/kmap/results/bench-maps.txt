@@ -1,0 +1,30 @@
+load average at start: 10.82 13.42 13.78 6/3298 3745466
+n=8      get          PHM       162.1 ns  KMap       180.4 ns  x1.113   CHAMP       209.0 ns  x1.289
+n=8      assoc        PHM       305.9 ns  KMap       335.2 ns  x1.096   CHAMP       338.2 ns  x1.105
+n=8      reduce-kv    PHM        70.9 ns  KMap        79.9 ns  x1.127   CHAMP        63.6 ns  x0.898
+n=8      into-clj     PHM       377.2 ns  KMap       401.9 ns  x1.066   CHAMP       381.3 ns  x1.011
+n=8      into-same    PHM       488.3 ns  KMap       529.0 ns  x1.083   CHAMP       666.7 ns  x1.365
+n=8      equiv        PHM       255.5 ns  KMap       301.8 ns  x1.181   CHAMP       348.1 ns  x1.363
+n=8      hash-cached  PHM        20.6 ns  KMap        28.1 ns  x1.363   CHAMP        29.3 ns  x1.422
+n=8      assoc+hash   PHM       319.8 ns  KMap       295.0 ns  x0.922   CHAMP       281.3 ns  x0.880
+n=8      kw-lookup    PHM       150.1 ns  KMap       218.3 ns  x1.454   CHAMP       312.9 ns  x2.084
+n=1000   get          PHM       160.3 ns  KMap       213.6 ns  x1.332   CHAMP       317.4 ns  x1.980
+n=1000   assoc        PHM       926.3 ns  KMap      1148.5 ns  x1.240   CHAMP      1245.9 ns  x1.345
+n=1000   reduce-kv    PHM     21652.9 ns  KMap     21835.0 ns  x1.008   CHAMP      7618.1 ns  x0.352
+n=1000   into-clj     PHM    121215.6 ns  KMap     99884.9 ns  x0.824   CHAMP     98122.3 ns  x0.809
+n=1000   into-same    PHM    121941.1 ns  KMap    114502.8 ns  x0.939   CHAMP    179924.4 ns  x1.476
+n=1000   equiv        PHM     74618.0 ns  KMap     64347.1 ns  x0.862   CHAMP     92969.7 ns  x1.246
+n=1000   hash-cached  PHM        17.5 ns  KMap        25.0 ns  x1.425   CHAMP        24.7 ns  x1.409
+n=1000   assoc+hash   PHM     78673.5 ns  KMap     40978.1 ns  x0.521   CHAMP     34568.1 ns  x0.439
+n=1000   kw-lookup    PHM       170.7 ns  KMap       206.8 ns  x1.211   CHAMP       345.6 ns  x2.024
+n=100000 get          PHM       199.2 ns  KMap       256.2 ns  x1.286   CHAMP       464.5 ns  x2.332
+n=100000 assoc        PHM      1421.1 ns  KMap      1501.4 ns  x1.056   CHAMP      1566.1 ns  x1.102
+n=100000 reduce-kv    PHM   3041568.8 ns  KMap   3228860.8 ns  x1.062   CHAMP   1875464.2 ns  x0.617
+n=100000 into-clj     PHM  18271618.5 ns  KMap  14424941.9 ns  x0.789   CHAMP  14628467.5 ns  x0.801
+n=100000 into-same    PHM  18940263.2 ns  KMap  15757624.2 ns  x0.832   CHAMP  32109487.0 ns  x1.695
+n=100000 equiv        PHM  13176621.0 ns  KMap  10951575.4 ns  x0.831   CHAMP  17819388.3 ns  x1.352
+n=100000 hash-cached  PHM        14.8 ns  KMap        26.5 ns  x1.789   CHAMP        25.7 ns  x1.736
+n=100000 assoc+hash   PHM  10996266.0 ns  KMap   7879283.5 ns  x0.717   CHAMP   6562023.3 ns  x0.597
+n=100000 kw-lookup    PHM       199.6 ns  KMap       216.2 ns  x1.083   CHAMP       454.1 ns  x2.275
+n=11111  postwalk     PHM   2574026.6 ns  KMap   2562582.8 ns  x0.996   CHAMP   3950327.4 ns  x1.535
+load average at end: 8.68 7.15 8.88 8/3140 3765951

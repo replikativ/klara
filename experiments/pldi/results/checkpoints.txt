@@ -1,0 +1,13 @@
+[0.001s][warning][perf,memops] Cannot use file /tmp/hsperfdata_christian-weilbach/2 because it is locked by another process (errno = 11)
+
+Testing klara.deopt-test
+
+Testing klara.compile.speculate-test
+
+Testing klara.compile.unbox-test
+
+Testing klara.compile.direct-abi-test
+
+Ran 33 tests containing 198 assertions.
+0 failures, 0 errors.
+{:events 54, :frame-tags #{:let :if :list :handle}, :resume-modes #{:ret :eval}, :descriptors #{:instance :vector :letrec :const :live :local :closure}}

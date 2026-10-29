@@ -1,0 +1,98 @@
+// Compiled unchanged run-batch source form under a dump namespace.
+Compiled from "NO_SOURCE_FILE"
+public final class consolidation.batch_bytecode$run_batch extends clojure.lang.AFunction implements clojure.lang.IFn$OOLO {
+  public consolidation.batch_bytecode$run_batch();
+    Code:
+         0: aload_0
+         1: invokespecial #11                 // Method clojure/lang/AFunction."<init>":()V
+         4: return
+
+  public static java.lang.Object invokeStatic(java.lang.Object, java.lang.Object, long);
+    Code:
+         0: aload_0
+         1: instanceof    #15                 // class clojure/lang/IFn$OL
+         4: ifeq          57
+         7: lconst_0
+         8: nop
+         9: lstore        4
+        11: lconst_0
+        12: nop
+        13: lstore        6
+        15: lload         4
+        17: lload_2
+        18: lcmp
+        19: ifge          48
+        22: lload         4
+        24: invokestatic  #21                 // Method clojure/lang/Numbers.inc:(J)J
+        27: aload_0
+        28: checkcast     #15                 // class clojure/lang/IFn$OL
+        31: aload_1
+        32: invokeinterface #25,  2           // InterfaceMethod clojure/lang/IFn$OL.invokePrim:(Ljava/lang/Object;)J
+        37: lstore        6
+        39: lstore        4
+        41: goto          15
+        44: nop
+        45: nop
+        46: athrow
+        47: athrow
+        48: lload         6
+        50: invokestatic  #29                 // Method clojure/lang/Numbers.num:(J)Ljava/lang/Number;
+        53: goto          102
+        56: athrow
+        57: lconst_0
+        58: nop
+        59: lstore        4
+        61: aconst_null
+        62: astore        8
+        64: lload         4
+        66: lload_2
+        67: lcmp
+        68: ifge          97
+        71: lload         4
+        73: invokestatic  #21                 // Method clojure/lang/Numbers.inc:(J)J
+        76: aload_0
+        77: checkcast     #34                 // class clojure/lang/IFn
+        80: aload_1
+        81: invokeinterface #38,  2           // InterfaceMethod clojure/lang/IFn.invoke:(Ljava/lang/Object;)Ljava/lang/Object;
+        86: astore        8
+        88: lstore        4
+        90: goto          64
+        93: nop
+        94: nop
+        95: athrow
+        96: athrow
+        97: aload         8
+        99: aconst_null
+       100: astore        8
+       102: areturn
+
+  public java.lang.Object invoke(java.lang.Object, java.lang.Object, java.lang.Object);
+    Code:
+         0: aload_1
+         1: aconst_null
+         2: astore_1
+         3: aload_2
+         4: aconst_null
+         5: astore_2
+         6: aload_3
+         7: checkcast     #49                 // class java/lang/Number
+        10: invokestatic  #54                 // Method clojure/lang/RT.longCast:(Ljava/lang/Object;)J
+        13: invokestatic  #56                 // Method invokeStatic:(Ljava/lang/Object;Ljava/lang/Object;J)Ljava/lang/Object;
+        16: areturn
+
+  public final java.lang.Object invokePrim(java.lang.Object, java.lang.Object, long);
+    Code:
+         0: aload_1
+         1: aconst_null
+         2: astore_1
+         3: aload_2
+         4: aconst_null
+         5: astore_2
+         6: lload_3
+         7: invokestatic  #56                 // Method invokeStatic:(Ljava/lang/Object;Ljava/lang/Object;J)Ljava/lang/Object;
+        10: areturn
+
+  public static {};
+    Code:
+         0: return
+}

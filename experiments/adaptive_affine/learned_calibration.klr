@@ -1,0 +1,53 @@
+;; A single online predictor. Ties choose :normal.
+(def predict-mode
+  (fn [model]
+    (if (>= (get model :normal 0) (get model :alert 0)) :normal :alert)))
+
+(def learn-mode
+  (fn [model observed]
+    (assoc model observed (inc (get model observed 0)))))
+
+;; Reference program: first classify the batch, then calibrate a value.
+(def classify-batch
+  (fn [readings]
+    (loop [xs readings]
+      (if (empty? xs) :normal
+        (if (> (first xs) 100) :alert (recur (rest xs)))))))
+
+(def calibrate
+  (fn [mode x]
+    (if (= mode :alert) (+ (* x 3) 10) (+ (* x 2) 1))))
+
+(def reference-calibration
+  (fn [readings x] (calibrate (classify-batch readings) x)))
+
+;; The mode is static; only x remains in the generated function.
+(def calibration-code
+  (fn [mode]
+    (let [gain (if (= mode :alert) 3 2)
+          offset (if (= mode :alert) 10 1)]
+      (code (fn [x] (+ (* x (esc (lift gain))) (esc (lift offset))))))))
+
+;; start/await are experimental host services, not new language primitives.
+;; The model and all policy decisions live in Klara.
+(def predict-and-calibrate
+  (fn [model readings x]
+    (let [predicted (predict-mode model)
+          source (calibration-code predicted)
+          job (perform :stage/demo-start source x)
+          observed (classify-batch readings)
+          outcome (perform :stage/demo-await job)
+          reuse (and (= predicted observed) (= :ok (:status outcome)))
+          value (if reuse (:value outcome) (calibrate observed x))]
+      {:predicted predicted :observed observed
+       :path (if reuse :reuse :fallback) :value value
+       :model (learn-mode model observed)})))
+
+;; The running application threads its learned state too, entirely in Klara.
+(def calibration-session
+  (fn [model batches x]
+    (loop [state model remaining batches steps []]
+      (if (empty? remaining)
+        {:model state :steps steps}
+        (let [result (predict-and-calibrate state (first remaining) x)]
+          (recur (:model result) (rest remaining) (conj steps result)))))))

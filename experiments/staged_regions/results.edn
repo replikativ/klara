@@ -1,0 +1,95 @@
+{:runtime
+ {:java "25.0.1+8-LTS-jvmci-b01",
+  :vm "Java HotSpot(TM) 64-Bit Server VM",
+  :jvmci "true"},
+ :early-generator-and-definitions-ms 2.382805,
+ :compile-ms 20.511993,
+ :install-ms 0.233547,
+ :class-bytes 894,
+ :cache-stats
+ {:hits 60000, :misses 0, :fallbacks 0, :revalidations 1, :deopts 0},
+ :rows
+ [{:n 32,
+   :clojure
+   {:median-ns 58.7005,
+    :samples-ns [74.404 63.319 60.7245 58.7005 53.1545 53.0115 53.131],
+    :value 5236304,
+    :calls 14000},
+   :staged-jvm
+   {:median-ns 1330.654,
+    :samples-ns
+    [1358.776 1330.654 1382.357 1358.626 1289.381 1239.308 1248.593],
+    :value 5236304,
+    :calls 7000},
+   :t0
+   {:median-ns 176562.41666666666,
+    :samples-ns
+    [178598.91666666666
+     179077.91666666666
+     176562.41666666666
+     174778.41666666666
+     178073.58333333334
+     174998.5
+     163164.5],
+    :value 5236304,
+    :calls 84},
+   :diagnostic-break-even-calls 118}
+  {:n 256,
+   :clojure
+   {:median-ns 192.084,
+    :samples-ns
+    [185.1255 196.978 186.221 192.6945 192.084 185.1625 196.21],
+    :value 213510206080,
+    :calls 14000},
+   :staged-jvm
+   {:median-ns 1434.085,
+    :samples-ns
+    [1471.451 1376.576 2808.299 1407.747 1408.311 1434.085 1475.833],
+    :value 213510206080,
+    :calls 7000},
+   :t0
+   {:median-ns 1352485.0,
+    :samples-ns
+    [1428768.6666666667
+     1266975.5
+     1394419.5
+     1257059.1666666667
+     1378334.1666666667
+     1256680.5833333333
+     1352485.0],
+    :value 213510206080,
+    :calls 84},
+   :diagnostic-break-even-calls 16}
+  {:n 1024,
+   :clojure
+   {:median-ns 581.012,
+    :samples-ns
+    [592.9335 581.9365 580.402 589.3275 580.4815 581.012 580.5925],
+    :value 223533935151616,
+    :calls 14000},
+   :staged-jvm
+   {:median-ns 1823.402,
+    :samples-ns
+    [1809.742 1826.598 1815.436 1823.402 1882.12 1875.157 1821.515],
+    :value 223533935151616,
+    :calls 7000},
+   :t0
+   {:median-ns 5150273.166666667,
+    :samples-ns
+    [5176055.5
+     5216835.666666667
+     5149610.666666667
+     5104380.083333333
+     5150273.166666667
+     5178822.75
+     5009725.25],
+    :value 223533935151616,
+    :calls 84},
+   :diagnostic-break-even-calls 4}],
+ :limitations
+ [:single-process
+  :fixed-order
+  :diagnostic-only
+  :no-memory-retention-measurement
+  :synchronous-example-policy
+  :break-even-excludes-generator-and-profile-cost]}

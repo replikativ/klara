@@ -1,0 +1,47 @@
+
+Running tests in #{"test"}
+
+Testing klara.affine-test
+
+Testing klara.authority-test
+
+Testing klara.compile.core-test
+
+Testing klara.compile.direct-abi-test
+
+Testing klara.compile.generated-test
+
+Testing klara.compile.hof-test
+
+Testing klara.compile.speculate-test
+
+Testing klara.compile.unbox-test
+
+Testing klara.deopt-test
+
+Testing klara.eval-test
+
+Testing klara.fusion-test
+1
+3
+
+Testing klara.owned-test
+
+Testing klara.r4-test
+
+Testing klara.stage-test
+
+Testing klara.staging-test
+
+Testing klara.transcript-test
+
+Testing klara.validity-test
+
+Testing klara.world-ops-test
+
+Testing klara.world-test
+
+Testing klara.x1-test
+
+Ran 146 tests containing 7041 assertions.
+0 failures, 0 errors.

@@ -1,0 +1,21 @@
+(def accumulator-step
+  (fn [a]
+    (let [alias a]
+      (assoc alias 0 (inc (nth alias 0))))))
+(def accumulator-code
+  (code
+    (fn [n]
+      ;; Mandatory entry read: the summary depends on this binding's value ID.
+      (let [step accumulator-step]
+        (loop [i 0 acc [0]]
+          (let [alias acc]
+            (if (< i n) (recur (inc i) (step alias)) acc)))))))
+(def accumulator (run accumulator-code))
+(def refine-accumulator
+  (fn [source]
+    (let [candidate
+          (fork [job (perform :stage/prepare-affine source)] (adopt! job))]
+      (perform :stage/install candidate))))
+;; (accumulator 5) => [5]. Old pinned roots retain their old helper contract.
+;; Replacing accumulator-step with (fn [a] [a]) makes preparation decline at
+;; :retained-version, and an old candidate's world guard fails in the new root.

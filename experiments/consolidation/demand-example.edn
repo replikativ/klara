@@ -1,0 +1,234 @@
+{:bridges :tested-Core-model-and-JVM-correspondence,
+ :canonical-version 1,
+ :witness
+ {:goal-sha256
+  "17382eb36ddc20fcc05e0ffb1785d0fc219e0be24f4efe2ce16430709d72ea60",
+  :proof-sha256
+  "7045927b51ce8748cf7ba9dfd550cd62b730f2d344161d93c42e3a2994396b1c",
+  :goal
+  "(forall xs (app (const List [#object[ansatz.kernel.Level 0x6f4de07f \"0\"]]) (const Nat [])) (app (app (app (const Eq [#object[ansatz.kernel.Level 0xc561956 \"1\"]]) (const Nat [])) (app (app (app (app (app (const List.foldl [#object[ansatz.kernel.Level 0x6f4de07f \"0\"] #object[ansatz.kernel.Level 0x6f4de07f \"0\"]]) (const Nat [])) (const Nat [])) (const Nat.add [])) (lit-nat 0)) (app (app (const demandTake []) (app (app (app (app (const List.map [#object[ansatz.kernel.Level 0x6f4de07f \"0\"] #object[ansatz.kernel.Level 0x6f4de07f \"0\"]]) (const Nat [])) (const Nat [])) (lam x (const Nat []) (app (app (const boundValue []) (app (app (const BoundExpr.add []) (app (app (const BoundExpr.add []) (app (const BoundExpr.lit []) (lit-nat 0))) (const BoundExpr.arg []))) (app (const BoundExpr.lit []) (lit-nat 1)))) (bvar 0)) :default)) (bvar 0))) (lit-nat 3)))) (app (app (app (app (app (const List.foldl [#object[ansatz.kernel.Level 0x6f4de07f \"0\"] #object[ansatz.kernel.Level 0x6f4de07f \"0\"]]) (const Nat [])) (const Nat [])) (const Nat.add [])) (lit-nat 0)) (app (app (app (app (const List.map [#object[ansatz.kernel.Level 0x6f4de07f \"0\"] #object[ansatz.kernel.Level 0x6f4de07f \"0\"]]) (const Nat [])) (const Nat [])) (lam x (const Nat []) (app (app (const boundValue []) (app (app (const BoundExpr.add []) (app (app (const BoundExpr.add []) (app (const BoundExpr.lit []) (lit-nat 0))) (const BoundExpr.arg []))) (app (const BoundExpr.lit []) (lit-nat 1)))) (bvar 0)) :default)) (app (app (const demandTake []) (bvar 0)) (lit-nat 3))))) :default)"},
+ :contract
+ {:outputs 3, :map-only true, :license :whole-vector-totality},
+ :source
+ {:op :fn,
+  :arity 1,
+  :rest? false,
+  :body
+  {:op :perform,
+   :target nil,
+   :name :host/call,
+   :args
+   [{:op :quote, :datum clojure.core/reduce}
+    {:op :perform,
+     :target nil,
+     :name :host/var,
+     :args [{:op :quote, :datum clojure.core/+}]}
+    {:op :quote, :datum 0}
+    {:op :perform,
+     :target nil,
+     :name :host/call,
+     :args
+     [{:op :quote, :datum clojure.core/take}
+      {:op :quote, :datum 3}
+      {:op :perform,
+       :target nil,
+       :name :host/call,
+       :args
+       [{:op :quote, :datum clojure.core/map}
+        {:op :fn,
+         :arity 1,
+         :rest? false,
+         :body
+         {:op :prim,
+          :name +,
+          :args [{:op :local, :index 0} {:op :quote, :datum 1}]}}
+        {:op :local, :index 0}]}]}]}},
+ :suspension :T0-between-completed-native-regions,
+ :owned
+ {:op :fn,
+  :arity 1,
+  :rest? false,
+  :body
+  {:op :let,
+   :init {:op :prim, :name count, :args [{:op :local, :index 0}]},
+   :body
+   {:op :let,
+    :init {:op :quote, :datum 0},
+    :body
+    {:op :let,
+     :init {:op :quote, :datum [0]},
+     :body
+     {:op :let,
+      :init
+      {:op :perform,
+       :target nil,
+       :name :own/alloc,
+       :args [{:op :quote, :datum [0]}]},
+      :body
+      {:op :let,
+       :init
+       {:op :letrec,
+        :inits
+        [{:op :fn,
+          :arity 1,
+          :rest? false,
+          :body
+          {:op :if,
+           :test
+           {:op :prim,
+            :name <,
+            :args [{:op :local, :index 0} {:op :local, :index 5}]},
+           :then
+           {:op :if,
+            :test
+            {:op :prim,
+             :name <,
+             :args [{:op :local, :index 0} {:op :quote, :datum 3}]},
+            :then
+            {:op :let,
+             :init
+             {:op :prim,
+              :name nth,
+              :args [{:op :local, :index 6} {:op :local, :index 0}]},
+             :body
+             {:op :let,
+              :init
+              {:op :prim, :name inc, :args [{:op :local, :index 1}]},
+              :body
+              {:op :let,
+               :init
+               {:op :perform,
+                :target nil,
+                :name :own/update,
+                :args
+                [{:op :local, :index 4}
+                 {:op :fn,
+                  :arity 1,
+                  :rest? false,
+                  :body
+                  {:op :prim,
+                   :name assoc,
+                   :args
+                   [{:op :local, :index 0}
+                    {:op :quote, :datum 0}
+                    {:op :prim,
+                     :name +,
+                     :args
+                     [{:op :prim,
+                       :name nth,
+                       :args
+                       [{:op :local, :index 0} {:op :quote, :datum 0}]}
+                      {:op :prim,
+                       :name +,
+                       :args
+                       [{:op :local, :index 2}
+                        {:op :quote, :datum 1}]}]}]}}]},
+               :body
+               {:op :app,
+                :fn {:op :local, :index 4},
+                :args [{:op :local, :index 1}]}}}},
+            :else {:op :quote, :datum nil}},
+           :else {:op :quote, :datum nil}}}],
+        :body
+        {:op :app,
+         :fn {:op :local, :index 0},
+         :args [{:op :local, :index 3}]}},
+       :body
+       {:op :perform,
+        :target nil,
+        :name :own/freeze,
+        :args [{:op :local, :index 1}]}}}}}}},
+ :target
+ {:op :fn,
+  :arity 1,
+  :rest? false,
+  :body
+  {:op :perform,
+   :target nil,
+   :name :host/call,
+   :args
+   [{:op :quote, :datum clojure.core/reduce}
+    {:op :fn,
+     :arity 2,
+     :rest? false,
+     :body
+     {:op :prim,
+      :name +,
+      :args
+      [{:op :local, :index 1}
+       {:op :prim,
+        :name +,
+        :args [{:op :local, :index 0} {:op :quote, :datum 1}]}]}}
+    {:op :quote, :datum 0}
+    {:op :perform,
+     :target nil,
+     :name :host/call,
+     :args
+     [{:op :quote, :datum clojure.core/take}
+      {:op :quote, :datum 3}
+      {:op :local, :index 0}]}]}},
+ :lowered-functional
+ {:op :fn,
+  :arity 1,
+  :rest? false,
+  :body
+  {:op :let,
+   :init {:op :prim, :name count, :args [{:op :local, :index 0}]},
+   :body
+   {:op :let,
+    :init {:op :quote, :datum 0},
+    :body
+    {:op :let,
+     :init {:op :quote, :datum [0]},
+     :body
+     {:op :letrec,
+      :inits
+      [{:op :fn,
+        :arity 2,
+        :rest? false,
+        :body
+        {:op :if,
+         :test
+         {:op :prim,
+          :name <,
+          :args [{:op :local, :index 1} {:op :local, :index 5}]},
+         :then
+         {:op :if,
+          :test
+          {:op :prim,
+           :name <,
+           :args [{:op :local, :index 1} {:op :quote, :datum 3}]},
+          :then
+          {:op :let,
+           :init
+           {:op :prim,
+            :name nth,
+            :args [{:op :local, :index 6} {:op :local, :index 1}]},
+           :body
+           {:op :app,
+            :fn {:op :local, :index 3},
+            :args
+            [{:op :prim, :name inc, :args [{:op :local, :index 2}]}
+             {:op :prim,
+              :name assoc,
+              :args
+              [{:op :local, :index 1}
+               {:op :quote, :datum 0}
+               {:op :prim,
+                :name +,
+                :args
+                [{:op :prim,
+                  :name nth,
+                  :args
+                  [{:op :local, :index 1} {:op :quote, :datum 0}]}
+                 {:op :prim,
+                  :name +,
+                  :args
+                  [{:op :local, :index 0}
+                   {:op :quote, :datum 1}]}]}]}]}},
+          :else {:op :local, :index 0}},
+         :else {:op :local, :index 0}}}],
+      :body
+      {:op :app,
+       :fn {:op :local, :index 0},
+       :args [{:op :local, :index 2} {:op :local, :index 1}]}}}}}}}

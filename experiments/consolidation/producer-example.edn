@@ -1,0 +1,31 @@
+{:source
+ {:op :fn,
+  :arity 1,
+  :rest? false,
+  :body
+  {:op :prim,
+   :name +,
+   :args [{:op :local, :index 0} {:op :quote, :datum 1}]}},
+ :contract
+ {:source-id
+  "74a970b2f9d7f61f2ddaa9f246c1643ac93ff2dd0b4cc825ef6b4d87f643c0e9",
+  :input-max 99,
+  :output-max 100,
+  :witness
+  {:goal-sha256
+   "84a9444f28fdc195724944131df385547d6305915a1f2be873f5bd72f667a549",
+   :proof-sha256
+   "387b1c36b1025575078d37fccc2c7af6235e269979bccff3cd781f8c7eb05353"}},
+ :goal
+ "(forall xs (app (const List [#object[ansatz.kernel.Level 0x6f4de07f \"0\"]]) (const Nat [])) (forall bounded (app (app (const AllBelow []) (lit-nat 99)) (bvar 0)) (app (app (const AllBelow []) (lit-nat 100)) (app (app (app (app (const List.map [#object[ansatz.kernel.Level 0x6f4de07f \"0\"] #object[ansatz.kernel.Level 0x6f4de07f \"0\"]]) (const Nat [])) (const Nat [])) (lam x (const Nat []) (app (app (const boundValue []) (app (app (const BoundExpr.add []) (app (app (const BoundExpr.add []) (app (const BoundExpr.lit []) (lit-nat 0))) (const BoundExpr.arg []))) (app (const BoundExpr.lit []) (lit-nat 1)))) (bvar 0)) :default)) (bvar 1))) :default) :default)",
+ :input-fact
+ {:predicate [:bounded-nat-vector 64 99], :origin :runtime-check},
+ :output-fact
+ {:predicate [:bounded-nat-vector 3 100],
+  :origin
+  {:producer-id
+   "74a970b2f9d7f61f2ddaa9f246c1643ac93ff2dd0b4cc825ef6b4d87f643c0e9",
+   :proof-sha256
+   "387b1c36b1025575078d37fccc2c7af6235e269979bccff3cd781f8c7eb05353"}},
+ :output-value [2 3 4],
+ :bridges :tested-producer-driver-and-core-JVM-correspondence}

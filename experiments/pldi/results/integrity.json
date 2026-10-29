@@ -1,0 +1,21 @@
+{
+  "measurement_sources_match": true,
+  "benchmark_processes": 40,
+  "process_estimates": 94,
+  "analysis_changes_since_measurement": {
+    "experiments/pldi/run.py": {
+      "recorded": "260445292ce2901eeacbe60c583c16dc151e703c8b5c33d849056934d6dbb188",
+      "current": "e6ecc91453c32e590664e576a273365de2b52461a5f7d06fe3669677c0742bb1"
+    },
+    "experiments/pldi/render.py": {
+      "recorded": "40ee4b976cf6ffb25e21d78ba671c978bd22bc211c27fd8776ba201c9a0e9fbc",
+      "current": "93832c26f3cae539d7b856f8eda8cce5c5a830aeca75870dd9779082afea2cd9"
+    },
+    "experiments/pldi/summarize.clj": {
+      "recorded": "e6324d2aa47505c8b3dc594c5869290af444475e21644d8516025079b09d0bcb",
+      "current": "d348a132b5b128a2ddf07a96709d350fdd1cceed4849e0ee098dd19fbeca2963"
+    }
+  },
+  "frozen_collector_matches_recorded_hash": true,
+  "note": "Only post-collection analysis/driver scripts differ. Numeric worker, SMC, Java, generators, compiler, tests and spec sources match the frozen manifest."
+}

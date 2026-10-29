@@ -1,0 +1,12 @@
+\begin{tabular}{llrrr}
+\toprule Workload & Mode & Size & $\mu$s/call [95\% CI] & B/call [95\% CI] \\
+\midrule
+first-correct & clojure & 0 & 0.195 [0.125, 0.205] & n/a \\
+first-correct & klara & 10 & 58.5 [53.3, 63.3] & n/a \\
+first-correct & klara & 1000 & 35.9 [29.9, 42.1] & n/a \\
+first-correct & klara & 100000 & 67.7 [29.3, 123] & n/a \\
+publish & klara & 10 & 2.92 [2.68, 3.08] & 4.41e+03 [4.41e+03, 4.41e+03] \\
+publish & klara & 1000 & 2.42 [2.22, 2.76] & 5.16e+03 [5.16e+03, 5.16e+03] \\
+publish & klara & 100000 & 2.22 [1.88, 2.34] & 5.43e+03 [5.43e+03, 5.43e+03] \\
+\bottomrule
+\end{tabular}

@@ -1,0 +1,16 @@
+rq,workload,mode,size,ns,bytes
+rq1,calls,java,200,184.636,24.096
+rq1,closures,java,200,1556.02,24.096
+rq1,collections,java,200,244.872,24.096
+rq1,hof-mapv,java,200,1459.608,1640.096
+rq1,hof-pipeline,java,200,1174.758,24.096
+rq1,numeric,java,200,228.002,24.096
+rq1,tail-effects,java,200,1671.95,24.096
+rq1,calls,java,2000,1020.834,24.096
+rq1,closures,java,2000,1380.184,24.096
+rq1,collections,java,2000,1360.066,24.096
+rq1,hof-mapv,java,2000,2156.646,16040.096
+rq1,hof-pipeline,java,2000,1003.824,24.096
+rq1,numeric,java,2000,1007.104,24.096
+rq1,tail-effects,java,2000,1154.292,24.096
+rq1,smc,java,384,152188.0,7712.0

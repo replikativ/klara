@@ -1,0 +1,16 @@
+WARNING: Use of :paths external to the project has been deprecated, please remove: /tmp/klara-s12-java.UzxWyP
+#'klara.compile-bench/steady!
+#'klara.compile-profile/run!
+#'klara.compile-admission/run!
+{:java 25.0.1, :clojure 1.12.4, :warmup 10000, :batches 9, :calls 10000, :units [:ns :bytes]}
+:driver {:ns 27.8119, :bytes 0.0056}
+:binding {:ns 285.9883, :bytes 1264.0056}
+:with-cache {:ns 498.75, :bytes 2552.0056}
+:read-disabled {:ns 26.4357, :bytes 0.0056}
+:read-enabled {:ns 244.6839, :bytes 720.0056}
+:handler-scan {:ns 182.3348, :bytes 304.0056}
+:selector {:ns 445.822, :bytes 320.0056}
+:body {:ns 834.0639, :bytes 672.0056}
+:invoke {:ns 554.9526, :bytes 696.0056}
+:entry {:ns 1006.1374, :bytes 2224.0056}
+:entry-with-cache {:ns 1400.5895, :bytes 4776.0056}

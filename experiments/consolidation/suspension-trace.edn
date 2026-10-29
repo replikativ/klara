@@ -1,0 +1,9 @@
+{:new-world-calibration 100,
+ :lease-status :settled,
+ :native-hits 2,
+ :evidence :tested-operational-trace,
+ :scope :lexical-T0-await-between-native-regions,
+ :suspended {:status :suspended, :request {:before 9}},
+ :installation :installed,
+ :second-resume :rejected,
+ :resumed {:value 33, :calibration 10}}

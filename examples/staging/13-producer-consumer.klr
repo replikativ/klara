@@ -1,0 +1,34 @@
+;; Load polynomial.klr and example12, plus consolidation.producer-consumer.
+;; The same preparation/refinement functions may run at startup or after profiling.
+(def refine-producer
+  (fn [source maximum]
+    (fork [job (perform :stage/prepare-producer source maximum)] (adopt! job))))
+(def shift-producer (refine-producer (code (fn [x] (+ x 1))) 99))
+
+(def consume-evidenced-batch
+  (fn [consumer evidence n]
+    (let [attempt (perform :stage/try-consume-batch consumer evidence n)]
+      (if (= (:status attempt) :completed) (:value attempt)
+          (let [f (:function attempt) input (:input attempt)]
+            (loop [i 0 result nil]
+              (if (< i n) (recur (inc i) (f input)) result)))))))
+
+(def generic-produced-statistic
+  (fn [xs repetitions]
+    (let [output (mapv (fn [x] (+ x 1)) xs)]
+      (loop [i 0 result nil]
+        (if (< i repetitions)
+          (recur (inc i) (polynomial-statistic output)) result)))))
+
+(def produced-statistic
+  (fn [xs repetitions]
+    (let [input (perform :stage/refine-input [:bounded-nat-vector 64 99] xs)]
+      (if (or (= :declined (:status input))
+              (not= :long (perform :stage/layout [repetitions]))
+              (< repetitions 0))
+        (generic-produced-statistic xs repetitions)
+        (let [output (perform :stage/produce shift-producer input)
+              consumer (perform :stage/consumer polynomial-statistic)]
+          ;; Value facts move from producer to consumer. No output rescan.
+          ;; This known pure batch admits the consumer once, before its loop.
+          (consume-evidenced-batch consumer output repetitions))))))

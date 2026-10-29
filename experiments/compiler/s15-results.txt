@@ -1,0 +1,11 @@
+WARNING: Use of :paths external to the project has been deprecated, please remove: /tmp/klara-s12-java.diNFsm
+#'klara.compile-bench/steady!
+{:hof-pipeline (fn [n] (reduce (fn [a x] (+ a x)) 0 (filter (fn [x] (even? x)) (map (fn [x] (+ x 1)) (range n))))), :hof-mapv (fn [n] (reduce (fn [a x] (+ a x)) 0 (mapv (fn [x] (* x 2)) (vec (range n)))))}
+{:java 25.0.1, :clojure 1.12.4, :input 200, :warmup 100, :batches 7, :calls-per-batch 20}
+{:T0-ms 0.8691775500000001, :compile-ms 3.913679, :clojure-ms 0.0127943, :java-ms 0.0012026, :T0/compiled 36.504037092957084, :compiled/java 19.7991435223682, :benchmark :hof-mapv, :result 39800, :compiled-ms 0.02381045, :allocations-removed 0, :compiled/clojure 1.8610201417818872}
+{:T0-ms 0.493687, :compile-ms 1.951453, :clojure-ms 0.01218735, :java-ms 8.0605E-4, :T0/compiled 25.557258152187977, :compiled/java 23.96489051547671, :benchmark :hof-pipeline, :result 10100, :compiled-ms 0.0193169, :allocations-removed 0, :compiled/clojure 1.584995917898477}
+{:mode :steady, :warmup 10000, :batches 9, :calls-per-batch 10000}
+{:numeric-body-ms nil, :clojure-ms 0.004506056800000001, :java-ms 0.0011839874, :compiled/java 5.295041146552742, :benchmark :hof-mapv, :entry-stats {:hits 1, :misses 0, :fallbacks 0, :revalidations 1, :deopts 0}, :compiled-ms 0.006269261999999999, :compiled/clojure 1.391296709797355, :input 200}
+{:numeric-body-ms nil, :clojure-ms 0.0033202446999999998, :java-ms 7.35623E-5, :compiled/java 57.39608196046072, :benchmark :hof-pipeline, :entry-stats {:hits 1, :misses 0, :fallbacks 0, :revalidations 1, :deopts 0}, :compiled-ms 0.0042221878, :compiled/clojure 1.2716495865500517, :input 200}
+{:numeric-body-ms nil, :clojure-ms 0.0342427596, :java-ms 0.0015547447, :compiled/java 41.418777629536216, :benchmark :hof-mapv, :entry-stats {:hits 1, :misses 0, :fallbacks 0, :revalidations 1, :deopts 0}, :compiled-ms 0.064395625, :compiled/clojure 1.880561781591925, :input 2000}
+{:numeric-body-ms nil, :clojure-ms 0.0346439311, :java-ms 4.5293089999999997E-4, :compiled/java 66.94315181410674, :benchmark :hof-pipeline, :entry-stats {:hits 1, :misses 0, :fallbacks 0, :revalidations 1, :deopts 0}, :compiled-ms 0.030320622, :compiled/clojure 0.8752073173358782, :input 2000}

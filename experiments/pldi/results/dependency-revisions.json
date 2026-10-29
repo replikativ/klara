@@ -1,0 +1,28 @@
+{
+  "ansatz": {
+    "commit": {
+      "exit": 0,
+      "stdout": "d573ca58410e74fe047cadc2ea8bf34b6b208a51\n",
+      "stderr": ""
+    },
+    "status": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  },
+  "wandler": {
+    "commit": {
+      "exit": 0,
+      "stdout": "cf39732cc00b51364b670843a3511d77ae82bf78\n",
+      "stderr": ""
+    },
+    "status": {
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  },
+  "recorded_utc": "2026-10-28T22:03:52.894229+00:00",
+  "note": "Final audit of sibling dependencies; these repositories were not edited during S16. Future one-command runs capture this metadata before tests."
+}

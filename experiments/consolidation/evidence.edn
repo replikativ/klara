@@ -1,0 +1,372 @@
+{:not-established
+ [:whole-compiler-correctness
+  :full-summary-soundness
+  :general-scope-freshness
+  :fully-proved-native-chain
+  :interior-owned-recovery
+  :publication-quality-performance],
+ :canonical-version 1,
+ :producer-theorems
+ [{:name "producer-bound-weaken",
+   :goal-sha256
+   "df9241fedd35648e9da27032d693c5411917e44155eb934ae55094673b235615",
+   :proof-sha256
+   "b212f024e6aeb1ed83fe798d9d3d93085c662a40869263e706dadd03a1758dd9",
+   :kernel-accepted true,
+   :self-reference false}
+  {:name "producer-map-bound",
+   :goal-sha256
+   "e9c666104d51df82360344f635e6f0652c9c0da80a9694954832c62e8d80c5e3",
+   :proof-sha256
+   "3b9361c7315c5efcfd4e6d949a5b4a10945c84466bf500188c268c4e37fffb12",
+   :kernel-accepted true,
+   :self-reference false}],
+ :private-theorems
+ [{:name "private-state-simulation",
+   :goal-sha256
+   "5006110c43e69b2d7d47cdcfa1502d5f31c8ba09429942af2751ed06cea36ac0",
+   :proof-sha256
+   "d49e22857f3eed3404fa271b541b00262e1dafc917e753e9953a41083c65f1c8",
+   :kernel-accepted true,
+   :self-reference false}
+  {:name "private-retain-rejected",
+   :goal-sha256
+   "2b4f1bfc5dde0d24fc2fb29d5262e298d18fb98645614514b3aae0fc3048f9a5",
+   :proof-sha256
+   "939a6fe62bb52c37198d7317bb619f9fb9b0e4dd66618e7fc435d6f2256d2205",
+   :kernel-accepted true,
+   :self-reference false}
+  {:name "private-branch-requires-both",
+   :goal-sha256
+   "4253e37fcd410639d9eb9bae5aacc3ac81e186e65b6dc9ab49a5db92a4779a67",
+   :proof-sha256
+   "3e4d2a96c9c4d3ed2b2e2871d5ab0831abc4cf8df5b380dbe255f507e94916ed",
+   :kernel-accepted true,
+   :self-reference false}
+  {:name "private-repeat-safe",
+   :goal-sha256
+   "d1fd84dac7b725bc1e3bef6c1759c84840d6be9bb57bbe474363d52619529d04",
+   :proof-sha256
+   "50cb7df10c368c05c5202aa2c42641723163430c4d6cfdddd7a3d9a58cc20b69",
+   :kernel-accepted true,
+   :self-reference false}],
+ :tests {:test 117, :pass 3027, :fail 0, :error 0, :type :summary},
+ :source-sha256
+ {"src/klara/compile/affine_erase.clj"
+  "6d23e1d0f89919bf1a2d07cd5dbb54bb6ae2826705db6c98a32bf7994003f7fb",
+  "experiments/consolidation/demand_test.clj"
+  "78a6c62fb11038ad52de71d8c23895e7c204a58819f5343462966c044c74c501",
+  "experiments/proof_staging/proof_staging.clj"
+  "e3cd83f51427ac839886357def981037c42a768693dfc499a3decd0917d0841a",
+  "experiments/consolidation/scalar_core.clj"
+  "86a3203b9123f6190bae16bde232bffee2a0053a5df9ed88b482c57d872e7846",
+  "experiments/consolidation/interval.clj"
+  "01163f98303df420ae29d03edc4ea416846d4797acc17e902f4f3b7113cd185e",
+  "experiments/consolidation/source_model.clj"
+  "5337bafbe09792e5f471fb176cb99b365db4925bd56cabe19ab517ce074fefed",
+  "experiments/consolidation/demand_model.clj"
+  "98b7e8518103b509b8ed4a92428d78ee6ebda7bfdf57e52c2651319249eee7cc",
+  "src/klara/compile/infer_affine.clj"
+  "a5631d2d71cfd5d74a3a8a15c27d146b8db3b957f019209e6bc3e948d61c5ce0",
+  "experiments/consolidation/proved_accumulator.clj"
+  "46167a9b6d3851253a724bda2bc59d5680d8ab00fe332794340892f11bf125a6",
+  "experiments/consolidation/scalar_sum.clj"
+  "b7922c5b15bc925c09581a7f3e4fb10384b93cd9853c6f6858fc69bb0dafe7ff",
+  "test/klara/code_identity_test.clj"
+  "1365e5c159e1daeca66e3faa8212582fac746c197dcea543cea626df78b4ce39",
+  "experiments/consolidation/helper_bridge.clj"
+  "d542873510e293cb9ca57313b036f741abe805d18a9e7b6efed8088622c971f9",
+  "experiments/consolidation/fold_model.clj"
+  "72a599a69385edd2cfb99277ba4ad56d73024acb4df385c173bb7b8b31f84c9f",
+  "experiments/consolidation/producer_consumer.clj"
+  "404fd62aa9515b0298640c87c34096b74c7ff84bbe802c18763c0c213d0415a5",
+  "src/klara/core.clj"
+  "c2284dbeb944c7ca1ec0fce6f5ed5c027de2eb64d8d4386ece826a981339f3dc",
+  "experiments/consolidation/checked_pipeline.clj"
+  "5d6e3920734142e1fde5cc70520a5ca0819530dd4d927fbf3e1c9391e5e1c088",
+  "experiments/consolidation/scalar_core_test.clj"
+  "e7f65c51fbce64ec27497bc279adb26927c676264a6a992276e187b8f5c15913",
+  "experiments/consolidation/counted_core.clj"
+  "b47249348cea7fd793958ba580c3d93900e91d1f7091115fadf2210c5b94ee3a",
+  "experiments/consolidation/private_state.clj"
+  "7498a86a6bab7b21108702edb5930ada7429c71ba8023eac2460a647c38d4184",
+  "experiments/consolidation/scalar_driver.clj"
+  "d31319ee7c223de000650e5873a95d240a1abc13252f0586df485cc79f5c2a57",
+  "experiments/consolidation/demand.clj"
+  "752a6cb22c1cace47bc587b2e147a1bc08f78c5043dd95b492196128b8beaf6e",
+  "experiments/consolidation/run.clj"
+  "446caee1013c80d05c3a60f7e973cae3bc2bcc7fa929ba2ddddb5a78c067e5dd",
+  "examples/staging/14-demand-and-await.klr"
+  "427954e301ef4fbef639734edb97661585e4533fcbf53f01de84945022acc282",
+  "experiments/consolidation/producer_model.clj"
+  "9725b71d3d5dbb2a5724d54667e4f687af85af86ecf8e311f2bb24189a21346f",
+  "src/klara/compile/staged.clj"
+  "c8fcd85d2cb1b329c0ccc62bbb2c94b334282afa4ce9ef0358109c192366b020",
+  "src/klara/stage.clj"
+  "ff326b17657cabf0ad63888c67f97e577b16c051577074297d6386e3d7582a56",
+  "src/klara/compile/analysis.clj"
+  "8c29cd30f8b8814efd55094db8a4310a815c33584e1b8a6ee39dabaf34245ebc",
+  "src/klara/compile/updates.clj"
+  "12dfb9cafb2feb19067111be683a3ee9c57c261b3ab3c264118dce3b341dcea9",
+  "src/klara/compile/strict_fold.clj"
+  "bd35e878609a1822e127d90f7b668465386b4c2cc56c36e0c16eb56ce3f4d28d"},
+ :demand-theorems
+ [{:name "demand-take-map",
+   :goal-sha256
+   "3e33d17f30192e3dd604777709e85bcd37090303d813cf5bbee092fd381bc8e0",
+   :proof-sha256
+   "93340fbfc52100fd77c6b11fe528303b5e97b7250a39f89d5d8dc04a1d18b23e",
+   :kernel-accepted true,
+   :self-reference false}
+  {:name "demand-zero-elements",
+   :goal-sha256
+   "92ae78b10194c4a7c629d47707b283e6a418a4b89f40f529c7a4215f4f2ccf61",
+   :proof-sha256
+   "5b5852fa876a970ea6e8d56c2ef341b40d1b8011f1c2ba4ce3a0a952a2320fa1",
+   :kernel-accepted true,
+   :self-reference false}
+  {:name "demand-prefix-ignores-tail",
+   :goal-sha256
+   "63e36e43d6aa262ac18730ba0209dc49d05a20093e94e845144245353f1eea5d",
+   :proof-sha256
+   "b8be025913472ea40fcb08e57ce430d81e91d698b78c8a323b4726a45acde3dc",
+   :kernel-accepted true,
+   :self-reference false}
+  {:name "demand-spin-pending",
+   :goal-sha256
+   "acf5ce878d8b3e825b83e9053976f727145b77e88270f01cc5f512288b37e201",
+   :proof-sha256
+   "4dd4945667713face260f685791e953f9efb7bf47d109d275b8a13e95eba2138",
+   :kernel-accepted true,
+   :self-reference false}],
+ :fold-theorems
+ [{:name "fold-step-refinement",
+   :goal-sha256
+   "d594a46bb127627f5415fb2654d4431e9589a6082c48d43f82e4b49e01b86676",
+   :proof-sha256
+   "a15fd94309fbebed3105926d8ef55d811ad300e85726920b13ebe20d0a43fb35",
+   :kernel-accepted true,
+   :self-reference false}
+  {:name "fold-private-refinement",
+   :goal-sha256
+   "516dcba99a7a21731d2d8cd52498a348656c50dcc7430d497e1895175ce8ad95",
+   :proof-sha256
+   "731ebe63288095f69c5ba3ff43359256b979c676893178a1a6a3553f507dc51f",
+   :kernel-accepted true,
+   :self-reference false}
+  {:name "fold-total-source",
+   :goal-sha256
+   "c2d8b48f4647f51af2199f0c41d075f1c96e8f76ef629ac2fc07e1b3365eeac8",
+   :proof-sha256
+   "feb3cc524525e30b6238c419e60ca3ed075cb8027c442c5ddce80c8c182e3f5f",
+   :kernel-accepted true,
+   :self-reference false}
+  {:name "fold-sum-bound",
+   :goal-sha256
+   "49038c6302fe3507d81cf9ef6203cb68d684244a3b8c7541957dd8ac53e60478",
+   :proof-sha256
+   "e5c7324f34be3be7c9e8fdf023a1f442a4399757fa8286c22837cada04cfbd08",
+   :kernel-accepted true,
+   :self-reference false}],
+ :bounds-theorems
+ [{:name "bound-monotone",
+   :goal-sha256
+   "54b13deb9927329575329ead9b83655c79efa64199ac296ae230c924fe72aa93",
+   :proof-sha256
+   "f5e9b994eee70fa7b95ee9e96def81c667a29300ab7696c27ab0c008e6053cfb",
+   :kernel-accepted true,
+   :self-reference false}
+  {:name "bound-value-safe",
+   :goal-sha256
+   "478a1f390eb861a5729a7f94b5e3c1c3ef445bba3d7d0d24c9ae3592acf3972d",
+   :proof-sha256
+   "c84ab9583973ae91bf73eb221c04a6f732c89e69426b25a3c81c5fdfd64bcc92",
+   :kernel-accepted true,
+   :self-reference false}
+  {:name "bound-fits-sound",
+   :goal-sha256
+   "434efef5083be687267fdd95ee4dde2d189fdcc73c208ef10a085911b37c116b",
+   :proof-sha256
+   "e904a8249901b044c7de34fd66c028a463dd558c0a078577b7bfca55b3b292c2",
+   :kernel-accepted true,
+   :self-reference false}
+  {:name "bound-checked-sound",
+   :goal-sha256
+   "42ef56748047d426836adcd16aa82fe47896e535be35ab1135aa267474f1db21",
+   :proof-sha256
+   "cbd37fc01f8192443526e4a198c7f5fece6d810ca369414483a96cf839e54838",
+   :kernel-accepted true,
+   :self-reference false}],
+ :numeric-context-theorems
+ [{:name "KlaraExperiment.horner-fold-step",
+   :goal-sha256
+   "4f8724872b19e9c612f580f61212558a94bdd5f81800435b7f6d68d05eaef948",
+   :proof-sha256
+   "dc66b0c4477f28edd08f79012ab3890f2e4c51c684383f0934e5a8cc927b866a",
+   :kernel-accepted true,
+   :self-reference false}
+  {:name "KlaraExperiment.horner-fold-sum",
+   :goal-sha256
+   "605936e8dc7c10e6c94eb4f6b2e0b06bb2f97b840213cf7713fb5a550becd71d",
+   :proof-sha256
+   "c2127a191272d0197213deb424d11cae4f92a4acd2f8acb928b156d49ec2bb4c",
+   :kernel-accepted true,
+   :self-reference false}],
+ :scalar-core-theorems
+ [{:name "scalar-env-push",
+   :goal-sha256
+   "a51d2ea065f88f98dcc3fb11080f2ffcc5f5bcdfe75daa5b6eb9c12e57ff9dfc",
+   :proof-sha256
+   "44a3aa5b493c5f9651035d00e9162326a9c1e91093d05bb74c60a6f66da0d044",
+   :kernel-accepted true,
+   :self-reference false}
+  {:name "scalar-bound-value",
+   :goal-sha256
+   "d87caa9e08b0760bb4b7320eb08b048d52f09244eaa2bd45582d04eab76d91af",
+   :proof-sha256
+   "c5fc87d7a46c610326f32e6ff07ebf231b51753c604e17b05c282e9f51965c26",
+   :kernel-accepted true,
+   :self-reference false}
+  {:name "scalar-checked-sound",
+   :goal-sha256
+   "dbc2be3b02a3a9312a90c87fe8bf561a55b6dff5e0bdf486eecea85ea50caf83",
+   :proof-sha256
+   "d3bf77a78b193a302ead03f816f7efed0dbd05a58378483df4049a51bd24afef",
+   :kernel-accepted true,
+   :self-reference false}],
+ :java "25.0.1+8-LTS-jvmci-b01",
+ :scalar-sum-theorems
+ [{:name "scalar-budget-acc",
+   :goal-sha256
+   "11fc76cc7975f1650f0448030421c5c0d44e635a938043d21fbd5075155e94e6",
+   :proof-sha256
+   "22db7403c76a1abe99c5883c8b86a919de69541f80a8f8c853c358b5cd23c033",
+   :kernel-accepted true,
+   :self-reference false}
+  {:name "scalar-budget-value",
+   :goal-sha256
+   "555501c761d15408b3d4dd38e43547e85fa5dd60dd22a71da7c88429c7d594de",
+   :proof-sha256
+   "b6b4aee13b55a97e1ef3645e24e9cc765342485eb3b4adeba2c894a43904e5d7",
+   :kernel-accepted true,
+   :self-reference false}
+  {:name "scalar-budget-sum",
+   :goal-sha256
+   "d39bb11717d9373b33d5cce5cf8995fba6a7b8b91e45e84f0fbb0d854d41bb37",
+   :proof-sha256
+   "8327167b51841d92a637fcc60025bedbdb92ae913e0b2e39f35c38199e992ff3",
+   :kernel-accepted true,
+   :self-reference false}
+  {:name "scalar-budget-start",
+   :goal-sha256
+   "9a75d887deefb5cb4d2fe6f5f4c6880776d6a80c6979a1528e9be2a18d1d1e97",
+   :proof-sha256
+   "dbf0337ddcc2818659ab952de4a2a03ccf1cac86b0b54a8c90784ded57f96c35",
+   :kernel-accepted true,
+   :self-reference false}
+  {:name "scalar-sum-budget-step",
+   :goal-sha256
+   "b05a0ae8ed15cd0ada0c92e35f7f0b2d7bcd30273a2d993b6e3e9faaab50d87c",
+   :proof-sha256
+   "df03520b7dd5418683bab9e792dcc03e286ed29386b3ccfa22279893e97cdb94",
+   :kernel-accepted true,
+   :self-reference false}
+  {:name "scalar-sum-run-safe",
+   :goal-sha256
+   "d69cc87b655a27e046b23dab3c7532e4aebea471e504c11eee8024f4313b501f",
+   :proof-sha256
+   "58a0271368741e0f02341c02f328e70221041c8d646c4681b612addf07d90ed1",
+   :kernel-accepted true,
+   :self-reference false}
+  {:name "scalar-sum-prefix-total",
+   :goal-sha256
+   "275c78591b9a0b5bb1280fec3412d3c9deeb025f162a23a285f5f08093be1942",
+   :proof-sha256
+   "b4e4358d28174208f2eb5697bc9f50fb038e5d30cb94d8f3d900d5a3fc24c88c",
+   :kernel-accepted true,
+   :self-reference false}],
+ :helper-theorems
+ [{:name "helper-loop-substitution",
+   :goal-sha256
+   "d4f9f27bc3b253842e2e6bcf91efd18320e7afa555003630f306bf9eed054676",
+   :proof-sha256
+   "7ca4c129c34626ed163fee23ebcb03a30502e60a98737c9e79ef3c0002e127ba",
+   :kernel-accepted true,
+   :self-reference false}
+  {:name "helper-reference-private",
+   :goal-sha256
+   "a9376f9756a391e6078c44b708a72f97e37159ac871058c066612aee000f689f",
+   :proof-sha256
+   "26c496d1c3adc957a705824bc208782034e9968f54d30174d43c47ec27181dc8",
+   :kernel-accepted true,
+   :self-reference false}
+  {:name "helper-private-composition",
+   :goal-sha256
+   "6fe18a7b458816b91bea6e83be61904c91d1a27c6d4bd6b1a59926e682f5c5c3",
+   :proof-sha256
+   "01107388411c1fb0a8905c5df9890c7f90a86749a85cc82778c9300e8121b208",
+   :kernel-accepted true,
+   :self-reference false}
+  {:name "helper-counter-index-safe",
+   :goal-sha256
+   "9dd701222672eb980fcd4d68a32b3882d051f85fe5bb004c88811ccddb599ea0",
+   :proof-sha256
+   "1e0094497f11a272515bbda469230151084c69e12c7db01f65879ae8cc382eea",
+   :kernel-accepted true,
+   :self-reference false}],
+ :correspondence-example
+ {:path "experiments/consolidation/correspondence-example.edn",
+  :sha256
+  "ee33e0c89833fe32c10db338aa51d4e6f9c5919a9f37a98965e7dd3597b1502a"},
+ :producer-example
+ {:path "experiments/consolidation/producer-example.edn",
+  :sha256
+  "4cf1492086acdfa163011d3e8439a7ab00b458b8c2b8a58a528dba61e32c84c7"},
+ :trust
+ [:bundled-init-statements
+  :core-model-elaboration
+  :T0-correspondence
+  :Clojure-JVM-backend
+  :tested-owned-erasure],
+ :demand-example
+ {:path "experiments/consolidation/demand-example.edn",
+  :sha256
+  "59f8686e2dd7c2d4557cd66dc7c37983919b2d7a6d40bcb9ebf4657629d9a985"},
+ :ansatz-dependency "0.2.115",
+ :suspension-trace
+ {:path "experiments/consolidation/suspension-trace.edn",
+  :sha256
+  "4e3475c13051f6c7d1299050431e000aa3229c23917d5881a0ba4abf80ab9cd1"},
+ :scalar-driver-theorems
+ [{:name "scalar-run-shift",
+   :goal-sha256
+   "8706d5c2144fcbfa95f50407841ba2d8369363b3e9fcaf1bf3b6b51916d59a16",
+   :proof-sha256
+   "c01c8f6c0049c463951fb55b75e3fec896ecec649d7b1f679605cd8b22626fe7",
+   :kernel-accepted true,
+   :self-reference false}
+  {:name "scalar-indexed-prefix-fold",
+   :goal-sha256
+   "01847ea41572551d21ef1c34ee33aeaef3cd6ba2b15e369dd85a6262c22dc688",
+   :proof-sha256
+   "8281935eb72fc3fe6a556dfdc36706e15b09e6df3a9fff70e24eada852411525",
+   :kernel-accepted true,
+   :self-reference false}
+  {:name "scalar-run-checked-sound",
+   :goal-sha256
+   "50910a821d6de0587f56b321fb84fea7c93c40d893ee357dd6a885f676210f7c",
+   :proof-sha256
+   "9d5171413af27da1577983b8d80b9506151b0cfeeb8c82a5234408dd31b884ed",
+   :kernel-accepted true,
+   :self-reference false}
+  {:name "scalar-checked-prefix-fold",
+   :goal-sha256
+   "0a42ff55b0a0beb727be8f4cc5d6fad8063c497c4d6fe967a16c5c15ec9497da",
+   :proof-sha256
+   "7cf66fa85b54e1b25f3117c1784c116402456b8e13109585d81d2c51989e89d5",
+   :kernel-accepted true,
+   :self-reference false}],
+ :native-example
+ {:path "experiments/consolidation/native-example.edn",
+  :sha256
+  "761d9ef3cdb408bf09845a72be04b70a04f06a081860deb307d966598ee21abb"}}

@@ -1,0 +1,19 @@
+{:fragment :entry-guarded-private-accumulator
+ :cases
+ [{:id :alias :expected :accept :boundary :version-alias}
+  {:id :helper :expected :accept :boundary :checked-helper-summary}
+  {:id :retaining-wrapper :expected :decline :boundary :version-observation}
+  {:id :history :expected :decline :boundary :version-observation}
+  {:id :branch-retention :expected :decline :boundary :path-join}
+  {:id :stale-helper :expected :fallback :boundary :world-admission}
+  {:id :effect-order :expected :decline :boundary :effect-congruence}
+  {:id :failure-order :expected :preserve :boundary :ordered-lowering}
+  {:id :false-range :expected :decline :boundary :intermediate-bounds}
+  {:id :profile-miss :expected :fallback :boundary :entry-admission}
+  {:id :endpoint-mismatch :expected :decline :boundary :edge-composition}
+  {:id :scope-extrusion :expected :reject :boundary :code-scope}
+  {:id :interior-guard :expected :decline :boundary :recovery-availability}
+  {:id :handler :expected :fallback :boundary :handler-admission}
+  {:id :owned-continuation :expected :reject :boundary :authority-control}
+  {:id :publication :expected :reject :boundary :prepared-install}
+  {:id :wrong-prediction :expected :discard :boundary :outcome-validation}]}

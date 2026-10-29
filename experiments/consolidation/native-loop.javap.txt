@@ -1,0 +1,93 @@
+Compiled from "NO_SOURCE_FILE"
+public final class klara.compile.affine_erase$eval174375$fn__174376$fn__174377 extends clojure.lang.AFunction {
+  long place174359;
+
+  java.lang.Object place174361;
+
+  java.lang.Object arg174356;
+
+  int place174358;
+
+  public klara.compile.affine_erase$eval174375$fn__174376$fn__174377(long, java.lang.Object, java.lang.Object, int);
+    Code:
+         0: aload_0
+         1: invokespecial #17                 // Method clojure/lang/AFunction."<init>":()V
+         4: aload_0
+         5: lload_1
+         6: putfield      #19                 // Field place174359:J
+         9: aload_0
+        10: aload_3
+        11: putfield      #21                 // Field place174361:Ljava/lang/Object;
+        14: aload_0
+        15: aload         4
+        17: putfield      #23                 // Field arg174356:Ljava/lang/Object;
+        20: aload_0
+        21: iload         5
+        23: putfield      #25                 // Field place174358:I
+        26: return
+
+  public java.lang.Object invoke();
+    Code:
+         0: aload_0
+         1: getfield      #19                 // Field place174359:J
+         4: lstore_1
+         5: lload_1
+         6: aload_0
+         7: getfield      #25                 // Field place174358:I
+        10: i2l
+        11: lcmp
+        12: ifge          109
+        15: aload_0
+        16: getfield      #23                 // Field arg174356:Ljava/lang/Object;
+        19: lload_1
+        20: invokestatic  #33                 // Method clojure/lang/RT.intCast:(J)I
+        23: invokestatic  #37                 // Method clojure/lang/RT.nth:(Ljava/lang/Object;I)Ljava/lang/Object;
+        26: invokestatic  #41                 // Method clojure/lang/RT.longCast:(Ljava/lang/Object;)J
+        29: lstore_3
+        30: lload_1
+        31: invokestatic  #47                 // Method clojure/lang/Numbers.inc:(J)J
+        34: lstore        5
+        36: aload_0
+        37: getfield      #21                 // Field place174361:Ljava/lang/Object;
+        40: astore        7
+        42: aload         7
+        44: checkcast     #49                 // class "[J"
+        47: lconst_0
+        48: invokestatic  #33                 // Method clojure/lang/RT.intCast:(J)I
+        51: laload
+        52: lconst_1
+        53: lload_3
+        54: ldc2_w        #50                 // long 2l
+        57: lload_3
+        58: ldc2_w        #52                 // long 3l
+        61: invokestatic  #57                 // Method clojure/lang/Numbers.multiply:(JJ)J
+        64: invokestatic  #60                 // Method clojure/lang/Numbers.add:(JJ)J
+        67: invokestatic  #57                 // Method clojure/lang/Numbers.multiply:(JJ)J
+        70: invokestatic  #60                 // Method clojure/lang/Numbers.add:(JJ)J
+        73: invokestatic  #60                 // Method clojure/lang/Numbers.add:(JJ)J
+        76: lstore        8
+        78: aload         7
+        80: checkcast     #49                 // class "[J"
+        83: lconst_0
+        84: invokestatic  #33                 // Method clojure/lang/RT.intCast:(J)I
+        87: lload         8
+        89: invokestatic  #64                 // Method clojure/lang/RT.aset:([JIJ)J
+        92: pop2
+        93: aload         7
+        95: aconst_null
+        96: astore        7
+        98: pop
+        99: lload         5
+       101: lstore_1
+       102: goto          5
+       105: nop
+       106: nop
+       107: athrow
+       108: athrow
+       109: aconst_null
+       110: areturn
+
+  public static {};
+    Code:
+         0: return
+}

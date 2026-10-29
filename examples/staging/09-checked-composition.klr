@@ -1,0 +1,17 @@
+;; Load experiments/proof_staging/polynomial.klr first; its independently
+;; selectable scalar and traversal builders return ordinary Code values.
+(def proposals (polynomial-proposals 1 2 3))
+(def checked-request
+  {:source (:source proposals)
+   :targets [(:numeric proposals) (:both proposals)]
+   :steps [{:kind :numeric :coefficients [1 2 3]} {:kind :fusion}]
+   :domain {:max-x 10 :max-count 10}})
+(def reference (run (:source proposals)))
+(def refine-checked
+  (fn [request]
+    (let [candidate
+          (fork [job (perform :stage/prepare-checked request)] (adopt! job))]
+      (perform :stage/install candidate))))
+;; (reference [1 2 3]) => 57 before and after (refine-checked checked-request).
+;; A recipe with coefficients [1 2 4] cannot license the unchanged target.
+;; Out-of-domain calls keep the original program; they are not language errors.

@@ -1,0 +1,6 @@
+loop-*: ns per T0 loop iteration (one entry of f through the cache), n = 20000
+enter-*: ns per direct klara.stage/enter call (hit), same root every call
+{:world-guards 0, :loop-no-cache-ns 5277.5733, :loop-exe-runtime-guards-only-ns 4638.3363, :loop-exe-with-world-guards-ns 4850.0668, :enter-runtime-guards-only-ns 203.8067, :enter-with-world-guards-ns 181.79812}
+{:world-guards 8, :loop-no-cache-ns 5777.6636, :loop-exe-runtime-guards-only-ns 5879.21235, :loop-exe-with-world-guards-ns 5979.1519, :enter-runtime-guards-only-ns 190.01232, :enter-with-world-guards-ns 184.44411}
+{:world-guards 32, :loop-no-cache-ns 7477.25195, :loop-exe-runtime-guards-only-ns 7393.26725, :loop-exe-with-world-guards-ns 7322.12985, :enter-runtime-guards-only-ns 189.96173, :enter-with-world-guards-ns 190.57466}
+{:world-guards 128, :loop-no-cache-ns 16544.3275, :loop-exe-runtime-guards-only-ns 16051.16375, :loop-exe-with-world-guards-ns 14254.27185, :enter-runtime-guards-only-ns 190.17692, :enter-with-world-guards-ns 189.8204}

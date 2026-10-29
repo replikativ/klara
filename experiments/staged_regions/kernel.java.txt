@@ -1,0 +1,32 @@
+package klara.generated;
+public final class Scalar_97e393482b440732cc1a extends clojure.lang.AFn {
+public static long body(long a0) {
+long t1 = 0L;
+long t2 = 0L;
+t3: while (true) {
+boolean t4 = (t1 < a0);
+if (t4) {
+long t5 = Math.multiplyExact(t1,0L);
+long t6 = Math.addExact(1L,t5);
+long t7 = Math.multiplyExact(t1,t6);
+long t8 = Math.addExact(-2L,t7);
+long t9 = Math.multiplyExact(t1,t8);
+long t10 = Math.addExact(3L,t9);
+long t11 = Math.subtractExact(t10,4L);
+long t12 = Math.incrementExact(t1);
+long t13 = Math.multiplyExact(t11,t11);
+long t14 = Math.addExact(t2,t13);
+long t15 = t12;
+long t16 = t14;
+t1 = t15;
+t2 = t16;
+continue t3;
+} else {
+return t2;
+}
+}
+}
+@Override public Object invoke(Object a0) {
+return Long.valueOf(body(((Long)a0).longValue()));
+}
+}

@@ -1,0 +1,13 @@
+\begin{tabular}{llrrr}
+\toprule Workload & Mode & Size & $\mu$s/call [95\% CI] & B/call [95\% CI] \\
+\midrule
+affine-loop & dynamic & 0 & 37.6 [24.4, 42.7] & 1.77e+04 [1.76e+04, 1.78e+04] \\
+affine-loop & dynamic & 1000 & 1.49e+04 [1.27e+04, 1.6e+04] & 2.12e+07 [2.1e+07, 2.13e+07] \\
+affine-loop & dynamic & 10000 & 7.51e+04 [7.24e+04, 7.85e+04] & 2.09e+08 [2.07e+08, 2.11e+08] \\
+affine-loop & erased & 0 & 4.33 [4.17, 5.55] & 5.82e+03 [5.79e+03, 6.04e+03] \\
+affine-loop & erased & 1000 & 29.4 [28.4, 29.8] & 5.84e+03 [5.8e+03, 6.06e+03] \\
+affine-loop & erased & 10000 & 255 [242, 261] & 5.82e+03 [5.75e+03, 6.01e+03] \\
+smc & dynamic & 384 & 8.26e+04 [7.66e+04, 8.58e+04] & 2.28e+08 [2.26e+08, 2.29e+08] \\
+smc & erased & 384 & 2.43e+04 [2.31e+04, 2.57e+04] & 6.3e+07 [6.24e+07, 6.35e+07] \\
+\bottomrule
+\end{tabular}

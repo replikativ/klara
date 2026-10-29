@@ -1,0 +1,25 @@
+WARNING: Use of :paths external to the project has been deprecated, please remove: /tmp/klara-s12-java.YzWdEP
+#'klara.compile-bench/steady!
+#'klara.compile-profile/run!
+#'klara.compile-admission/run!
+{:java 25.0.1, :clojure 1.12.4, :warmup 10000, :batches 9, :calls 10000, :units [:ns :bytes]}
+:driver {:ns 42.237, :bytes 0.0056}
+:identity-checks {:ns 50.7832, :bytes 0.0056}
+:argument-vector {:ns 30.0755, :bytes 64.0056}
+:boxed-arithmetic {:ns 41.1615, :bytes 24.0056}
+:fixed-ifn {:ns 41.1561, :bytes 24.0056}
+:apply-ifn {:ns 74.5247, :bytes 64.0056}
+:polymorphic-ifn {:ns 68.2957, :bytes 48.0056}
+:binding {:ns 367.0165, :bytes 1272.0056}
+:with-cache {:ns 1014.5035, :bytes 3288.0}
+:read-disabled {:ns 35.5384, :bytes 0.0}
+:read-enabled {:ns 243.7601, :bytes 688.0}
+:handler-scan {:ns 225.691, :bytes 304.0}
+:selector {:ns 201.274, :bytes 0.0}
+:body {:ns 705.4142, :bytes 296.0}
+:invoke {:ns 886.711, :bytes 360.0}
+:entry {:ns 1039.0325, :bytes 544.0}
+:entry-with-cache {:ns 1472.863, :bytes 3808.0}
+:read-recording-only {:ns 118.4157, :bytes 64.0056}
+:explicit-invoke {:ns 154.1492, :bytes 120.0056}
+:call-loop-200 {:ns 20459.6746, :bytes 34272.0}

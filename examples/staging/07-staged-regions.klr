@@ -1,0 +1,69 @@
+;; Polynomial least-squares scoring. This is ordinary Klara source.
+;; Read/evaluate the definitions in order (see 07-staged-regions.md).
+(def polynomial [3 -2 1])
+(def calibration 4)
+
+;; Horner evaluator parameterized by present or residual arithmetic.
+;; A coefficient is never dropped: checked arithmetic order is preserved.
+(def poly-eval
+  (fn [ops coefficients x]
+    (if (empty? coefficients)
+      ((:literal ops) 0)
+      ((:add ops) ((:literal ops) (first coefficients))
+                  ((:multiply ops) x (poly-eval ops (rest coefficients) x))))))
+
+(def present-ops {:literal (fn [v] v) :add + :multiply *})
+(def residual-ops
+  {:literal (fn [v] (lift v))
+   :add (fn [a b] (code (+ (esc a) (esc b))))
+   :multiply (fn [a b] (code (* (esc a) (esc b))))})
+
+;; Analysis and specialization happen when make-kernel runs, before the
+;; generated function sees n. Bounds/model size bound residual code size.
+(def make-kernel
+  (fn [coefficients]
+    (if (> (count coefficients) 16)
+      (throw :model-too-large)
+      (code
+        (fn [n]
+          (let [offset calibration]
+            (loop [i 0 score 0]
+              (if (< i n)
+                (let [residual (- (esc (poly-eval residual-ops coefficients (code i))) offset)]
+                  (recur (inc i) (+ score (* residual residual))))
+                score))))))))
+
+;; Early phase: actual code/esc evaluation, with model structure static.
+;; World code values and run's ordinary closures are the authoritative program.
+(def kernel-code (make-kernel polynomial))
+(def kernel (run kernel-code))
+
+;; Prepare inside an actual authority fork. Scratch is owned only in the
+;; child and frozen before returning; publication occurs outside the fork.
+;; The seed backend receives code and a persistent basis, no operational token.
+(def refine
+  (fn [source]
+    (let [candidate
+          (fork [job (let [scratch (own {:source source :layout :long})
+                          request (freeze scratch)]
+                      (perform :stage/prepare (:source request)))]
+            (adopt! job))]
+      (perform :stage/install candidate))))
+
+;; Counts suggest one candidate, never license it. Saturation bounds profile
+;; state, and attempted bounds compilation to once per operation. Real Long
+;; guards and analysis still admit each call; Double inputs use T0.
+(def operate
+  (fn [source inputs threshold]
+    (let [f (run source)]
+      (loop [xs inputs hits 0 attempted false values [] publication nil]
+        (if (empty? xs)
+          {:values values :long-count hits :attempted attempted :publication publication}
+          (let [n (first xs)
+                value (f n)
+                hits2 (if (= :long (perform :stage/layout [n]))
+                        (min threshold (inc hits)) hits)
+                compile-now (and (not attempted) (>= hits2 threshold))
+                published (if compile-now (refine source) publication)]
+            (recur (rest xs) hits2 (or attempted compile-now)
+                   (conj values value) published)))))))

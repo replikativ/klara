@@ -1,0 +1,112 @@
+{:processes [7 8 9],
+ :aggregation :median-and-range-of-process-medians,
+ :rows
+ [{:n 16,
+   :measurements
+   {:T0
+    {:ns {:median 56222.0, :min 55990.5, :max 58708.0},
+     :bytes {:median 213224.0, :min 213168.0, :max 213608.0}},
+    :guard-scan
+    {:ns {:median 63.445, :min 61.315, :max 65.255},
+     :bytes {:median 0.48, :min 0.48, :max 0.48}},
+    :guarded
+    {:ns {:median 3995.14, :min 3756.805, :max 4226.98},
+     :bytes {:median 9560.48, :min 9512.48, :max 9568.48}},
+    :emitted-body
+    {:ns {:median 50.645, :min 48.595, :max 52.89},
+     :bytes {:median 24.48, :min 24.48, :max 24.48}},
+    :primitive
+    {:ns {:median 58.55, :min 54.665, :max 60.02},
+     :bytes {:median 24.48, :min 24.48, :max 24.48}},
+    :transient
+    {:ns {:median 108.035, :min 105.77, :max 111.265},
+     :bytes {:median 688.48, :min 688.48, :max 688.48}},
+    :functional
+    {:ns {:median 217.695, :min 214.665, :max 227.33},
+     :bytes {:median 1288.48, :min 1288.48, :max 1288.48}},
+    :mapped
+    {:ns {:median 233.32, :min 209.315, :max 369.67},
+     :bytes {:median 672.48, :min 672.48, :max 912.48}}}}
+  {:n 256,
+   :measurements
+   {:T0
+    {:ns {:median 698909.5, :min 628622.5, :max 713666.5},
+     :bytes {:median 3236936.0, :min 3230736.0, :max 3238304.0}},
+    :guard-scan
+    {:ns {:median 472.645, :min 469.545, :max 514.175},
+     :bytes {:median 0.48, :min 0.48, :max 0.48}},
+    :guarded
+    {:ns {:median 5186.755, :min 5155.585, :max 5704.635},
+     :bytes {:median 9560.48, :min 9512.48, :max 9568.48}},
+    :emitted-body
+    {:ns {:median 442.545, :min 416.575, :max 482.02},
+     :bytes {:median 24.48, :min 24.48, :max 24.48}},
+    :primitive
+    {:ns {:median 573.02, :min 561.46, :max 750.14},
+     :bytes {:median 24.48, :min 24.48, :max 24.48}},
+    :transient
+    {:ns {:median 782.345, :min 758.415, :max 829.435},
+     :bytes {:median 6448.48, :min 6448.48, :max 6448.48}},
+    :functional
+    {:ns {:median 2451.285, :min 2353.185, :max 2566.185},
+     :bytes {:median 22408.48, :min 22408.48, :max 22408.48}},
+    :mapped
+    {:ns {:median 2076.915, :min 1893.475, :max 3165.545},
+     :bytes {:median 9072.48, :min 9072.48, :max 14904.48}}}}
+  {:n 4096,
+   :measurements
+   {:T0
+    {:ns {:median 1.09092255E7, :min 9928729.0, :max 1.105958E7},
+     :bytes {:median 5.1613064E7, :min 5.1514704E7, :max 5.1642272E7}},
+    :guard-scan
+    {:ns {:median 10496.82, :min 10032.395, :max 10523.04},
+     :bytes {:median 0.48, :min 0.48, :max 0.48}},
+    :guarded
+    {:ns {:median 24346.91, :min 23201.92, :max 30473.32},
+     :bytes {:median 9472.48, :min 9342.08, :max 9520.48}},
+    :emitted-body
+    {:ns {:median 10177.17, :min 9468.91, :max 10192.14},
+     :bytes {:median 88.48, :min 24.48, :max 88.48}},
+    :primitive
+    {:ns {:median 12415.935, :min 11375.14, :max 14563.99},
+     :bytes {:median 24.48, :min 24.48, :max 24.48}},
+    :transient
+    {:ns {:median 12344.53, :min 11892.005, :max 12465.775},
+     :bytes {:median 98608.48, :min 98608.48, :max 98608.48}},
+    :functional
+    {:ns {:median 40015.85, :min 36250.935, :max 40034.845},
+     :bytes {:median 360328.48, :min 360328.48, :max 360328.48}},
+    :mapped
+    {:ns {:median 28466.85, :min 27806.17, :max 43329.03},
+     :bytes {:median 144768.48, :min 144768.48, :max 239880.48}}}}],
+ :hardware "Intel Core Ultra 7 258V, x86_64, 8 cores; no CPU pinning",
+ :source-sha256
+ {"src/klara/compile/affine_erase.clj"
+  "6d23e1d0f89919bf1a2d07cd5dbb54bb6ae2826705db6c98a32bf7994003f7fb",
+  "experiments/proof_staging/proof_staging.clj"
+  "e3cd83f51427ac839886357def981037c42a768693dfc499a3decd0917d0841a",
+  "src/klara/compile/infer_affine.clj"
+  "58b9219ea82e601301b9cb67a3185787fdecf44497d1ae3d3983de121bdc79c4",
+  "experiments/consolidation/fold_model.clj"
+  "72a599a69385edd2cfb99277ba4ad56d73024acb4df385c173bb7b8b31f84c9f",
+  "experiments/consolidation/checked_pipeline.clj"
+  "24f8700f5620f34143077460f1830cab97000d6ae537fc85a2f7c4b1c258321b",
+  "src/klara/stage.clj"
+  "7bd1de2e05dcd7615bd25a2061081135ab0d986962a514f4673e00e63c3a0d13",
+  "src/klara/compile/analysis.clj"
+  "8c29cd30f8b8814efd55094db8a4310a815c33584e1b8a6ee39dabaf34245ebc",
+  "src/klara/compile/updates.clj"
+  "12dfb9cafb2feb19067111be683a3ee9c57c261b3ab3c264118dce3b341dcea9",
+  "src/klara/compile/strict_fold.clj"
+  "88982ad57552f5e181c8144ddef48ef9f4970fc2185f7e981f8fd47f3d883991"},
+ :preparation-ms {:median 73.71226, :min 67.518066, :max 84.830126},
+ :installation-ms {:median 23.116902, :min 22.547041, :max 24.55367},
+ :limitations
+ [:single-workload-family
+  :three-process-pilot
+  :no-cpu-isolation
+  :thread-allocation-not-retained-memory
+  :guard-scan-is-linear
+  :T0-has-less-warmup
+  :no-cold-JVM-end-to-end
+  :no-throughput-concurrency]}

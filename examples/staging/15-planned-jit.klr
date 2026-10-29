@@ -1,0 +1,75 @@
+;; Pure, source-backed planning code. Seed validation/emission and measurement
+;; are host services invoked only AFTER the bounded planner returns a request.
+(def plan-append
+  (fn [state problem kind node cost-key]
+    {:node node :code (get (:codes problem) node)
+     :source (:source state) :domain (:domain state)
+     :targets (conj (:targets state) (get (:codes problem) node))
+     :target-ids (conj (:target-ids state) (get (:ids problem) node))
+     :steps (conj (:steps state) (if (= kind :numeric)
+                                {:kind kind :coefficients (:coefficients problem)} {:kind kind}))
+     :prepare-estimate (+ (:prepare-estimate state) (get-in problem [:estimates cost-key]))}))
+
+(def plan-successors
+  (fn [state problem]
+    (let [node (:node state)]
+      (if (= node :source)
+        [(plan-append state problem :numeric :numeric :numeric-ns)
+         (plan-append state problem :fusion :stream :fusion-ns)]
+        (if (= node :numeric)
+          [(plan-append state problem :fusion :both :fusion-ns)]
+          (if (= node :stream)
+            [(plan-append state problem :numeric :both :numeric-ns)] []))))))
+
+(def plan-score
+  (fn [state problem calls]
+    (let [node (:node state) native (not (= node :numeric))
+          emit (if native (get-in problem [:estimates :emit-ns]) 0)
+          prepare (+ (:prepare-estimate state) emit)
+          runtime (get-in problem [:estimates :run-ns node])
+          reference (get-in problem [:estimates :run-ns :source])
+          guard (get-in problem [:estimates :guard-ns])]
+      (assoc state :preparation-estimate prepare :executor (if native :private-array :T0-vector)
+                   :expected-benefit (- (* calls (- reference (+ runtime guard))) prepare)))))
+
+;; Memoization is job-local. Same code under different domains, observations,
+;; interfaces or unresolved proof obligations remains a different subproblem.
+(def plan-key
+  (fn [state problem]
+    [(get (:ids problem) (:node state)) (:domain state) (:semantics problem)
+     (:observation problem) (:interface problem)
+     (:target-ids state) (:steps state) :proof-pending]))
+
+(def plan-optimizer
+  (fn [problem profile limits]
+    (let [initial {:node :source :code (get (:codes problem) :source)
+                   :source (get (:codes problem) :source) :domain (:domain problem)
+                   :targets [] :target-ids [] :steps [] :prepare-estimate 0}]
+      (loop [frontier [initial] memo {} best {:action :stop :expected-benefit 0}
+             fuel (:search-fuel limits) expanded 0]
+        (if (or (<= fuel 0) (empty? frontier))
+          (assoc best :expanded expanded :search-exhausted (not (empty? frontier)))
+          (let [state (first frontier) remaining (subvec frontier 1)
+                key (plan-key state problem) previous (get memo key)
+                dominated (and previous (<= previous (:prepare-estimate state)))]
+            (if dominated
+              (recur remaining memo best (dec fuel) expanded)
+              (let [memo (assoc memo key (:prepare-estimate state))
+                    successors (plan-successors state problem)
+                    frontier (loop [i 0 result remaining]
+                               (if (< i (count successors))
+                                 (recur (inc i) (conj result (nth successors i))) result))
+                    scored (if (= (:node state) :source) best
+                               (plan-score state problem (:remaining-calls profile)))
+                    eligible (and (not (= (:node state) :source))
+                                  (<= (:preparation-estimate scored) (:preparation-ns limits))
+                                  (> (:expected-benefit scored) (:expected-benefit best)))
+                    best (if eligible (assoc scored :action :prepare) best)]
+                (recur frontier memo best (dec fuel) (inc expanded))))))))))
+
+;; Policies may evolve independently of the checked candidate interface.
+(def conservative-optimizer
+  (fn [problem profile limits]
+    (if (< (:remaining-calls profile) 1000)
+      {:action :stop :reason :short-horizon :expected-benefit 0}
+      (plan-optimizer problem profile limits))))

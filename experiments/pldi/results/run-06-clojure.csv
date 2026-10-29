@@ -1,0 +1,16 @@
+rq,workload,mode,size,ns,bytes
+rq1,calls,clojure,200,249.176,24.096
+rq1,closures,clojure,200,203.764,24.096
+rq1,collections,clojure,200,456.14,1752.096
+rq1,hof-mapv,clojure,200,7339.286,12552.096
+rq1,hof-pipeline,clojure,200,3864.674,10744.096
+rq1,numeric,clojure,200,187.038,24.096
+rq1,tail-effects,clojure,200,194.096,24.096
+rq1,calls,clojure,2000,1278.55,24.096
+rq1,closures,clojure,2000,1530.428,24.096
+rq1,collections,clojure,2000,5289.042,44952.096
+rq1,hof-mapv,clojure,2000,49476.584,115464.096
+rq1,hof-pipeline,clojure,2000,28988.872,136864.096
+rq1,numeric,clojure,2000,801.302,24.096
+rq1,tail-effects,clojure,2000,1205.196,24.096
+rq1,smc,clojure,384,601268.0,471992.0

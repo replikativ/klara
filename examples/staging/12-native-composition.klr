@@ -1,0 +1,30 @@
+;; Load experiments/proof_staging/polynomial.klr and the reference adapters
+;; consolidation.checked-pipeline / klara.compile.strict-fold first.
+(def native-proposals (polynomial-proposals 1 2 3))
+(def native-request
+  {:source (:source native-proposals)
+   :targets [(:numeric native-proposals) (:both native-proposals)]
+   :steps [{:kind :numeric :coefficients [1 2 3]} {:kind :fusion}]
+   :domain {:max-count 4096 :max-x 100}
+   :executor :private-array})
+(def polynomial-statistic (run (:source native-request)))
+(def refine-native
+  (fn [request]
+    (let [candidate (fork [job (perform :stage/prepare-checked request)] (adopt! job))]
+      (perform :stage/install candidate))))
+
+;; A larger accumulator uses the SAME fold/ownership compiler. This path has
+;; tested lowering evidence; it does not inherit the scalar sum's theorem.
+(def count-sum-builder
+  (fn [polynomial a b c]
+    (code (fn [xs]
+            (reduce (fn [acc x]
+                      (assoc (assoc acc 0 (inc (nth acc 0)))
+                             1 (+ (nth acc 1) (esc (polynomial a b c (code x))))))
+                    [0 0] xs)))))
+(def count-sum-code (count-sum-builder horner-polynomial 1 2 3))
+(def count-sum (run count-sum-code))
+(def refine-fold
+  (fn [source]
+    (let [candidate (fork [job (perform :stage/prepare-fold source)] (adopt! job))]
+      (perform :stage/install candidate))))

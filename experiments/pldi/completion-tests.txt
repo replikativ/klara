@@ -1,0 +1,8 @@
+[0.002s][warning][perf,memops] Cannot use file /tmp/hsperfdata_christian-weilbach/2 because it is locked by another process (errno = 11)
+
+Running tests in #{"test"}
+
+Testing klara.transcript-test
+
+Ran 2 tests containing 399 assertions.
+0 failures, 0 errors.

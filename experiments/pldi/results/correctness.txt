@@ -1,0 +1,30 @@
+{:generated
+ {:generated-programs 1500,
+  :distinct-syntax 1303,
+  :families {:accepted 1000, :hof 250, :rejected 250},
+  :input-cases 8250,
+  :post-clear-cases 1250,
+  :disagreements 0,
+  :classification {}},
+ :spec {:programs 69, :agreements 65, :disagreements 4},
+ :spec-classification
+ {:bad-perform-target
+  "T0 reports a perform on a non-instance as 'unhandled lexical effect'; the spec names it :bad-target",
+  :csp-code-value
+  "a code value used at level 1 without esc: T0 refuses it (stage error); the spec substitutes it, a nested quotation",
+  :csp-closure-over-code-var
+  "a closure that captures a generated variable, used at level 1: T0 refuses to lift it; the spec substitutes it and re-reads the variable at level 1",
+  :eq-on-code
+  "T0's = is clojure.core/= on any values; the spec's = is defined on datums only (:prim-type otherwise)"},
+ :forced
+ {:families
+  {:addition 10, :vector-alias-closure 10, :loop 10, :authority 10},
+  :checkpoints 40,
+  :exits 240,
+  :disagreements 0},
+ :naive-deopt
+ {:correct 2.5,
+  :broken 2.5,
+  :correct-trace [:effect],
+  :broken-trace [:effect :effect],
+  :broken-under-caller-fork true}}

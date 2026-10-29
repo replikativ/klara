@@ -1,0 +1,35 @@
+;; Load consolidation.demand. This example has a finite, total map-only licence.
+(def prefix-builder
+  (fn [polynomial amount]
+    {:source (code (fn [xs]
+                     (reduce + 0 (take (esc (lift amount))
+                                       (map (fn [x] (esc (polynomial (code x)))) xs)))))
+     :eager (code (fn [xs]
+                    (reduce + 0 (take (esc (lift amount))
+                                      (mapv (fn [x] (esc (polynomial (code x)))) xs)))))
+     :target (code (fn [xs]
+                     (reduce (fn [acc x] (+ acc (esc (polynomial (code x)))))
+                             0 (take (esc (lift amount)) xs))))}))
+(def shift-scalar-code (fn [x] (code (+ (esc x) 1))))
+(def prefix-code (prefix-builder shift-scalar-code 3))
+(def prefix-request {:source (:source prefix-code) :target (:target prefix-code)
+                     :domain {:max-count 64 :max-x 10}})
+(def prefix-statistic (run (:source prefix-request)))
+(def refine-prefix
+  (fn [request]
+    (let [candidate (fork [job (perform :stage/prepare-demand request)] (adopt! job))]
+      (perform :stage/install candidate))))
+
+;; T0 suspension BETWEEN complete native segments. No native await lowering.
+(def calibration 10)
+(def start-prefix-task
+  (fn [xs]
+    (let [lease (resource :resume-once)]
+      (handle [h {:await (fn [request k] {:status :suspended :request request :resume k :lease lease})}]
+        (let [before (prefix-statistic xs)
+              reply (perform h :await {:before before})
+              used (consume! lease)
+              after (prefix-statistic xs)]
+          {:value (+ before reply after calibration) :calibration calibration})))))
+(def resume-prefix-task (fn [task reply] ((:resume task) reply)))
+(def cancel-prefix-task (fn [task] (consume! (:lease task))))

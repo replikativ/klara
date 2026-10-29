@@ -1,0 +1,22 @@
+[0.002s][warning][perf,memops] Cannot use file /tmp/hsperfdata_christian-weilbach/2 because it is locked by another process (errno = 11)
+#'klara.compile-bench/run!
+#'klara.compile-profile/run!
+{:java 25.0.1, :clojure 1.12.4, :warmup 10000, :batches 9, :calls 10000}
+{:input 0, :form (clojure.core/fn [& args3414] (if (clojure.core/= 1 (clojure.core/count args3414)) (clojure.core/let [[v3408] args3414] (clojure.core/letfn [(v3411 [v3412 v3413] (if (clojure.core/> v3412 (quote 0)) (recur (clojure.core/dec v3412) (clojure.core/+ v3413 v3412)) v3413))] (v3411 v3408 (quote 0)))) klara.eval/deopt))}
+:plain {:ns 56.8872, :bytes 0.0056}
+:emitted {:ns 134.5356, :bytes 72.0056}
+:wrapper {:ns 277.6095, :bytes 72.0056}
+:entry {:ns 1854.4823, :bytes 536.0056}
+:compiled {:ns 11477.6652, :bytes 4384.0056}
+{:input 200, :form (clojure.core/fn [& args3445] (if (clojure.core/= 1 (clojure.core/count args3445)) (clojure.core/let [[v3439] args3445] (clojure.core/letfn [(v3442 [v3443 v3444] (if (clojure.core/> v3443 (quote 0)) (recur (clojure.core/dec v3443) (clojure.core/+ v3444 v3443)) v3444))] (v3442 v3439 (quote 0)))) klara.eval/deopt))}
+:plain {:ns 984.3239, :bytes 1752.0}
+:emitted {:ns 148.5932, :bytes 96.0056}
+:wrapper {:ns 121.1629, :bytes 80.0056}
+:entry {:ns 617.705, :bytes 512.0056}
+:compiled {:ns 2051.5988, :bytes 4408.0056}
+{:input 2000, :form (clojure.core/fn [& args3476] (if (clojure.core/= 1 (clojure.core/count args3476)) (clojure.core/let [[v3470] args3476] (clojure.core/letfn [(v3473 [v3474 v3475] (if (clojure.core/> v3474 (quote 0)) (recur (clojure.core/dec v3474) (clojure.core/+ v3475 v3474)) v3475))] (v3473 v3470 (quote 0)))) klara.eval/deopt))}
+:plain {:ns 710.8819, :bytes 24.0}
+:emitted {:ns 866.7879, :bytes 96.0056}
+:wrapper {:ns 916.3944, :bytes 96.0056}
+:entry {:ns 229.9771, :bytes 512.0056}
+:compiled {:ns 2504.8366, :bytes 4424.0056}

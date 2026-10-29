@@ -1,0 +1,465 @@
+{:installation-ms 23.116902,
+ :processors 8,
+ :policies
+ {:never {:value 15904, :ms 1.009484},
+  :always {:value 15904, :ms 137.128354},
+  :bounded {:value 15904, :ms 31.777241}},
+ :limitations
+ [:single-workload-family
+  :three-process-pilot
+  :no-cpu-isolation
+  :thread-allocation-not-retained-memory
+  :guard-scan-is-linear
+  :T0-has-less-warmup
+  :no-cold-JVM-end-to-end
+  :no-throughput-concurrency],
+ :process 9,
+ :vm "Java HotSpot(TM) 64-Bit Server VM",
+ :rows
+ [{:n 16,
+   :measurements
+   {:T0
+    {:median-ns 56222.0,
+     :median-bytes 213168.0,
+     :samples
+     [{:ns 84522.5, :bytes 213316.0, :value 3976, :iterations 2}
+      {:ns 62698.0, :bytes 213168.0, :value 3976, :iterations 2}
+      {:ns 49791.5, :bytes 213168.0, :value 3976, :iterations 2}
+      {:ns 57886.0, :bytes 213168.0, :value 3976, :iterations 2}
+      {:ns 52957.0, :bytes 213168.0, :value 3976, :iterations 2}
+      {:ns 56222.0, :bytes 213168.0, :value 3976, :iterations 2}
+      {:ns 52829.0, :bytes 213168.0, :value 3976, :iterations 2}
+      {:ns 56505.0, :bytes 213168.0, :value 3976, :iterations 2}
+      {:ns 55379.0, :bytes 213168.0, :value 3976, :iterations 2}]},
+    :guard-scan
+    {:median-ns 61.315,
+     :median-bytes 0.48,
+     :samples
+     [{:ns 137.56, :bytes 0.48, :value true, :iterations 200}
+      {:ns 57.085, :bytes 0.48, :value true, :iterations 200}
+      {:ns 62.93, :bytes 0.48, :value true, :iterations 200}
+      {:ns 57.2, :bytes 0.48, :value true, :iterations 200}
+      {:ns 60.775, :bytes 0.48, :value true, :iterations 200}
+      {:ns 60.135, :bytes 0.48, :value true, :iterations 200}
+      {:ns 62.265, :bytes 0.48, :value true, :iterations 200}
+      {:ns 62.255, :bytes 0.48, :value true, :iterations 200}
+      {:ns 61.315, :bytes 0.48, :value true, :iterations 200}]},
+    :guarded
+    {:median-ns 3756.805,
+     :median-bytes 9512.48,
+     :samples
+     [{:ns 4627.055, :bytes 9512.48, :value 3976, :iterations 200}
+      {:ns 3791.62, :bytes 9512.48, :value 3976, :iterations 200}
+      {:ns 3726.215, :bytes 9512.48, :value 3976, :iterations 200}
+      {:ns 3839.155, :bytes 9512.48, :value 3976, :iterations 200}
+      {:ns 3710.69, :bytes 9512.48, :value 3976, :iterations 200}
+      {:ns 3756.805, :bytes 9512.48, :value 3976, :iterations 200}
+      {:ns 3743.02, :bytes 9512.48, :value 3976, :iterations 200}
+      {:ns 3862.195, :bytes 9512.48, :value 3976, :iterations 200}
+      {:ns 3735.04, :bytes 9512.48, :value 3976, :iterations 200}]},
+    :emitted-body
+    {:median-ns 48.595,
+     :median-bytes 24.48,
+     :samples
+     [{:ns 70.94, :bytes 24.48, :value 3976, :iterations 200}
+      {:ns 51.565, :bytes 24.48, :value 3976, :iterations 200}
+      {:ns 50.025, :bytes 24.48, :value 3976, :iterations 200}
+      {:ns 48.595, :bytes 24.48, :value 3976, :iterations 200}
+      {:ns 51.865, :bytes 24.48, :value 3976, :iterations 200}
+      {:ns 47.285, :bytes 24.48, :value 3976, :iterations 200}
+      {:ns 47.75, :bytes 24.48, :value 3976, :iterations 200}
+      {:ns 48.23, :bytes 24.48, :value 3976, :iterations 200}
+      {:ns 48.285, :bytes 24.48, :value 3976, :iterations 200}]},
+    :primitive
+    {:median-ns 54.665,
+     :median-bytes 24.48,
+     :samples
+     [{:ns 64.02, :bytes 24.48, :value 3976, :iterations 200}
+      {:ns 58.785, :bytes 24.48, :value 3976, :iterations 200}
+      {:ns 53.955, :bytes 24.48, :value 3976, :iterations 200}
+      {:ns 54.665, :bytes 24.48, :value 3976, :iterations 200}
+      {:ns 55.18, :bytes 24.48, :value 3976, :iterations 200}
+      {:ns 53.535, :bytes 24.48, :value 3976, :iterations 200}
+      {:ns 53.675, :bytes 24.48, :value 3976, :iterations 200}
+      {:ns 57.345, :bytes 24.48, :value 3976, :iterations 200}
+      {:ns 53.835, :bytes 24.48, :value 3976, :iterations 200}]},
+    :transient
+    {:median-ns 105.77,
+     :median-bytes 688.48,
+     :samples
+     [{:ns 111.65, :bytes 688.48, :value 3976, :iterations 200}
+      {:ns 109.885, :bytes 688.48, :value 3976, :iterations 200}
+      {:ns 114.485, :bytes 688.48, :value 3976, :iterations 200}
+      {:ns 99.695, :bytes 688.48, :value 3976, :iterations 200}
+      {:ns 102.3, :bytes 688.48, :value 3976, :iterations 200}
+      {:ns 104.705, :bytes 688.48, :value 3976, :iterations 200}
+      {:ns 102.685, :bytes 688.48, :value 3976, :iterations 200}
+      {:ns 105.77, :bytes 688.48, :value 3976, :iterations 200}
+      {:ns 140.035, :bytes 688.48, :value 3976, :iterations 200}]},
+    :functional
+    {:median-ns 214.665,
+     :median-bytes 1288.48,
+     :samples
+     [{:ns 251.2, :bytes 1288.48, :value 3976, :iterations 200}
+      {:ns 195.38, :bytes 1288.48, :value 3976, :iterations 200}
+      {:ns 214.665, :bytes 1288.48, :value 3976, :iterations 200}
+      {:ns 215.275, :bytes 1288.48, :value 3976, :iterations 200}
+      {:ns 185.015, :bytes 1288.48, :value 3976, :iterations 200}
+      {:ns 190.43, :bytes 1288.48, :value 3976, :iterations 200}
+      {:ns 249.805, :bytes 1288.48, :value 3976, :iterations 200}
+      {:ns 217.995, :bytes 1288.48, :value 3976, :iterations 200}
+      {:ns 211.815, :bytes 1288.48, :value 3976, :iterations 200}]},
+    :mapped
+    {:median-ns 209.315,
+     :median-bytes 672.48,
+     :samples
+     [{:ns 224.05, :bytes 672.48, :value 3976, :iterations 200}
+      {:ns 210.87, :bytes 672.48, :value 3976, :iterations 200}
+      {:ns 221.005, :bytes 672.48, :value 3976, :iterations 200}
+      {:ns 209.315, :bytes 672.48, :value 3976, :iterations 200}
+      {:ns 213.085, :bytes 672.48, :value 3976, :iterations 200}
+      {:ns 186.115, :bytes 672.48, :value 3976, :iterations 200}
+      {:ns 206.845, :bytes 672.48, :value 3976, :iterations 200}
+      {:ns 191.47, :bytes 672.48, :value 3976, :iterations 200}
+      {:ns 206.72, :bytes 672.48, :value 3976, :iterations 200}]}}}
+  {:n 256,
+   :measurements
+   {:T0
+    {:median-ns 628622.5,
+     :median-bytes 3230736.0,
+     :samples
+     [{:ns 1556735.5, :bytes 3230736.0, :value 2206535, :iterations 2}
+      {:ns 664462.0, :bytes 3230736.0, :value 2206535, :iterations 2}
+      {:ns 628622.5, :bytes 3230736.0, :value 2206535, :iterations 2}
+      {:ns 630003.0, :bytes 3230736.0, :value 2206535, :iterations 2}
+      {:ns 613234.0, :bytes 3230736.0, :value 2206535, :iterations 2}
+      {:ns 626408.0, :bytes 3230736.0, :value 2206535, :iterations 2}
+      {:ns 615608.5, :bytes 3230736.0, :value 2206535, :iterations 2}
+      {:ns 646564.0, :bytes 3230736.0, :value 2206535, :iterations 2}
+      {:ns 618012.0,
+       :bytes 3230736.0,
+       :value 2206535,
+       :iterations 2}]},
+    :guard-scan
+    {:median-ns 472.645,
+     :median-bytes 0.48,
+     :samples
+     [{:ns 479.84, :bytes 0.48, :value true, :iterations 200}
+      {:ns 472.995, :bytes 0.48, :value true, :iterations 200}
+      {:ns 478.385, :bytes 0.48, :value true, :iterations 200}
+      {:ns 488.31, :bytes 0.48, :value true, :iterations 200}
+      {:ns 471.41, :bytes 0.48, :value true, :iterations 200}
+      {:ns 449.255, :bytes 0.48, :value true, :iterations 200}
+      {:ns 471.45, :bytes 0.48, :value true, :iterations 200}
+      {:ns 472.645, :bytes 0.48, :value true, :iterations 200}
+      {:ns 444.65, :bytes 0.48, :value true, :iterations 200}]},
+    :guarded
+    {:median-ns 5186.755,
+     :median-bytes 9512.48,
+     :samples
+     [{:ns 5529.7, :bytes 9512.48, :value 2206535, :iterations 200}
+      {:ns 5217.29, :bytes 9512.48, :value 2206535, :iterations 200}
+      {:ns 5497.075, :bytes 9513.04, :value 2206535, :iterations 200}
+      {:ns 5088.79, :bytes 9512.48, :value 2206535, :iterations 200}
+      {:ns 5208.16, :bytes 9512.48, :value 2206535, :iterations 200}
+      {:ns 5083.165, :bytes 9512.48, :value 2206535, :iterations 200}
+      {:ns 5186.755, :bytes 9512.48, :value 2206535, :iterations 200}
+      {:ns 5147.555, :bytes 9512.48, :value 2206535, :iterations 200}
+      {:ns 4891.31, :bytes 9512.48, :value 2206535, :iterations 200}]},
+    :emitted-body
+    {:median-ns 442.545,
+     :median-bytes 24.48,
+     :samples
+     [{:ns 482.875, :bytes 24.48, :value 2206535, :iterations 200}
+      {:ns 441.045, :bytes 24.48, :value 2206535, :iterations 200}
+      {:ns 450.66, :bytes 24.48, :value 2206535, :iterations 200}
+      {:ns 442.545, :bytes 24.48, :value 2206535, :iterations 200}
+      {:ns 460.195, :bytes 24.48, :value 2206535, :iterations 200}
+      {:ns 451.25, :bytes 24.48, :value 2206535, :iterations 200}
+      {:ns 441.725, :bytes 88.48, :value 2206535, :iterations 200}
+      {:ns 394.485, :bytes 88.48, :value 2206535, :iterations 200}
+      {:ns 394.53, :bytes 88.48, :value 2206535, :iterations 200}]},
+    :primitive
+    {:median-ns 561.46,
+     :median-bytes 24.48,
+     :samples
+     [{:ns 614.28, :bytes 24.48, :value 2206535, :iterations 200}
+      {:ns 561.46, :bytes 24.48, :value 2206535, :iterations 200}
+      {:ns 564.255, :bytes 24.48, :value 2206535, :iterations 200}
+      {:ns 561.41, :bytes 24.48, :value 2206535, :iterations 200}
+      {:ns 561.34, :bytes 24.48, :value 2206535, :iterations 200}
+      {:ns 619.22, :bytes 24.48, :value 2206535, :iterations 200}
+      {:ns 558.985, :bytes 24.48, :value 2206535, :iterations 200}
+      {:ns 566.065, :bytes 24.48, :value 2206535, :iterations 200}
+      {:ns 539.815, :bytes 24.48, :value 2206535, :iterations 200}]},
+    :transient
+    {:median-ns 758.415,
+     :median-bytes 6448.48,
+     :samples
+     [{:ns 777.02, :bytes 6448.48, :value 2206535, :iterations 200}
+      {:ns 757.535, :bytes 6448.48, :value 2206535, :iterations 200}
+      {:ns 755.495, :bytes 6448.48, :value 2206535, :iterations 200}
+      {:ns 742.79, :bytes 6448.48, :value 2206535, :iterations 200}
+      {:ns 818.935, :bytes 6448.48, :value 2206535, :iterations 200}
+      {:ns 761.965, :bytes 6448.48, :value 2206535, :iterations 200}
+      {:ns 758.415, :bytes 6448.48, :value 2206535, :iterations 200}
+      {:ns 779.505, :bytes 6448.48, :value 2206535, :iterations 200}
+      {:ns 740.63, :bytes 6448.48, :value 2206535, :iterations 200}]},
+    :functional
+    {:median-ns 2353.185,
+     :median-bytes 22408.48,
+     :samples
+     [{:ns 2400.28, :bytes 22408.48, :value 2206535, :iterations 200}
+      {:ns 2456.485, :bytes 22408.48, :value 2206535, :iterations 200}
+      {:ns 2279.4, :bytes 22408.48, :value 2206535, :iterations 200}
+      {:ns 2538.28, :bytes 22408.48, :value 2206535, :iterations 200}
+      {:ns 2269.9, :bytes 22408.48, :value 2206535, :iterations 200}
+      {:ns 2326.49, :bytes 22408.48, :value 2206535, :iterations 200}
+      {:ns 2315.56, :bytes 22408.48, :value 2206535, :iterations 200}
+      {:ns 2353.635, :bytes 22408.48, :value 2206535, :iterations 200}
+      {:ns 2353.185,
+       :bytes 22408.48,
+       :value 2206535,
+       :iterations 200}]},
+    :mapped
+    {:median-ns 1893.475,
+     :median-bytes 9072.48,
+     :samples
+     [{:ns 2001.955, :bytes 9072.48, :value 2206535, :iterations 200}
+      {:ns 1886.32, :bytes 9072.48, :value 2206535, :iterations 200}
+      {:ns 1858.0, :bytes 9072.48, :value 2206535, :iterations 200}
+      {:ns 1862.07, :bytes 9072.48, :value 2206535, :iterations 200}
+      {:ns 1892.555, :bytes 9072.48, :value 2206535, :iterations 200}
+      {:ns 1989.55, :bytes 9072.48, :value 2206535, :iterations 200}
+      {:ns 1893.475, :bytes 9072.48, :value 2206535, :iterations 200}
+      {:ns 1969.37, :bytes 9072.84, :value 2206535, :iterations 200}
+      {:ns 1956.535,
+       :bytes 9072.48,
+       :value 2206535,
+       :iterations 200}]}}}
+  {:n 4096,
+   :measurements
+   {:T0
+    {:median-ns 9928729.0,
+     :median-bytes 5.1514704E7,
+     :samples
+     [{:ns 9928729.0,
+       :bytes 5.1514704E7,
+       :value 41184116,
+       :iterations 2}
+      {:ns 1.2220979E7,
+       :bytes 5.1514704E7,
+       :value 41184116,
+       :iterations 2}
+      {:ns 9374604.5,
+       :bytes 5.1514704E7,
+       :value 41184116,
+       :iterations 2}
+      {:ns 1.07795005E7,
+       :bytes 5.1514704E7,
+       :value 41184116,
+       :iterations 2}
+      {:ns 1.01314405E7,
+       :bytes 5.1514704E7,
+       :value 41184116,
+       :iterations 2}
+      {:ns 1.00597375E7,
+       :bytes 5.1514704E7,
+       :value 41184116,
+       :iterations 2}
+      {:ns 9464764.5,
+       :bytes 5.1514704E7,
+       :value 41184116,
+       :iterations 2}
+      {:ns 9356871.5,
+       :bytes 5.1514704E7,
+       :value 41184116,
+       :iterations 2}
+      {:ns 9395008.0,
+       :bytes 5.1514704E7,
+       :value 41184116,
+       :iterations 2}]},
+    :guard-scan
+    {:median-ns 10032.395,
+     :median-bytes 0.48,
+     :samples
+     [{:ns 10469.06, :bytes 0.48, :value true, :iterations 200}
+      {:ns 10032.395, :bytes 0.48, :value true, :iterations 200}
+      {:ns 9658.645, :bytes 0.48, :value true, :iterations 200}
+      {:ns 17134.295, :bytes 0.48, :value true, :iterations 200}
+      {:ns 10426.065, :bytes 0.48, :value true, :iterations 200}
+      {:ns 10339.58, :bytes 0.48, :value true, :iterations 200}
+      {:ns 9463.54, :bytes 0.48, :value true, :iterations 200}
+      {:ns 9199.375, :bytes 0.48, :value true, :iterations 200}
+      {:ns 9356.095, :bytes 0.48, :value true, :iterations 200}]},
+    :guarded
+    {:median-ns 23201.92,
+     :median-bytes 9342.08,
+     :samples
+     [{:ns 31337.67, :bytes 9512.48, :value 41184116, :iterations 200}
+      {:ns 30457.57, :bytes 9512.76, :value 41184116, :iterations 200}
+      {:ns 31831.635, :bytes 9513.32, :value 41184116, :iterations 200}
+      {:ns 32163.3, :bytes 9488.76, :value 41184116, :iterations 200}
+      {:ns 23201.92, :bytes 9342.08, :value 41184116, :iterations 200}
+      {:ns 21020.935, :bytes 9328.48, :value 41184116, :iterations 200}
+      {:ns 21911.77, :bytes 9328.48, :value 41184116, :iterations 200}
+      {:ns 21549.9, :bytes 9328.48, :value 41184116, :iterations 200}
+      {:ns 21116.685,
+       :bytes 9328.48,
+       :value 41184116,
+       :iterations 200}]},
+    :emitted-body
+    {:median-ns 9468.91,
+     :median-bytes 88.48,
+     :samples
+     [{:ns 9719.46, :bytes 88.48, :value 41184116, :iterations 200}
+      {:ns 9502.54, :bytes 88.48, :value 41184116, :iterations 200}
+      {:ns 9840.68, :bytes 88.48, :value 41184116, :iterations 200}
+      {:ns 10867.7, :bytes 88.48, :value 41184116, :iterations 200}
+      {:ns 9298.445, :bytes 88.48, :value 41184116, :iterations 200}
+      {:ns 9468.91, :bytes 88.48, :value 41184116, :iterations 200}
+      {:ns 9033.85, :bytes 88.48, :value 41184116, :iterations 200}
+      {:ns 9128.725, :bytes 88.48, :value 41184116, :iterations 200}
+      {:ns 9054.185, :bytes 88.48, :value 41184116, :iterations 200}]},
+    :primitive
+    {:median-ns 11375.14,
+     :median-bytes 24.48,
+     :samples
+     [{:ns 11885.96, :bytes 24.48, :value 41184116, :iterations 200}
+      {:ns 11777.7, :bytes 24.48, :value 41184116, :iterations 200}
+      {:ns 12151.985, :bytes 24.48, :value 41184116, :iterations 200}
+      {:ns 12450.86, :bytes 24.48, :value 41184116, :iterations 200}
+      {:ns 11319.085, :bytes 24.48, :value 41184116, :iterations 200}
+      {:ns 11375.14, :bytes 24.48, :value 41184116, :iterations 200}
+      {:ns 11055.015, :bytes 24.48, :value 41184116, :iterations 200}
+      {:ns 11025.105, :bytes 24.48, :value 41184116, :iterations 200}
+      {:ns 10925.92, :bytes 24.48, :value 41184116, :iterations 200}]},
+    :transient
+    {:median-ns 11892.005,
+     :median-bytes 98608.48,
+     :samples
+     [{:ns 19461.395,
+       :bytes 98608.48,
+       :value 41184116,
+       :iterations 200}
+      {:ns 11337.605,
+       :bytes 98608.48,
+       :value 41184116,
+       :iterations 200}
+      {:ns 12017.16, :bytes 98608.48, :value 41184116, :iterations 200}
+      {:ns 11892.005,
+       :bytes 98608.48,
+       :value 41184116,
+       :iterations 200}
+      {:ns 11176.89, :bytes 98608.48, :value 41184116, :iterations 200}
+      {:ns 10719.91, :bytes 98608.48, :value 41184116, :iterations 200}
+      {:ns 12895.145,
+       :bytes 98608.48,
+       :value 41184116,
+       :iterations 200}
+      {:ns 10627.625,
+       :bytes 98608.48,
+       :value 41184116,
+       :iterations 200}
+      {:ns 15439.555,
+       :bytes 98608.48,
+       :value 41184116,
+       :iterations 200}]},
+    :functional
+    {:median-ns 36250.935,
+     :median-bytes 360328.48,
+     :samples
+     [{:ns 36250.935,
+       :bytes 360328.48,
+       :value 41184116,
+       :iterations 200}
+      {:ns 36305.795,
+       :bytes 360328.48,
+       :value 41184116,
+       :iterations 200}
+      {:ns 45083.7, :bytes 360328.48, :value 41184116, :iterations 200}
+      {:ns 39548.55,
+       :bytes 360328.48,
+       :value 41184116,
+       :iterations 200}
+      {:ns 39912.855,
+       :bytes 360328.48,
+       :value 41184116,
+       :iterations 200}
+      {:ns 35110.08,
+       :bytes 360328.48,
+       :value 41184116,
+       :iterations 200}
+      {:ns 35521.475,
+       :bytes 360328.48,
+       :value 41184116,
+       :iterations 200}
+      {:ns 34277.49,
+       :bytes 360328.48,
+       :value 41184116,
+       :iterations 200}
+      {:ns 34431.19,
+       :bytes 360328.48,
+       :value 41184116,
+       :iterations 200}]},
+    :mapped
+    {:median-ns 27806.17,
+     :median-bytes 144768.48,
+     :samples
+     [{:ns 28347.75,
+       :bytes 144768.48,
+       :value 41184116,
+       :iterations 200}
+      {:ns 27806.17,
+       :bytes 144768.48,
+       :value 41184116,
+       :iterations 200}
+      {:ns 30238.685,
+       :bytes 144768.48,
+       :value 41184116,
+       :iterations 200}
+      {:ns 29649.16,
+       :bytes 144768.48,
+       :value 41184116,
+       :iterations 200}
+      {:ns 27334.225,
+       :bytes 144768.48,
+       :value 41184116,
+       :iterations 200}
+      {:ns 25975.63,
+       :bytes 144768.48,
+       :value 41184116,
+       :iterations 200}
+      {:ns 26663.77,
+       :bytes 144768.48,
+       :value 41184116,
+       :iterations 200}
+      {:ns 32330.325,
+       :bytes 144768.48,
+       :value 41184116,
+       :iterations 200}
+      {:ns 26095.665,
+       :bytes 144768.48,
+       :value 41184116,
+       :iterations 200}]}}}],
+ :java "25.0.1+8-LTS-jvmci-b01",
+ :phases
+ {:proof-and-bounds-ms 12.563595, :shared-bootstrap-ms 2103.146784},
+ :preparation-ms 67.518066,
+ :declined {:value :declined, :ms 3.603208},
+ :generation-ms 15.310457,
+ :source-id
+ "9edac2f06ff85aa562cfffc79ad66366522a70ddbddd556a313ddc5710baea04",
+ :warmup
+ {:calls-per-size 3000,
+  :T0-calls-per-size 8,
+  :all-sizes-before-sampling true},
+ :native-phases
+ {:analysis-ms 6.334895,
+  :erasure-ms 2.253985,
+  :emission-and-loading-ms 2.81929},
+ :sampling
+ {:batches 9,
+  :iterations 200,
+  :T0-iterations 2,
+  :order :alternating-process-parity}}

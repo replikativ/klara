@@ -1,0 +1,144 @@
+(fn
+ [raw5677]
+ (if
+  true
+  (let
+   [arg5676 raw5677]
+   (let
+    [place5678 (long (clojure.core/count arg5676))]
+    (let
+     [place5679 '0]
+     (let
+      [place5680 '[0]]
+      (let
+       [place5681 (long-array '[0])]
+       (let
+        [place5688
+         (loop
+          [index5682 place5679]
+          (if
+           (clojure.core/< index5682 place5678)
+           (let
+            [place5683 (long (clojure.core/nth arg5676 index5682))]
+            (let
+             [place5684 (clojure.core/inc index5682)]
+             (let
+              [place5687
+               (let
+                [^longs buffer5685
+                 place5681
+                 rhs5686
+                 (clojure.core/+
+                  (aget buffer5685 0)
+                  (clojure.core/+
+                   '1
+                   (clojure.core/*
+                    place5683
+                    (clojure.core/+
+                     '2
+                     (clojure.core/* place5683 '3)))))]
+                (do (aset buffer5685 0 rhs5686) buffer5685))]
+              (recur place5684))))
+           'nil))]
+        (vec place5681)))))))
+  (klara.compile.affine-erase/fallback
+   '{:op :fn,
+     :arity 1,
+     :rest? false,
+     :body
+     {:op :let,
+      :init {:op :prim, :name count, :args [{:op :local, :index 0}]},
+      :body
+      {:op :let,
+       :init {:op :quote, :datum 0},
+       :body
+       {:op :let,
+        :init {:op :quote, :datum [0]},
+        :body
+        {:op :let,
+         :init
+         {:op :perform,
+          :target nil,
+          :name :own/alloc,
+          :args [{:op :quote, :datum [0]}]},
+         :body
+         {:op :let,
+          :init
+          {:op :letrec,
+           :inits
+           [{:op :fn,
+             :arity 1,
+             :rest? false,
+             :body
+             {:op :if,
+              :test
+              {:op :prim,
+               :name <,
+               :args [{:op :local, :index 0} {:op :local, :index 5}]},
+              :then
+              {:op :let,
+               :init
+               {:op :prim,
+                :name nth,
+                :args [{:op :local, :index 6} {:op :local, :index 0}]},
+               :body
+               {:op :let,
+                :init
+                {:op :prim, :name inc, :args [{:op :local, :index 1}]},
+                :body
+                {:op :let,
+                 :init
+                 {:op :perform,
+                  :target nil,
+                  :name :own/update,
+                  :args
+                  [{:op :local, :index 4}
+                   {:op :fn,
+                    :arity 1,
+                    :rest? false,
+                    :body
+                    {:op :prim,
+                     :name assoc,
+                     :args
+                     [{:op :local, :index 0}
+                      {:op :quote, :datum 0}
+                      {:op :prim,
+                       :name +,
+                       :args
+                       [{:op :prim,
+                         :name nth,
+                         :args
+                         [{:op :local, :index 0}
+                          {:op :quote, :datum 0}]}
+                        {:op :prim,
+                         :name +,
+                         :args
+                         [{:op :quote, :datum 1}
+                          {:op :prim,
+                           :name *,
+                           :args
+                           [{:op :local, :index 2}
+                            {:op :prim,
+                             :name +,
+                             :args
+                             [{:op :quote, :datum 2}
+                              {:op :prim,
+                               :name *,
+                               :args
+                               [{:op :local, :index 2}
+                                {:op :quote, :datum 3}]}]}]}]}]}]}}]},
+                 :body
+                 {:op :app,
+                  :fn {:op :local, :index 4},
+                  :args [{:op :local, :index 1}]}}}},
+              :else {:op :quote, :datum nil}}}],
+           :body
+           {:op :app,
+            :fn {:op :local, :index 0},
+            :args [{:op :local, :index 3}]}},
+          :body
+          {:op :perform,
+           :target nil,
+           :name :own/freeze,
+           :args [{:op :local, :index 1}]}}}}}}}
+   [raw5677])))

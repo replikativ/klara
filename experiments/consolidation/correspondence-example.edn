@@ -1,0 +1,253 @@
+{:source
+ {:op :fn,
+  :arity 1,
+  :rest? false,
+  :body
+  {:op :perform,
+   :target nil,
+   :name :host/call,
+   :args
+   [{:op :quote, :datum clojure.core/reduce}
+    {:op :fn,
+     :arity 2,
+     :rest? false,
+     :body
+     {:op :let,
+      :init
+      {:op :prim,
+       :name *,
+       :args [{:op :local, :index 0} {:op :local, :index 0}]},
+      :body
+      {:op :prim,
+       :name +,
+       :args [{:op :local, :index 2} {:op :local, :index 0}]}}}
+    {:op :quote, :datum 0}
+    {:op :perform,
+     :target nil,
+     :name :host/call,
+     :args
+     [{:op :quote, :datum clojure.core/take}
+      {:op :quote, :datum 3}
+      {:op :local, :index 0}]}]}},
+ :counted-target
+ {:op :fn,
+  :arity 1,
+  :rest? false,
+  :body
+  {:op :let,
+   :init {:op :prim, :name count, :args [{:op :local, :index 0}]},
+   :body
+   {:op :let,
+    :init {:op :quote, :datum 0},
+    :body
+    {:op :let,
+     :init {:op :quote, :datum [0]},
+     :body
+     {:op :letrec,
+      :inits
+      [{:op :fn,
+        :arity 2,
+        :rest? false,
+        :body
+        {:op :if,
+         :test
+         {:op :prim,
+          :name <,
+          :args [{:op :local, :index 1} {:op :local, :index 5}]},
+         :then
+         {:op :if,
+          :test
+          {:op :prim,
+           :name <,
+           :args [{:op :local, :index 1} {:op :quote, :datum 3}]},
+          :then
+          {:op :let,
+           :init
+           {:op :prim,
+            :name nth,
+            :args [{:op :local, :index 6} {:op :local, :index 1}]},
+           :body
+           {:op :app,
+            :fn {:op :local, :index 3},
+            :args
+            [{:op :prim, :name inc, :args [{:op :local, :index 2}]}
+             {:op :prim,
+              :name assoc,
+              :args
+              [{:op :local, :index 1}
+               {:op :quote, :datum 0}
+               {:op :let,
+                :init
+                {:op :prim,
+                 :name *,
+                 :args
+                 [{:op :local, :index 0} {:op :local, :index 0}]},
+                :body
+                {:op :prim,
+                 :name +,
+                 :args
+                 [{:op :prim,
+                   :name nth,
+                   :args
+                   [{:op :local, :index 2} {:op :quote, :datum 0}]}
+                  {:op :local, :index 0}]}}]}]}},
+          :else {:op :local, :index 0}},
+         :else {:op :local, :index 0}}}],
+      :body
+      {:op :app,
+       :fn {:op :local, :index 0},
+       :args [{:op :local, :index 2} {:op :local, :index 1}]}}}}}},
+ :scalar
+ {:input-bounds [100 10],
+  :upper 200,
+  :capacity 9223372036854775807,
+  :source-id
+  "7873fb67bbfa5acfb52a59a203f1a569aefc4ba2d966f91165e966a0df1cac0c",
+  :goal-sha256
+  "663e4e6eb184d612009562f4a079db22071655dae0f5a2a0d71dbad56b69da9b",
+  :proof-sha256
+  "d4cf800d2e61f5213f2d47a60ca24fa86a56f64b86466b5180287f80bfb2ae44",
+  :bridges
+  [:runtime-map-decoder
+   :finite-environment-embedding
+   :T0-CEK
+   :JVM-Long],
+  :checked-goal
+  "(forall rho (forall _ (const Nat []) (const Nat []) :default) (forall bounded (forall index (const Nat []) (app (app (const Nat.le []) (app (bvar 1) (bvar 0))) (app (app (app (const scalarPush []) (lit-nat 10)) (app (app (const scalarPush []) (lit-nat 100)) (lam index (const Nat []) (lit-nat 0) :default))) (bvar 0))) :default) (app (app (app (const Eq [#object[ansatz.kernel.Level 0xc561956 \"1\"]]) (app (const Option [#object[ansatz.kernel.Level 0x6f4de07f \"0\"]]) (const Nat []))) (app (app (app (const scalarChecked []) (app (app (const ScalarCore.let_ []) (app (app (const ScalarCore.mul []) (app (const ScalarCore.local []) (lit-nat 0))) (app (const ScalarCore.local []) (lit-nat 0)))) (app (app (const ScalarCore.add []) (app (const ScalarCore.local []) (lit-nat 2))) (app (const ScalarCore.local []) (lit-nat 0))))) (bvar 1)) (lit-nat 9223372036854775807))) (app (app (const Option.some [#object[ansatz.kernel.Level 0x6f4de07f \"0\"]]) (const Nat [])) (app (app (const scalarMeaning []) (app (app (const ScalarCore.let_ []) (app (app (const ScalarCore.mul []) (app (const ScalarCore.local []) (lit-nat 0))) (app (const ScalarCore.local []) (lit-nat 0)))) (app (app (const ScalarCore.add []) (app (const ScalarCore.local []) (lit-nat 2))) (app (const ScalarCore.local []) (lit-nat 0))))) (bvar 1)))) :default) :default)"},
+ :driver
+ {:bridges
+  [:loop-decoder
+   :source-reference-host
+   :finite-environment
+   :T0-CEK
+   :reachable-Long-invariant
+   :owned-erasure
+   :JVM],
+  :checked-proof-sha256
+  "bce1ccd0c24f1eef5722f96c1c714c4c9363f31a8fc4feec3148cabe22c13592",
+  :target-id
+  "fb2f1c5e9a31f30a205fab955a93b2c2402561922dd116671b2366c09b3c6de7",
+  :reachable-safety-premise :required-not-automatically-discharged,
+  :goal-sha256
+  "bb216b9741f14bb36be2ea1e6ae16c93df6671e17c8a020f8792cdc7dc1d51cd",
+  :checked-goal
+  "(forall xs (app (const List [#object[ansatz.kernel.Level 0x6f4de07f \"0\"]]) (const Nat [])) (forall count (const Nat []) (forall acc (const Nat []) (forall within (app (app (const Nat.le []) (bvar 1)) (app (app (const List.length [#object[ansatz.kernel.Level 0x6f4de07f \"0\"]]) (const Nat [])) (bvar 2))) (forall safe (app (app (app (app (app (app (const ScalarRunSafe []) (lit-nat 9223372036854775807)) (app (app (const ScalarCore.let_ []) (app (app (const ScalarCore.mul []) (app (const ScalarCore.local []) (lit-nat 0))) (app (const ScalarCore.local []) (lit-nat 0)))) (app (app (const ScalarCore.add []) (app (const ScalarCore.local []) (lit-nat 2))) (app (const ScalarCore.local []) (lit-nat 0))))) (bvar 3)) (bvar 2)) (lit-nat 0)) (bvar 1)) (app (app (app (const Eq [#object[ansatz.kernel.Level 0xc561956 \"1\"]]) (app (const Option [#object[ansatz.kernel.Level 0x6f4de07f \"0\"]]) (const Nat []))) (app (app (app (app (app (app (const scalarRunChecked []) (bvar 3)) (app (app (const ScalarCore.let_ []) (app (app (const ScalarCore.mul []) (app (const ScalarCore.local []) (lit-nat 0))) (app (const ScalarCore.local []) (lit-nat 0)))) (app (app (const ScalarCore.add []) (app (const ScalarCore.local []) (lit-nat 2))) (app (const ScalarCore.local []) (lit-nat 0))))) (bvar 4)) (lit-nat 0)) (bvar 2)) (lit-nat 9223372036854775807))) (app (app (const Option.some [#object[ansatz.kernel.Level 0x6f4de07f \"0\"]]) (const Nat [])) (app (app (app (app (app (const List.foldl [#object[ansatz.kernel.Level 0x6f4de07f \"0\"] #object[ansatz.kernel.Level 0x6f4de07f \"0\"]]) (const Nat [])) (const Nat [])) (app (const scalarStep []) (app (app (const ScalarCore.let_ []) (app (app (const ScalarCore.mul []) (app (const ScalarCore.local []) (lit-nat 0))) (app (const ScalarCore.local []) (lit-nat 0)))) (app (app (const ScalarCore.add []) (app (const ScalarCore.local []) (lit-nat 2))) (app (const ScalarCore.local []) (lit-nat 0)))))) (bvar 2)) (app (app (const scalarTake []) (bvar 4)) (bvar 3))))) :default) :default) :default) :default) :default)",
+  :source-id
+  "1da6bed9d07eb841ab6f39a653c42c55f26638dd5e5549ed8701e6179c422bdb",
+  :checked-goal-sha256
+  "63f61efb6afc46e43626e32c60f717d68ab800b92b9a20a83bf4cbfd1651e2bb",
+  :proof-sha256
+  "2a811ab2398ec3781f76da41a039642883a17c0dacb6888c783bc53ede008f43"},
+ :sum
+ {:source
+  {:op :fn,
+   :arity 1,
+   :rest? false,
+   :body
+   {:op :perform,
+    :target nil,
+    :name :host/call,
+    :args
+    [{:op :quote, :datum clojure.core/reduce}
+     {:op :fn,
+      :arity 2,
+      :rest? false,
+      :body
+      {:op :prim,
+       :name +,
+       :args [{:op :local, :index 1} {:op :local, :index 0}]}}
+     {:op :quote, :datum 0}
+     {:op :perform,
+      :target nil,
+      :name :host/call,
+      :args
+      [{:op :quote, :datum clojure.core/take}
+       {:op :quote, :datum 3}
+       {:op :local, :index 0}]}]}},
+  :counted-target
+  {:op :fn,
+   :arity 1,
+   :rest? false,
+   :body
+   {:op :let,
+    :init {:op :prim, :name count, :args [{:op :local, :index 0}]},
+    :body
+    {:op :let,
+     :init {:op :quote, :datum 0},
+     :body
+     {:op :let,
+      :init {:op :quote, :datum [0]},
+      :body
+      {:op :letrec,
+       :inits
+       [{:op :fn,
+         :arity 2,
+         :rest? false,
+         :body
+         {:op :if,
+          :test
+          {:op :prim,
+           :name <,
+           :args [{:op :local, :index 1} {:op :local, :index 5}]},
+          :then
+          {:op :if,
+           :test
+           {:op :prim,
+            :name <,
+            :args [{:op :local, :index 1} {:op :quote, :datum 3}]},
+           :then
+           {:op :let,
+            :init
+            {:op :prim,
+             :name nth,
+             :args [{:op :local, :index 6} {:op :local, :index 1}]},
+            :body
+            {:op :app,
+             :fn {:op :local, :index 3},
+             :args
+             [{:op :prim, :name inc, :args [{:op :local, :index 2}]}
+              {:op :prim,
+               :name assoc,
+               :args
+               [{:op :local, :index 1}
+                {:op :quote, :datum 0}
+                {:op :prim,
+                 :name +,
+                 :args
+                 [{:op :prim,
+                   :name nth,
+                   :args
+                   [{:op :local, :index 1} {:op :quote, :datum 0}]}
+                  {:op :local, :index 0}]}]}]}},
+           :else {:op :local, :index 0}},
+          :else {:op :local, :index 0}}}],
+       :body
+       {:op :app,
+        :fn {:op :local, :index 0},
+        :args [{:op :local, :index 2} {:op :local, :index 1}]}}}}}},
+  :contract
+  {:bridges
+   [:source-and-loop-decoder
+    :finite-input-guard
+    :T0-CEK
+    :Long-representation
+    :owned-erasure
+    :JVM],
+   :max-x 10,
+   :target-id
+   "daa706c403b650e420b6bc678ad25783af87fa029a9d7e78e181fcc8c18d4ced",
+   :reachable-safety-premise :discharged-for-sum,
+   :goal-sha256
+   "9da3c7bfebdafa68319def5996eaece303e75bfee8b31a55336c225e6b4518a9",
+   :invariant :acc-plus-remaining-times-upper-fits,
+   :source-id
+   "0d36c33078e33c073ee7ca1d8f4fdcaa1e963ca683e0917df5d1d233289282b3",
+   :max-count 64,
+   :proof-sha256
+   "f467b8e1606bd9a84421dacc59ebad4557bf68b22c4cf38a28ef8634f845808f"},
+  :goal
+  "(forall xs (app (const List [#object[ansatz.kernel.Level 0x6f4de07f \"0\"]]) (const Nat [])) (forall count (const Nat []) (forall within (app (app (const Nat.le []) (bvar 0)) (app (app (const List.length [#object[ansatz.kernel.Level 0x6f4de07f \"0\"]]) (const Nat [])) (bvar 1))) (forall limited (app (app (const Nat.le []) (bvar 1)) (lit-nat 64)) (forall elements (forall index (const Nat []) (app (app (const Nat.le []) (app (app (const scalarAt []) (bvar 4)) (bvar 0))) (lit-nat 10)) :default) (app (app (app (const Eq [#object[ansatz.kernel.Level 0xc561956 \"1\"]]) (app (const Option [#object[ansatz.kernel.Level 0x6f4de07f \"0\"]]) (const Nat []))) (app (app (app (app (app (app (const scalarRunChecked []) (bvar 3)) (app (app (const ScalarCore.add []) (app (const ScalarCore.local []) (lit-nat 1))) (app (const ScalarCore.local []) (lit-nat 0)))) (bvar 4)) (lit-nat 0)) (lit-nat 0)) (lit-nat 9223372036854775807))) (app (app (const Option.some [#object[ansatz.kernel.Level 0x6f4de07f \"0\"]]) (const Nat [])) (app (app (app (app (app (const List.foldl [#object[ansatz.kernel.Level 0x6f4de07f \"0\"] #object[ansatz.kernel.Level 0x6f4de07f \"0\"]]) (const Nat [])) (const Nat [])) (app (const scalarStep []) (app (app (const ScalarCore.add []) (app (const ScalarCore.local []) (lit-nat 1))) (app (const ScalarCore.local []) (lit-nat 0))))) (lit-nat 0)) (app (app (const scalarTake []) (bvar 4)) (bvar 3))))) :default) :default) :default) :default) :default)"},
+ :not-established
+ [:full-Core-CEK-adequacy
+  :arbitrary-loop-invariant-inference
+  :verified-JVM-emission]}

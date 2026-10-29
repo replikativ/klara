@@ -1,0 +1,16 @@
+{
+  "note": "Measurement worker hashes and frozen collector revision are in manifest.json; these hashes record post-collection table and supplementary-validation scripts.",
+  "sha256": {
+    "experiments/pldi/authority_validation.clj": "34a65b6fe9203bac96879bda403db5505062d4922c48f19952f7565d96cbf96e",
+    "experiments/pldi/checkpoints.clj": "74e0aa4757cb62f4d2e69bf21c4b8f81ed14222971ebcd392f6f897a4bca0cde",
+    "experiments/pldi/entry.clj": "8b429f2e79b3aad1614f4d92f9315c71d100a043d6d9396366c655f07f00cfaf",
+    "experiments/pldi/render.py": "93832c26f3cae539d7b856f8eda8cce5c5a830aeca75870dd9779082afea2cd9",
+    "experiments/pldi/run.py": "e6ecc91453c32e590664e576a273365de2b52461a5f7d06fe3669677c0742bb1",
+    "experiments/pldi/scale.clj": "def56facd8106dbebd62d0df989031752233751cc4beac9c01afd5f91515576c",
+    "experiments/pldi/smc.clj": "800c174a2f804aa3f9ac3dec9b728f439b91dc785793dec0053e759e7f138c71",
+    "experiments/pldi/smc_validation.clj": "4eeffdb89ef032d362a011268eaaaeaa13980cfd113a5aec81342f335098ffc3",
+    "experiments/pldi/spec.clj": "02f28d7a5529f89c4236714b7e858d3ce1194e44be8d8a30fce7c95af0e1762a",
+    "experiments/pldi/summarize.clj": "d348a132b5b128a2ddf07a96709d350fdd1cceed4849e0ee098dd19fbeca2963",
+    "experiments/pldi/worker.clj": "8e6816bbb6f04064f34518c27929c3e2bbbc12ef439b20548a6946625e0dea48"
+  }
+}

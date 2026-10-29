@@ -1,0 +1,10 @@
+metric,count
+Generated programs,1500
+Distinct syntax,1303
+Input cases,8250
+Cache deletion cases,1250
+Compiler disagreements,0
+Forced exits,240
+Spec cases,69
+Spec agreements,65
+Classified spec differences,4

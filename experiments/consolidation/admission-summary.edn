@@ -1,0 +1,74 @@
+{:processes [6 7 8],
+ :rows
+ [{:n 16,
+   :ns-per-call
+   {:guarded {:median 4567.26, :min 4363.14, :max 5526.82},
+    :evidenced {:median 2472.46, :min 2404.3, :max 2898.72},
+    :pure-batch-100
+    {:median 77.41, :min 73.429, :max 99.59100000000001},
+    :materialize-then-guard
+    {:median 4834.4, :min 4485.27, :max 5694.14},
+    :producer-facts-consumer
+    {:median 3033.34, :min 2841.33, :max 3431.94},
+    :scan-producer-consumer
+    {:median 3122.23, :min 2905.71, :max 3509.71}}}
+  {:n 256,
+   :ns-per-call
+   {:guarded {:median 5844.0, :min 5553.19, :max 6962.35},
+    :evidenced {:median 3095.97, :min 2962.8, :max 3514.78},
+    :pure-batch-100 {:median 593.437, :min 565.436, :max 679.0},
+    :materialize-then-guard
+    {:median 8291.95, :min 7664.61, :max 9383.37},
+    :producer-facts-consumer
+    {:median 6039.58, :min 5706.29, :max 6916.6},
+    :scan-producer-consumer
+    {:median 6340.89, :min 6185.72, :max 7565.26}}}
+  {:n 4096,
+   :ns-per-call
+   {:guarded {:median 31896.93, :min 28422.85, :max 33290.84},
+    :evidenced {:median 14570.21, :min 13461.89, :max 15992.32},
+    :pure-batch-100
+    {:median 12172.75, :min 10961.438999999998, :max 12890.942},
+    :materialize-then-guard
+    {:median 66950.41, :min 58343.42, :max 70389.57},
+    :producer-facts-consumer
+    {:median 60193.62, :min 59915.13, :max 70545.91},
+    :scan-producer-consumer
+    {:median 78100.62, :min 72954.54, :max 84168.8}}}],
+ :setup-ms
+ {:preparation-ms {:median 96.051714, :min 96.019897, :max 132.185672},
+  :publication-ms {:median 0.283615, :min 0.272227, :max 0.28398},
+  :legacy-checked-installation-ms
+  {:median 20.90326, :min 20.882966, :max 21.8559},
+  :validation-ms {:median 29.632302, :min 26.285469, :max 41.246781}},
+ :source-sha256
+ {"src/klara/stage.clj"
+  "3bb897f8d62dd1660097573c87d4b72d36f469f106c89515560bd1838ae7c948",
+  "src/klara/compile/staged.clj"
+  "c8fcd85d2cb1b329c0ccc62bbb2c94b334282afa4ce9ef0358109c192366b020",
+  "src/klara/compile/infer_affine.clj"
+  "a5631d2d71cfd5d74a3a8a15c27d146b8db3b957f019209e6bc3e948d61c5ce0",
+  "src/klara/compile/strict_fold.clj"
+  "2363c1371ea0428f143d746bfb041f3727955b8efe492b5932d12d7dc8616d39",
+  "experiments/consolidation/checked_pipeline.clj"
+  "87a1f9c612d4f48239e2ee37ca993c24bd9d2fefd4b411f5736249d23f2c8f1c",
+  "experiments/consolidation/producer_model.clj"
+  "9725b71d3d5dbb2a5724d54667e4f687af85af86ecf8e311f2bb24189a21346f",
+  "experiments/consolidation/producer_consumer.clj"
+  "404fd62aa9515b0298640c87c34096b74c7ff84bbe802c18763c0c213d0415a5"},
+ :method
+ {:warmup :all-sizes-before-sampling,
+  :calls-per-size 3000,
+  :batch-warmup 100,
+  :batches 9,
+  :order :alternating-process-parity,
+  :pure-batch-size 100},
+ :limitations
+ [:three-process-pilot
+  :one-family
+  :no-cpu-pinning
+  :batch-is-known-pure-driver
+  :producer-output-is-materialized
+  :guard-profile-instrumentation-is-not-additive
+  :facts-bootstrap-excluded-from-warm-evidence-cases],
+ :all-process-source-hashes-match true}

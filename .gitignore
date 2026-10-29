@@ -1,0 +1,19 @@
+.cpcache/
+target/
+*.log
+doc/reviews/tmp/
+.nrepl-port
+# Private research, manuscript work and local development discussion
+.internal/
+# Generated verification and editor/build state
+.DS_Store
+**/__pycache__/
+# Legacy private manuscript location; prefer .internal/paper/
+/paper/
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.synctex.gz
+*.toc

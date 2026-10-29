@@ -1,0 +1,1 @@
+{:checks 43, :build {:artifact "/tmp/klara-s22-old.edn", :build-ms 130.733835, :class-bytes 2634}, :load-ms 13.402899, :new-build {:artifact "/tmp/klara-s22-new.edn", :build-ms 52.520512, :class-bytes 2634}, :old-stats {:fast 23, :fallback 5}, :new-stats {:fast 1, :fallback 1}}

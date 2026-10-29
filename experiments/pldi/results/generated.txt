@@ -1,0 +1,1 @@
+{:generated-programs 1500, :distinct-syntax 1303, :families {:accepted 1000, :hof 250, :rejected 250}, :input-cases 8250, :post-clear-cases 1250, :disagreements 0, :classification {}}

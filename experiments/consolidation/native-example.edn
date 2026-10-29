@@ -1,0 +1,1073 @@
+{:implementation-bridges :tested,
+ :source
+ {:op :fn,
+  :arity 1,
+  :rest? false,
+  :body
+  {:op :perform,
+   :target nil,
+   :name :host/call,
+   :args
+   [{:op :quote, :datum clojure.core/reduce}
+    {:op :perform,
+     :target nil,
+     :name :host/var,
+     :args [{:op :quote, :datum clojure.core/+}]}
+    {:op :quote, :datum 0}
+    {:op :perform,
+     :target nil,
+     :name :host/call,
+     :args
+     [{:op :quote, :datum clojure.core/map}
+      {:op :fn,
+       :arity 1,
+       :rest? false,
+       :body
+       {:op :prim,
+        :name +,
+        :args
+        [{:op :quote, :datum 1}
+         {:op :prim,
+          :name +,
+          :args
+          [{:op :prim,
+            :name *,
+            :args [{:op :local, :index 0} {:op :quote, :datum 2}]}
+           {:op :prim,
+            :name *,
+            :args
+            [{:op :prim,
+              :name *,
+              :args [{:op :local, :index 0} {:op :local, :index 0}]}
+             {:op :quote, :datum 3}]}]}]}}
+      {:op :local, :index 0}]}]}},
+ :ownership-derivation
+ {:checker "s10-1",
+  :inputs :closed-immutable-data,
+  :code-id
+  "0e3fc69a78769c6e43bf3edb8bb9a455ba5596ead77236eacfdf52ab5d883795",
+  :rules
+  [{:path [:body :init :args 0], :rule :local}
+   {:path [:body :init], :rule :prim}
+   {:path [:body :body :init], :rule :quote}
+   {:path [:body :body :body :init], :rule :quote}
+   {:path [:body :body :body :body :init :args 0], :rule :quote}
+   {:path [:body :body :body :body :init],
+    :rule :own/alloc,
+    :resource [:body :body :body :body :init]}
+   {:path
+    [:body :body :body :body :body :init :inits 0 :body :test :args 0],
+    :rule :local}
+   {:path
+    [:body :body :body :body :body :init :inits 0 :body :test :args 1],
+    :rule :local}
+   {:path [:body :body :body :body :body :init :inits 0 :body :test],
+    :rule :prim}
+   {:path
+    [:body
+     :body
+     :body
+     :body
+     :body
+     :init
+     :inits
+     0
+     :body
+     :then
+     :init
+     :args
+     0],
+    :rule :local}
+   {:path
+    [:body
+     :body
+     :body
+     :body
+     :body
+     :init
+     :inits
+     0
+     :body
+     :then
+     :init
+     :args
+     1],
+    :rule :local}
+   {:path
+    [:body :body :body :body :body :init :inits 0 :body :then :init],
+    :rule :prim}
+   {:path
+    [:body
+     :body
+     :body
+     :body
+     :body
+     :init
+     :inits
+     0
+     :body
+     :then
+     :body
+     :init
+     :args
+     0],
+    :rule :local}
+   {:path
+    [:body
+     :body
+     :body
+     :body
+     :body
+     :init
+     :inits
+     0
+     :body
+     :then
+     :body
+     :init],
+    :rule :prim}
+   {:path
+    [:body
+     :body
+     :body
+     :body
+     :body
+     :init
+     :inits
+     0
+     :body
+     :then
+     :body
+     :body
+     :init
+     :args
+     0],
+    :rule :local,
+    :resource [:body :body :body :body :init]}
+   {:path
+    [:body
+     :body
+     :body
+     :body
+     :body
+     :init
+     :inits
+     0
+     :body
+     :then
+     :body
+     :body
+     :init],
+    :rule :permission,
+    :resource [:body :body :body :body :init],
+    :operation :own/update,
+    :permission :write}
+   {:path
+    [:body
+     :body
+     :body
+     :body
+     :body
+     :init
+     :inits
+     0
+     :body
+     :then
+     :body
+     :body
+     :init
+     :args
+     1
+     :body
+     :args
+     0],
+    :rule :local}
+   {:path
+    [:body
+     :body
+     :body
+     :body
+     :body
+     :init
+     :inits
+     0
+     :body
+     :then
+     :body
+     :body
+     :init
+     :args
+     1
+     :body
+     :args
+     1],
+    :rule :quote}
+   {:path
+    [:body
+     :body
+     :body
+     :body
+     :body
+     :init
+     :inits
+     0
+     :body
+     :then
+     :body
+     :body
+     :init
+     :args
+     1
+     :body
+     :args
+     2
+     :args
+     0
+     :args
+     0],
+    :rule :local}
+   {:path
+    [:body
+     :body
+     :body
+     :body
+     :body
+     :init
+     :inits
+     0
+     :body
+     :then
+     :body
+     :body
+     :init
+     :args
+     1
+     :body
+     :args
+     2
+     :args
+     0
+     :args
+     1],
+    :rule :quote}
+   {:path
+    [:body
+     :body
+     :body
+     :body
+     :body
+     :init
+     :inits
+     0
+     :body
+     :then
+     :body
+     :body
+     :init
+     :args
+     1
+     :body
+     :args
+     2
+     :args
+     0],
+    :rule :prim}
+   {:path
+    [:body
+     :body
+     :body
+     :body
+     :body
+     :init
+     :inits
+     0
+     :body
+     :then
+     :body
+     :body
+     :init
+     :args
+     1
+     :body
+     :args
+     2
+     :args
+     1
+     :args
+     0],
+    :rule :quote}
+   {:path
+    [:body
+     :body
+     :body
+     :body
+     :body
+     :init
+     :inits
+     0
+     :body
+     :then
+     :body
+     :body
+     :init
+     :args
+     1
+     :body
+     :args
+     2
+     :args
+     1
+     :args
+     1
+     :args
+     0],
+    :rule :local}
+   {:path
+    [:body
+     :body
+     :body
+     :body
+     :body
+     :init
+     :inits
+     0
+     :body
+     :then
+     :body
+     :body
+     :init
+     :args
+     1
+     :body
+     :args
+     2
+     :args
+     1
+     :args
+     1
+     :args
+     1
+     :args
+     0],
+    :rule :quote}
+   {:path
+    [:body
+     :body
+     :body
+     :body
+     :body
+     :init
+     :inits
+     0
+     :body
+     :then
+     :body
+     :body
+     :init
+     :args
+     1
+     :body
+     :args
+     2
+     :args
+     1
+     :args
+     1
+     :args
+     1
+     :args
+     1
+     :args
+     0],
+    :rule :local}
+   {:path
+    [:body
+     :body
+     :body
+     :body
+     :body
+     :init
+     :inits
+     0
+     :body
+     :then
+     :body
+     :body
+     :init
+     :args
+     1
+     :body
+     :args
+     2
+     :args
+     1
+     :args
+     1
+     :args
+     1
+     :args
+     1
+     :args
+     1],
+    :rule :quote}
+   {:path
+    [:body
+     :body
+     :body
+     :body
+     :body
+     :init
+     :inits
+     0
+     :body
+     :then
+     :body
+     :body
+     :init
+     :args
+     1
+     :body
+     :args
+     2
+     :args
+     1
+     :args
+     1
+     :args
+     1
+     :args
+     1],
+    :rule :prim}
+   {:path
+    [:body
+     :body
+     :body
+     :body
+     :body
+     :init
+     :inits
+     0
+     :body
+     :then
+     :body
+     :body
+     :init
+     :args
+     1
+     :body
+     :args
+     2
+     :args
+     1
+     :args
+     1
+     :args
+     1],
+    :rule :prim}
+   {:path
+    [:body
+     :body
+     :body
+     :body
+     :body
+     :init
+     :inits
+     0
+     :body
+     :then
+     :body
+     :body
+     :init
+     :args
+     1
+     :body
+     :args
+     2
+     :args
+     1
+     :args
+     1],
+    :rule :prim}
+   {:path
+    [:body
+     :body
+     :body
+     :body
+     :body
+     :init
+     :inits
+     0
+     :body
+     :then
+     :body
+     :body
+     :init
+     :args
+     1
+     :body
+     :args
+     2
+     :args
+     1],
+    :rule :prim}
+   {:path
+    [:body
+     :body
+     :body
+     :body
+     :body
+     :init
+     :inits
+     0
+     :body
+     :then
+     :body
+     :body
+     :init
+     :args
+     1
+     :body
+     :args
+     2],
+    :rule :prim}
+   {:path
+    [:body
+     :body
+     :body
+     :body
+     :body
+     :init
+     :inits
+     0
+     :body
+     :then
+     :body
+     :body
+     :init
+     :args
+     1
+     :body],
+    :rule :prim}
+   {:path
+    [:body
+     :body
+     :body
+     :body
+     :body
+     :init
+     :inits
+     0
+     :body
+     :then
+     :body
+     :body
+     :init
+     :args
+     1],
+    :rule :fn}
+   {:path
+    [:body
+     :body
+     :body
+     :body
+     :body
+     :init
+     :inits
+     0
+     :body
+     :then
+     :body
+     :body
+     :init],
+    :rule :own/update,
+    :resource [:body :body :body :body :init]}
+   {:path
+    [:body
+     :body
+     :body
+     :body
+     :body
+     :init
+     :inits
+     0
+     :body
+     :then
+     :body
+     :body
+     :body
+     :fn],
+    :rule :local}
+   {:path
+    [:body
+     :body
+     :body
+     :body
+     :body
+     :init
+     :inits
+     0
+     :body
+     :then
+     :body
+     :body
+     :body
+     :args
+     0],
+    :rule :local}
+   {:path
+    [:body
+     :body
+     :body
+     :body
+     :body
+     :init
+     :inits
+     0
+     :body
+     :then
+     :body
+     :body
+     :body],
+    :rule :app}
+   {:path
+    [:body
+     :body
+     :body
+     :body
+     :body
+     :init
+     :inits
+     0
+     :body
+     :then
+     :body
+     :body],
+    :rule :let}
+   {:path
+    [:body :body :body :body :body :init :inits 0 :body :then :body],
+    :rule :let}
+   {:path [:body :body :body :body :body :init :inits 0 :body :then],
+    :rule :let}
+   {:path [:body :body :body :body :body :init :inits 0 :body :else],
+    :rule :quote}
+   {:path [:body :body :body :body :body :init :inits 0 :body],
+    :rule :if}
+   {:path [:body :body :body :body :body :init :body :fn],
+    :rule :local}
+   {:path [:body :body :body :body :body :init :body :args 0],
+    :rule :local}
+   {:path [:body :body :body :body :body :init :body], :rule :app}
+   {:path [:body :body :body :body :body :init], :rule :letrec}
+   {:path [:body :body :body :body :body :body :args 0],
+    :rule :local,
+    :resource [:body :body :body :body :init]}
+   {:path [:body :body :body :body :body :body],
+    :rule :permission,
+    :resource [:body :body :body :body :init],
+    :operation :own/freeze,
+    :permission :write}
+   {:path [:body :body :body :body :body :body], :rule :own/freeze}
+   {:path [:body :body :body :body :body], :rule :let}
+   {:path [:body :body :body :body], :rule :let}
+   {:path [:body :body :body], :rule :let}
+   {:path [:body :body], :rule :let}
+   {:path [:body], :rule :let}],
+  :exit
+  {[:body :body :body :body :init]
+   {:status :dead, :permission :write}}},
+ :mathematical-target
+ {:op :fn,
+  :arity 1,
+  :rest? false,
+  :body
+  {:op :perform,
+   :target nil,
+   :name :host/call,
+   :args
+   [{:op :quote, :datum clojure.core/reduce}
+    {:op :fn,
+     :arity 2,
+     :rest? false,
+     :body
+     {:op :prim,
+      :name +,
+      :args
+      [{:op :local, :index 1}
+       {:op :prim,
+        :name +,
+        :args
+        [{:op :quote, :datum 1}
+         {:op :prim,
+          :name *,
+          :args
+          [{:op :local, :index 0}
+           {:op :prim,
+            :name +,
+            :args
+            [{:op :quote, :datum 2}
+             {:op :prim,
+              :name *,
+              :args
+              [{:op :local, :index 0} {:op :quote, :datum 3}]}]}]}]}]}}
+    {:op :quote, :datum 0}
+    {:op :local, :index 0}]}},
+ :owned
+ {:op :fn,
+  :arity 1,
+  :rest? false,
+  :body
+  {:op :let,
+   :init {:op :prim, :name count, :args [{:op :local, :index 0}]},
+   :body
+   {:op :let,
+    :init {:op :quote, :datum 0},
+    :body
+    {:op :let,
+     :init {:op :quote, :datum [0]},
+     :body
+     {:op :let,
+      :init
+      {:op :perform,
+       :target nil,
+       :name :own/alloc,
+       :args [{:op :quote, :datum [0]}]},
+      :body
+      {:op :let,
+       :init
+       {:op :letrec,
+        :inits
+        [{:op :fn,
+          :arity 1,
+          :rest? false,
+          :body
+          {:op :if,
+           :test
+           {:op :prim,
+            :name <,
+            :args [{:op :local, :index 0} {:op :local, :index 5}]},
+           :then
+           {:op :let,
+            :init
+            {:op :prim,
+             :name nth,
+             :args [{:op :local, :index 6} {:op :local, :index 0}]},
+            :body
+            {:op :let,
+             :init
+             {:op :prim, :name inc, :args [{:op :local, :index 1}]},
+             :body
+             {:op :let,
+              :init
+              {:op :perform,
+               :target nil,
+               :name :own/update,
+               :args
+               [{:op :local, :index 4}
+                {:op :fn,
+                 :arity 1,
+                 :rest? false,
+                 :body
+                 {:op :prim,
+                  :name assoc,
+                  :args
+                  [{:op :local, :index 0}
+                   {:op :quote, :datum 0}
+                   {:op :prim,
+                    :name +,
+                    :args
+                    [{:op :prim,
+                      :name nth,
+                      :args
+                      [{:op :local, :index 0} {:op :quote, :datum 0}]}
+                     {:op :prim,
+                      :name +,
+                      :args
+                      [{:op :quote, :datum 1}
+                       {:op :prim,
+                        :name *,
+                        :args
+                        [{:op :local, :index 2}
+                         {:op :prim,
+                          :name +,
+                          :args
+                          [{:op :quote, :datum 2}
+                           {:op :prim,
+                            :name *,
+                            :args
+                            [{:op :local, :index 2}
+                             {:op :quote, :datum 3}]}]}]}]}]}]}}]},
+              :body
+              {:op :app,
+               :fn {:op :local, :index 4},
+               :args [{:op :local, :index 1}]}}}},
+           :else {:op :quote, :datum nil}}}],
+        :body
+        {:op :app,
+         :fn {:op :local, :index 0},
+         :args [{:op :local, :index 3}]}},
+       :body
+       {:op :perform,
+        :target nil,
+        :name :own/freeze,
+        :args [{:op :local, :index 1}]}}}}}}},
+ :lowering
+ {:version "strict-vector-fold-3",
+  :source-id
+  "0b6d09537b1e0d62a35ecf14452a49f9d448cc455e28e3cc334213d4d4f57143",
+  :target
+  {:op :fn,
+   :arity 1,
+   :rest? false,
+   :body
+   {:op :let,
+    :init {:op :prim, :name count, :args [{:op :local, :index 0}]},
+    :body
+    {:op :let,
+     :init {:op :quote, :datum 0},
+     :body
+     {:op :let,
+      :init {:op :quote, :datum [0]},
+      :body
+      {:op :letrec,
+       :inits
+       [{:op :fn,
+         :arity 2,
+         :rest? false,
+         :body
+         {:op :if,
+          :test
+          {:op :prim,
+           :name <,
+           :args [{:op :local, :index 1} {:op :local, :index 5}]},
+          :then
+          {:op :let,
+           :init
+           {:op :prim,
+            :name nth,
+            :args [{:op :local, :index 6} {:op :local, :index 1}]},
+           :body
+           {:op :app,
+            :fn {:op :local, :index 3},
+            :args
+            [{:op :prim, :name inc, :args [{:op :local, :index 2}]}
+             {:op :prim,
+              :name assoc,
+              :args
+              [{:op :local, :index 1}
+               {:op :quote, :datum 0}
+               {:op :prim,
+                :name +,
+                :args
+                [{:op :prim,
+                  :name nth,
+                  :args
+                  [{:op :local, :index 1} {:op :quote, :datum 0}]}
+                 {:op :prim,
+                  :name +,
+                  :args
+                  [{:op :quote, :datum 1}
+                   {:op :prim,
+                    :name *,
+                    :args
+                    [{:op :local, :index 0}
+                     {:op :prim,
+                      :name +,
+                      :args
+                      [{:op :quote, :datum 2}
+                       {:op :prim,
+                        :name *,
+                        :args
+                        [{:op :local, :index 0}
+                         {:op :quote, :datum 3}]}]}]}]}]}]}]}},
+          :else {:op :local, :index 0}}}],
+       :body
+       {:op :app,
+        :fn {:op :local, :index 0},
+        :args [{:op :local, :index 2} {:op :local, :index 1}]}}}}}},
+  :target-id
+  "61ec71227752a2ebe5698889bdec6fd9b55b26a06abeefe3b2943ce8c05e7082",
+  :projection :singleton-scalar,
+  :prefix nil},
+ :lowered-functional
+ {:op :fn,
+  :arity 1,
+  :rest? false,
+  :body
+  {:op :let,
+   :init {:op :prim, :name count, :args [{:op :local, :index 0}]},
+   :body
+   {:op :let,
+    :init {:op :quote, :datum 0},
+    :body
+    {:op :let,
+     :init {:op :quote, :datum [0]},
+     :body
+     {:op :letrec,
+      :inits
+      [{:op :fn,
+        :arity 2,
+        :rest? false,
+        :body
+        {:op :if,
+         :test
+         {:op :prim,
+          :name <,
+          :args [{:op :local, :index 1} {:op :local, :index 5}]},
+         :then
+         {:op :let,
+          :init
+          {:op :prim,
+           :name nth,
+           :args [{:op :local, :index 6} {:op :local, :index 1}]},
+          :body
+          {:op :app,
+           :fn {:op :local, :index 3},
+           :args
+           [{:op :prim, :name inc, :args [{:op :local, :index 2}]}
+            {:op :prim,
+             :name assoc,
+             :args
+             [{:op :local, :index 1}
+              {:op :quote, :datum 0}
+              {:op :prim,
+               :name +,
+               :args
+               [{:op :prim,
+                 :name nth,
+                 :args [{:op :local, :index 1} {:op :quote, :datum 0}]}
+                {:op :prim,
+                 :name +,
+                 :args
+                 [{:op :quote, :datum 1}
+                  {:op :prim,
+                   :name *,
+                   :args
+                   [{:op :local, :index 0}
+                    {:op :prim,
+                     :name +,
+                     :args
+                     [{:op :quote, :datum 2}
+                      {:op :prim,
+                       :name *,
+                       :args
+                       [{:op :local, :index 0}
+                        {:op :quote, :datum 3}]}]}]}]}]}]}]}},
+         :else {:op :local, :index 0}}}],
+      :body
+      {:op :app,
+       :fn {:op :local, :index 0},
+       :args [{:op :local, :index 2} {:op :local, :index 1}]}}}}}},
+ :private-witness
+ {:source-id
+  "91fa686a0d817f4eb17f942cd8169601ded2afabb7b44ab46f7fc0585416cff3",
+  :target-id
+  "0b6d09537b1e0d62a35ecf14452a49f9d448cc455e28e3cc334213d4d4f57143",
+  :goal-sha256
+  "681ba2db2dfcd5ff1bff2170280987591b333f1a508b8371daa4f9b22d0c5715",
+  :proof-sha256
+  "03fd9c9b4641b9e550121f68d46e8124e4bb220e7838c4fadaa0d601d1165769",
+  :goal
+  "(forall xs (app (const List [#object[ansatz.kernel.Level 0x6f4de07f \"0\"]]) (const Nat [])) (forall outside (app (const List [#object[ansatz.kernel.Level 0x6f4de07f \"0\"]]) (const Nat [])) (app (app (app (const Eq [#object[ansatz.kernel.Level 0xc561956 \"1\"]]) (const FoldExit [])) (app (app (app (app (const foldTarget []) (bvar 1)) (app (const FoldCell.mk []) (lit-nat 0))) (lam acc (const Nat []) (lam x (const Nat []) (app (app (const Option.some [#object[ansatz.kernel.Level 0x6f4de07f \"0\"]]) (const Nat [])) (app (app (lam x0 (const Nat []) (lam x1 (const Nat []) (app (app (const Nat.add []) (bvar 1)) (app (app (const Nat.add []) (lit-nat 1)) (app (app (const Nat.mul []) (bvar 0)) (app (app (const Nat.add []) (lit-nat 2)) (app (app (const Nat.mul []) (bvar 0)) (lit-nat 3)))))) :default) :default) (bvar 1)) (bvar 0))) :default) :default)) (bvar 0))) (app (app (const FoldExit.mk []) (app (app (const FoldAnswer.ok []) (app (app (app (app (app (const List.foldl [#object[ansatz.kernel.Level 0x6f4de07f \"0\"] #object[ansatz.kernel.Level 0x6f4de07f \"0\"]]) (const Nat [])) (const Nat [])) (lam x0 (const Nat []) (lam x1 (const Nat []) (app (app (const Nat.add []) (bvar 1)) (bvar 0)) :default) :default)) (lit-nat 0)) (app (app (app (app (const List.map [#object[ansatz.kernel.Level 0x6f4de07f \"0\"] #object[ansatz.kernel.Level 0x6f4de07f \"0\"]]) (const Nat [])) (const Nat [])) (lam x0 (const Nat []) (app (app (const Nat.add []) (lit-nat 1)) (app (app (const Nat.add []) (app (app (const Nat.mul []) (bvar 0)) (lit-nat 2))) (app (app (const Nat.mul []) (app (app (const Nat.mul []) (bvar 0)) (bvar 0))) (lit-nat 3)))) :default)) (bvar 1)))) (bvar 0))) (const Bool.true []))) :default) :default)"},
+ :normalized-functional
+ {:op :fn,
+  :arity 1,
+  :rest? false,
+  :body
+  {:op :let,
+   :init {:op :prim, :name count, :args [{:op :local, :index 0}]},
+   :body
+   {:op :let,
+    :init {:op :quote, :datum 0},
+    :body
+    {:op :let,
+     :init {:op :quote, :datum [0]},
+     :body
+     {:op :letrec,
+      :inits
+      [{:op :fn,
+        :arity 2,
+        :rest? false,
+        :body
+        {:op :if,
+         :test
+         {:op :prim,
+          :name <,
+          :args [{:op :local, :index 1} {:op :local, :index 5}]},
+         :then
+         {:op :let,
+          :init
+          {:op :prim,
+           :name nth,
+           :args [{:op :local, :index 6} {:op :local, :index 1}]},
+          :body
+          {:op :app,
+           :fn {:op :local, :index 3},
+           :args
+           [{:op :prim, :name inc, :args [{:op :local, :index 2}]}
+            {:op :prim,
+             :name assoc,
+             :args
+             [{:op :local, :index 1}
+              {:op :quote, :datum 0}
+              {:op :prim,
+               :name +,
+               :args
+               [{:op :prim,
+                 :name nth,
+                 :args [{:op :local, :index 1} {:op :quote, :datum 0}]}
+                {:op :prim,
+                 :name +,
+                 :args
+                 [{:op :quote, :datum 1}
+                  {:op :prim,
+                   :name *,
+                   :args
+                   [{:op :local, :index 0}
+                    {:op :prim,
+                     :name +,
+                     :args
+                     [{:op :quote, :datum 2}
+                      {:op :prim,
+                       :name *,
+                       :args
+                       [{:op :local, :index 0}
+                        {:op :quote, :datum 3}]}]}]}]}]}]}]}},
+         :else {:op :local, :index 0}}}],
+      :body
+      {:op :app,
+       :fn {:op :local, :index 0},
+       :args [{:op :local, :index 2} {:op :local, :index 1}]}}}}}},
+ :entry-guards
+ [[:captures []]
+  [:host-root clojure.core/inc :reference-root]
+  [:arity 1]
+  [:host-root clojure.core/= :reference-root]
+  [:host-root clojure.core/<= :reference-root]
+  [:arg 0 [:bounded-nat-vector 64 100]]
+  [:host-root clojure.core/not :reference-root]
+  [:unhandled #{:exn/raise :host/var :host/call}]
+  [:host-root clojure.core/+ :reference-root]
+  [:host-root clojure.core/nth :reference-root]
+  [:host-root clojure.core/reduce :reference-root]
+  [:host-root klara.core/prims :reference-root]
+  [:host-root clojure.core/every? :reference-root]
+  [:host-root clojure.core/aget :reference-root]
+  [:host-root clojure.core/vec :reference-root]
+  [:host-root clojure.core/* :reference-root]
+  [:host-root clojure.core/zero? :reference-root]
+  [:host-root clojure.core/dec :reference-root]
+  [:host-root clojure.core/- :reference-root]
+  [:host-root clojure.core/not= :reference-root]
+  [:host-root clojure.core/neg? :reference-root]
+  [:host-root clojure.core/pos? :reference-root]
+  [:host-root clojure.core/assoc :reference-root]
+  [:host-root clojure.core/count :reference-root]
+  [:statics []]
+  [:host-root clojure.core/map :reference-root]
+  [:host-root clojure.core/< :reference-root]
+  [:host-root clojure.core/aset :reference-root]
+  [:host-root clojure.core/> :reference-root]
+  [:host-root clojure.core/long :reference-root]
+  [:host-root clojure.core/>= :reference-root]
+  [:host-root klara.affine/value? :reference-root]
+  [:host-root clojure.core/long-array :reference-root]]}
