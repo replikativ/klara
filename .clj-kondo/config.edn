@@ -1,0 +1,7 @@
+{:lint-as {klara.stage/code clojure.core/do
+           klara.effect/handle clojure.core/do
+           klara.job/fork clojure.core/do}
+ :linters {:unresolved-namespace {:exclude [klara.stage klara.world klara.effect klara.job
+                                            klara.code klara.kernel klara.compiler.kernel]}
+           :unresolved-var {:exclude [klara.stage klara.world klara.effect klara.job
+                                      klara.code klara.kernel klara.compiler.kernel]}}}

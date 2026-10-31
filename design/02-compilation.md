@@ -116,7 +116,7 @@ When to prepare is a separate decision from how:
 |---|---|
 | ahead of time, for a release | `(compiler/optimize! (compiler/pin (compiler/reference 'app/main) release-world))` |
 | before first use, at load | `(compiler/optimize! 'demo.score/score)` at the end of the namespace |
-| after a threshold | `(compiler/watch! 'demo.score/score {:after 1000 :policy p})` |
+| after a threshold (planned) | `(compiler/watch! 'demo.score/score {:after 1000 :policy p})` |
 | never | the default |
 
 A **policy** is a guest function from an observation map (call count, term

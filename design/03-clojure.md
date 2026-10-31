@@ -88,7 +88,7 @@ as `ex-info` with the same keys in `ex-data`.
 ```sh
 clojure -M:klara run examples/worlds/main.clj   # run a file
 clojure -M:klara repl                            # interactive REPL
-clojure -M:klara nrepl                           # nREPL server speaking Klara
+# (planned) clojure -M:klara nrepl                 # nREPL server speaking Klara
 ```
 
 From Clojure (and therefore from any Clojure nREPL), `klara.host.api` offers

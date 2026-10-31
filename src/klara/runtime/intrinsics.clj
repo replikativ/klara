@@ -164,3 +164,61 @@
                         (when-let [job (get-in st [:dyn :job])]
                           (swap! job update :owned (fnil conj #{}) x))
                         (ret st x)))}))
+
+;; ---------------------------------------------------------------------------
+;; klara.code: Code views for guest recipes (L2.view.make)
+;;
+;; A view is the top of a term as a map whose subterms are Code values (which
+;; may have free locals bound by the enclosing term). Views are how guest
+;; programs inspect and rebuild code; they grant no authority.
+
+(defn- c [term] (Code. term))
+(defn- term-of [x] (if (v/code? x) (.-term ^Code x) (fail :L2.view.make (str "expected code, got " (pr-str x)))))
+
+(defn view [^Code code]
+  (let [t (.-term code)]
+    (case (:op t)
+      :const {:op :const :value (:value t)}
+      :local {:op :local :name (:name t)}
+      :host {:op :host :name (:name t)}
+      :global {:op :global :name (get-in t [:link :name]) :kind (get-in t [:link :kind])}
+      :app {:op :app :fn (c (:fn t)) :args (mapv c (:args t))}
+      :let {:op :let :name (:name t) :init (c (:init t)) :body (c (:body t))}
+      :if {:op :if :test (c (:test t)) :then (c (:then t)) :else (c (:else t))}
+      :do {:op :do :body (mapv c (:body t))}
+      :fn (let [[a & more] (:arities t)]
+            (if (and (nil? more) (nil? (:rest a)))
+              {:op :fn :self (:self t) :params (:params a) :body (c (:body a))}
+              {:op :other}))
+      {:op :other})))
+
+(defn make [code-or-view original]
+  (let [m code-or-view]
+    (case (:op m)
+      :const (t/const (:value m))
+      :app (t/app (term-of (:fn m)) (map term-of (:args m)))
+      :let (t/let1 (:name m) (term-of (:init m)) (term-of (:body m)))
+      :if (t/if* (term-of (:test m)) (term-of (:then m)) (term-of (:else m)))
+      :do (t/do* (mapv term-of (:body m)))
+      :fn (t/fn-term (:self m) [(t/arity (:params m) nil (term-of (:body m)))])
+      (fail :L2.view.make (str "cannot make code from view " (:op m))))))
+
+(defintrinsic klara.code/view [st [code]] (ret st (view code)))
+
+(defintrinsic klara.code/make [st [m]] (ret st (Code. (t/refresh-free (make m nil)))))
+
+(defintrinsic klara.code/subst [st [code bindings]]
+  (ret st (Code. (t/refresh-free (t/substitute (term-of code) (into {} (map (fn [[n x]] [n (term-of x)])) bindings))))))
+
+(defintrinsic klara.code/unfold [st [code]]
+  ;; The function a global link or lifted closure denotes, as code with fresh
+  ;; binders, or nil. Untrusted: recipes use it, the checker re-derives it.
+  (let [t (term-of code)
+        f (case (:op t)
+            :global (let [x (m/resolve-link (:link t) (:world st))] (when (v/closure? x) x))
+            :const (when (v/closure? (:value t)) (:value t))
+            nil)]
+    (ret st (when f (Code. (first (t/freshen (.-term ^Code (reify-closure f)))))))))
+
+(defintrinsic klara.code/host-fn [st [code]]
+  (let [t (term-of code)] (ret st (when (= :host (:op t)) (m/host-value (:name t))))))

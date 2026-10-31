@@ -112,4 +112,4 @@ link pinned to `w`. A candidate prepared from pinned Code has no premises.
 reachable only from that candidate.
 
 `L4.retain.dispatch` The dispatch table holds at most `:candidates-per-name`
-candidates per name (default 4), evicting the least recently valid.
+candidates per name (default 4), evicting the oldest installed.

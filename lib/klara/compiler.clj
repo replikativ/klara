@@ -5,7 +5,7 @@
   (klara.compiler.kernel). Recipes and policies are untrusted guest
   functions; only the kernel's checker decides what is admitted."
   (:require [klara.compiler.kernel :as kernel]
-            [klara.stage :refer [code esc lift]]))
+            [klara.compiler.recipes :as recipes]))
 
 (defn as-is
   "The recipe that proposes the reference itself: plain compilation."
@@ -63,7 +63,7 @@
   ([f known] (specialize f known {}))
   ([f known opts]
    (let [outcome (prepare (kernel/specialization f known)
-                          (merge {:recipe (:recipe opts kernel/normalize)} opts))]
+                          (merge {:recipe recipes/inline} opts))]
      (if (= :ready (:status outcome))
        (executable outcome)
        outcome))))
