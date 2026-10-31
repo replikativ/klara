@@ -52,6 +52,14 @@ equal.
 
 A *value* for these rules is a `:const`, a `:local`, or a `:fn`.
 
+`L4.check.certificate` When the rules above do not relate the candidate to
+the reference, `(:certificate opts)` may supply a proof. A certifier
+registered for its `:kind` states the theorem about the *actual* reference
+and candidate terms (quoted into the formal semantics) and checks the proof
+with a kernel. The theorem may assume guards on the arguments (for example
+`:long`); the executable checks them at entry and falls back otherwise. A
+proof that does not check rejects the candidate with this rule.
+
 `L4.check.not-equivalent` The candidate is rejected if the comparison fails
 without running out of budget. The outcome names the first pair of differing
 subterms.

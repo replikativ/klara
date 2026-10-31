@@ -27,12 +27,29 @@
 ;; ---------------------------------------------------------------------------
 ;; Candidates and executables
 
-(defrecord Candidate [name reference term premises host-fn form])
+(defrecord Candidate [name reference term premises host-fn form guards evidence])
 
 (defn valid?
   "L4.exec.valid: every premise holds in `world`."
   [cand world]
   (every? (fn [[q g]] (= g (w/generation world q))) (:premises cand)))
+
+(def guard-predicates
+  "Argument guards a certificate can assume (L4.check.certificate)."
+  {:long #(instance? Long %)})
+
+(defn- guards-hold? [cand args]
+  (let [gs (:guards cand)]
+    (or (nil? gs)
+        (and (= (count gs) (count args))
+             (every? true? (map (fn [g x] (or (nil? g) ((guard-predicates g) x))) gs args))))))
+
+;; Certifiers admit candidates the definitional checker cannot relate, given
+;; a certificate (L4.check.certificate). A certifier returns
+;; {:result :proved :guards [..] :evidence ..} or {:result :failed :message ..}.
+(defonce certifiers (atom {}))
+
+(defn register-certifier! [kind f] (swap! certifiers assoc kind f))
 
 (defn- abandoning
   "Default handlers that abandon the compiled call (L4.exec.deopt)."
@@ -47,7 +64,8 @@
           ok (and (nil? (:mint st))
                   (if (identical? world last-world)
                     last-valid
-                    (let [r (valid? cand world)] (set! last-world world) (set! last-valid r) r)))
+                    (let [r (valid? cand world)] (set! last-world world) (set! last-valid r) r))
+                  (guards-hold? cand args))
           r (if ok
               (let [inner (update (:dyn st) :defaults abandoning)]
                 (try (m/set-context! world (:mint st) inner)
@@ -64,11 +82,13 @@
     (if (and (nil? mint)
              (if (identical? world last-world)
                last-valid
-               (let [r (valid? cand world)] (set! last-world world) (set! last-valid r) r)))
+               (let [r (valid? cand world)] (set! last-world world) (set! last-valid r) r))
+             (guards-hold? cand args))
       (do (set! last-path :compiled) (apply (:host-fn cand) args))
       v/fallback))
   (-describe [this]
     {:name (:name cand) :reference (:reference cand) :premises (:premises cand)
+     :guards (:guards cand) :evidence (:evidence cand)
      :compiled (:form cand) :last-path last-path})
   Object
   (toString [_] (str "#klara/executable[" (or (:name cand) "anonymous") "]")))
@@ -111,8 +131,17 @@
     (reject :L4.prepare.recipe-failed (str "the recipe returned " (pr-str candidate) ", not code"))
     (let [ref-term (.-term ^Code reference)
           cand-term (.-term ^Code candidate)
-          r (check/check ref-term cand-term (:world st) (get-in st [:dyn :meter]))]
+          r (check/check ref-term cand-term (:world st) (get-in st [:dyn :meter]))
+          r (if-let [cert (and (= :different (:result r)) (:certificate opts))]
+              (if-let [certify (get @certifiers (:kind cert))]
+                (let [c (certify {:reference ref-term :candidate cand-term :world (:world st) :certificate cert})]
+                  (if (= :proved (:result c))
+                    {:result :equal :premises #{} :guards (:guards c) :evidence (:evidence c)}
+                    {:result :certificate-failed :message (:message c)}))
+                {:result :certificate-failed :message (str "no certifier for " (pr-str (:kind cert)))})
+              r)]
       (case (:result r)
+        :certificate-failed (reject :L4.check.certificate (str "the certificate was not accepted: " (:message r)))
         :exhausted {:status :exhausted :rule :L4.check.exhausted
                     :message "the checker ran out of budget before deciding"}
         :different (reject :L4.check.not-equivalent
@@ -126,7 +155,8 @@
                                   (:name opts) (conj [(:name opts) (w/generation (:world st) (:name opts))]))
                        {:keys [fn form]} (lower/lower cand-term {:self-name (:name opts)})]
                    {:status :ready
-                    :candidate (->Candidate (:name opts) reference cand-term premises fn form)
+                    :candidate (->Candidate (:name opts) reference cand-term premises fn form
+                                            (:guards r) (:evidence r))
                     :premises (vec (sort-by (comp str first) premises))}))))))
 
 (defn- settle

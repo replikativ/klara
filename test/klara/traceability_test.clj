@@ -29,7 +29,7 @@
 
 (deftest every-implemented-rule-is-tested
   (let [{:keys [all planned]} (specified)
-        cited (ids-in (concat (files "test" ".clj") (files "spec/cases" ".clj")))
+        cited (ids-in (concat (files "test" ".clj") (files "spec/cases" ".clj") (files "spec/formal" ".clj")))
         missing (set/difference all planned structural cited)]
     (is (empty? missing) (str "rules without a test or case: " (sort missing)))))
 

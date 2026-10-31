@@ -117,3 +117,46 @@
   (constructor)
   (intro hs) (exact (star-det c c1 d hs ht h1))
   (intro hs) (exact (Star.step c c1 d h1 hs)))
+
+;; ---------------------------------------------------------------------------
+;; Joining: configurations that reach a common configuration reach the same
+;; terminal configurations. Used by proof-carrying candidates (L4.check.certificate).
+
+(a/theorem star-equiv [c :- Config, m :- Config, hm :- (Star c m)]
+  (forall [d :- Config] (=> (forall [e :- Config] (Not (Step d e)))
+                            (And (=> (Star c d) (Star m d)) (=> (Star m d) (Star c d)))))
+  (induction hm)
+  (all_goals (intro d) (intro ht) (constructor))
+  (intro hx) (exact hx)
+  (intro hx) (exact hx)
+  (intro hx) (exact (And.left (ih_hs d ht) (star-det _ _ d hx ht h)))
+  (intro hx) (exact (Star.step _ _ d h (And.right (ih_hs d ht) hx))))
+
+(a/theorem equiv-of-reach [c :- Config, c2 :- Config, m :- Config, h1 :- (Star c m), h2 :- (Star c2 m)]
+  (forall [d :- Config] (=> (forall [e :- Config] (Not (Step d e)))
+                            (And (=> (Star c d) (Star c2 d)) (=> (Star c2 d) (Star c d)))))
+  (intro d) (intro ht) (constructor)
+  (intro hs) (exact (And.right (star-equiv c2 m h2 d ht) (And.left (star-equiv c m h1 d ht) hs)))
+  (intro hs) (exact (And.right (star-equiv c m h1 d ht) (And.left (star-equiv c2 m h2 d ht) hs))))
+
+;; Running an integer literal through checked arithmetic.
+(a/theorem checked-in-range [i :- Int, hi :- (= Bool (inRange i) Bool.true)]
+  (= PrimRes (checked i) (PrimRes.ok (Datum.int i)))
+  (simp only [checked]) (rw [hi]))
+
+;; Building blocks for certificates: one reduction step, with the reduced
+;; term given explicitly (the elaborator does not unfold subst when unifying).
+(a/theorem reach-beta [w :- World, ws :- Worlds, n :- Nat, b :- Tm, v :- Tm, b2 :- Tm, m :- Config,
+                       hv :- (= Bool (isVal v) Bool.true), he :- (= Tm (subst 0 v b) b2),
+                       hm :- (Star (Config.mk w ws n b2) m)]
+  (Star (Config.mk w ws n (Tm.app (Tm.lam b) v)) m)
+  (have h1 (Step (Config.mk w ws n (Tm.app (Tm.lam b) v)) (Config.mk w ws n (subst 0 v b))))
+  (exact (beta-step w ws n b v hv))
+  (rw [he] at h1)
+  (exact (Star.step _ _ _ h1 hm)))
+
+(a/theorem reach-prim [w :- World, ws :- Worlds, n :- Nat, op :- PrimOp, x :- Datum, y :- Datum, r :- Datum, m :- Config,
+                       hr :- (= PrimRes (primApply op x y) (PrimRes.ok r)),
+                       hm :- (Star (Config.mk w ws n (Tm.lit r)) m)]
+  (Star (Config.mk w ws n (Tm.prim op (Tm.lit x) (Tm.lit y))) m)
+  (exact (Star.step _ _ _ (prim-step w ws n op x y r hr) hm)))

@@ -19,6 +19,8 @@ KLARA_DIFF_SEEDS=5000 clojure -M:formal:test-formal
 | `src/klara/formal/ws.clj` | Well-scopedness: weakening, substitution, pinning, soundness of `run`'s closedness check |
 | `src/klara/formal/props.clj` | Determinism, preservation, progress, safety, running quoted code |
 | `src/klara/formal/checker.clj` | The checker's head rules are steps; a step preserves the terminal configurations reached |
+| `src/klara/formal/certify.clj` | The ansatz certifier for proof-carrying candidates (L4.check.certificate) |
+| `cases/certified_identity.clj` | A candidate admitted by proof: `(* x 1)` replaced by `x` for 64-bit integers |
 | `src/klara/formal/bridge.clj` | The trusted bridge: quoting real Core terms into `Tm`, running the model, observations |
 | `src/klara/formal/gen.clj` | A seeded generator of Klara programs inside the fragment |
 | `test/klara/formal/` | Proof check and differential tests |
@@ -55,6 +57,26 @@ compiler. Forms outside the fragment are reported, not compared.
 Not yet proved: rewriting under binders (needs contextual equivalence),
 `L4.check.let-app`, that the CEK machine refines `step` (tested
 differentially), and the bridge between named Core and `Tm` (tested).
+
+## Proof-carrying candidates
+
+When the definitional checker cannot relate a candidate to its reference,
+a certificate may (L4.check.certificate). The certifier quotes the actual
+reference and candidate terms with the bridge, states
+
+```text
+forall i : Int, inRange i -> forall terminal d, Star (ref i) d <-> Star (cand i) d
+```
+
+about exactly those terms, and checks the certificate's tactic proof with
+the ansatz kernel. The assumption `inRange i` becomes a runtime guard: the
+executable checks that its argument is a long and runs the reference
+otherwise. `cases/certified_identity.clj` replaces `(* x 1)` by `x`, which
+the definitional checker rightly rejects (it throws for non-numbers).
+
+Current limits: unary functions on integers; the proof is written by hand
+(the lemmas `equiv-of-reach`, `reach-beta`, `reach-prim` keep it short).
+Proof search as a budgeted job and theorems as world definitions are next.
 
 ## The bridge
 
