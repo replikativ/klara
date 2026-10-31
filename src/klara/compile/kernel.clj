@@ -60,6 +60,13 @@
             (assoc st :mode :apply
                    :ctl [(m/closure-of (.-term ^Code (:reference cand)) (:mint st)) (vec args)]))
         (do (set! last-path :compiled) (ret st r)))))
+  (-call [this world mint dyn args]
+    (if (and (nil? mint)
+             (if (identical? world last-world)
+               last-valid
+               (let [r (valid? cand world)] (set! last-world world) (set! last-valid r) r)))
+      (do (set! last-path :compiled) (apply (:host-fn cand) args))
+      v/fallback))
   (-describe [this]
     {:name (:name cand) :reference (:reference cand) :premises (:premises cand)
      :compiled (:form cand) :last-path last-path})
@@ -117,7 +124,7 @@
                  (reject :L4.lower.subset (str "the backend does not compile " x))
                  (let [premises (cond-> (:premises r)
                                   (:name opts) (conj [(:name opts) (w/generation (:world st) (:name opts))]))
-                       {:keys [fn form]} (lower/lower cand-term)]
+                       {:keys [fn form]} (lower/lower cand-term {:self-name (:name opts)})]
                    {:status :ready
                     :candidate (->Candidate (:name opts) reference cand-term premises fn form)
                     :premises (vec (sort-by (comp str first) premises))}))))))

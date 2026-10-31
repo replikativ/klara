@@ -29,9 +29,24 @@
       (aset meter 0 (dec (aget meter 0)))
       (when (neg? (aget meter 0)) (m/abandon! :exhausted)))))
 
-(defn late [q]
-  (let [^objects c (m/current-context)]
-    (m/resolve-link {:kind :late :name q} (aget c 0) (:session (aget c 2)))))
+;; A call site of a late link: the world id, dispatch epoch and value of its
+;; last resolution, as in the interpreter's globals (klara.runtime.prepare).
+(definterface ISite (lookup [q]))
+
+(deftype Site [^:volatile-mutable cid ^:volatile-mutable ^long cepoch ^:volatile-mutable cvalue]
+  ISite
+  (lookup [_ q]
+    (let [^objects c (m/current-context)
+          world (aget c 0)
+          id (.-id ^klara.runtime.value.World world)
+          epoch (.get m/dispatch-epoch)]
+      (if (and (identical? cid id) (== cepoch epoch))
+        cvalue
+        (let [x (m/resolve-link {:kind :late :name q} world (:session (aget c 2)))]
+          (set! cid id) (set! cepoch epoch) (set! cvalue x)
+          x)))))
+
+(defn late [^ISite site q] (.lookup site q))
 
 (defn- deopt-dyn
   "A nested machine started from compiled code handles no effects itself:
@@ -40,13 +55,23 @@
   (assoc dyn :defaults (into {} (map (fn [[op _]] [op (fn [_ _] (m/abandon! :effect))]))
                              (:defaults dyn))))
 
+(defn- nested [f args]
+  (let [^objects c (m/current-context)]
+    (m/call-in [(aget c 0) (aget c 1) (deopt-dyn (aget c 2))] f args true)))
+
 (defn call
-  "Call any function value from compiled code (L4.lower.calls)."
+  "Call any function value from compiled code (L4.lower.calls): compiled
+   callees directly, Klara closures in a nested machine, host functions as
+   they are."
   [f args]
-  (if (or (instance? Closure f) (instance? klara.runtime.value.Continuation f) (m/intrinsic? f))
-    (let [^objects c (m/current-context)]
-      (m/call-in [(aget c 0) (aget c 1) (deopt-dyn (aget c 2))] f args true))
-    (apply f args)))
+  (cond
+    (instance? klara.runtime.value.IExecutable f)
+    (let [^objects c (m/current-context)
+          r (v/-call f (aget c 0) (aget c 1) (aget c 2) args)]
+      (if (identical? r v/fallback) (nested f args) r))
+    (or (instance? Closure f) (instance? klara.runtime.value.Continuation f) (m/intrinsic? f))
+    (nested f args)
+    :else (apply f args)))
 
 ;; ---------------------------------------------------------------------------
 ;; Lowering
@@ -59,7 +84,7 @@
     :guarded (:value link)
     nil))
 
-(defn- lower* [t consts]
+(defn- lower* [t consts self-name self-sym]
   (letfn [(constant [x]
             (let [i (count @consts)] (swap! consts conj x) (list 'clojure.core/nth 'consts i)))
           (go [t]
@@ -73,9 +98,13 @@
                             (:symbol (klara.lang.builtins/lookup q)) (:symbol (klara.lang.builtins/lookup q))
                             :else (constant (m/host-value q))))
               :global (let [l (:link t)]
-                        (if (= :late (:kind l))
-                          (list 'klara.compile.lower/late (list 'quote (:name l)))
-                          (constant (link-value l))))
+                        (cond
+                          ;; a recursive call of the definition being compiled: its own
+                          ;; generation is a premise, so it denotes this function (L4.exec.valid)
+                          (and (= :late (:kind l)) self-name (= (:name l) self-name)) self-sym
+                          (= :late (:kind l))
+                          (list 'klara.compile.lower/late (constant (Site. nil -1 nil)) (list 'quote (:name l)))
+                          :else (constant (link-value l))))
               :fn (let [self (or (:self t) (t/fresh "fn"))]
                     (list* 'fn* self
                            (for [{:keys [params rest body]} (:arities t)]
@@ -90,6 +119,8 @@
                        (list* (:name f) args)
                        (and (= :host (:op f)) (:symbol (klara.lang.builtins/lookup (:name f))))
                        (list* (:symbol (klara.lang.builtins/lookup (:name f))) args)
+                       (and self-name (= :global (:op f)) (= :late (get-in f [:link :kind])) (= self-name (get-in f [:link :name])))
+                       (list* self-sym args)
                        :else (list 'klara.compile.lower/call (go f) (vec args))))
               :recur (list* 'recur (map go (:args t)))
               :let (list 'let* [(:name t) (go (:init t))] (go (:body t)))
@@ -108,13 +139,17 @@
         (t/nodes term)))
 
 (defn lower
-  "Compile a :fn term to a host function."
-  [term]
+  "Compile a :fn term to a host function. With :self-name, late references
+   to that definition call the compiled function itself."
+  ([term] (lower term {}))
+  ([term {:keys [self-name]}]
   (when-not (= :fn (:op term)) (fail :L4.lower.subset "only functions are compiled"))
   (when-let [x (subset-violation term)]
     (fail :L4.lower.subset (str "the backend does not compile " x)))
   (let [consts (atom [])
-        form (lower* term consts)
+        self-sym (or (:self term) (t/fresh "self"))
+        term (assoc term :self self-sym)
+        form (lower* term consts self-name self-sym)
         wrapper (list 'fn* ['consts] form)]
     {:form form
-     :fn ((binding [*ns* (the-ns 'klara.compile.lower)] (eval wrapper)) @consts)}))
+     :fn ((binding [*ns* (the-ns 'klara.compile.lower)] (eval wrapper)) @consts)})))

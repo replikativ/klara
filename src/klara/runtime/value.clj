@@ -12,9 +12,14 @@
 
 (defprotocol IExecutable
   "A compiled implementation (L4): the machine calls -execute with its state
-   and the arguments, and gets a new state back."
+   and the arguments, and gets a new state back. Compiled code calls -call
+   with the current context and gets the value, or `fallback` when the
+   candidate is not valid there."
   (-execute [f st args])
+  (-call [f world mint dyn args])
   (-describe [f]))
+
+(def fallback ::fallback)
 
 (defonce host-invoke (atom (fn [f args] (throw (ex-info "machine not loaded" {})))))
 
