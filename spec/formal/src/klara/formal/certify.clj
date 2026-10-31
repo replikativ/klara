@@ -72,7 +72,6 @@
                        (list 'And (list '=> (list 'Star cr 'd) (list 'Star cc 'd))
                              (list '=> (list 'Star cc 'd) (list 'Star cr 'd)))))}))
 
-(def ^:private counter (atom 0))
 
 (defn certify
   "Check `certificate` for `reference` = `candidate` (Core :fn terms)."
@@ -89,7 +88,8 @@
                                           '%arg '(Tm.lit (Datum.int i))
                                           '%world 'World.empty '%worlds 'Worlds.none}
                                          (:proof certificate))
-          name (symbol (str "Klara.certificate" (swap! counter inc)))]
+          ;; unique per check: the kernel environment rejects redeclaration
+          name (symbol (str "Klara.certificate." (.replace (str (java.util.UUID/randomUUID)) "-" "")))]
       (binding [*ns* (the-ns 'klara.formal.checker)]
         (eval (list* 'ansatz.core/theorem name params type tactics)))
       {:result :proved :guards [:long]
@@ -99,3 +99,16 @@
        :message (loop [e e] (if (.getCause e) (recur (.getCause e)) (.getMessage e)))})))
 
 (kernel/register-certifier! :ansatz certify)
+
+;; ---------------------------------------------------------------------------
+;; klara.proof/certify: the certifier as a guest function, so proof search can
+;; be ordinary Klara code (for example in a budgeted job). It returns data: a
+;; result map whose :evidence names the kernel-checked theorem.
+
+(klara.lang.builtins/register!
+ 'klara.proof/certify
+ {:kind :host
+  :fn (fn [reference candidate proof]
+        (certify {:reference (.-term ^klara.runtime.value.Code reference)
+                  :candidate (.-term ^klara.runtime.value.Code candidate)
+                  :certificate {:kind :ansatz :proof proof}}))})

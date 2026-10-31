@@ -15,7 +15,7 @@
 (defn lookup [q] (get @registry q))
 
 (defn runtime-ns? [ns-sym]
-  (contains? #{"klara.stage" "klara.world" "klara.effect" "klara.job" "klara.code"
+  (contains? #{"klara.stage" "klara.world" "klara.effect" "klara.job" "klara.code" "klara.proof"
                "klara.compiler.kernel" "klara.kernel"}
              (str ns-sym)))
 

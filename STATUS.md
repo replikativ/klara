@@ -41,33 +41,51 @@ the real reader and expander (`clojure -M:formal:test-formal`; 10003 of
 10003 forms agreed over 5000 programs). The comparison found and fixed a
 Clojure subtraction inconsistency and a missing not-a-function rule.
 
-Not yet proved: the checker rules (`L4.check.*`), and that the CEK machine
-refines the semantics (tested, not proved).
+The checker's head rules are proved to be steps of the semantics, and a
+step is proved to preserve the terminal configurations reached
+(`spec/formal/src/klara/formal/checker.clj`). Candidates the definitional
+checker cannot relate can carry a certificate: the ansatz certifier quotes
+the actual terms, states their equivalence for 64-bit integers and checks
+the proof with the kernel; the assumption becomes a runtime guard
+(L4.check.certificate). Klara programs can search for proofs in budgeted
+jobs through `klara.proof/certify` (`spec/formal/cases/proof_search.clj`).
 
-## Next milestone: performance
+Not yet proved: rewriting under binders (contextual equivalence),
+`L4.check.let-app`, the CEK machine's refinement of `step` (tested), and the
+named-Core-to-Tm bridge (tested). Certificates cover unary integer
+functions; the prototype's affine/ownership fragment and its proof models
+are not yet ported.
 
-The nucleus favours clarity. Measured on a development JVM (single run,
-best of five, not a benchmark):
+## Performance
 
-| Program | Interpreted | Compiled | Clojure |
-|---|---|---|---|
-| `fib 20` | 218 ms | 155 ms | 0.4 ms |
-| `loop` sum to 100,000 | 1.09 s | 6.4 ms | — |
+`clojure -M:bench` runs the same programs in Klara (interpreted), Klara
+(compiled with `optimize!`), SCI and Clojure. One JVM, best of seven: good
+for finding cliffs, not a publication benchmark. Times in milliseconds:
 
-These are cliffs, not constant factors. Known causes:
+| Program | Klara | Klara compiled | SCI | Clojure |
+|---|---|---|---|---|
+| fib 20 | 38.5 | 1.5 | 3.0 | 1.3 |
+| loop to 100,000 | 20.8 | 4.9 | 10.9 | 2.7 |
+| closures | 40.8 | 4.8 | 15.2 | 3.4 |
+| let-heavy | 26.8 | 3.9 | 12.5 | 1.9 |
+| maps | 16.8 | 2.5 | 8.1 | 2.4 |
 
-- **The machine allocates a state map per step** and wraps each step in a
-  `try`. A loop iteration costs about 11 µs. The earlier prototype's
-  interpreter fused operand evaluation and avoided transient states; those
-  lessons need to be ported.
-- **Compiled calls to compiled functions go through the machine.** A
-  recursive call resolves a late link, finds the installed executable,
-  enters a nested machine and binds dynamic vars. Direct calls between
-  candidates (with their premises merged) remove this.
-- **Step accounting in compiled code** reads a dynamic var per iteration.
+The interpreter is a CEK machine with first-class, multi-shot
+continuations, so it pays for frames that SCI does not have; it runs at 2
+to 13 times SCI. Compiled code is faster than SCI and close to Clojure.
+What made the difference (from 50-190 times SCI):
 
-The milestone: port the prototype's interpreter and direct-call lessons,
-compare against the prototype and SCI on the same programs, and remove the
-cliffs without giving up the semantics (worlds, handlers, budgets). The
-target is predictable performance: interpretation within a small factor of
-other Clojure interpreters, and compiled loops close to Clojure.
+- Terms are prepared once into nodes with slot environments, resolved host
+  functions and inline caches for globals keyed by world id
+  (`klara.runtime.prepare`).
+- The driver keeps its state in a register array, evaluates immediate
+  nodes without frames, and is split into small step functions: the
+  single large driver exceeded the JVM's huge-method limit and was never
+  JIT-compiled. Hot namespaces warn on reflection.
+- Compiled code calls itself directly (its own generation is a premise),
+  calls other candidates without a nested machine, and caches late links
+  per call site.
+
+Next: tiering as an explicit policy (compile after a threshold), the
+remaining interpreter costs (frames for non-tail calls, argument vectors),
+and primitive arithmetic in compiled code.

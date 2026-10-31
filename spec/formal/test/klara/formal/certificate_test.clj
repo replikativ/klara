@@ -13,3 +13,7 @@
             :reference-semantics :reference
             :rejected :L4.check.certificate]
            (k/load-file s "spec/formal/cases/certified_identity.clj")))))
+
+(deftest proof-search-in-a-job
+  (let [s (k/session {:roots ["lib" "spec/formal/cases"] :out (java.io.StringWriter.)})]
+    (is (= [:done :proved 3 7] (k/load-file s "spec/formal/cases/proof_search.clj")))))
