@@ -1,0 +1,207 @@
+(ns klara.compile.kernel
+  "Preparation, candidates and execution (spec/L4-compiler.md).
+
+  The guest-facing API is klara.compiler (lib/klara/compiler.clj), written
+  in Klara over the intrinsics registered here as klara.compiler.kernel/*.
+  `prepare` runs a guest recipe inside a job, then the trusted checker and
+  backend. An executable checks its premises at entry and otherwise runs
+  the reference meaning."
+  (:require [klara.compile.check :as check]
+            [klara.compile.lower :as lower]
+            [klara.lang.builtins :as b]
+            [klara.lang.term :as t]
+            [klara.runtime.intrinsics :as intr]
+            [klara.runtime.job :as job]
+            [klara.runtime.machine :as m]
+            [klara.runtime.value :as v]
+            [klara.runtime.world :as w])
+  (:import [klara.runtime.value Closure Code]))
+
+(defn fail [rule msg & {:as data}]
+  (throw (ex-info msg (merge {:rule rule :message msg} data))))
+
+(defn- ret [st x] (assoc st :mode :ret :ctl x :env nil))
+
+;; ---------------------------------------------------------------------------
+;; Candidates and executables
+
+(defrecord Candidate [name reference term premises host-fn form])
+
+(defn valid?
+  "L4.exec.valid: every premise holds in `world`."
+  [cand world]
+  (every? (fn [[q g]] (= g (w/generation world q))) (:premises cand)))
+
+(defn- abandoning
+  "Default handlers that abandon the compiled call (L4.exec.deopt)."
+  [defaults]
+  (into {} (map (fn [[op _]] [op (fn [_ _] (m/abandon! :effect))])) defaults))
+
+(v/deftype-callable Executable [cand ^:volatile-mutable last-world ^:volatile-mutable last-valid
+                                ^:volatile-mutable last-path]
+  v/IExecutable
+  (-execute [this st args]
+    (let [world (:world st)
+          ok (and (nil? (:mint st))
+                  (if (identical? world last-world)
+                    last-valid
+                    (let [r (valid? cand world)] (set! last-world world) (set! last-valid r) r)))
+          r (if ok
+              (let [inner (update-in st [:dyn :defaults] abandoning)]
+                (try (binding [lower/*ctx* inner m/*nested* inner]
+                       (apply (:host-fn cand) args))
+                     (catch Throwable ex
+                       (if (= :effect (m/abandoned ex)) ::deopt (throw ex)))))
+              ::invalid)]
+      (if (or (= ::deopt r) (= ::invalid r))
+        (do (set! last-path :reference)                           ; L4.exec.executable, L4.exec.deopt
+            (assoc st :mode :apply
+                   :ctl [(Closure. (.-term ^Code (:reference cand)) {} (:mint st)) (vec args)]))
+        (do (set! last-path :compiled) (ret st r)))))
+  (-describe [this]
+    {:name (:name cand) :reference (:reference cand) :premises (:premises cand)
+     :compiled (:form cand) :last-path last-path})
+  Object
+  (toString [_] (str "#klara/executable[" (or (:name cand) "anonymous") "]")))
+
+(defmethod print-method Executable [x ^java.io.Writer out] (.write out (str x)))
+
+(defn executable [cand] (Executable. cand nil false nil))
+
+(defn- candidate-of [^Executable e] (.-cand e))
+
+;; ---------------------------------------------------------------------------
+;; Dispatch table (L4.exec.install, L4.retain.dispatch)
+
+(def candidates-per-name 4)
+
+(defn install! [session cand]
+  (let [q (:name cand)]
+    (when-not q (fail :L4.exec.install "only a candidate for a named definition can be installed"))
+    (swap! session update-in [:dispatch q]
+           (fn [xs] (vec (take candidates-per-name
+                               (cons (executable cand) (remove #(= (:term (candidate-of %)) (:term cand)) xs))))))
+    q))
+
+(reset! m/resolve-hook
+        (fn [q _d world session]
+          (when-let [xs (get-in @session [:dispatch q])]
+            (some #(when (valid? (candidate-of %) world) %) xs))))
+
+;; ---------------------------------------------------------------------------
+;; Preparation (L4.prepare)
+
+(defn- reject [rule message & {:as more}]
+  (merge {:status :rejected :rule rule :message message} more))
+
+(defn- finish
+  "Check and lower `candidate` against `reference`, inside the job (state `st`)."
+  [st reference candidate opts]
+  (if-not (v/code? candidate)
+    (reject :L4.prepare.recipe-failed (str "the recipe returned " (pr-str candidate) ", not code"))
+    (let [ref-term (.-term ^Code reference)
+          cand-term (.-term ^Code candidate)
+          r (check/check ref-term cand-term (:world st) (get-in st [:dyn :meter]))]
+      (case (:result r)
+        :exhausted {:status :exhausted :rule :L4.check.exhausted
+                    :message "the checker ran out of budget before deciding"}
+        :different (reject :L4.check.not-equivalent
+                           (str "candidate differs from the reference: "
+                                (pr-str (second (:difference r))) " vs " (pr-str (first (:difference r))))
+                           :difference (:difference r)
+                           :hint "the checker unfolds definitions, substitutes values and folds constants; it does not use algebraic identities")
+        :equal (if-let [x (lower/subset-violation cand-term)]
+                 (reject :L4.lower.subset (str "the backend does not compile " x))
+                 (let [premises (cond-> (:premises r)
+                                  (:name opts) (conj [(:name opts) (w/generation (:world st) (:name opts))]))
+                       {:keys [fn form]} (lower/lower cand-term)]
+                   {:status :ready
+                    :candidate (->Candidate (:name opts) reference cand-term premises fn form)
+                    :premises (vec (sort-by (comp str first) premises))}))))))
+
+(defn- settle
+  "Turn the job outcome around preparation into a preparation outcome."
+  [st outcome]
+  (ret st (case (:status outcome)
+            :done (assoc (:value outcome) :spent (:spent outcome))
+            :exhausted {:status :exhausted :rule :L3.budget.exhausted :spent (:spent outcome)
+                        :message "the recipe ran out of budget"}
+            :failed (reject :L4.prepare.recipe-failed
+                            (str "the recipe failed: " (get-in outcome [:error :message]))
+                            :error (:error outcome) :spent (:spent outcome)))))
+
+(b/register! 'klara.compiler.kernel/prepare
+  {:kind :intrinsic
+   :fn (fn [st [reference opts]]
+         (when-not (v/code? reference) (fail :L4.prepare "the reference must be code"))
+         (when-not (= :fn (:op (.-term ^Code reference)))
+           (fail :L4.prepare "the reference must be code for a function"))
+         (let [opts (or opts {})
+               recipe (or (:recipe opts) identity)
+               st (assoc st :k (conj (:k st) {:f :frame-fn :fn settle}))
+               st (job/start st {:budget (or (:budget opts) {:steps 100000})})]
+           (assoc st :mode :apply :ctl [recipe [reference]]
+                  :k (conj (:k st) {:f :frame-fn
+                                    :fn (fn [st cand] (ret st (finish st reference cand opts)))}))))})
+
+(b/register! 'klara.compiler.kernel/executable
+  {:kind :intrinsic
+   :fn (fn [st [outcome]]
+         (when-not (= :ready (:status outcome))
+           (fail :L4.exec.executable (str "no candidate: the outcome is " (:status outcome))))
+         (ret st (executable (:candidate outcome))))})
+
+(b/register! 'klara.compiler.kernel/install!
+  {:kind :intrinsic
+   :fn (fn [st [outcome]]
+         (when-not (= :ready (:status outcome))
+           (fail :L4.exec.install (str "no candidate: the outcome is " (:status outcome))))
+         (ret st (install! (get-in st [:dyn :session]) (:candidate outcome))))})
+
+(b/register! 'klara.compiler.kernel/reference
+  {:kind :intrinsic
+   :fn (fn [st [q]]
+         (let [d (w/lookup (:world st) q)]
+           (when-not (and d (v/closure? (:value d)))
+             (fail :L4.prepare (str q " is not a function definition")))
+           (ret st (intr/reify-closure (:value d)))))})
+
+(b/register! 'klara.compiler.kernel/pin
+  {:kind :intrinsic
+   :fn (fn [st [c world]] (ret st (Code. (intr/pin-links (.-term ^Code c) world))))})
+
+(b/register! 'klara.compiler.kernel/explain
+  {:kind :intrinsic
+   :fn (fn [st [f]]
+         (ret st (cond
+                   (instance? Executable f)
+                   (assoc (v/-describe f) :valid (valid? (candidate-of f) (:world st)))
+                   (v/closure? f) {:kind :interpreted :code (intr/reify-closure f)}
+                   :else {:kind :host :value f})))})
+
+(b/register! 'klara.compiler.kernel/arity
+  {:kind :intrinsic
+   :fn (fn [st [f]]
+         (ret st (when (v/closure? f)
+                   (mapv (fn [a] (cond-> (count (:params a)) (:rest a) (vector :&)))
+                         (:arities (.-term ^Closure f))))))})
+
+(b/register! 'klara.compiler.kernel/specialization
+  {:kind :intrinsic
+   :fn (fn [st [f known]]
+         ;; (fn [u..] (f k-or-u ..)) for a closure of fixed arity n (L4: specialize)
+         (let [n (some #(when (nil? (:rest %)) (count (:params %))) (:arities (.-term ^Closure f)))
+               ps (vec (for [i (range n) :when (not (contains? known i))] (t/fresh (str "a" i))))
+               args (loop [i 0 ps ps out []]
+                      (if (= i n) out
+                          (if (contains? known i)
+                            (recur (inc i) ps (conj out (m/lift-term (get known i))))
+                            (recur (inc i) (rest ps) (conj out (t/local (first ps)))))))]
+           (ret st (Code. (t/fn-term nil [(t/arity ps nil (t/app (m/lift-term f) args))])))))})
+
+(b/register! 'klara.compiler.kernel/normalize
+  {:kind :intrinsic
+   :fn (fn [st [c]]
+         (if-let [n (check/normalize (.-term ^Code c) (:world st) (get-in st [:dyn :meter]))]
+           (ret st (Code. n))
+           (m/abandon! :exhausted)))})

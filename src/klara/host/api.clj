@@ -2,7 +2,8 @@
   "Driving Klara from Clojure: sessions, evaluation and loading
   (design/03-clojure.md#running-klara). Everything a tool or an agent needs
   from the host side."
-  (:require [klara.runtime.intrinsics]
+  (:require [klara.compile.kernel]
+            [klara.runtime.intrinsics]
             [klara.runtime.job]
             [klara.runtime.session :as s]))
 

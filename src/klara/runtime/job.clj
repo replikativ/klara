@@ -96,14 +96,19 @@
 
 (defn- steps-of [budget] (long (or (:steps budget) default-steps)))
 
+(defn start
+  "Enter a new job from `st`: push its frame, fork the world and switch to
+   the job's context. The caller then sets the control to run inside it."
+  [st opts]
+  (let [fork (w/fork (:world st))
+        job (atom {:world fork :base (:world st) :intents [] :owned #{}
+                   :intent-limit (or (:intent-limit opts) default-intent-limit)})]
+    (assoc (enter st job (steps-of (:budget opts))) :world fork :mint nil)))
+
 (b/register! 'klara.job/run                                          ; L3.job.run
   {:kind :intrinsic
    :fn (fn [st [opts thunk]]
-         (let [fork (w/fork (:world st))
-               job (atom {:world fork :base (:world st) :intents [] :owned #{}
-                          :intent-limit (or (:intent-limit opts) default-intent-limit)})]
-           (-> (enter st job (steps-of (:budget opts)))
-               (assoc :mode :apply :ctl [thunk []] :world fork :mint nil))))})
+         (assoc (start st opts) :mode :apply :ctl [thunk []]))})
 
 (b/register! 'klara.job/resume                                       ; L3.job.resume
   {:kind :intrinsic

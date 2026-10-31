@@ -343,7 +343,10 @@
   (let [items (if (map? form) (mapcat identity form) form)
         terms (mapv #(expand env %) items)]
     (if (every? #(= :const (:op %)) terms)
-      (t/const form)
+      (let [vals (map :value terms)]
+        (t/const (cond (map? form) (apply hash-map vals)
+                       (set? form) (set vals)
+                       :else (vec vals))))
       (t/app (t/host (cond (map? form) 'clojure.core/hash-map
                            (set? form) 'clojure.core/hash-set
                            :else 'clojure.core/vector))

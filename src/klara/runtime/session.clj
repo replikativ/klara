@@ -212,3 +212,22 @@
 (b/register! 'klara.kernel/require
              (directive (fn [session [_ & specs]]
                           (doseq [s specs] (require-lib! session (:ns @session) (unquote* s))))))
+
+;; ---------------------------------------------------------------------------
+;; Retention report (design/01-lifetimes.md#making-retention-visible)
+
+(defn retained [session]
+  (let [s @session]
+    {:world (w/id (:world s))
+     :world-definitions (count (w/defs (:world s)))
+     :history-entries (count (:history s))
+     :history-limit (:history-limit s)
+     :candidates (reduce + 0 (map count (vals (:dispatch s))))
+     :candidates-by-name (into {} (map (fn [[q xs]] [q (count xs)])) (:dispatch s))}))
+
+(b/register! 'klara.kernel/retained
+             {:kind :intrinsic
+              :fn (fn [st _]
+                    (assoc st :mode :ret :env nil
+                           :ctl (assoc (retained (get-in st [:dyn :session]))
+                                       :jobs (count (filter #(= :job (:f %)) (:k st))))))})

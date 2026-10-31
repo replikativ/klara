@@ -8,9 +8,15 @@
   `host-invoke` when it loads, which avoids a namespace cycle."
   (:require [klara.lang.term :as t]))
 
+(defprotocol IExecutable
+  "A compiled implementation (L4): the machine calls -execute with its state
+   and the arguments, and gets a new state back."
+  (-execute [f st args])
+  (-describe [f]))
+
 (defonce host-invoke (atom (fn [f args] (throw (ex-info "machine not loaded" {})))))
 
-(defmacro ^:private deftype-callable
+(defmacro deftype-callable
   "deftype whose IFn methods (arities 0..20 and applyTo) delegate to host-invoke."
   [name fields & specs]
   (let [this (gensym "this")
@@ -96,9 +102,11 @@
 ;; Mutability (L2.lift.mutable, L3.job.host-mutation)
 
 (defn mutable? [x]
-  (or (instance? clojure.lang.IAtom x) (instance? clojure.lang.Volatile x)
+  (and (some? x)
+   (or (instance? clojure.lang.IAtom x) (instance? clojure.lang.Volatile x)
       (instance? clojure.lang.IRef x) (.isArray (class x))
-      (instance? java.util.Collection x) (instance? java.util.Map x)))
+      (and (instance? java.util.Collection x) (not (instance? clojure.lang.IPersistentCollection x)))
+      (and (instance? java.util.Map x) (not (instance? clojure.lang.IPersistentMap x))))))
 
 (defn find-mutable
   "The first mutable object reachable through immutable data, or nil."

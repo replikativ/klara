@@ -39,7 +39,7 @@
 
 ;; Hooks set by later layers (L4): select a compiled implementation of a
 ;; definition, and call an executable.
-(defonce resolve-hook (atom nil))     ; (fn [q definition world] value-or-nil)
+(defonce resolve-hook (atom nil))     ; (fn [q definition world session] value-or-nil)
 
 ;; ---------------------------------------------------------------------------
 ;; Intrinsic values
@@ -76,17 +76,19 @@
 ;; ---------------------------------------------------------------------------
 ;; Globals (L2.link.*)
 
-(defn resolve-link [link ^World world]
+(defn resolve-link
+  ([link world] (resolve-link link world nil))
+  ([link ^World world session]
   (case (:kind link)
     :late (let [q (:name link)
                 d (w/lookup world q)]
             (when (nil? d) (fail :L1.resolve.unbound (str "unable to resolve " q " in " (w/id world)) :name q))
-            (or (when-let [h @resolve-hook] (h q d world)) (:value d)))
+            (or (when-let [h (and session @resolve-hook)] (h q d world session)) (:value d)))
     :pinned (w/pin (:world link) (:name link))
     :guarded (let [q (:name link)]
                (if (= (:generation link) (w/generation world q))
                  (:value link)
-                 (resolve-link {:kind :late :name q} world)))))
+                 (resolve-link {:kind :late :name q} world session))))))
 
 ;; ---------------------------------------------------------------------------
 ;; Closure application
@@ -249,6 +251,9 @@
     (instance? Intrinsic f)
     ((:f f) st args)
 
+    (instance? klara.runtime.value.IExecutable f)
+    (v/-execute f st args)
+
     :else
     (let [snapshot (job-snapshot st)
           r (try (binding [*nested* st] (apply f args))
@@ -290,7 +295,7 @@
                (if (contains? env n)
                  (let [x (get env n)] (assoc st :mode :ret :ctl (if (instance? RecRef x) @x x)))
                  (fail :L0.term.wf (str "unbound local " n))))
-      :global (assoc st :mode :ret :ctl (resolve-link (:link c) (:world st)))
+      :global (assoc st :mode :ret :ctl (resolve-link (:link c) (:world st) (get-in st [:dyn :session])))
       :host (assoc st :mode :ret :ctl (host-lookup (:name c)))
       :fn (let [captured (persistent! (reduce (fn [m n] (assoc! m n (get env n))) (transient {}) (:free c)))]
             (assoc st :mode :ret :ctl (Closure. c captured (:mint st))))
