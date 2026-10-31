@@ -17,6 +17,19 @@ by the [conformance cases](spec/cases/), the [examples](examples/) or the
 | L5 Guest compiler | `klara.compiler` API and the `inline` partial evaluator, both written in Klara | No policies or threshold scheduling yet |
 | Lifetimes | Named roots, footprint slices, deltas instead of parent references, per-candidate class loaders, retention report; collectability tests and a soak test | Retention is reported, not charged |
 
+## Known gaps in the guarantees
+
+- **Host functions are trusted.** A `clojure.core` function the prelude does
+  not override (for example `spit` or `rand`) runs directly: inside a job it
+  is not deferred, and if a compiled call is abandoned and re-executed it
+  runs twice. Printing, atoms and volatiles are overridden. Classifying host
+  functions as pure, effectful or refused is open work.
+- **Class unloading depends on soft references.** Clojure's compiler caches
+  generated classes softly; candidates' classes are reclaimed promptly only
+  with `-XX:SoftRefLRUPolicyMSPerMB=0` (set for the test alias).
+- **`finally` and discarded continuations.** A handler that drops its
+  continuation skips `finally` blocks inside it (`L0.eval.exception`).
+
 ## Not yet proved
 
 No rule is mechanically proved. The checker rules (`L4.check.*`) are the
