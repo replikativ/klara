@@ -1,0 +1,88 @@
+# L2 Staging
+
+## Code
+
+`L2.code.value` A Code value holds a Core term (its *body*). Locals bound
+inside it have unique names; it may have free locals only while it is being
+constructed (below).
+
+## Links
+
+`L2.link.late` `{:kind :late :name q}` resolves `q` in the effective world
+of the context in which the code runs.
+
+`L2.link.pinned` `{:kind :pinned :world w :name q}` resolves `q` in `w`, as
+`(world/get w 'q)` does, regardless of context.
+
+`L2.link.guarded` `{:kind :guarded :name q :generation g :value v}` means
+the same as the late link to `q`. An implementation may use `v` when `q` has
+generation `g` in the effective world.
+
+## Construction
+
+`L2.code.build` `(code e)` evaluates to Code for `e`. Each local bound
+inside `e` is renamed to a fresh name. Globals in `e` become late links.
+
+`L2.code.csp` A local bound *outside* `(code e)` at the present stage and
+used inside `e` is lifted: the Code contains its value as a constant.
+
+`L2.esc.splice` `(esc g)` inside `(code e)` evaluates `g` at the present
+stage when the Code is constructed. Its value must be Code
+(`L2.esc.not-code` otherwise), whose body replaces the `esc` form.
+
+`L2.esc.level` `esc` outside `code` is rejected at expansion.
+
+`L2.stage.level` A local bound inside `code` (a future-stage local) used at
+the present stage, for example directly inside an `esc` without an inner
+`code`, is rejected at expansion.
+
+`L2.code.extrusion` When `(code e)` completes, every free local of its result
+must be bound by an enclosing `code` that is still under construction.
+Otherwise the construction fails: some future-stage local escaped its
+binder.
+
+## Lift
+
+`L2.lift.values` `(lift v)` returns Code whose evaluation yields `v`.
+Allowed values: immutable data (recursively), closures, host functions,
+worlds, Code and candidates.
+
+`L2.lift.mutable` Lifting a mutable host object, or a collection containing
+one, is rejected.
+
+`L2.lift.preserves` `(run (lift v))` yields `v` itself, in every context.
+
+## Run
+
+`L2.run.closed` `(run c)` requires Code without free locals.
+
+`L2.run.context` `(run c)` evaluates the body of `c` in the current context
+(`E`, `m`). It does not compile.
+
+## Reify
+
+`L2.reify.fn` `(reify f)` for a closure returns Code `(fn ...)` with the
+closure's arities. Its captured locals are lifted. If the closure has no
+basis, its globals become late links; if it has basis `w`, they become
+links pinned to `w`.
+
+`L2.reify.host` `(reify f)` for a host function returns `(lift f)`.
+
+`L2.reify.preserves` `(run (reify f))` behaves as `f` in every context.
+
+## Views and printing
+
+`L2.view` `(code/view c)` returns the top of `c`'s term as a map with Code
+values in place of subterms; `(code/make m)` is its inverse. Guest
+recipes use these to inspect and build Code.
+
+`L2.print` Code prints as `#klara/code <form>`. Late links print as their
+qualified symbol, pinned links as `(klara/at <world-id> <symbol>)`, guarded
+links as `(klara/guarded <symbol> <generation>)`, non-literal constants as
+`(klara/const <printed value>)`.
+
+## Planned
+
+`L2.genlet` (planned) Let-insertion: binding a generated expression at an
+outer code construction point. It will be restricted to expressions that
+cannot fail, diverge or perform effects.
