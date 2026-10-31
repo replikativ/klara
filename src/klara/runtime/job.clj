@@ -30,7 +30,7 @@
 (defn- outcome [frame status extra]
   (let [j @(:job frame)]
     (merge {:status status :world (:world j) :intents (:intents j) :spent (spent frame)
-            ::job (:job frame) ::base (:base j)}
+            ::job (:job frame)}
            extra)))
 
 (defn- leave
@@ -101,7 +101,7 @@
    the job's context. The caller then sets the control to run inside it."
   [st opts]
   (let [fork (w/fork (:world st))
-        job (atom {:world fork :base (:world st) :intents [] :owned #{}
+        job (atom {:world fork :intents [] :owned #{}
                    :intent-limit (or (:intent-limit opts) default-intent-limit)})]
     (assoc (enter st job (steps-of (:budget opts))) :world fork :mint nil)))
 
@@ -129,14 +129,12 @@
            (when-not (= :done (:status outcome))
              (fail :L3.job.adopt (str "only a finished job can be adopted, not " (:status outcome))))
            (swap! job assoc :adopted true)
-           (let [base (::base outcome) changed (:world outcome)
-                 published (if-let [s (get-in st [:dyn :session])]
-                             (if (get-in st [:dyn :job])
-                               (let [nw (w/merge-into base changed (:world st))]
-                                 (when-not nw (fail :L1.session.conflict "conflicting changes in parent job"))
-                                 (swap! (get-in st [:dyn :job]) assoc :world nw) nw)
-                               (session/publish! s base changed))
-                             changed)
+           (let [changed (:world outcome)
+                 published (if (get-in st [:dyn :job])
+                             (let [nw (w/apply-delta changed (:world st))]
+                               (when-not nw (fail :L1.session.conflict "conflicting changes in the parent job"))
+                               (swap! (get-in st [:dyn :job]) assoc :world nw) nw)
+                             (session/publish! (get-in st [:dyn :session]) changed))
                  intents (map (fn [[op & args]]
                                 (t/app (t/host 'klara.effect/perform) (map t/const (cons op args))))
                               (:intents outcome))]

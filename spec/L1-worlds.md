@@ -7,13 +7,18 @@
 with the same id are the same world.
 
 `L1.world.definition` A definition records `:name`, `:form` (source),
-`:term` (Core), `:value`, `:generation` and `:reads` (the definitions whose
-values its initializer read). Generations are unique: no two evaluations of
+`:term` (Core), `:value`, `:generation` and `:reads` (the globals its
+initializer term mentions). Generations are unique: no two evaluations of
 any definition share one.
 
-`L1.world.define` `(world/define w name value-or-code)` returns a new world
-equal to `w` except for `name`. If given Code, the Code is run in the new
-world's context to produce the value. It does not change the session.
+`L1.world.define` `(world/define w name value)` returns a new world equal
+to `w` except that `name` is defined as `value`. It does not change the
+session; `(world/publish! w)` does (`L1.session.publish`).
+
+`L1.session.conflict` Publishing a change to a name whose definition was
+changed by another publication since the change was made raises this
+rule. Worlds record only the base entries of the names they change
+(their *delta*), not their base world.
 
 ## Sessions and activations
 
@@ -50,6 +55,9 @@ value is a closure without basis, it is returned with basis `w` (a slice of
 sets the activation's `E` to it (`L1.def.read-your-writes`). In a pinned
 context (`m` not nil) `def` raises `L1.def.pinned`.
 
+`L1.def.pinned` `def` in a pinned context (mint not nil) raises this rule:
+a pinned world is a fixed past, not a place to define.
+
 `L1.context.advance` `(world/advance)` sets `E` to the session's current
 world. It is an error in a pinned context.
 
@@ -77,6 +85,9 @@ from its value, closed under the same rule in the world.
 `L1.slice.resolve` A slice of `w` to footprint `F` resolves every name in
 `F` as `w` does. Resolving a name outside `F` is an internal error
 (`L1.slice.missing`), never a silent fallback.
+
+`L1.slice.missing` Resolving a name outside a slice's footprint raises this
+rule. It indicates an unsound footprint, an implementation error.
 
 `L1.slice.dynamic` If a footprint contains `run`, `world/current`,
 `world/advance`, `eval` or `world/get` with a non-constant name, the slice is

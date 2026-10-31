@@ -22,8 +22,10 @@ Every rule has an ID of the form `L<layer>.<topic>.<name>`, for example
 - in the name or docstring of the test that checks it.
 
 So `grep -r L2.run.closed` finds the rule, its implementation and its tests.
-[rules.edn](rules.edn) lists every rule ID with a one-line summary; the test
-suite checks that each listed rule is cited by at least one test.
+The traceability test (`test/klara/traceability_test.clj`) extracts every
+rule ID from these files and checks that each implemented rule is cited by
+a test or conformance case, and that every rule the implementation raises
+is specified here.
 
 ## Conformance
 

@@ -2,7 +2,7 @@
 
 ## Preparation
 
-`L4.prepare` `(compiler/prepare reference opts)` takes closed Code
+`L4.prepare.job` `(compiler/prepare reference opts)` takes closed Code
 `reference` and runs, in one job with `(:budget opts)` (default 100000
 steps):
 
@@ -14,6 +14,9 @@ steps):
 It returns an outcome with `:status` `:ready`, `:rejected` (with `:rule`,
 `:message`) or `:exhausted`, and `:report`. A `:ready` outcome carries
 `:candidate` and `:premises`.
+
+`L4.prepare.reference` The reference must be Code for a `fn`; for
+`(compiler/reference q)`, `q` must name a function definition.
 
 `L4.prepare.recipe-failed` A recipe that throws or returns a non-Code value
 gives `:rejected` with this rule.
@@ -100,7 +103,7 @@ reference, premises, validity in `E`, and `:last-path` (`:compiled` or
 
 ## Pinning
 
-`L4.pin` `(compiler/pin c w)` returns `c` with every late link replaced by a
+`L4.pin.links` `(compiler/pin c w)` returns `c` with every late link replaced by a
 link pinned to `w`. A candidate prepared from pinned Code has no premises.
 
 ## Retention

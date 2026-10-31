@@ -41,7 +41,7 @@
   "Call any function value from compiled code (L4.lower.calls)."
   [f args]
   (if (or (instance? Closure f) (instance? klara.runtime.value.Continuation f) (m/intrinsic? f))
-    (m/call-in (update *ctx* :dyn deopt-dyn) f args)
+    (m/call-in (update *ctx* :dyn deopt-dyn) f args true)
     (apply f args)))
 
 ;; ---------------------------------------------------------------------------

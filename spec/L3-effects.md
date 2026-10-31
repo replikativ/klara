@@ -2,11 +2,12 @@
 
 ## Effects and handlers
 
-`L3.perform` `(perform op & args)` with a keyword `op` suspends the
+`L3.perform.op` `(perform op & args)` with a keyword `op` suspends the
 computation and passes `args` and the continuation to the nearest enclosing
 handler for `op`.
 
-`L3.handle.deep` `(handle handlers body...)` evaluates `handlers`, a map
+`L3.handle.deep` `(handle handlers body...)` (a macro over
+`klara.effect/handle*`, which takes the map and a thunk) evaluates `handlers`, a map
 from operation keywords to functions `(fn [k & args] ...)`, then the body
 with a handler frame installed. A handler function runs *outside* the
 frame. Its continuation `k`, when called with `v`, resumes the body with `v`
@@ -17,8 +18,10 @@ as the value of `perform`, with the frame reinstalled (deep handlers).
 
 `L3.cont.multishot` A continuation may be called more than once.
 
-`L3.affine.reuse` A continuation that captured an affine resource (a budget)
-may be called at most once; a second call raises this rule.
+`L3.affine.reuse` (planned) A continuation that captured an affine resource
+may be called at most once; a second call raises this rule. The first
+version has no first-class affine values: budgets are held by job frames,
+not by programs.
 
 `L3.effect.default` An operation with no enclosing handler is handled by the
 context's default handler: the session's at top level, the job's inside a
@@ -57,6 +60,8 @@ the job.
 `L3.job.adopt` `(job/adopt! outcome)` publishes the job's world changes to
 the session (as `L1.session.publish`) and then performs its intents in
 order. Adopting an outcome twice raises `L3.job.adopted`.
+
+`L3.job.adopted` Adopting the same outcome twice raises this rule.
 
 `L3.job.resume` `(job/resume outcome budget)` continues an `:exhausted`
 outcome's continuation under a new budget and returns a new outcome.

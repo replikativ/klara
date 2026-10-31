@@ -179,7 +179,7 @@
         (if (= :fn (:op t')) (fn-term (:self t') (:arities t')) t')))))
 
 ;; ---------------------------------------------------------------------------
-;; Printing (L2.print): a readable form. Not read back; Code is not text.
+;; Printing (L2.print.form): a readable form. Not read back; Code is not text.
 
 (declare ->form)
 

@@ -13,7 +13,7 @@
 
 (defn- new-id [] (str "w" (.incrementAndGet world-ids)))
 
-(defn empty-world [] (World. (new-id) nil {} {} nil))
+(defn empty-world [] (World. (new-id) nil {} {} nil {}))
 
 (defn id [^World w] (.-id w))
 (defn defs [^World w] (.-defs w))
@@ -32,15 +32,26 @@
 
 (defn generation [w q] (some-> (lookup w q) :generation))
 
+(defn delta
+  "What `w` changed relative to the world it was forked or published from:
+   {:defs {q base-definition} :namespaces {ns base-record}}. Only the base
+   entries of changed names are kept, never the base world itself
+   (design/01-lifetimes.md#roots)."
+  [^World w] (.-delta w))
+
 (defn fork
-  "A new world with the same definitions and a new identity (L3.job.run)."
+  "A new world with the same definitions, a new identity and no changes yet (L3.job.run)."
   [^World w]
-  (World. (new-id) (.-id w) (.-defs w) (.-namespaces w) nil))
+  (World. (new-id) (.-id w) (.-defs w) (.-namespaces w) nil {}))
+
+(defn- note [delta kind k base]
+  (if (contains? (get delta kind) k) delta (assoc-in delta [kind k] base)))
 
 (defn put-definition
   "A new world equal to `w` except that `q` is defined by `d` (L1.world.define)."
   [^World w q d]
-  (World. (new-id) (.-id w) (assoc (.-defs w) q d) (.-namespaces w) nil))
+  (World. (new-id) (.-id w) (assoc (.-defs w) q d) (.-namespaces w) nil
+          (note (.-delta w) :defs q (get (.-defs w) q))))
 
 (defn definition
   [q {:keys [form term value macro?]}]
@@ -50,27 +61,26 @@
 (defn update-namespace
   "A new world whose namespace record for `ns` is (f record)."
   [^World w ns f]
-  (World. (new-id) (.-id w) (.-defs w) (update (.-namespaces w) ns f) nil))
+  (World. (new-id) (.-id w) (.-defs w) (update (.-namespaces w) ns f) nil
+          (note (.-delta w) :namespaces ns (get (.-namespaces w) ns))))
 
 (defn ns-info [^World w ns] (get (.-namespaces w) ns))
 
-(defn merge-into
-  "Publish `changed` (derived from `base`) onto `current` (L1.session.publish).
-   Returns the merged world, or nil on a conflict."
-  [^World base ^World changed ^World current]
-  (if (= (id base) (id current))
-    changed
-    (let [names (into #{} (filter #(not (identical? (get (defs base) %) (get (defs changed) %))))
-                      (into (set (keys (defs changed))) (keys (defs base))))
-          conflict? (some #(not (identical? (get (defs base) %) (get (defs current) %))) names)
-          ns-changed (into #{} (filter #(not= (get (namespaces base) %) (get (namespaces changed) %)))
-                           (keys (namespaces changed)))]
-      (when-not conflict?
-        (World. (new-id) (id current)
-                (reduce (fn [m q] (if-let [d (get (defs changed) q)] (assoc m q d) (dissoc m q)))
-                        (defs current) names)
-                (reduce (fn [m n] (assoc m n (get (namespaces changed) n))) (namespaces current) ns-changed)
-                nil)))))
+(defn apply-delta
+  "Apply the changes of `changed` to `current` (L1.session.publish). A
+   change conflicts if `current` no longer has the base entry the change
+   was made from. Returns the new world (with no pending changes), or nil
+   on a conflict."
+  [^World changed ^World current]
+  (let [{dd :defs dn :namespaces} (delta changed)
+        conflict? (or (some (fn [[q base]] (not (identical? base (get (defs current) q)))) dd)
+                      (some (fn [[n base]] (not (identical? base (get (namespaces current) n)))) dn))]
+    (when-not conflict?
+      (World. (new-id) (id current)
+              (reduce (fn [m q] (if-let [d (get (defs changed) q)] (assoc m q d) (dissoc m q)))
+                      (defs current) (keys dd))
+              (reduce (fn [m n] (assoc m n (get (namespaces changed) n))) (namespaces current) (keys dn))
+              nil {}))))
 
 (defn changed-names
   "Names whose definitions differ between two worlds (for history summaries)."
@@ -110,7 +120,7 @@
   [^World w names]
   (if (nil? names)
     w
-    (World. (.-id w) (.-parent w) (select-keys (.-defs w) names) {} (set names))))
+    (World. (.-id w) (.-parent w) (select-keys (.-defs w) names) {} (set names) {})))
 
 (defn pin
   "The value of `q` in `w`, with a closure pinned to the slice of `w` it can

@@ -89,7 +89,7 @@
             (some #(when (valid? (candidate-of %) world) %) xs))))
 
 ;; ---------------------------------------------------------------------------
-;; Preparation (L4.prepare)
+;; Preparation (L4.prepare.job)
 
 (defn- reject [rule message & {:as more}]
   (merge {:status :rejected :rule rule :message message} more))
@@ -133,9 +133,9 @@
 (b/register! 'klara.compiler.kernel/prepare
   {:kind :intrinsic
    :fn (fn [st [reference opts]]
-         (when-not (v/code? reference) (fail :L4.prepare "the reference must be code"))
+         (when-not (v/code? reference) (fail :L4.prepare.reference "the reference must be code"))
          (when-not (= :fn (:op (.-term ^Code reference)))
-           (fail :L4.prepare "the reference must be code for a function"))
+           (fail :L4.prepare.reference "the reference must be code for a function"))
          (let [opts (or opts {})
                recipe (or (:recipe opts) identity)
                st (assoc st :k (conj (:k st) {:f :frame-fn :fn settle}))
@@ -163,7 +163,7 @@
    :fn (fn [st [q]]
          (let [d (w/lookup (:world st) q)]
            (when-not (and d (v/closure? (:value d)))
-             (fail :L4.prepare (str q " is not a function definition")))
+             (fail :L4.prepare.reference (str q " is not a function definition")))
            (ret st (intr/reify-closure (:value d)))))})
 
 (b/register! 'klara.compiler.kernel/pin

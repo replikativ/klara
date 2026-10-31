@@ -29,20 +29,23 @@ The expander translates source forms to Core terms, which are maps with an
 | `:app` | `:fn` `:args` | call |
 | `:let` | `:name` `:init` `:body` | bind one local |
 | `:letrec` | `:bindings` `:body` | mutually recursive local functions |
-| `:loop` / `:recur` | `:bindings` `:body` / `:args` | Clojure `loop`/`recur` |
+| `:recur` | `:target` `:arity` `:args` | re-enter arity `:arity` of the function bound to `:target` |
 | `:if` | `:test` `:then` `:else` | branch on truthiness |
 | `:do` | `:body` | sequence; value of the last |
 | `:throw`, `:try` | `:ex` / `:body` `:catches` `:finally` | exceptions |
 | `:interop` | `:target` `:member` `:args` `:static?` | trusted host method or field access |
 | `:def` | `:name` `:init` `:form` | define a global (L1) |
-| `:perform`, `:handle` | | effects (L3) |
-| `:code`, `:esc` | `:body` | staging (L2) |
+| `:code` | `:id` `:template` `:holes` `:free` | code construction (L2); `esc` positions are `:hole` nodes |
 
-`L0.term.wf` A term is well formed if its locals are bound, `:recur` occurs
-only in tail position of `:loop` or an arity body with the same number of
-arguments, and `:esc` occurs only inside `:code`. Expansion produces only
-well-formed terms; violations are reported with the rule of the offending
-construct.
+`L0.term.wf` A term is well formed if its locals are bound and `:recur`
+passes as many arguments as its target arity has parameters. Expansion
+produces only well-formed terms; violations are reported with the rule of
+the offending construct.
+
+`L0.term.loop` `(loop [x a y b] body)` expands to binding `a` and `b` in
+order and calling a local function `(fn loop [x y] body)`; `recur` in
+`body` re-enters it. Effects (L3) are not Core forms: `perform` and
+`handle` are runtime operations.
 
 `L0.term.free` Every `:fn` term records `:free`, the locals its body
 mentions that are bound outside it.
@@ -63,6 +66,9 @@ arguments (or the variadic arity), binds parameters, and evaluates the body
 in the captured environment plus the parameters. No matching arity raises
 an `ArityException`-equivalent `ex-info` with rule `L0.eval.arity`.
 
+`L0.eval.arity` Calling a closure with a number of arguments that no arity
+accepts raises this rule.
+
 `L0.eval.host` Calling a host function applies it to the argument values.
 A host exception becomes a Klara exception at that point.
 
@@ -70,10 +76,10 @@ A host exception becomes a Klara exception at that point.
 `recur` reuses the current loop or arity without growing the continuation.
 
 `L0.eval.exception` `throw` raises its value (which must be a `Throwable`).
-`try` catches by class, in order, and runs `finally` on every exit,
-including when the exception is not caught and when a continuation exits
-through it. A continuation that *re-enters* a `try` body does not re-run
-anything already run.
+`try` catches by class, in order, and runs `finally` when the body
+returns or raises. If a handler (L3) discards the continuation that holds
+the `try`, its `finally` does not run: with multi-shot continuations the
+machine cannot know that the continuation will never be resumed.
 
 `L0.space.closure` A closure captures exactly its `:free` locals.
 

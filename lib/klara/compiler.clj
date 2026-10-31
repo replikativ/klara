@@ -36,7 +36,7 @@
   (kernel/install! outcome))
 
 (defn pin
-  "`c` with every late link pinned to world `w` (AOT, L4.pin)."
+  "`c` with every late link pinned to world `w` (AOT, L4.pin.links)."
   [c w]
   (kernel/pin c w))
 

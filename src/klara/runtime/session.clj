@@ -35,13 +35,13 @@
 (defn current-world [session] (:world @session))
 
 (defn publish!
-  "Publish `changed`, derived from `base`, to the session (L1.session.publish).
+  "Publish the changes of world `changed` to the session (L1.session.publish).
    Returns the published world."
-  [session ^World base ^World changed]
+  [session ^World changed]
   (let [result (volatile! nil)]
     (swap! session
            (fn [s]
-             (let [merged (w/merge-into base changed (:world s))]
+             (let [merged (w/apply-delta changed (:world s))]
                (when-not merged
                  (fail :L1.session.conflict
                        (str "concurrent change to the same definitions while publishing " (w/id changed))))
@@ -64,12 +64,12 @@
    :world/define (fn [st [q info]]
                    (let [base (:world st)
                          changed (w/put-definition base q (w/definition q info))
-                         published (publish! session base changed)]
+                         published (publish! session changed)]
                      ;; L1.def.read-your-writes
                      (assoc st :mode :ret :ctl q :env nil :world published)))
    :world/update (fn [st [f]]
                    (let [base (:world st)
-                         published (publish! session base (f base))]
+                         published (publish! session (f base))]
                      (assoc st :mode :ret :ctl nil :env nil :world published)))})
 
 (defn session-dyn [session]
@@ -161,7 +161,7 @@
           alias (:as opts)]
       (when alias (ex/mirror-alias! ns-sym alias lib))
       (doseq [s refers] (ex/mirror-refer! ns-sym s (symbol (str lib) (name s))))
-      (publish! session world
+      (publish! session
                 (w/update-namespace (ensure-ns world ns-sym) ns-sym
                                     (fn [info]
                                       (cond-> info
@@ -178,13 +178,13 @@
         clauses (filter seq? clauses)
         world (current-world session)]
     (swap! session assoc :ns name)
-    (publish! session world (ensure-ns world name))
+    (publish! session (ensure-ns world name))
     (doseq [[kind & args] clauses]
       (case kind
         :require (doseq [spec args] (require-lib! session name spec))
         :refer-clojure (let [{:keys [exclude]} (apply hash-map args)
                              world (current-world session)]
-                         (publish! session world
+                         (publish! session
                                    (w/update-namespace world name #(update % :exclude into exclude))))
         nil))
     nil))
@@ -208,7 +208,7 @@
              (directive (fn [session [_ q]]
                           (let [n (unquote* q) world (current-world session)]
                             (swap! session assoc :ns n)
-                            (publish! session world (ensure-ns world n))))))
+                            (publish! session (ensure-ns world n))))))
 (b/register! 'klara.kernel/require
              (directive (fn [session [_ & specs]]
                           (doseq [s specs] (require-lib! session (:ns @session) (unquote* s))))))

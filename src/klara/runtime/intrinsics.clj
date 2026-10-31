@@ -82,7 +82,7 @@
     (assoc st :mode :eval :ctl term :env {})))
 
 (defn pin-links
-  "Replace late links by links pinned to `world` (L2.reify.fn, L4.pin)."
+  "Replace late links by links pinned to `world` (L2.reify.fn, L4.pin.links)."
   [term world]
   (if (= :global (:op term))
     (let [l (:link term)]
@@ -116,8 +116,8 @@
 ;; ---------------------------------------------------------------------------
 ;; klara.effect (spec/L3-effects.md)
 
-(defintrinsic klara.effect/perform [st [op & args]]             ; L3.perform
-  (when-not (keyword? op) (fail :L3.perform (str "operation must be a keyword, got " (pr-str op))))
+(defintrinsic klara.effect/perform [st [op & args]]             ; L3.perform.op
+  (when-not (keyword? op) (fail :L3.perform.op (str "operation must be a keyword, got " (pr-str op))))
   (m/perform st op (vec args)))
 
 (defintrinsic klara.effect/handle* [st [handlers thunk]]        ; L3.handle.deep

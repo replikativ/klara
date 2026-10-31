@@ -48,10 +48,11 @@
 
 ;; A letrec binding: siblings refer to each other through a cell that is
 ;; filled once all closures exist.
-(deftype RecRef [^:volatile-mutable value]
-  clojure.lang.IDeref (deref [_] value)
+(deftype RecRef [^objects cell]
+  clojure.lang.IDeref (deref [_] (aget cell 0))
   Object (toString [_] "#klara/rec"))
-(defn- set-rec! [^RecRef r x] (set! (.-value r) x))
+(defn- rec-ref [] (RecRef. (object-array 1)))
+(defn- set-rec! [^RecRef r x] (aset ^objects (.-cell r) 0 x))
 
 (defn intrinsic? [x] (instance? Intrinsic x))
 
@@ -175,7 +176,7 @@
         (recur (rest k) (inc i))))))
 
 (defn perform
-  "Perform `op` with `args` from state `st` (L3.perform)."
+  "Perform `op` with `args` from state `st` (L3.perform.op)."
   [st op args]
   (let [k (:k st)
         [kind i] (find-handler k op)]
@@ -187,11 +188,13 @@
         ;; the handler runs outside its frame, in the handle expression's context
         (assoc st :mode :apply :ctl [handler (into [cont] args)]
                :k (nthrest k (inc i)) :world (:world frame) :mint (:mint frame)))
-      (if-let [d (get-in st [:dyn :defaults op])]
+      (if-let [d (and (not (and (= kind :stop) (:deopt (nth k i)))) (get-in st [:dyn :defaults op]))]
         (d st args)
+        (if (and (= kind :stop) (:deopt (nth k i)))
+          (abandon! :effect)                                      ; L4.exec.deopt
         (fail (if (= kind :stop) (if (= :boundary (:f (nth k i))) :L3.effect.host-boundary :L3.effect.unhandled)
                 :L3.effect.unhandled)
-              (str "unhandled effect " op) :op op)))))
+              (str "unhandled effect " op) :op op))))))
 
 (defn- raise
   "Unwind `st` with exception `ex` to the nearest try or job frame (L0.eval.exception)."
@@ -301,7 +304,7 @@
             (assoc st :mode :ret :ctl (Closure. c captured (:mint st))))
       :app (assoc st :ctl (:fn c) :k (conj k {:f :args :todo (:args c) :vals [] :env env :recur (:recur c)}))
       :let (assoc st :ctl (:init c) :k (conj k {:f :let :name (:name c) :body (:body c) :env env}))
-      :letrec (let [refs (into {} (map (fn [[n _]] [n (RecRef. nil)])) (:bindings c))
+      :letrec (let [refs (into {} (map (fn [[n _]] [n (rec-ref)])) (:bindings c))
                     env' (merge env refs)
                     fns (mapv (fn [[n f]]
                                 [n (Closure. f (into {} (map (fn [x] [x (get env' x)])) (:free f)) (:mint st))])
@@ -418,9 +421,11 @@
 
 (defn call-in
   "Call function value `f` with `args` from a host context (nested machine,
-   L3.effect.host-boundary). `outer` is the calling state, or nil."
-  [outer f args]
-  (let [st (state :apply [f (vec args)] nil (list {:f :boundary})
+   L3.effect.host-boundary). `outer` is the calling state. With `deopt?`
+   (calls from compiled code) any effect the callee does not handle itself
+   abandons the compiled call (L4.exec.deopt)."
+  [outer f args & [deopt?]]
+  (let [st (state :apply [f (vec args)] nil (list {:f :boundary :deopt deopt?})
                   (:world outer) (:mint outer) (:dyn outer))]
     (:ctl (run-state st))))
 

@@ -25,6 +25,7 @@
                  `(~'invoke [~this ~@args] (@host-invoke ~this ~args))))
         rest-sym (gensym "args")]
     `(deftype ~name ~fields
+       clojure.lang.Fn
        clojure.lang.IFn
        ~@sigs
        (~'applyTo [~this ~rest-sym] (@host-invoke ~this (vec ~rest-sym)))
@@ -35,8 +36,9 @@
 
 (defrecord Definition [name form term value generation reads macro?])
 
-(deftype World [id parent defs namespaces footprint]
+(deftype World [id parent defs namespaces footprint delta]
   ;; footprint: nil for a whole world; a set of names for a slice (L1.slice.*)
+  ;; delta: changes since the world this one was forked or published from
   Object
   (equals [_ o] (and (instance? World o) (= id (.-id ^World o))))
   (hashCode [_] (hash id))

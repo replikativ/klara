@@ -30,6 +30,8 @@ used inside `e` is lifted: the Code contains its value as a constant.
 stage when the Code is constructed. Its value must be Code
 (`L2.esc.not-code` otherwise), whose body replaces the `esc` form.
 
+`L2.esc.not-code` The generator in `esc` returned something other than Code.
+
 `L2.esc.level` `esc` outside `code` is rejected at expansion.
 
 `L2.stage.level` A local bound inside `code` (a future-stage local) used at
@@ -37,9 +39,12 @@ the present stage, for example directly inside an `esc` without an inner
 `code`, is rejected at expansion.
 
 `L2.code.extrusion` When `(code e)` completes, every free local of its result
-must be bound by an enclosing `code` that is still under construction.
-Otherwise the construction fails: some future-stage local escaped its
-binder.
+must be bound by a `code` construction that is still in progress on the
+continuation (its dynamic extent), or be a future-stage variable in scope.
+Otherwise construction fails: some future-stage local escaped its binder.
+Code that escapes through a mutable cell and is run later is caught by
+`L2.run.closed`. This is a dynamic check in the sense of Lee et al.,
+POPL 2026 ([related work](../design/related-work.md#staging)).
 
 ## Lift
 
@@ -72,17 +77,17 @@ links pinned to `w`.
 
 ## Views and printing
 
-`L2.view` `(code/view c)` returns the top of `c`'s term as a map with Code
+`L2.view.make` `(code/view c)` returns the top of `c`'s term as a map with Code
 values in place of subterms; `(code/make m)` is its inverse. Guest
 recipes use these to inspect and build Code.
 
-`L2.print` Code prints as `#klara/code <form>`. Late links print as their
+`L2.print.form` Code prints as `#klara/code <form>`. Late links print as their
 qualified symbol, pinned links as `(klara/at <world-id> <symbol>)`, guarded
 links as `(klara/guarded <symbol> <generation>)`, non-literal constants as
 `(klara/const <printed value>)`.
 
 ## Planned
 
-`L2.genlet` (planned) Let-insertion: binding a generated expression at an
+`L2.genlet.restricted` (planned) Let-insertion: binding a generated expression at an
 outer code construction point. It will be restricted to expressions that
 cannot fail, diverge or perform effects.
