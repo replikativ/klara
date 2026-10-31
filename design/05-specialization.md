@@ -1,8 +1,9 @@
-# Specialization: guards, evidence, chains and profiles
+# Specialization: candidates, evidence, the investor
 
-Status: design. Builds on [02-compilation.md](02-compilation.md); parts are
-implemented (single checked steps, generation premises, argument guards from
-certificates, AOT by pinning), the rest is planned.
+Status: design, partly implemented (single checked steps, generation premises,
+argument guards from certificates, AOT by pinning). Speculation inside code,
+frame states, facts, profiles and the staged JIT are in
+[06-speculation.md](06-speculation.md).
 
 The goal: Klara programs adjust Klara programs, from fully dynamic (JIT
 guided by profiles) to fully static (AOT with every guard proved away), while
@@ -12,85 +13,85 @@ the interpreter and the checker stay fixed.
 
 | Part | Meaning | Examples |
 |---|---|---|
-| Code | the implementation, checked against a reference | an unrolled loop, a transient accumulator |
-| Guards | conditions checked at entry; if one fails the next candidate runs, finally the reference | world premise `(power, 40)`; argument guard `x : long`; value guard `coeffs = [1 2 3]` |
+| Code | the implementation, checked against a reference | an unrolled loop, a fused traversal |
+| Guards | conditions under which it applies; elsewhere the reference runs | world premise `(power, 40)`; `x` is a long; `coeffs = [1 2 3]` |
 | Evidence | why the code means the same as the reference while its guards hold | definitional, proved, tested, trusted |
-| Provenance | how it was produced | the recipe chain, the profile it used |
+| Provenance | how it was produced | the steps taken, the profile used, the costs paid |
 
-**Evidence kinds**, in decreasing strength:
+**Evidence kinds**, in decreasing strength: *definitional* (the kernel
+checker), *proved* (a certificate checked by a kernel), *tested* (agreement
+with the reference on recorded inputs, evidence about those inputs only),
+*trusted* (asserted by the program). Which kinds a job accepts is policy: by
+default definitional and proved; tested and trusted only when the session or
+job enables them explicitly, and `compiler/explain` always reports the kind.
 
-- *definitional*: the kernel checker (L4.check.*), automatic;
-- *proved*: a certificate checked by a kernel (L4.check.certificate);
-- *tested*: the candidate agreed with the reference on recorded samples
-  (profile inputs); evidence about those inputs only;
-- *trusted*: the program asserts it.
+## Rewrites are planned, not hard-coded
 
-Which kinds a job accepts is policy: by default definitional and proved;
-tested and trusted only when the session or job enables them explicitly, and
-`compiler/explain` always reports the kind. (Open decision: whether trusted
-evidence should exist at all.)
+Recipes are the vocabulary: Klara functions from Code to Code, each with the
+evidence it can offer. Two rewrites of different character, fusion of
+`reduce` over `map` (control flow, justified by unfolding) and Horner's rule
+(arithmetic, justified by a law under a range premise), are both recipes;
+they differ only in their evidence.
 
-## Fixed hooks in the runtime
-
-The interpreter has exactly three:
-
-1. at a call, select an installed candidate whose guards hold;
-2. otherwise run the reference;
-3. count calls and sample argument shapes into profile data.
-
-Profiles are values (`klara.profile/snapshot`): they can be inspected,
-stored in a world, saved with a build and fed to a later AOT preparation.
-
-## Composition is a chain
-
-A rewrite pipeline is a sequence of steps. Each step is a recipe (a Klara
-function from Code to Code), checked against the previous step's output, with
-its own evidence and guards. Evidence composes by transitivity; the guards of
-the final candidate are the union.
+The **investor** is a Klara program that plans which recipes to apply, in
+which order, to which functions. A plan is a path through programs:
 
 ```text
 reference ──fuse──▶ R1 ──horner──▶ R2 ──longs──▶ R3
-          definitional    proved, |x| ≤ 2^20    guarded: xs is a long vector
+          definitional    proved, |x| ≤ 2^20    speculative: xs holds longs
 ```
 
-Fusion (control flow, justified by unfolding `map` and `reduce`) and Horner
-(arithmetic, justified by a law under a range premise) are different kinds
-of rewrite only in their evidence; as steps they are the same thing.
+Each step is checked against the previous one; evidence composes by
+transitivity; the final guards are the union. The investor weighs:
 
-## DSLs and staged generators
+- expected benefit: calls (from profiles) times predicted saving;
+- preparation cost: rewriting, checking, proof search, lowering, measured;
+- risk: how often the guards are expected to fail;
+- retention: memory held by candidates and code.
 
-A DSL's reference is its interpreter; its compiler is a staged generator.
-The candidate relates them: reference `(fn [x] (run-dsl prog x))`, recipe
-`(fn [_] (gen-dsl prog))`. For a static `prog`, unfolding the interpreter is
-the first Futamura projection, which is what the definitional checker does,
-so many generators need no proof.
+It may explore alternative plans in parallel forked jobs under budgets, then
+settles once: it installs the winner, discards the rest, and pays for all of
+them. A fixed list of steps is the degenerate investor, for tests.
 
-**genlet** is an effect. `(genlet c)` performs `:stage/genlet`; the nearest
-`code` construction in progress handles it by binding `c` to a fresh name at
-its top and returning the name. Moving computation earlier is safe only for
-pure, total expressions; in a recipe, an unsafe placement fails the check
-unless it carries other evidence.
+## Facts widen the rules
+
+The checker's rules today must hold for any code: they never drop, duplicate
+or reorder a computation that might fail, diverge or perform an effect.
+Facts about a region (*pure*, *total*, *unique*, from analyses or type
+systems, see [06-speculation.md](06-speculation.md)) license further rules,
+each with a precondition and proved once for the formal fragment:
+
+| Rule | Precondition |
+|---|---|
+| dead code elimination | pure and total |
+| let floating, code motion | pure and total |
+| common subexpression elimination | pure |
+| representation change in place | unique |
+
+The longer code is guaranteed free of effects, the more it can be rewritten.
+For pure regions, equality saturation (exploring all equivalent programs and
+extracting the cheapest by a cost model) becomes available; it needs a
+first-order form of the code (closures explicit), and ansatz's `grind`
+already provides e-graph machinery.
+
+## Sharing instead of genlet
+
+Generators stay pure: no effect for let-insertion. Code is persistent data,
+so a generator that reuses a Code value produces a DAG, not a duplicated
+tree; the naive Fibonacci generator builds a linear-size DAG. Let-insertion
+is a decision of lowering: each shared node is emitted once, bound at the
+closest point that dominates all its uses. Binding it earlier is allowed only
+when the node is total (a fact). The checker compares DAGs with memoization
+on node identity, so checking stays linear in the DAG.
 
 ## From dynamic to static
 
 | Mode | Prepared when | Guards from | Left at run time |
 |---|---|---|---|
 | Interpreted | never | — | the reference |
-| JIT | after a policy's threshold, reading profiles | profiles, generation premises | entry guards, fallback |
+| JIT | after the investor decides, from profiles | profiles, generation premises | guards with frame states |
 | AOT | at build, pinned to a release world | earlier profiles; no generation premises | undischarged guards |
 | Static | at build | discharged at every call site | nothing |
 
-**Guard discharge** is a property of a call site: if the caller's candidate
-establishes the callee's guard at the call (literal types, the result type of
-checked arithmetic, a certificate), the call goes to the guard-free entry.
 Because the reference ships with the program, speculation in an AOT build is
 safe: a failed guard costs speed, not correctness.
-
-## Plan
-
-1. Chains of steps in `compiler/prepare` (`:steps`).
-2. Argument and value guards for every step; evidence kinds and a policy.
-3. Profile data in the interpreter; a threshold policy written in Klara.
-4. genlet as an effect handled by code construction.
-5. Guard discharge at call sites; AOT given a profile.
-6. Ownership as a step kind ([04-ownership.md](04-ownership.md)).

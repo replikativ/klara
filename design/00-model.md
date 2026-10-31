@@ -15,7 +15,8 @@ refine one aspect each:
 | [02-compilation.md](02-compilation.md) | How does code become a checked, installed executable? |
 | [03-clojure.md](03-clojure.md) | How does Klara relate to Clojure code, tools and agents? |
 | [04-ownership.md](04-ownership.md) | How do affine regions become checked staged rewrites? (design) |
-| [05-specialization.md](05-specialization.md) | Guards, evidence, chains of rewrites, profiles, JIT to AOT (design) |
+| [05-specialization.md](05-specialization.md) | Candidates, evidence, the investor, facts, JIT to AOT (design) |
+| [06-speculation.md](06-speculation.md) | Frame states, speculation, pluggable type systems, the staged JIT, profiles (design) |
 | [related-work.md](related-work.md) | Where the ideas come from and what is new |
 
 The normative rules are in [`spec/`](../spec/README.md); each rule has an ID

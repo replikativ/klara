@@ -6,20 +6,24 @@ version, described at the end.
 
 ## The idea in one paragraph
 
-An affine region is not a different meaning for a program. It is a
-representation choice: inside a region, a value that is used linearly may be
-updated in place, because nobody can observe the difference. So "making code
-affine" is an optimization, and it goes through the same pipeline as every
-other optimization ([02-compilation.md](02-compilation.md)): a Klara recipe
-proposes owned code, and the kernel admits it only if it means the same as
-the reference. What is new is how the kernel checks it, and that check splits
-into one theorem proved once and one test run per candidate.
+Klara stays functional. Ownership is not a language feature and has no
+surface syntax: it is a representation choice the investor may make inside a
+closed region where a value is provably unique, so updating it in place
+cannot be observed. This is "functional but in-place", as in Lean 4
+(Ullrich and de Moura, *Counting Immutable Beans*, 2019) and Koka (Reinking
+et al., *Perceus*, PLDI 2021); on the JVM there is no reference counting, so a
+static uniqueness judgment plays that role. In-place update entangles memory
+(aliasing, cache interference, no sharing across forks), so persistent
+structures stay the default; the investor chooses the owned representation
+only where its cost model predicts a benefit, such as a large accumulator in
+a loop. Admission goes through the same pipeline as every other
+optimization: one theorem proved once, one check per candidate.
 
-## The owned fragment is Clojure's transient discipline
+## The owned fragment is Clojure's transient discipline (internally)
 
-Klara does not need new surface forms. Clojure already has a vocabulary for
-in-place updates of persistent data, with a usage rule every Clojure
-programmer and model knows: transients.
+The candidate language for owned code is Clojure's transients, because its
+usage rule is well known and its implementation exists. Programmers write
+ordinary persistent code; owned code appears only in candidates.
 
 ```clojure
 ;; reference                                  ;; owned candidate
@@ -89,7 +93,8 @@ library finds them and describes each as data:
  :exits [<code> ...]}
 ```
 
-**Accumulator ownership** (`klara.compiler.recipes.owned`). For each loop
+**Accumulator ownership** (`klara.compiler.recipes.owned`), a recipe the
+investor may choose. For each loop
 binding whose updates are persistent operations on the previous value
 (`conj`, `assoc`, `update`, `disj`, `dissoc`), that is not otherwise used
 after the update, and that leaves the loop only through its exits, the recipe
@@ -105,6 +110,7 @@ constructors, so it is a staged program that writes the candidate.
         (let [owned (filter owned/linear-accumulator? (:bindings l))]
           (when (seq owned) (owned/rebuild l owned)))))))
 
+;; the investor considers it among other recipes; for a test it can be forced
 (compiler/optimize! 'app/frequencies* {:recipe own-accumulators})
 ```
 
