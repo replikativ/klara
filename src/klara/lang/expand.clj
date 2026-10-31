@@ -11,6 +11,8 @@
             [klara.lang.builtins :as b]
             [klara.lang.term :as t]))
 
+(set! *warn-on-reflection* true)
+
 (defn fail [rule msg & {:as data}]
   (throw (ex-info msg (merge {:rule rule :message msg} data))))
 

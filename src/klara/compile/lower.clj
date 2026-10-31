@@ -3,8 +3,8 @@
   classes through the Clojure compiler.
 
   A lowered function is a host fn. Late links are looked up in the
-  effective world of the call (L4.lower.links) through the runtime context
-  `*ctx*`, the machine state of the call. Calls to Klara closures run in a
+  effective world of the call (L4.lower.links), read from the machine's
+  current context (klara.runtime.machine/current-context). Calls to Klara closures run in a
   nested machine whose effects abandon the compiled call (L4.lower.calls,
   L4.exec.deopt). Each lowering is compiled by `eval`, which uses a fresh
   class loader (L4.retain.classes)."
@@ -13,7 +13,7 @@
             [klara.runtime.value :as v])
   (:import [klara.runtime.value Closure]))
 
-(def ^:dynamic *ctx* "The machine state of the call that entered compiled code." nil)
+(set! *warn-on-reflection* true)
 
 (defn fail [rule msg & {:as data}]
   (throw (ex-info msg (merge {:rule rule :message msg} data))))
@@ -24,11 +24,14 @@
 (defn tick!
   "L4.lower.steps: one step per function entry and loop iteration."
   []
-  (when-let [^longs meter (get-in *ctx* [:dyn :meter])]
-    (aset meter 0 (dec (aget meter 0)))
-    (when (neg? (aget meter 0)) (m/abandon! :exhausted))))
+  (let [^objects c (m/current-context)]
+    (when-let [^longs meter (:meter (aget c 2))]
+      (aset meter 0 (dec (aget meter 0)))
+      (when (neg? (aget meter 0)) (m/abandon! :exhausted)))))
 
-(defn late [q] (m/resolve-link {:kind :late :name q} (:world *ctx*)))
+(defn late [q]
+  (let [^objects c (m/current-context)]
+    (m/resolve-link {:kind :late :name q} (aget c 0) (:session (aget c 2)))))
 
 (defn- deopt-dyn
   "A nested machine started from compiled code handles no effects itself:
@@ -41,7 +44,8 @@
   "Call any function value from compiled code (L4.lower.calls)."
   [f args]
   (if (or (instance? Closure f) (instance? klara.runtime.value.Continuation f) (m/intrinsic? f))
-    (m/call-in (update *ctx* :dyn deopt-dyn) f args true)
+    (let [^objects c (m/current-context)]
+      (m/call-in [(aget c 0) (aget c 1) (deopt-dyn (aget c 2))] f args true))
     (apply f args)))
 
 ;; ---------------------------------------------------------------------------

@@ -14,6 +14,8 @@
             [klara.runtime.world :as w])
   (:import [klara.runtime.value Code World]))
 
+(set! *warn-on-reflection* true)
+
 (defn fail [rule msg & {:as data}]
   (throw (ex-info msg (merge {:rule rule :message msg} data))))
 
@@ -85,7 +87,7 @@
 
 (defn- macro-runner [session]
   (fn [d form]
-    (m/call-in {:world (current-world session) :mint nil :dyn (session-dyn session)}
+    (m/call-in [(current-world session) nil (session-dyn session)]
                (:value d) (vec (rest form)))))
 
 (defn resolver [session ns-sym]

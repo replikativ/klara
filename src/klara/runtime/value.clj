@@ -8,6 +8,8 @@
   `host-invoke` when it loads, which avoids a namespace cycle."
   (:require [klara.lang.term :as t]))
 
+(set! *warn-on-reflection* true)
+
 (defprotocol IExecutable
   "A compiled implementation (L4): the machine calls -execute with its state
    and the arguments, and gets a new state back."
@@ -51,9 +53,10 @@
 ;; ---------------------------------------------------------------------------
 ;; Closures
 
-;; term: a :fn Core term; env: {name value} for exactly (:free term);
+;; term: a :fn Core term; node: its prepared form (klara.runtime.prepare);
+;; env: vector of the captured values of (:free term), in that order;
 ;; basis: nil (open) or a World (L1.context.mint)
-(deftype-callable Closure [term env basis]
+(deftype-callable Closure [term node env basis]
   Object
   (toString [_] (str "#klara/fn[" (or (some-> (:self term) t/base-name) "anonymous")
                      (when basis (str " @" (.-id ^World basis))) "]")))
@@ -66,8 +69,13 @@
   "A closure with basis `w` if it has none (L1.context.get)."
   [x w]
   (if (and (closure? x) (nil? (.-basis ^Closure x)))
-    (Closure. (.-term ^Closure x) (.-env ^Closure x) w)
+    (Closure. (.-term ^Closure x) (.-node ^Closure x) (.-env ^Closure x) w)
     x))
+
+(defn captured
+  "The captured locals of closure `c` as a map from name to value."
+  [^Closure c]
+  (zipmap (:free (.-term c)) (.-env c)))
 
 ;; ---------------------------------------------------------------------------
 ;; Continuations (spec/L3-effects.md)

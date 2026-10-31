@@ -7,10 +7,12 @@
   (L0.space.closure)."
   (:require [clojure.set :as set]))
 
+(set! *warn-on-reflection* true)
+
 ;; ---------------------------------------------------------------------------
 ;; Fresh names
 
-(def ^:private counter (java.util.concurrent.atomic.AtomicLong. 0))
+(def ^:private ^java.util.concurrent.atomic.AtomicLong counter (java.util.concurrent.atomic.AtomicLong. 0))
 
 (defn fresh
   "A local name that no other expansion or instantiation produces."
@@ -33,7 +35,7 @@
 (defn if* [t a b] {:op :if :test t :then a :else b})
 (defn do* [ts] (if (= 1 (count ts)) (first ts) {:op :do :body (vec ts)}))
 
-(declare free-locals)
+(declare free-locals nodes)
 
 (defn arity [params rest body]
   {:params (vec params) :rest rest :body body})
@@ -97,7 +99,10 @@
                     (reduce set/union #{} (map (fn [c] (disj (free-locals (:body c)) (:name c)))
                                                (:catches t)))
                     (if (:finally t) (free-locals (:finally t)) #{}))
-    :code (set/union (set (:free t)) (reduce set/union #{} (map free-locals (:holes t))))
+    ;; holes see the template's binders as future-stage variables, not as free locals
+    :code (let [bound (into #{} (mapcat binders) (nodes (:template t)))]
+            (set/union (set (:free t))
+                       (set/difference (reduce set/union #{} (map free-locals (:holes t))) bound)))
     (reduce set/union #{} (map free-locals (children t)))))
 
 (defn globals

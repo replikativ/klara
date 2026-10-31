@@ -6,8 +6,10 @@
             [klara.runtime.value :as v])
   (:import [klara.runtime.value World Definition]))
 
-(def ^:private world-ids (java.util.concurrent.atomic.AtomicLong. 0))
-(def ^:private generations (java.util.concurrent.atomic.AtomicLong. 0))
+(set! *warn-on-reflection* true)
+
+(def ^:private ^java.util.concurrent.atomic.AtomicLong world-ids (java.util.concurrent.atomic.AtomicLong. 0))
+(def ^:private ^java.util.concurrent.atomic.AtomicLong generations (java.util.concurrent.atomic.AtomicLong. 0))
 
 (defn next-generation [] (.incrementAndGet generations))
 

@@ -22,8 +22,14 @@
                              {:git/tag "v0.5.1" :git/sha "dfb30dd"}}
                 :jvm-opts ["-Xss16m" "-Xmx1g"]
                 :main-opts ["-m" "cognitect.test-runner" "-d" "spec/formal/test"]}
-  :dev {:extra-paths ["test" "examples" "spec"]
+  ;; clojure -M:bench  compares Klara, compiled Klara, SCI and Clojure
+  :bench {:extra-paths ["bench"]
+          :extra-deps {org.babashka/sci {:mvn/version "0.10.49"}}
+          :jvm-opts ["-Xss16m" "-Xmx1g"]
+          :main-opts ["-m" "klara.bench"]}
+  :dev {:extra-paths ["test" "examples" "spec" "bench"]
         :extra-deps {nrepl/nrepl {:mvn/version "1.3.0"}
+                     org.babashka/sci {:mvn/version "0.10.49"}
                      io.github.cognitect-labs/test-runner
                      {:git/tag "v0.5.1" :git/sha "dfb30dd"}}
         :jvm-opts ["-Xss16m" "-Xmx1g"]}}}

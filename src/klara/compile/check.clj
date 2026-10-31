@@ -15,6 +15,8 @@
             [klara.runtime.world :as w])
   (:import [klara.runtime.value Closure]))
 
+(set! *warn-on-reflection* true)
+
 (defn- exhausted! [] (throw (ex-info "check exhausted" {::exhausted true})))
 
 (defn- charge! [{:keys [^longs meter]}]
@@ -69,7 +71,7 @@
    globals linked by its basis."
   [^Closure f]
   (let [subst (into {} (map (fn [[n x]] [n (t/const (if (instance? clojure.lang.IDeref x) @x x))]))
-                    (.-env f))
+                    (v/captured f))
         term (t/substitute (.-term f) subst)]
     (if-let [basis (.-basis f)]
       ((requiring-resolve 'klara.runtime.intrinsics/pin-links) term basis)

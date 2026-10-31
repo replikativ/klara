@@ -12,6 +12,8 @@
             [klara.runtime.world :as w])
   (:import [klara.runtime.value Closure Code World]))
 
+(set! *warn-on-reflection* true)
+
 (defn fail [rule msg & {:as data}]
   (throw (ex-info msg (merge {:rule rule :message msg} data))))
 
@@ -80,7 +82,7 @@
   (let [term (.-term ^Code c) free (t/free-locals term)]
     (when (seq free)
       (fail :L2.run.closed (str "code has free locals " (vec free)) :locals (vec free)))
-    (assoc st :mode :eval :ctl term :env {})))
+    (assoc st :mode :eval :ctl (m/prepare-term term) :env [])))
 
 (defn pin-links
   "Replace late links by links pinned to `world` (L2.reify.fn, L4.pin.links)."
@@ -97,7 +99,7 @@
    lifted, globals linked according to the closure's basis."
   [^Closure f]
   (let [term (.-term f)
-        env (.-env f)
+        env (v/captured f)
         rec (fn [x] (if (instance? clojure.lang.IDeref x) (if (v/closure? @x) @x x) x))
         body (t/substitute term (into {} (map (fn [[n x]] [n (m/lift-term (rec x))])) env))
         body (if-let [b (.-basis f)] (pin-links body b) body)]

@@ -91,3 +91,13 @@
               growth-mb (/ (- after before) 1024.0 1024.0)]
           (is (< growth-mb 16) (str "retained heap grew by " growth-mb " MB over 200 rounds"))
           (is (<= (:history-entries (klara.runtime.session/retained s)) 1000)))))))
+
+(deftest L1-retain-roots-caches
+  (testing "L1.retain.roots: the interpreter's global caches do not keep worlds alive"
+    (let [s (session)
+          _ (k/eval-string s "(def k 1) (defn reader [] k) (def f (fn [] (reader)))")
+          _ (k/eval-string s "(f)")                  ; populate the caches of f's body
+          old (weak (:world @s))]
+      (k/eval-string s "(def k 2) (def k 3)")
+      (is (collected? old))
+      (is (= 3 (k/eval-string s "(f)"))))))

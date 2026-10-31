@@ -71,9 +71,11 @@ be called, and the parent's spent budget is not reduced.
 
 ## Budgets
 
-`L3.budget.steps` A budget limits machine steps: each evaluation transition
-costs one step. Compiled code (L4) costs one step per function entry and per
-loop iteration.
+`L3.budget.steps` A budget limits steps: every application of a Klara
+function or continuation, and every loop iteration (`recur`), costs one
+step, in interpreted and compiled code alike (L4.lower.steps). Every
+non-terminating computation performs infinitely many of them, so a finite
+budget always ends.
 
 `L3.budget.exhausted` When a budget reaches zero the job stops with status
 `:exhausted` and the continuation at that point.

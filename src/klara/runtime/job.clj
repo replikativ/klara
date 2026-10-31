@@ -11,6 +11,8 @@
             [klara.runtime.session :as session]
             [klara.runtime.world :as w]))
 
+(set! *warn-on-reflection* true)
+
 (defn fail [rule msg & {:as data}]
   (throw (ex-info msg (merge {:rule rule :message msg} data))))
 
@@ -23,7 +25,7 @@
   "Return unused reserved steps to the parent meter (L3.budget.nesting)."
   [frame]
   (when-let [^longs pm (get-in frame [:parent-dyn :meter])]
-    (aset pm 0 (+ (aget pm 0) (remaining (:meter frame))))))
+    (aset pm 0 (long (+ (aget pm 0) (long (remaining (:meter frame))))))))
 
 (defn- spent [frame] {:steps (- (:reserved frame) (remaining (:meter frame)))})
 
@@ -80,7 +82,7 @@
   "Reserve up to `n` steps from the parent meter (L3.budget.nesting)."
   [parent-meter n]
   (if-let [^longs pm parent-meter]
-    (let [r (min n (max 0 (aget pm 0)))] (aset pm 0 (- (aget pm 0) r)) r)
+    (let [r (long (min n (max 0 (aget pm 0))))] (aset pm 0 (- (aget pm 0) r)) r)
     n))
 
 (defn- enter
@@ -138,8 +140,8 @@
                  intents (map (fn [[op & args]]
                                 (t/app (t/host 'klara.effect/perform) (map t/const (cons op args))))
                               (:intents outcome))]
-             (assoc st :mode :eval :env {} :world published
-                    :ctl (t/do* (concat intents [(t/const (:value outcome))]))))))})
+             (assoc st :mode :eval :env [] :world published
+                    :ctl (m/prepare-term (t/do* (concat intents [(t/const (:value outcome))])))))))})
 
 (b/register! 'klara.job/fork
              {:kind :macro

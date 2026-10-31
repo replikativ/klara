@@ -17,6 +17,8 @@
             [klara.runtime.world :as w])
   (:import [klara.runtime.value Closure Code]))
 
+(set! *warn-on-reflection* true)
+
 (defn fail [rule msg & {:as data}]
   (throw (ex-info msg (merge {:rule rule :message msg} data))))
 
@@ -47,16 +49,16 @@
                     last-valid
                     (let [r (valid? cand world)] (set! last-world world) (set! last-valid r) r)))
           r (if ok
-              (let [inner (update-in st [:dyn :defaults] abandoning)]
-                (try (binding [lower/*ctx* inner m/*nested* inner]
-                       (apply (:host-fn cand) args))
+              (let [inner (update (:dyn st) :defaults abandoning)]
+                (try (m/set-context! world (:mint st) inner)
+                     (apply (:host-fn cand) args)
                      (catch Throwable ex
                        (if (= :effect (m/abandoned ex)) ::deopt (throw ex)))))
               ::invalid)]
       (if (or (= ::deopt r) (= ::invalid r))
         (do (set! last-path :reference)                           ; L4.exec.executable, L4.exec.deopt
             (assoc st :mode :apply
-                   :ctl [(Closure. (.-term ^Code (:reference cand)) {} (:mint st)) (vec args)]))
+                   :ctl [(m/closure-of (.-term ^Code (:reference cand)) (:mint st)) (vec args)]))
         (do (set! last-path :compiled) (ret st r)))))
   (-describe [this]
     {:name (:name cand) :reference (:reference cand) :premises (:premises cand)
@@ -78,6 +80,7 @@
 (defn install! [session cand]
   (let [q (:name cand)]
     (when-not q (fail :L4.exec.install "only a candidate for a named definition can be installed"))
+    (.incrementAndGet m/dispatch-epoch)        ; invalidate globals' inline caches
     (swap! session update-in [:dispatch q]
            (fn [xs] (vec (take candidates-per-name
                                (cons (executable cand) (remove #(= (:term (candidate-of %)) (:term cand)) xs))))))
