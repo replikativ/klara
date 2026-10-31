@@ -6,7 +6,8 @@
   General effects, ambient operations and escaping functions stay in T0."
   (:require [klara.compile.ir :as ir] [klara.compile.hof :as hof] [klara.eval :as ev]
             [klara.compile.runtime :as runtime] [klara.stage :as stage]
-            [klara.world :as w] [klara.compile.unbox :as unbox]))
+            [klara.world :as w] [klara.compile.unbox :as unbox]
+            [klara.compile.loop :as transfer] [klara.compile.host :as host]))
 
 (defn unsupported [t reason]
   (throw (ex-info (str "compile: " reason) {:klara/error :compile :reason reason :op (:op t)})))
@@ -14,8 +15,25 @@
 (def ^:dynamic *call-sites* nil)
 (def ^:dynamic *context-symbol* nil)
 (def ^:dynamic *return-layouts* {})
+(def ^:dynamic *typed-loops?* true)
+(def ^:dynamic *direct-loops?* false)
+(def ^:dynamic *transfer-producer* nil)
+(def ^:dynamic *transfer-receipts* nil)
 
 (declare emit-expr)
+
+(defn- emit-direct-loop [env {:keys [self function entry]}]
+  (let [parameters (:params function)
+        ;; Application arguments all belong to the outer environment. Evaluate
+        ;; them in order before introducing any loop parameter bindings.
+        initial (mapv #(emit-expr % env false nil) (get-in entry [:node :args]))
+        temporaries (mapv (fn [_] (gensym "initial")) initial)
+        loop-env (into (assoc env self {:recursive self :arity (:arity function)
+                                       :parameters parameters})
+                       (map (juxt identity identity) parameters))
+        body (emit-expr (:body function) loop-env true self)]
+    `(let [~@(mapcat vector temporaries initial)]
+       (loop [~@(mapcat vector parameters temporaries)] ~body))))
 
 (defn emit-callback [f env arity]
   (when-not (and (= :fn (:op f)) (not (:rest? f)) (= arity (:arity f)))
@@ -104,20 +122,22 @@
               (if (= 2 (count (:args t)))
                 `(into ~(go (first (:args t))) ~(emit-expr (second (:args t)) env false self true))
                 (unsupported t "only two-argument into is supported"))
-              :else (list* (symbol "clojure.core" (name (:name t))) (mapv go (:args t))))
+              :else (host/primitive-form (:name t) (mapv go (:args t))))
       :let (let [s (:name t)]
              `(let [~s ~(go (:init t))] ~(emit-expr (:body t) (assoc env s s) tail? self)))
       :if `(if ~(go (:test t)) ~(emit-expr (:then t) env tail? self)
                ~(emit-expr (:else t) env tail? self))
       :letrec
+      (if-let [view (when *direct-loops?* (transfer/view t))]
+        (emit-direct-loop env view)
       (if (and (= 1 (count (:inits t))) (not (:rest? (first (:inits t)))))
         (let [s (first (:names t)) f (first (:inits t)) ps (:params f)
-              ctx (assoc env s {:recursive s :arity (:arity f)})
+              ctx (assoc env s {:recursive s :arity (:arity f) :parameters ps})
               loop-env (into ctx (map (juxt identity identity) ps))
               body (emit-expr (:body f) loop-env true s)
-              fast-body (emit-expr (if (= :loop-check (:op (:body f)))
-                                    (:body (:body f)) (:body f)) loop-env true s)
-              kinds (unbox/loop-kinds t *return-layouts*)
+              fast-body (when *typed-loops?* (emit-expr (if (= :loop-check (:op (:body f)))
+                                    (:body (:body f)) (:body f)) loop-env true s))
+              kinds (when *typed-loops?* (unbox/loop-kinds t *return-layouts*))
               generic `(letfn [(~s [~@ps] ~body)] ~(emit-expr (:body t) ctx tail? self))]
           (if (seq kinds)
             (let [args (mapv (fn [_] (gensym "initial")) ps)
@@ -129,14 +149,32 @@
                                  ~fast-body)
                                ~other)) fallback (reverse kinds))))
             generic))
-        (unsupported t "only single-function letrec is emitted"))
+        (unsupported t "only single-function letrec is emitted")))
       :app
       (let [f (when (= :local (get-in t [:fn :op])) (get env (get-in t [:fn :name])))
             args (mapv go (:args t))]
         (cond
           (and (:recursive f) (= (:arity f) (count args)))
           (if (= self (:recursive f))
-            (if tail? (list* 'recur args) (unsupported t "non-tail recursive call"))
+            (if tail?
+              (if *transfer-producer*
+                (let [plan (*transfer-producer* (:parameters f) (:args t))
+                      receipt (transfer/check-transfer! (:parameters f) (:args t) plan)
+                      _ (when *transfer-receipts*
+                          (swap! *transfer-receipts* conj
+                                 (merge receipt (select-keys (meta plan)
+                                                            [:producer :producer-code-id :producer-symbol
+                                                             :policy-symbol :policy-code-id :compiler-reads
+                                                             :service-transitions]))))
+                      temporaries (mapv (fn [_] (gensym "transfer")) (:evaluations plan))]
+                  ;; Consume the checked producer output. Every RHS is evaluated
+                  ;; before recur commits any loop parameter, in source order.
+                  (list 'let (vec (mapcat (fn [temporary evaluation]
+                                           [temporary (nth args (:temporary evaluation))])
+                                         temporaries (:evaluations plan)))
+                        (list* 'recur (mapv #(nth temporaries (:temporary %)) (:commits plan)))))
+                (list* 'recur args))
+              (unsupported t "non-tail recursive call"))
             (list* (:recursive f) args))
           (= :resolve (get-in t [:fn :op]))
           (let [site (gensym "callsite") resolved (gensym "callee")]
@@ -176,11 +214,14 @@
 (defn run
   ([term] (run term #{}))
   ([term reads] (run term reads {}))
-  ([term reads return-layouts]
+  ([term reads return-layouts] (run term reads return-layouts {}))
+  ([term reads return-layouts {:keys [typed-loops? direct-loops? before-eval]
+                             :or {typed-loops? true direct-loops? false}}]
    (when (or (not= :fn (:op term)) (:rest? term)) (unsupported term "expected fixed-arity function"))
    (let [ps (:params term) sites (atom []) ctx (gensym "context")
          body (binding [*call-sites* sites *context-symbol* ctx
-                        *return-layouts* return-layouts]
+                        *return-layouts* return-layouts *typed-loops?* typed-loops?
+                        *direct-loops?* direct-loops?]
                 (emit-expr (:body term) (into {} (map (juxt identity identity) ps)) true nil))
          body-name (gensym "body")
          read-set (set (for [[_ s h] reads] [:value s h]))
@@ -197,6 +238,7 @@
                       {:run (fn [~@ps]
                               ~@(for [r read-set] `(w/note-read! '~r))
                               (let [~ctx (stage/current-context)] ~body))}))
-         runners (eval factory)]
+         _ (when before-eval (before-eval factory))
+         runners (host/evaluate factory)]
      (merge runners {:form `(:run ~factory) :abi :s12-v1
                      :definition-reads read-set}))))

@@ -1,0 +1,1612 @@
+{:selector
+ [{:cache :empty,
+   :arguments [0 4 1],
+   :expected nil,
+   :diagnostics
+   {:reference {:selected nil, :counts {}},
+    :planned {:selected nil, :counts {}}},
+   :batch 512,
+   :samples
+   [{:reference
+     {:wall-ns-per-call 413.3125,
+      :cpu-ns-per-call 438.21875,
+      :bytes-per-call 97.484375},
+     :planned
+     {:wall-ns-per-call 351.69921875,
+      :cpu-ns-per-call 353.873046875,
+      :bytes-per-call 96.140625}}
+    {:planned
+     {:wall-ns-per-call 325.919921875,
+      :cpu-ns-per-call 327.861328125,
+      :bytes-per-call 96.140625},
+     :reference
+     {:wall-ns-per-call 300.98828125,
+      :cpu-ns-per-call 302.380859375,
+      :bytes-per-call 96.140625}}
+    {:reference
+     {:wall-ns-per-call 307.712890625,
+      :cpu-ns-per-call 309.31640625,
+      :bytes-per-call 96.140625},
+     :planned
+     {:wall-ns-per-call 306.9375,
+      :cpu-ns-per-call 308.2890625,
+      :bytes-per-call 96.140625}}
+    {:planned
+     {:wall-ns-per-call 308.25390625,
+      :cpu-ns-per-call 309.865234375,
+      :bytes-per-call 96.140625},
+     :reference
+     {:wall-ns-per-call 306.447265625,
+      :cpu-ns-per-call 307.8515625,
+      :bytes-per-call 96.140625}}
+    {:reference
+     {:wall-ns-per-call 303.375,
+      :cpu-ns-per-call 304.755859375,
+      :bytes-per-call 96.140625},
+     :planned
+     {:wall-ns-per-call 296.423828125,
+      :cpu-ns-per-call 297.98046875,
+      :bytes-per-call 96.140625}}
+    {:planned
+     {:wall-ns-per-call 300.302734375,
+      :cpu-ns-per-call 301.79296875,
+      :bytes-per-call 96.140625},
+     :reference
+     {:wall-ns-per-call 320.58203125,
+      :cpu-ns-per-call 321.98828125,
+      :bytes-per-call 96.140625}}
+    {:reference
+     {:wall-ns-per-call 324.357421875,
+      :cpu-ns-per-call 325.787109375,
+      :bytes-per-call 96.140625},
+     :planned
+     {:wall-ns-per-call 339.388671875,
+      :cpu-ns-per-call 341.00390625,
+      :bytes-per-call 96.140625}}
+    {:planned
+     {:wall-ns-per-call 344.955078125,
+      :cpu-ns-per-call 346.669921875,
+      :bytes-per-call 96.140625},
+     :reference
+     {:wall-ns-per-call 335.705078125,
+      :cpu-ns-per-call 337.376953125,
+      :bytes-per-call 96.140625}}
+    {:reference
+     {:wall-ns-per-call 322.64453125,
+      :cpu-ns-per-call 324.20703125,
+      :bytes-per-call 96.140625},
+     :planned
+     {:wall-ns-per-call 345.07421875,
+      :cpu-ns-per-call 346.564453125,
+      :bytes-per-call 96.140625}}],
+   :medians
+   {:reference
+    {:wall-ns-per-call 320.58203125,
+     :cpu-ns-per-call 321.98828125,
+     :bytes-per-call 96.140625},
+    :planned
+    {:wall-ns-per-call 325.919921875,
+     :cpu-ns-per-call 327.861328125,
+     :bytes-per-call 96.140625}}}
+  {:cache :empty,
+   :arguments [0.5 4 1],
+   :expected nil,
+   :diagnostics
+   {:reference {:selected nil, :counts {}},
+    :planned {:selected nil, :counts {}}},
+   :batch 512,
+   :samples
+   [{:reference
+     {:wall-ns-per-call 321.140625,
+      :cpu-ns-per-call 326.04296875,
+      :bytes-per-call 96.140625},
+     :planned
+     {:wall-ns-per-call 297.810546875,
+      :cpu-ns-per-call 299.193359375,
+      :bytes-per-call 96.140625}}
+    {:planned
+     {:wall-ns-per-call 319.080078125,
+      :cpu-ns-per-call 320.58984375,
+      :bytes-per-call 96.140625},
+     :reference
+     {:wall-ns-per-call 298.0390625,
+      :cpu-ns-per-call 299.466796875,
+      :bytes-per-call 96.140625}}
+    {:reference
+     {:wall-ns-per-call 323.005859375,
+      :cpu-ns-per-call 324.333984375,
+      :bytes-per-call 96.140625},
+     :planned
+     {:wall-ns-per-call 316.673828125,
+      :cpu-ns-per-call 318.4296875,
+      :bytes-per-call 96.140625}}
+    {:planned
+     {:wall-ns-per-call 341.638671875,
+      :cpu-ns-per-call 343.2578125,
+      :bytes-per-call 96.140625},
+     :reference
+     {:wall-ns-per-call 309.025390625,
+      :cpu-ns-per-call 310.361328125,
+      :bytes-per-call 96.140625}}
+    {:reference
+     {:wall-ns-per-call 325.3671875,
+      :cpu-ns-per-call 327.08203125,
+      :bytes-per-call 96.28125},
+     :planned
+     {:wall-ns-per-call 326.859375,
+      :cpu-ns-per-call 328.3984375,
+      :bytes-per-call 96.140625}}
+    {:planned
+     {:wall-ns-per-call 337.08203125,
+      :cpu-ns-per-call 338.759765625,
+      :bytes-per-call 96.140625},
+     :reference
+     {:wall-ns-per-call 331.62890625,
+      :cpu-ns-per-call 333.38671875,
+      :bytes-per-call 96.140625}}
+    {:reference
+     {:wall-ns-per-call 316.08203125,
+      :cpu-ns-per-call 317.453125,
+      :bytes-per-call 96.140625},
+     :planned
+     {:wall-ns-per-call 322.474609375,
+      :cpu-ns-per-call 323.84375,
+      :bytes-per-call 96.140625}}
+    {:planned
+     {:wall-ns-per-call 315.015625,
+      :cpu-ns-per-call 316.50390625,
+      :bytes-per-call 96.140625},
+     :reference
+     {:wall-ns-per-call 326.8203125,
+      :cpu-ns-per-call 328.396484375,
+      :bytes-per-call 96.140625}}
+    {:reference
+     {:wall-ns-per-call 317.75,
+      :cpu-ns-per-call 319.298828125,
+      :bytes-per-call 96.140625},
+     :planned
+     {:wall-ns-per-call 327.36328125,
+      :cpu-ns-per-call 328.94140625,
+      :bytes-per-call 96.140625}}],
+   :medians
+   {:reference
+    {:wall-ns-per-call 321.140625,
+     :cpu-ns-per-call 324.333984375,
+     :bytes-per-call 96.140625},
+    :planned
+    {:wall-ns-per-call 322.474609375,
+     :cpu-ns-per-call 323.84375,
+     :bytes-per-call 96.140625}}}
+  {:cache :baseline,
+   :arguments [0 4 1],
+   :expected :baseline,
+   :diagnostics
+   {:reference {:selected :baseline, :counts {:requiring-resolve 5}},
+    :planned {:selected :baseline, :counts {:binding-checks 5}}},
+   :batch 512,
+   :samples
+   [{:reference
+     {:wall-ns-per-call 3928.103515625,
+      :cpu-ns-per-call 3934.5859375,
+      :bytes-per-call 1688.140625},
+     :planned
+     {:wall-ns-per-call 3719.046875,
+      :cpu-ns-per-call 3721.751953125,
+      :bytes-per-call 864.140625}}
+    {:planned
+     {:wall-ns-per-call 3934.65234375,
+      :cpu-ns-per-call 3937.603515625,
+      :bytes-per-call 864.140625},
+     :reference
+     {:wall-ns-per-call 4164.30859375,
+      :cpu-ns-per-call 4167.6796875,
+      :bytes-per-call 1688.140625}}
+    {:reference
+     {:wall-ns-per-call 4026.3203125,
+      :cpu-ns-per-call 4029.404296875,
+      :bytes-per-call 1688.140625},
+     :planned
+     {:wall-ns-per-call 3841.8046875,
+      :cpu-ns-per-call 3844.64453125,
+      :bytes-per-call 864.140625}}
+    {:planned
+     {:wall-ns-per-call 3967.083984375,
+      :cpu-ns-per-call 3969.48828125,
+      :bytes-per-call 864.25},
+     :reference
+     {:wall-ns-per-call 2732.63671875,
+      :cpu-ns-per-call 2735.494140625,
+      :bytes-per-call 1688.140625}}
+    {:reference
+     {:wall-ns-per-call 2734.138671875,
+      :cpu-ns-per-call 2736.94140625,
+      :bytes-per-call 1688.140625},
+     :planned
+     {:wall-ns-per-call 3425.265625,
+      :cpu-ns-per-call 3427.95703125,
+      :bytes-per-call 864.140625}}
+    {:planned
+     {:wall-ns-per-call 3735.2578125,
+      :cpu-ns-per-call 3543.017578125,
+      :bytes-per-call 864.140625},
+     :reference
+     {:wall-ns-per-call 2983.732421875,
+      :cpu-ns-per-call 2986.568359375,
+      :bytes-per-call 1688.140625}}
+    {:reference
+     {:wall-ns-per-call 3024.568359375,
+      :cpu-ns-per-call 3027.7265625,
+      :bytes-per-call 1688.140625},
+     :planned
+     {:wall-ns-per-call 3063.978515625,
+      :cpu-ns-per-call 3067.126953125,
+      :bytes-per-call 864.140625}}
+    {:planned
+     {:wall-ns-per-call 2972.732421875,
+      :cpu-ns-per-call 2975.494140625,
+      :bytes-per-call 864.140625},
+     :reference
+     {:wall-ns-per-call 2941.326171875,
+      :cpu-ns-per-call 2944.220703125,
+      :bytes-per-call 1688.140625}}
+    {:reference
+     {:wall-ns-per-call 2926.541015625,
+      :cpu-ns-per-call 2929.25390625,
+      :bytes-per-call 1688.140625},
+     :planned
+     {:wall-ns-per-call 2980.578125,
+      :cpu-ns-per-call 2986.205078125,
+      :bytes-per-call 864.140625}}],
+   :medians
+   {:reference
+    {:wall-ns-per-call 2983.732421875,
+     :cpu-ns-per-call 2986.568359375,
+     :bytes-per-call 1688.140625},
+    :planned
+    {:wall-ns-per-call 3719.046875,
+     :cpu-ns-per-call 3543.017578125,
+     :bytes-per-call 864.140625}}}
+  {:cache :baseline,
+   :arguments [0.5 4 1],
+   :expected :baseline,
+   :diagnostics
+   {:reference {:selected :baseline, :counts {:requiring-resolve 5}},
+    :planned {:selected :baseline, :counts {:binding-checks 5}}},
+   :batch 512,
+   :samples
+   [{:reference
+     {:wall-ns-per-call 2329.322265625,
+      :cpu-ns-per-call 2347.228515625,
+      :bytes-per-call 1688.140625},
+     :planned
+     {:wall-ns-per-call 2352.6015625,
+      :cpu-ns-per-call 2355.369140625,
+      :bytes-per-call 864.140625}}
+    {:planned
+     {:wall-ns-per-call 2346.849609375,
+      :cpu-ns-per-call 2349.03125,
+      :bytes-per-call 864.140625},
+     :reference
+     {:wall-ns-per-call 2214.509765625,
+      :cpu-ns-per-call 2216.837890625,
+      :bytes-per-call 1688.140625}}
+    {:reference
+     {:wall-ns-per-call 2301.982421875,
+      :cpu-ns-per-call 2304.12890625,
+      :bytes-per-call 1688.140625},
+     :planned
+     {:wall-ns-per-call 2324.990234375,
+      :cpu-ns-per-call 2327.037109375,
+      :bytes-per-call 864.140625}}
+    {:planned
+     {:wall-ns-per-call 2350.3359375,
+      :cpu-ns-per-call 2352.74609375,
+      :bytes-per-call 864.140625},
+     :reference
+     {:wall-ns-per-call 2360.5859375,
+      :cpu-ns-per-call 2363.150390625,
+      :bytes-per-call 1688.140625}}
+    {:reference
+     {:wall-ns-per-call 2280.42578125,
+      :cpu-ns-per-call 2283.59765625,
+      :bytes-per-call 1688.140625},
+     :planned
+     {:wall-ns-per-call 2339.921875,
+      :cpu-ns-per-call 2409.53515625,
+      :bytes-per-call 864.140625}}
+    {:planned
+     {:wall-ns-per-call 2257.298828125,
+      :cpu-ns-per-call 2259.62890625,
+      :bytes-per-call 864.140625},
+     :reference
+     {:wall-ns-per-call 2296.77734375,
+      :cpu-ns-per-call 2299.181640625,
+      :bytes-per-call 1688.140625}}
+    {:reference
+     {:wall-ns-per-call 2236.138671875,
+      :cpu-ns-per-call 2238.22265625,
+      :bytes-per-call 1688.140625},
+     :planned
+     {:wall-ns-per-call 2225.08203125,
+      :cpu-ns-per-call 2227.298828125,
+      :bytes-per-call 864.140625}}
+    {:planned
+     {:wall-ns-per-call 2363.494140625,
+      :cpu-ns-per-call 2344.619140625,
+      :bytes-per-call 864.140625},
+     :reference
+     {:wall-ns-per-call 2306.994140625,
+      :cpu-ns-per-call 2309.091796875,
+      :bytes-per-call 1688.140625}}
+    {:reference
+     {:wall-ns-per-call 2367.029296875,
+      :cpu-ns-per-call 2369.220703125,
+      :bytes-per-call 1688.140625},
+     :planned
+     {:wall-ns-per-call 2381.169921875,
+      :cpu-ns-per-call 2383.50390625,
+      :bytes-per-call 864.140625}}],
+   :medians
+   {:reference
+    {:wall-ns-per-call 2301.982421875,
+     :cpu-ns-per-call 2304.12890625,
+     :bytes-per-call 1688.140625},
+    :planned
+    {:wall-ns-per-call 2346.849609375,
+     :cpu-ns-per-call 2349.03125,
+     :bytes-per-call 864.140625}}}
+  {:cache :private,
+   :arguments [0 4 1],
+   :expected :private,
+   :diagnostics
+   {:reference {:selected :private, :counts {:requiring-resolve 26}},
+    :planned {:selected :private, :counts {:binding-checks 26}}},
+   :batch 512,
+   :samples
+   [{:reference
+     {:wall-ns-per-call 4735.8828125,
+      :cpu-ns-per-call 4744.796875,
+      :bytes-per-call 4632.25},
+     :planned
+     {:wall-ns-per-call 2709.966796875,
+      :cpu-ns-per-call 2712.7265625,
+      :bytes-per-call 1504.140625}}
+    {:planned
+     {:wall-ns-per-call 2691.458984375,
+      :cpu-ns-per-call 2693.876953125,
+      :bytes-per-call 1504.140625},
+     :reference
+     {:wall-ns-per-call 4689.96875,
+      :cpu-ns-per-call 4692.6484375,
+      :bytes-per-call 4632.140625}}
+    {:reference
+     {:wall-ns-per-call 4868.169921875,
+      :cpu-ns-per-call 4870.68359375,
+      :bytes-per-call 4632.140625},
+     :planned
+     {:wall-ns-per-call 2760.1796875,
+      :cpu-ns-per-call 2762.484375,
+      :bytes-per-call 1504.140625}}
+    {:planned
+     {:wall-ns-per-call 2745.779296875,
+      :cpu-ns-per-call 2748.20703125,
+      :bytes-per-call 1504.140625},
+     :reference
+     {:wall-ns-per-call 4679.083984375,
+      :cpu-ns-per-call 4681.615234375,
+      :bytes-per-call 4632.140625}}
+    {:reference
+     {:wall-ns-per-call 4705.734375,
+      :cpu-ns-per-call 4708.27734375,
+      :bytes-per-call 4632.140625},
+     :planned
+     {:wall-ns-per-call 2678.701171875,
+      :cpu-ns-per-call 2680.837890625,
+      :bytes-per-call 1504.140625}}
+    {:planned
+     {:wall-ns-per-call 2711.390625,
+      :cpu-ns-per-call 2713.345703125,
+      :bytes-per-call 1504.140625},
+     :reference
+     {:wall-ns-per-call 4726.71484375,
+      :cpu-ns-per-call 4729.076171875,
+      :bytes-per-call 4632.140625}}
+    {:reference
+     {:wall-ns-per-call 4737.568359375,
+      :cpu-ns-per-call 4739.978515625,
+      :bytes-per-call 4632.140625},
+     :planned
+     {:wall-ns-per-call 2671.138671875,
+      :cpu-ns-per-call 2674.115234375,
+      :bytes-per-call 1504.140625}}
+    {:planned
+     {:wall-ns-per-call 2707.05859375,
+      :cpu-ns-per-call 2709.2578125,
+      :bytes-per-call 1504.140625},
+     :reference
+     {:wall-ns-per-call 4650.966796875,
+      :cpu-ns-per-call 4654.494140625,
+      :bytes-per-call 4632.140625}}
+    {:reference
+     {:wall-ns-per-call 4839.81640625,
+      :cpu-ns-per-call 4843.06640625,
+      :bytes-per-call 4632.140625},
+     :planned
+     {:wall-ns-per-call 2656.4140625,
+      :cpu-ns-per-call 2658.88671875,
+      :bytes-per-call 1504.140625}}],
+   :medians
+   {:reference
+    {:wall-ns-per-call 4726.71484375,
+     :cpu-ns-per-call 4729.076171875,
+     :bytes-per-call 4632.140625},
+    :planned
+    {:wall-ns-per-call 2707.05859375,
+     :cpu-ns-per-call 2709.2578125,
+     :bytes-per-call 1504.140625}}}
+  {:cache :private,
+   :arguments [0.5 4 1],
+   :expected nil,
+   :diagnostics
+   {:reference {:selected nil, :counts {:requiring-resolve 24}},
+    :planned {:selected nil, :counts {:binding-checks 24}}},
+   :batch 512,
+   :samples
+   [{:reference
+     {:wall-ns-per-call 4202.666015625,
+      :cpu-ns-per-call 4216.94921875,
+      :bytes-per-call 4336.140625},
+     :planned
+     {:wall-ns-per-call 2989.044921875,
+      :cpu-ns-per-call 2991.732421875,
+      :bytes-per-call 1416.140625}}
+    {:planned
+     {:wall-ns-per-call 2969.873046875,
+      :cpu-ns-per-call 2972.513671875,
+      :bytes-per-call 1416.140625},
+     :reference
+     {:wall-ns-per-call 4187.0859375,
+      :cpu-ns-per-call 4189.806640625,
+      :bytes-per-call 4336.140625}}
+    {:reference
+     {:wall-ns-per-call 4294.50390625,
+      :cpu-ns-per-call 4297.251953125,
+      :bytes-per-call 4336.140625},
+     :planned
+     {:wall-ns-per-call 3137.525390625,
+      :cpu-ns-per-call 3140.080078125,
+      :bytes-per-call 1416.140625}}
+    {:planned
+     {:wall-ns-per-call 2971.85546875,
+      :cpu-ns-per-call 2974.42578125,
+      :bytes-per-call 1416.140625},
+     :reference
+     {:wall-ns-per-call 4205.646484375,
+      :cpu-ns-per-call 4207.953125,
+      :bytes-per-call 4336.140625}}
+    {:reference
+     {:wall-ns-per-call 4182.2421875,
+      :cpu-ns-per-call 4184.328125,
+      :bytes-per-call 4336.140625},
+     :planned
+     {:wall-ns-per-call 3009.505859375,
+      :cpu-ns-per-call 3011.185546875,
+      :bytes-per-call 1416.140625}}
+    {:planned
+     {:wall-ns-per-call 2961.205078125,
+      :cpu-ns-per-call 2963.181640625,
+      :bytes-per-call 1416.140625},
+     :reference
+     {:wall-ns-per-call 3863.26171875,
+      :cpu-ns-per-call 3880.38671875,
+      :bytes-per-call 4336.140625}}
+    {:reference
+     {:wall-ns-per-call 3906.53515625,
+      :cpu-ns-per-call 3909.80859375,
+      :bytes-per-call 4336.140625},
+     :planned
+     {:wall-ns-per-call 2817.74609375,
+      :cpu-ns-per-call 2819.943359375,
+      :bytes-per-call 1416.140625}}
+    {:planned
+     {:wall-ns-per-call 2733.556640625,
+      :cpu-ns-per-call 2735.9453125,
+      :bytes-per-call 1416.140625},
+     :reference
+     {:wall-ns-per-call 3790.37890625,
+      :cpu-ns-per-call 3792.974609375,
+      :bytes-per-call 4336.140625}}
+    {:reference
+     {:wall-ns-per-call 3915.72265625,
+      :cpu-ns-per-call 3918.341796875,
+      :bytes-per-call 4336.140625},
+     :planned
+     {:wall-ns-per-call 2843.666015625,
+      :cpu-ns-per-call 2845.60546875,
+      :bytes-per-call 1416.140625}}],
+   :medians
+   {:reference
+    {:wall-ns-per-call 4182.2421875,
+     :cpu-ns-per-call 4184.328125,
+     :bytes-per-call 4336.140625},
+    :planned
+    {:wall-ns-per-call 2969.873046875,
+     :cpu-ns-per-call 2972.513671875,
+     :bytes-per-call 1416.140625}}}
+  {:cache :portfolio,
+   :arguments [0 4 1],
+   :expected :private,
+   :diagnostics
+   {:reference {:selected :private, :counts {:requiring-resolve 26}},
+    :planned {:selected :private, :counts {:binding-checks 26}}},
+   :batch 512,
+   :samples
+   [{:reference
+     {:wall-ns-per-call 3854.935546875,
+      :cpu-ns-per-call 3860.228515625,
+      :bytes-per-call 4584.140625},
+     :planned
+     {:wall-ns-per-call 2316.28125,
+      :cpu-ns-per-call 2318.396484375,
+      :bytes-per-call 1480.140625}}
+    {:planned
+     {:wall-ns-per-call 2206.12109375,
+      :cpu-ns-per-call 2208.44921875,
+      :bytes-per-call 1480.140625},
+     :reference
+     {:wall-ns-per-call 3876.357421875,
+      :cpu-ns-per-call 3878.712890625,
+      :bytes-per-call 4584.140625}}
+    {:reference
+     {:wall-ns-per-call 3572.376953125,
+      :cpu-ns-per-call 3575.029296875,
+      :bytes-per-call 4584.140625},
+     :planned
+     {:wall-ns-per-call 2097.462890625,
+      :cpu-ns-per-call 2099.294921875,
+      :bytes-per-call 1480.140625}}
+    {:planned
+     {:wall-ns-per-call 2069.25390625,
+      :cpu-ns-per-call 2071.12890625,
+      :bytes-per-call 1480.140625},
+     :reference
+     {:wall-ns-per-call 3634.55859375,
+      :cpu-ns-per-call 3636.677734375,
+      :bytes-per-call 4584.140625}}
+    {:reference
+     {:wall-ns-per-call 3626.830078125,
+      :cpu-ns-per-call 3629.158203125,
+      :bytes-per-call 4584.140625},
+     :planned
+     {:wall-ns-per-call 2131.205078125,
+      :cpu-ns-per-call 2133.59765625,
+      :bytes-per-call 1480.140625}}
+    {:planned
+     {:wall-ns-per-call 2116.017578125,
+      :cpu-ns-per-call 2118.2109375,
+      :bytes-per-call 1480.140625},
+     :reference
+     {:wall-ns-per-call 3562.58203125,
+      :cpu-ns-per-call 3565.24609375,
+      :bytes-per-call 4584.140625}}
+    {:reference
+     {:wall-ns-per-call 3579.953125,
+      :cpu-ns-per-call 3581.96484375,
+      :bytes-per-call 4584.140625},
+     :planned
+     {:wall-ns-per-call 2050.017578125,
+      :cpu-ns-per-call 2051.869140625,
+      :bytes-per-call 1480.140625}}
+    {:planned
+     {:wall-ns-per-call 2044.470703125,
+      :cpu-ns-per-call 2046.546875,
+      :bytes-per-call 1480.140625},
+     :reference
+     {:wall-ns-per-call 3602.552734375,
+      :cpu-ns-per-call 3604.5078125,
+      :bytes-per-call 4584.140625}}
+    {:reference
+     {:wall-ns-per-call 3581.515625,
+      :cpu-ns-per-call 3583.716796875,
+      :bytes-per-call 4584.140625},
+     :planned
+     {:wall-ns-per-call 2103.48046875,
+      :cpu-ns-per-call 2105.14453125,
+      :bytes-per-call 1480.140625}}],
+   :medians
+   {:reference
+    {:wall-ns-per-call 3602.552734375,
+     :cpu-ns-per-call 3604.5078125,
+     :bytes-per-call 4584.140625},
+    :planned
+    {:wall-ns-per-call 2103.48046875,
+     :cpu-ns-per-call 2105.14453125,
+     :bytes-per-call 1480.140625}}}
+  {:cache :portfolio,
+   :arguments [0.5 4 1],
+   :expected :baseline,
+   :diagnostics
+   {:reference {:selected :baseline, :counts {:requiring-resolve 29}},
+    :planned {:selected :baseline, :counts {:binding-checks 29}}},
+   :batch 512,
+   :samples
+   [{:reference
+     {:wall-ns-per-call 4097.880859375,
+      :cpu-ns-per-call 4103.56640625,
+      :bytes-per-call 5312.140625},
+     :planned
+     {:wall-ns-per-call 2464.375,
+      :cpu-ns-per-call 2494.654296875,
+      :bytes-per-call 1616.140625}}
+    {:planned
+     {:wall-ns-per-call 2504.111328125,
+      :cpu-ns-per-call 2564.205078125,
+      :bytes-per-call 1616.140625},
+     :reference
+     {:wall-ns-per-call 4222.15625,
+      :cpu-ns-per-call 4224.3515625,
+      :bytes-per-call 5312.140625}}
+    {:reference
+     {:wall-ns-per-call 4087.15234375,
+      :cpu-ns-per-call 4088.083984375,
+      :bytes-per-call 5312.140625},
+     :planned
+     {:wall-ns-per-call 2464.427734375,
+      :cpu-ns-per-call 2465.3671875,
+      :bytes-per-call 1616.140625}}
+    {:planned
+     {:wall-ns-per-call 2555.115234375,
+      :cpu-ns-per-call 2555.859375,
+      :bytes-per-call 1616.140625},
+     :reference
+     {:wall-ns-per-call 4226.796875,
+      :cpu-ns-per-call 4228.169921875,
+      :bytes-per-call 5312.140625}}
+    {:reference
+     {:wall-ns-per-call 4258.603515625,
+      :cpu-ns-per-call 4259.623046875,
+      :bytes-per-call 5312.140625},
+     :planned
+     {:wall-ns-per-call 2466.81640625,
+      :cpu-ns-per-call 2467.703125,
+      :bytes-per-call 1616.140625}}
+    {:planned
+     {:wall-ns-per-call 2508.02734375,
+      :cpu-ns-per-call 2509.0625,
+      :bytes-per-call 1616.140625},
+     :reference
+     {:wall-ns-per-call 4196.23046875,
+      :cpu-ns-per-call 4197.173828125,
+      :bytes-per-call 5312.140625}}
+    {:reference
+     {:wall-ns-per-call 4256.876953125,
+      :cpu-ns-per-call 4257.6640625,
+      :bytes-per-call 5312.140625},
+     :planned
+     {:wall-ns-per-call 2443.044921875,
+      :cpu-ns-per-call 2443.69921875,
+      :bytes-per-call 1616.140625}}
+    {:planned
+     {:wall-ns-per-call 2406.90625,
+      :cpu-ns-per-call 2407.908203125,
+      :bytes-per-call 1616.140625},
+     :reference
+     {:wall-ns-per-call 4179.939453125,
+      :cpu-ns-per-call 4180.771484375,
+      :bytes-per-call 5312.140625}}
+    {:reference
+     {:wall-ns-per-call 4295.458984375,
+      :cpu-ns-per-call 4296.34765625,
+      :bytes-per-call 5312.140625},
+     :planned
+     {:wall-ns-per-call 2475.21484375,
+      :cpu-ns-per-call 2476.423828125,
+      :bytes-per-call 1616.140625}}],
+   :medians
+   {:reference
+    {:wall-ns-per-call 4222.15625,
+     :cpu-ns-per-call 4224.3515625,
+     :bytes-per-call 5312.140625},
+    :planned
+    {:wall-ns-per-call 2466.81640625,
+     :cpu-ns-per-call 2476.423828125,
+     :bytes-per-call 1616.140625}}}],
+ :source-sha256
+ {"src/klara/compile/inline.clj"
+  "2c06694af339b84e6f501fc035ac17023d55dd5da0babbd74becd849966f8f8a",
+  "src/klara/compile/unbox.clj"
+  "0e449e139a657bc5b4bac26f5f951c9cd606afd1b851e69244700f5cd9438917",
+  "src/klara/compile/speculate.clj"
+  "80d54937c925ed2fc593bd8cb6f216e8ec8298bcab40041be2255ba94cd3173f",
+  "src/klara/compile/core.clj"
+  "8c59aa51f636c8e7a38b1d63cd07a4badd775ca23582155ef4deb64800cdd128",
+  "src/klara/compile/affine_erase.clj"
+  "d5cc50d9ee7009e1c0635f5838aebf0f705d2be2312934cc39d851882235e756",
+  "src/klara/fusion/kernel.clj"
+  "edc582a5b412a83e61b465c45a980f3811c770167627188da1ba3ad18e1c9453",
+  "src/klara/compile/private_accumulator.clj"
+  "1b96f35740df42f5a2e77c3f75abb18b4f360041ac556ae43c6cbcd616ed3416",
+  "src/klara/compile/pe.clj"
+  "728a7c15b318edb6ebfb69517e9c4dba245cde8d64e434c83622758ee5bb1b70",
+  "src/klara/compile/relation.clj"
+  "9198c4fa963235e9e3babf5ebc9845f0eaac2ffdf66bd7acc455ebb02cd58ae1",
+  "src/klara/deploy.clj"
+  "88e3503486932d88ecdd900ba148637e645d18aa5d2605a9d65d343fb5c30c75",
+  "src/klara/compile/funding.clj"
+  "4272444d0fe0a2c69f6295224868048fac048679bc3039f5b319865963bef95f",
+  "src/klara/compile/view.clj"
+  "7a58c4612ca77720b807eb19cc024968b0ca1c2e8fb8e9fdbab17eb521155c3c",
+  "experiments/baseline/entry_collision.clj"
+  "27bc31e2857d2f9748edc123614e67c8c082e7e365bf9935024b81352907152b",
+  "src/klara/compile/infer_affine.clj"
+  "1ea336ef960114d11d4e7480381a0cedfb373797622353b36c587a9725c4d0de",
+  "src/klara/compile/emit.clj"
+  "55c966534f4e08d84176d5ba73b2f08ec59c5e17473f9ace690b5b153aba4165",
+  "src/klara/world.clj"
+  "29ea09915982d5daa246251c87da3095f0014c0f7680ff017e618e36fd9e9286",
+  "src/klara/core.clj"
+  "4fde378a632e9259d5133c166c118c951e3afb44eb84e0eb896a45e041684e6f",
+  "src/klara/affine.clj"
+  "7bceeeb76fb1f30adb60b0e17c9a879a4e626be6697ff5d2c24b8dc917b4e8af",
+  "src/klara/compile/budget.clj"
+  "a14c2c3a158f950915b6e12e39266ac68b9f07614b386932ca2f5655eade70f2",
+  "src/klara/compile/host.clj"
+  "5ccd09307e7bdbc3794eee27adcce08f2a742e07c54fd79e1d73464e9e35ad20",
+  "src/klara/repl.clj"
+  "13dd5b6feb07238fc1e976d027beb638ec6db9c8e753acfde3778b27c9a3a031",
+  "src/klara/load.clj"
+  "13360862c46395b41c048d5e19fc9d08dfad74e80046b4a1d3e3d685cd4e1968",
+  "src/klara/compile/strategy.clj"
+  "e11d64865f0647f8025361b3de0b9e47349e5674543b9ffacc83da1e9bfefbc5",
+  "experiments/baseline/private_accumulator.clj"
+  "9ec5d27aa618c5fa2b34a7f95e8c93ead9811ca5fb0f5bc4957425189be71eed",
+  "src/klara/compile/edge.clj"
+  "93f90ed2d3571f89223a60182af01655e239a776333824f0fa4b0edb014a3e9f",
+  "src/klara/compile/escape.clj"
+  "0b0cbd23e2a031ddaf1d2a5e66f68209901cf5e6ecd9f4771acdccb5d606d462",
+  "src/klara/code.clj"
+  "9a4663239a849215d83cc21ce24390d6ba3f6c3b80a4951d758285fffe7f80e8",
+  "src/klara/compile/ir.clj"
+  "04da4006359a881b8f5c849632d64714cc0ee43c3717e13b81f70b2ff8557989",
+  "experiments/baseline/campaign.clj"
+  "da93ee566f0c81da327ec366b698a8d9bed6d232901dfc95f31b95b099bf52be",
+  "src/klara/defs.clj"
+  "fa2cef5153903f49de13676785c8d0075d87086f6bdd78fb66c61cfbd3d0c436",
+  "src/klara/compile/guest.clj"
+  "53c4aaee0ada0e7284c884d72e39adf0577c388870712b80042475c77ff6f2d1",
+  "src/klara/expand.clj"
+  "3e4dd3ce7fe4a2b197344549ed3966a628ac1399c860ea24d0c69e0687e4f124",
+  "experiments/baseline/entry.clj"
+  "b09946726da1a6f8188164113715a2ddff8bd1eca4772d3eb38d3d6c1d4a12d5",
+  "src/klara/compile/subject.clj"
+  "4ff05a76d70ec93f902d9301217755f743c47b3eac121118dce948b709072ae6",
+  "src/klara/compile/baseline.clj"
+  "be1fda2ebf41a1aeaf4cd4b5da4e029af6766e65992ed2fcf610508d9345385c",
+  "src/klara/effect_class.clj"
+  "354e1100fe88a79195d8bb5958ce38053ed67657440c59e5e04a1918c87870fe",
+  "src/klara/compile/compose.clj"
+  "0ab8e752e5ef9a76255b247f6858062e526f8b0e9c727e4f57534ea330b39906",
+  "src/klara/compile/loop.clj"
+  "70288d9e58db5ac74f631404da32cb209bb29cba9fc71d56bf67a49d90ed5b47",
+  "src/klara/nrepl.clj"
+  "087b57b1b3d925efe37d72c14f0d9e515591b88dc885e29f67dfad359405b8b1",
+  "src/klara/compile/hof.clj"
+  "b16d14a9c70532ceb5e00c2ef8fdb4167b8b5cc0b3eaca8a3f4c65255661d519",
+  "test/klara/entry_test.clj"
+  "8d3073dc51242e1e4598a59d8f4f37fa06b6a9c81c41955fed9ae26e3ee8cc81",
+  "src/klara/compile/staged.clj"
+  "7d0861ab553b1484c31632e7dfe347161745cb478c089802949becb6201b585d",
+  "src/klara/syntax.clj"
+  "8963b902a00dd3f778ba0fbb5efd2ef15244c904070195fd4a47a48d5825db44",
+  "src/klara/compile/runtime.clj"
+  "f4fcfcf98fc25874f6cb4ad120751b2d66ad4ca16fcc27bb3a51b5000cc16a74",
+  "src/klara/compile/scalar.clj"
+  "352012cdc752465d36452302da1d8cc60cd521fd79081f8f4915da209d273966",
+  "src/klara/stage.clj"
+  "9cf3c97d2cdc8181810e5262951f924383b5acfc051c947139de75d503c44856",
+  "src/klara/compile/analysis.clj"
+  "8c29cd30f8b8814efd55094db8a4310a815c33584e1b8a6ee39dabaf34245ebc",
+  "src/klara/compile/updates.clj"
+  "446b74e76cb10a9f77e7eefebc2ae68401b3adf6bf7a3bd1f567e1873e0cc721",
+  "src/klara/fusion.clj"
+  "8e88dbe66640c4d60be5a1dafc07c86a17bef5b0633c08179256f56a1658a356",
+  "src/klara/compile/diagnostics.clj"
+  "f7b7d848edcfa22ff05d4dd81b154444e4ba68c1794d9a42177f40eece1ea089",
+  "src/klara/authority.clj"
+  "70c91dac1f5beace4e6426913f27a8a4dca3a5517f70bc86516f50f4ac369a9d",
+  "src/klara/compile/service.clj"
+  "f0cad0e231d18b2602ea67e89bda3eb41d728f8fb2e43efca9088e51fe4f9c0b",
+  "src/klara/compile/strict_fold.clj"
+  "bd35e878609a1822e127d90f7b668465386b4c2cc56c36e0c16eb56ce3f4d28d",
+  "src/klara/eval.clj"
+  "f3426a67ec736d5e07c1e1e836a7d242ed6f5efdc1ebb16ab079afcf3d80ad65",
+  "src/klara/compile/local_calls.clj"
+  "4cdba2f2c6cb09752c38cbe1942034e236c65b6e35568b9fe4d066256cd28a0a",
+  "src/klara/compile/prepare.clj"
+  "2de9e4921590cfdb4abf96acd40b412af2aad002dd1b3a30836c7523e9eb9f0d",
+  "src/klara/compile/requirements.clj"
+  "b551f12324b50024fbae1f448e3819736e2004d602ed8cdfde02674c22300969"},
+ :source
+ (fn
+  [n bias limit]
+  (let
+   [step
+    (fn
+     [acc i]
+     (assoc (assoc acc 0 (+ (nth acc 0) i)) 1 (+ (nth acc 1) bias)))]
+   (let
+    [acc
+     (loop
+      [i 0 acc [0 0]]
+      (if (< i n) (recur (inc i) (step acc i)) acc))]
+    (< (+ (nth acc 0) (nth acc 1)) limit)))),
+ :java "25.0.1+8-LTS-jvmci-b01",
+ :label "final-2",
+ :full-calls
+ [{:cache :empty,
+   :arguments [0 4 1],
+   :expected true,
+   :direct-hook :disabled-for-both,
+   :batch 128,
+   :samples
+   [{:reference
+     {:wall-ns-per-call 8834.8984375,
+      :cpu-ns-per-call 8926.6015625,
+      :bytes-per-call 10512.5625},
+     :planned
+     {:wall-ns-per-call 8557.1015625,
+      :cpu-ns-per-call 8634.6171875,
+      :bytes-per-call 10512.5625}}
+    {:planned
+     {:wall-ns-per-call 8606.609375,
+      :cpu-ns-per-call 8622.2578125,
+      :bytes-per-call 10512.5625},
+     :reference
+     {:wall-ns-per-call 8704.875,
+      :cpu-ns-per-call 8727.2890625,
+      :bytes-per-call 10512.5625}}
+    {:reference
+     {:wall-ns-per-call 8537.046875,
+      :cpu-ns-per-call 8551.15625,
+      :bytes-per-call 10512.5625},
+     :planned
+     {:wall-ns-per-call 8639.96875,
+      :cpu-ns-per-call 8656.15625,
+      :bytes-per-call 10512.5625}}
+    {:planned
+     {:wall-ns-per-call 8599.1796875,
+      :cpu-ns-per-call 8613.4921875,
+      :bytes-per-call 10512.5625},
+     :reference
+     {:wall-ns-per-call 8596.65625,
+      :cpu-ns-per-call 8611.34375,
+      :bytes-per-call 10512.5625}}
+    {:reference
+     {:wall-ns-per-call 9015.59375,
+      :cpu-ns-per-call 9034.046875,
+      :bytes-per-call 10512.5625},
+     :planned
+     {:wall-ns-per-call 8769.40625,
+      :cpu-ns-per-call 8790.6015625,
+      :bytes-per-call 10512.5625}}
+    {:planned
+     {:wall-ns-per-call 8561.859375,
+      :cpu-ns-per-call 8579.7421875,
+      :bytes-per-call 10512.5625},
+     :reference
+     {:wall-ns-per-call 8799.1328125,
+      :cpu-ns-per-call 8816.671875,
+      :bytes-per-call 10512.5625}}
+    {:reference
+     {:wall-ns-per-call 8495.3203125,
+      :cpu-ns-per-call 8513.2421875,
+      :bytes-per-call 10512.5625},
+     :planned
+     {:wall-ns-per-call 8409.328125,
+      :cpu-ns-per-call 8423.578125,
+      :bytes-per-call 10512.5625}}
+    {:planned
+     {:wall-ns-per-call 8352.2734375,
+      :cpu-ns-per-call 8371.7265625,
+      :bytes-per-call 10512.5625},
+     :reference
+     {:wall-ns-per-call 8376.28125,
+      :cpu-ns-per-call 8393.8515625,
+      :bytes-per-call 10512.5625}}
+    {:reference
+     {:wall-ns-per-call 8358.96875,
+      :cpu-ns-per-call 8378.0390625,
+      :bytes-per-call 10512.5625},
+     :planned
+     {:wall-ns-per-call 8217.7734375,
+      :cpu-ns-per-call 8230.484375,
+      :bytes-per-call 10512.5625}}],
+   :medians
+   {:reference
+    {:wall-ns-per-call 8596.65625,
+     :cpu-ns-per-call 8611.34375,
+     :bytes-per-call 10512.5625},
+    :planned
+    {:wall-ns-per-call 8561.859375,
+     :cpu-ns-per-call 8613.4921875,
+     :bytes-per-call 10512.5625}}}
+  {:cache :empty,
+   :arguments [0.5 4 1],
+   :expected false,
+   :direct-hook :disabled-for-both,
+   :batch 128,
+   :samples
+   [{:reference
+     {:wall-ns-per-call 10679.8046875,
+      :cpu-ns-per-call 10691.9609375,
+      :bytes-per-call 22560.5625},
+     :planned
+     {:wall-ns-per-call 10723.0390625,
+      :cpu-ns-per-call 10728.0234375,
+      :bytes-per-call 22560.5625}}
+    {:planned
+     {:wall-ns-per-call 10755.765625,
+      :cpu-ns-per-call 10760.6328125,
+      :bytes-per-call 22560.5625},
+     :reference
+     {:wall-ns-per-call 10154.171875,
+      :cpu-ns-per-call 10158.453125,
+      :bytes-per-call 22560.5625}}
+    {:reference
+     {:wall-ns-per-call 10610.6953125,
+      :cpu-ns-per-call 10613.9765625,
+      :bytes-per-call 22560.5625},
+     :planned
+     {:wall-ns-per-call 10623.9765625,
+      :cpu-ns-per-call 10628.9375,
+      :bytes-per-call 22560.5625}}
+    {:planned
+     {:wall-ns-per-call 10310.109375,
+      :cpu-ns-per-call 10313.7421875,
+      :bytes-per-call 22560.5625},
+     :reference
+     {:wall-ns-per-call 10154.21875,
+      :cpu-ns-per-call 10159.8671875,
+      :bytes-per-call 22560.5625}}
+    {:reference
+     {:wall-ns-per-call 10450.9765625,
+      :cpu-ns-per-call 10455.2265625,
+      :bytes-per-call 22560.5625},
+     :planned
+     {:wall-ns-per-call 10893.2578125,
+      :cpu-ns-per-call 10897.2421875,
+      :bytes-per-call 22560.5625}}
+    {:planned
+     {:wall-ns-per-call 10524.265625,
+      :cpu-ns-per-call 10529.0390625,
+      :bytes-per-call 22560.5625},
+     :reference
+     {:wall-ns-per-call 10598.46875,
+      :cpu-ns-per-call 10602.8046875,
+      :bytes-per-call 22560.5625}}
+    {:reference
+     {:wall-ns-per-call 10563.671875,
+      :cpu-ns-per-call 10567.640625,
+      :bytes-per-call 22560.5625},
+     :planned
+     {:wall-ns-per-call 10630.9296875,
+      :cpu-ns-per-call 10635.7421875,
+      :bytes-per-call 22560.5625}}
+    {:planned
+     {:wall-ns-per-call 10484.6328125,
+      :cpu-ns-per-call 10488.546875,
+      :bytes-per-call 22560.5625},
+     :reference
+     {:wall-ns-per-call 10395.6640625,
+      :cpu-ns-per-call 10399.0234375,
+      :bytes-per-call 22560.5625}}
+    {:reference
+     {:wall-ns-per-call 10417.5625,
+      :cpu-ns-per-call 10422.6953125,
+      :bytes-per-call 22560.5625},
+     :planned
+     {:wall-ns-per-call 10460.390625,
+      :cpu-ns-per-call 10463.3203125,
+      :bytes-per-call 22560.5625}}],
+   :medians
+   {:reference
+    {:wall-ns-per-call 10450.9765625,
+     :cpu-ns-per-call 10455.2265625,
+     :bytes-per-call 22560.5625},
+    :planned
+    {:wall-ns-per-call 10623.9765625,
+     :cpu-ns-per-call 10628.9375,
+     :bytes-per-call 22560.5625}}}
+  {:cache :baseline,
+   :arguments [0 4 1],
+   :expected true,
+   :direct-hook :disabled-for-both,
+   :batch 128,
+   :samples
+   [{:reference
+     {:wall-ns-per-call 3098.046875,
+      :cpu-ns-per-call 3104.5390625,
+      :bytes-per-call 5584.5625},
+     :planned
+     {:wall-ns-per-call 2571.03125,
+      :cpu-ns-per-call 2519.828125,
+      :bytes-per-call 4784.5625}}
+    {:planned
+     {:wall-ns-per-call 2309.0078125,
+      :cpu-ns-per-call 2312.484375,
+      :bytes-per-call 4784.5625},
+     :reference
+     {:wall-ns-per-call 2793.6328125,
+      :cpu-ns-per-call 2796.484375,
+      :bytes-per-call 5584.5625}}
+    {:reference
+     {:wall-ns-per-call 2739.1171875,
+      :cpu-ns-per-call 2741.7890625,
+      :bytes-per-call 5584.5625},
+     :planned
+     {:wall-ns-per-call 2303.9921875,
+      :cpu-ns-per-call 2307.03125,
+      :bytes-per-call 4784.5625}}
+    {:planned
+     {:wall-ns-per-call 2306.34375,
+      :cpu-ns-per-call 2309.6875,
+      :bytes-per-call 4784.5625},
+     :reference
+     {:wall-ns-per-call 2681.359375,
+      :cpu-ns-per-call 2684.0,
+      :bytes-per-call 5584.5625}}
+    {:reference
+     {:wall-ns-per-call 2694.359375,
+      :cpu-ns-per-call 2698.0,
+      :bytes-per-call 5584.5625},
+     :planned
+     {:wall-ns-per-call 2251.234375,
+      :cpu-ns-per-call 2254.3046875,
+      :bytes-per-call 4784.5625}}
+    {:planned
+     {:wall-ns-per-call 2303.78125,
+      :cpu-ns-per-call 2306.6484375,
+      :bytes-per-call 4784.5625},
+     :reference
+     {:wall-ns-per-call 2832.1796875,
+      :cpu-ns-per-call 2834.8671875,
+      :bytes-per-call 5584.5625}}
+    {:reference
+     {:wall-ns-per-call 2776.265625,
+      :cpu-ns-per-call 2779.359375,
+      :bytes-per-call 5584.5625},
+     :planned
+     {:wall-ns-per-call 2356.1328125,
+      :cpu-ns-per-call 2358.953125,
+      :bytes-per-call 4784.5625}}
+    {:planned
+     {:wall-ns-per-call 2306.609375,
+      :cpu-ns-per-call 2309.359375,
+      :bytes-per-call 4784.5625},
+     :reference
+     {:wall-ns-per-call 2814.6015625,
+      :cpu-ns-per-call 2817.3359375,
+      :bytes-per-call 5584.5625}}
+    {:reference
+     {:wall-ns-per-call 2807.921875,
+      :cpu-ns-per-call 2811.09375,
+      :bytes-per-call 5584.5625},
+     :planned
+     {:wall-ns-per-call 2392.2109375,
+      :cpu-ns-per-call 2394.8828125,
+      :bytes-per-call 4784.5625}}],
+   :medians
+   {:reference
+    {:wall-ns-per-call 2793.6328125,
+     :cpu-ns-per-call 2796.484375,
+     :bytes-per-call 5584.5625},
+    :planned
+    {:wall-ns-per-call 2306.609375,
+     :cpu-ns-per-call 2309.6875,
+     :bytes-per-call 4784.5625}}}
+  {:cache :baseline,
+   :arguments [0.5 4 1],
+   :expected false,
+   :direct-hook :disabled-for-both,
+   :batch 128,
+   :samples
+   [{:reference
+     {:wall-ns-per-call 2653.7734375,
+      :cpu-ns-per-call 2663.9765625,
+      :bytes-per-call 5712.5625},
+     :planned
+     {:wall-ns-per-call 2141.359375,
+      :cpu-ns-per-call 2145.046875,
+      :bytes-per-call 4912.5625}}
+    {:planned
+     {:wall-ns-per-call 2237.3203125,
+      :cpu-ns-per-call 2240.921875,
+      :bytes-per-call 4912.5625},
+     :reference
+     {:wall-ns-per-call 2849.984375,
+      :cpu-ns-per-call 2853.546875,
+      :bytes-per-call 5712.5625}}
+    {:reference
+     {:wall-ns-per-call 2810.4296875,
+      :cpu-ns-per-call 2813.5625,
+      :bytes-per-call 5712.5625},
+     :planned
+     {:wall-ns-per-call 2255.1171875,
+      :cpu-ns-per-call 2258.21875,
+      :bytes-per-call 4912.5625}}
+    {:planned
+     {:wall-ns-per-call 2220.5078125,
+      :cpu-ns-per-call 2224.0859375,
+      :bytes-per-call 4912.5625},
+     :reference
+     {:wall-ns-per-call 2685.3515625,
+      :cpu-ns-per-call 2689.1875,
+      :bytes-per-call 5712.5625}}
+    {:reference
+     {:wall-ns-per-call 2669.2578125,
+      :cpu-ns-per-call 2671.8984375,
+      :bytes-per-call 5712.5625},
+     :planned
+     {:wall-ns-per-call 2276.40625,
+      :cpu-ns-per-call 2279.1875,
+      :bytes-per-call 4912.5625}}
+    {:planned
+     {:wall-ns-per-call 2226.578125,
+      :cpu-ns-per-call 2229.4765625,
+      :bytes-per-call 4912.5625},
+     :reference
+     {:wall-ns-per-call 2681.125,
+      :cpu-ns-per-call 2684.6796875,
+      :bytes-per-call 5712.5625}}
+    {:reference
+     {:wall-ns-per-call 2647.8125,
+      :cpu-ns-per-call 2651.3203125,
+      :bytes-per-call 5712.5625},
+     :planned
+     {:wall-ns-per-call 2390.359375,
+      :cpu-ns-per-call 2436.8515625,
+      :bytes-per-call 4912.5625}}
+    {:planned
+     {:wall-ns-per-call 2186.7109375,
+      :cpu-ns-per-call 2191.140625,
+      :bytes-per-call 4912.5625},
+     :reference
+     {:wall-ns-per-call 2728.4140625,
+      :cpu-ns-per-call 2732.390625,
+      :bytes-per-call 5712.5625}}
+    {:reference
+     {:wall-ns-per-call 2594.0625,
+      :cpu-ns-per-call 2597.5859375,
+      :bytes-per-call 5712.5625},
+     :planned
+     {:wall-ns-per-call 2256.53125,
+      :cpu-ns-per-call 2292.578125,
+      :bytes-per-call 4912.5625}}],
+   :medians
+   {:reference
+    {:wall-ns-per-call 2681.125,
+     :cpu-ns-per-call 2684.6796875,
+     :bytes-per-call 5712.5625},
+    :planned
+    {:wall-ns-per-call 2237.3203125,
+     :cpu-ns-per-call 2240.921875,
+     :bytes-per-call 4912.5625}}}
+  {:cache :private,
+   :arguments [0 4 1],
+   :expected true,
+   :direct-hook :disabled-for-both,
+   :batch 128,
+   :samples
+   [{:reference
+     {:wall-ns-per-call 5182.5234375,
+      :cpu-ns-per-call 5193.5703125,
+      :bytes-per-call 8760.5625},
+     :planned
+     {:wall-ns-per-call 3545.5703125,
+      :cpu-ns-per-call 3550.0859375,
+      :bytes-per-call 5656.5625}}
+    {:planned
+     {:wall-ns-per-call 3516.453125,
+      :cpu-ns-per-call 3520.078125,
+      :bytes-per-call 5656.5625},
+     :reference
+     {:wall-ns-per-call 5190.2109375,
+      :cpu-ns-per-call 5193.1796875,
+      :bytes-per-call 8760.5625}}
+    {:reference
+     {:wall-ns-per-call 5196.21875,
+      :cpu-ns-per-call 5200.015625,
+      :bytes-per-call 8760.5625},
+     :planned
+     {:wall-ns-per-call 3401.5859375,
+      :cpu-ns-per-call 3405.421875,
+      :bytes-per-call 5656.5625}}
+    {:planned
+     {:wall-ns-per-call 3211.1484375,
+      :cpu-ns-per-call 3215.8203125,
+      :bytes-per-call 5656.5625},
+     :reference
+     {:wall-ns-per-call 5037.7109375,
+      :cpu-ns-per-call 5041.3671875,
+      :bytes-per-call 8760.5625}}
+    {:reference
+     {:wall-ns-per-call 5032.109375,
+      :cpu-ns-per-call 5035.390625,
+      :bytes-per-call 8760.5625},
+     :planned
+     {:wall-ns-per-call 3386.84375,
+      :cpu-ns-per-call 3390.734375,
+      :bytes-per-call 5656.5625}}
+    {:planned
+     {:wall-ns-per-call 3348.6796875,
+      :cpu-ns-per-call 3352.8046875,
+      :bytes-per-call 5656.5625},
+     :reference
+     {:wall-ns-per-call 5057.0234375,
+      :cpu-ns-per-call 5059.8046875,
+      :bytes-per-call 8760.5625}}
+    {:reference
+     {:wall-ns-per-call 5120.1953125,
+      :cpu-ns-per-call 5123.96875,
+      :bytes-per-call 8760.5625},
+     :planned
+     {:wall-ns-per-call 3211.9609375,
+      :cpu-ns-per-call 3216.7109375,
+      :bytes-per-call 5656.5625}}
+    {:planned
+     {:wall-ns-per-call 3413.6796875,
+      :cpu-ns-per-call 3417.7265625,
+      :bytes-per-call 5656.5625},
+     :reference
+     {:wall-ns-per-call 5162.5078125,
+      :cpu-ns-per-call 5165.9140625,
+      :bytes-per-call 8760.5625}}
+    {:reference
+     {:wall-ns-per-call 5085.9375,
+      :cpu-ns-per-call 5089.4453125,
+      :bytes-per-call 8760.5625},
+     :planned
+     {:wall-ns-per-call 3443.1953125,
+      :cpu-ns-per-call 3445.7734375,
+      :bytes-per-call 5656.5625}}],
+   :medians
+   {:reference
+    {:wall-ns-per-call 5120.1953125,
+     :cpu-ns-per-call 5123.96875,
+     :bytes-per-call 8760.5625},
+    :planned
+    {:wall-ns-per-call 3401.5859375,
+     :cpu-ns-per-call 3405.421875,
+     :bytes-per-call 5656.5625}}}
+  {:cache :private,
+   :arguments [0.5 4 1],
+   :expected false,
+   :direct-hook :disabled-for-both,
+   :batch 128,
+   :samples
+   [{:reference
+     {:wall-ns-per-call 11640.4609375,
+      :cpu-ns-per-call 11654.625,
+      :bytes-per-call 26760.5625},
+     :planned
+     {:wall-ns-per-call 10099.1015625,
+      :cpu-ns-per-call 10103.65625,
+      :bytes-per-call 23864.5625}}
+    {:planned
+     {:wall-ns-per-call 10089.984375,
+      :cpu-ns-per-call 10095.9140625,
+      :bytes-per-call 23864.5625},
+     :reference
+     {:wall-ns-per-call 11595.609375,
+      :cpu-ns-per-call 11601.109375,
+      :bytes-per-call 26760.5625}}
+    {:reference
+     {:wall-ns-per-call 11736.0390625,
+      :cpu-ns-per-call 11741.84375,
+      :bytes-per-call 26760.5625},
+     :planned
+     {:wall-ns-per-call 10592.5,
+      :cpu-ns-per-call 10597.796875,
+      :bytes-per-call 23864.5625}}
+    {:planned
+     {:wall-ns-per-call 10421.953125,
+      :cpu-ns-per-call 10425.8984375,
+      :bytes-per-call 23864.5625},
+     :reference
+     {:wall-ns-per-call 11472.90625,
+      :cpu-ns-per-call 11476.4921875,
+      :bytes-per-call 26760.5625}}
+    {:reference
+     {:wall-ns-per-call 11597.15625,
+      :cpu-ns-per-call 11601.1796875,
+      :bytes-per-call 26760.5625},
+     :planned
+     {:wall-ns-per-call 10215.8359375,
+      :cpu-ns-per-call 10218.6484375,
+      :bytes-per-call 23864.5625}}
+    {:planned
+     {:wall-ns-per-call 18303.4375,
+      :cpu-ns-per-call 10909.1953125,
+      :bytes-per-call 23864.5625},
+     :reference
+     {:wall-ns-per-call 11588.0234375,
+      :cpu-ns-per-call 11593.1796875,
+      :bytes-per-call 26760.5625}}
+    {:reference
+     {:wall-ns-per-call 11179.8359375,
+      :cpu-ns-per-call 11184.7578125,
+      :bytes-per-call 26760.5625},
+     :planned
+     {:wall-ns-per-call 9409.515625,
+      :cpu-ns-per-call 9412.7734375,
+      :bytes-per-call 23864.5625}}
+    {:planned
+     {:wall-ns-per-call 10517.109375,
+      :cpu-ns-per-call 10521.5859375,
+      :bytes-per-call 23864.5625},
+     :reference
+     {:wall-ns-per-call 11634.75,
+      :cpu-ns-per-call 11638.5,
+      :bytes-per-call 26760.5625}}
+    {:reference
+     {:wall-ns-per-call 11758.6953125,
+      :cpu-ns-per-call 11762.4453125,
+      :bytes-per-call 26760.5625},
+     :planned
+     {:wall-ns-per-call 10385.6640625,
+      :cpu-ns-per-call 10388.953125,
+      :bytes-per-call 23864.5625}}],
+   :medians
+   {:reference
+    {:wall-ns-per-call 11597.15625,
+     :cpu-ns-per-call 11601.1796875,
+     :bytes-per-call 26760.5625},
+    :planned
+    {:wall-ns-per-call 10385.6640625,
+     :cpu-ns-per-call 10388.953125,
+     :bytes-per-call 23864.5625}}}
+  {:cache :portfolio,
+   :arguments [0 4 1],
+   :expected true,
+   :direct-hook :disabled-for-both,
+   :batch 128,
+   :samples
+   [{:reference
+     {:wall-ns-per-call 4522.265625,
+      :cpu-ns-per-call 4532.359375,
+      :bytes-per-call 8472.5625},
+     :planned
+     {:wall-ns-per-call 2914.8046875,
+      :cpu-ns-per-call 2918.7421875,
+      :bytes-per-call 5368.5625}}
+    {:planned
+     {:wall-ns-per-call 2824.21875,
+      :cpu-ns-per-call 2827.0234375,
+      :bytes-per-call 5368.5625},
+     :reference
+     {:wall-ns-per-call 4275.5703125,
+      :cpu-ns-per-call 4279.2578125,
+      :bytes-per-call 8472.5625}}
+    {:reference
+     {:wall-ns-per-call 4362.40625,
+      :cpu-ns-per-call 4366.234375,
+      :bytes-per-call 8472.5625},
+     :planned
+     {:wall-ns-per-call 2823.6875,
+      :cpu-ns-per-call 2826.578125,
+      :bytes-per-call 5368.5625}}
+    {:planned
+     {:wall-ns-per-call 2788.4921875,
+      :cpu-ns-per-call 2791.2265625,
+      :bytes-per-call 5368.5625},
+     :reference
+     {:wall-ns-per-call 4420.8828125,
+      :cpu-ns-per-call 4423.34375,
+      :bytes-per-call 8472.5625}}
+    {:reference
+     {:wall-ns-per-call 4315.8984375,
+      :cpu-ns-per-call 4318.5234375,
+      :bytes-per-call 8472.5625},
+     :planned
+     {:wall-ns-per-call 2798.359375,
+      :cpu-ns-per-call 2801.1171875,
+      :bytes-per-call 5368.5625}}
+    {:planned
+     {:wall-ns-per-call 2848.0703125,
+      :cpu-ns-per-call 2850.9765625,
+      :bytes-per-call 5368.5625},
+     :reference
+     {:wall-ns-per-call 4347.4375,
+      :cpu-ns-per-call 4351.1328125,
+      :bytes-per-call 8472.5625}}
+    {:reference
+     {:wall-ns-per-call 4327.984375,
+      :cpu-ns-per-call 4330.765625,
+      :bytes-per-call 8472.5625},
+     :planned
+     {:wall-ns-per-call 2867.984375,
+      :cpu-ns-per-call 2870.6171875,
+      :bytes-per-call 5368.5625}}
+    {:planned
+     {:wall-ns-per-call 2851.4140625,
+      :cpu-ns-per-call 2854.0703125,
+      :bytes-per-call 5368.5625},
+     :reference
+     {:wall-ns-per-call 4541.46875,
+      :cpu-ns-per-call 4544.015625,
+      :bytes-per-call 8472.5625}}
+    {:reference
+     {:wall-ns-per-call 4352.78125,
+      :cpu-ns-per-call 4356.6875,
+      :bytes-per-call 8472.5625},
+     :planned
+     {:wall-ns-per-call 2919.4375,
+      :cpu-ns-per-call 2922.7890625,
+      :bytes-per-call 5368.5625}}],
+   :medians
+   {:reference
+    {:wall-ns-per-call 4352.78125,
+     :cpu-ns-per-call 4356.6875,
+     :bytes-per-call 8472.5625},
+    :planned
+    {:wall-ns-per-call 2848.0703125,
+     :cpu-ns-per-call 2850.9765625,
+     :bytes-per-call 5368.5625}}}
+  {:cache :portfolio,
+   :arguments [0.5 4 1],
+   :expected false,
+   :direct-hook :disabled-for-both,
+   :batch 128,
+   :samples
+   [{:reference
+     {:wall-ns-per-call 4962.0859375,
+      :cpu-ns-per-call 4974.1328125,
+      :bytes-per-call 9376.5625},
+     :planned
+     {:wall-ns-per-call 3351.5859375,
+      :cpu-ns-per-call 3355.234375,
+      :bytes-per-call 5680.5625}}
+    {:planned
+     {:wall-ns-per-call 3240.5625,
+      :cpu-ns-per-call 3243.140625,
+      :bytes-per-call 5680.5625},
+     :reference
+     {:wall-ns-per-call 4842.5859375,
+      :cpu-ns-per-call 4846.2421875,
+      :bytes-per-call 9376.5625}}
+    {:reference
+     {:wall-ns-per-call 5001.375,
+      :cpu-ns-per-call 5004.5234375,
+      :bytes-per-call 9376.5625},
+     :planned
+     {:wall-ns-per-call 3239.8515625,
+      :cpu-ns-per-call 3243.015625,
+      :bytes-per-call 5680.5625}}
+    {:planned
+     {:wall-ns-per-call 3111.5078125,
+      :cpu-ns-per-call 3114.421875,
+      :bytes-per-call 5680.5625},
+     :reference
+     {:wall-ns-per-call 14932.703125,
+      :cpu-ns-per-call 4940.8515625,
+      :bytes-per-call 9376.5625}}
+    {:reference
+     {:wall-ns-per-call 4663.890625,
+      :cpu-ns-per-call 4666.96875,
+      :bytes-per-call 9376.5625},
+     :planned
+     {:wall-ns-per-call 3049.28125,
+      :cpu-ns-per-call 3052.421875,
+      :bytes-per-call 5680.5625}}
+    {:planned
+     {:wall-ns-per-call 2913.609375,
+      :cpu-ns-per-call 2916.25,
+      :bytes-per-call 5680.5625},
+     :reference
+     {:wall-ns-per-call 4428.1328125,
+      :cpu-ns-per-call 4431.453125,
+      :bytes-per-call 9376.5625}}
+    {:reference
+     {:wall-ns-per-call 4669.8828125,
+      :cpu-ns-per-call 4672.0703125,
+      :bytes-per-call 9376.5625},
+     :planned
+     {:wall-ns-per-call 3089.8828125,
+      :cpu-ns-per-call 3093.7578125,
+      :bytes-per-call 5680.5625}}
+    {:planned
+     {:wall-ns-per-call 3233.2890625,
+      :cpu-ns-per-call 3235.796875,
+      :bytes-per-call 5680.5625},
+     :reference
+     {:wall-ns-per-call 5037.6171875,
+      :cpu-ns-per-call 5040.078125,
+      :bytes-per-call 9376.5625}}
+    {:reference
+     {:wall-ns-per-call 5136.1328125,
+      :cpu-ns-per-call 5140.5703125,
+      :bytes-per-call 9376.5625},
+     :planned
+     {:wall-ns-per-call 3591.4296875,
+      :cpu-ns-per-call 3594.0,
+      :bytes-per-call 5680.5625}}],
+   :medians
+   {:reference
+    {:wall-ns-per-call 4962.0859375,
+     :cpu-ns-per-call 4940.8515625,
+     :bytes-per-call 9376.5625},
+    :planned
+    {:wall-ns-per-call 3233.2890625,
+     :cpu-ns-per-call 3235.796875,
+     :bytes-per-call 5680.5625}}}],
+ :direct-site
+ [{:wall-ns-per-call 750.921875,
+   :cpu-ns-per-call 754.13671875,
+   :bytes-per-call 784.140625}
+  {:wall-ns-per-call 707.154296875,
+   :cpu-ns-per-call 708.140625,
+   :bytes-per-call 784.140625}
+  {:wall-ns-per-call 684.923828125,
+   :cpu-ns-per-call 685.62109375,
+   :bytes-per-call 784.140625}
+  {:wall-ns-per-call 705.494140625,
+   :cpu-ns-per-call 706.06640625,
+   :bytes-per-call 784.140625}
+  {:wall-ns-per-call 690.830078125,
+   :cpu-ns-per-call 691.8203125,
+   :bytes-per-call 784.140625}
+  {:wall-ns-per-call 696.626953125,
+   :cpu-ns-per-call 697.369140625,
+   :bytes-per-call 784.140625}
+  {:wall-ns-per-call 711.25,
+   :cpu-ns-per-call 711.912109375,
+   :bytes-per-call 784.140625}
+  {:wall-ns-per-call 687.435546875,
+   :cpu-ns-per-call 688.28515625,
+   :bytes-per-call 784.140625}
+  {:wall-ns-per-call 732.4375,
+   :cpu-ns-per-call 733.283203125,
+   :bytes-per-call 784.140625}],
+ :limits
+ [:one-source-two-inputs
+  :fixed-bounded-traces
+  :warmup-8192-per-mode
+  :nine-alternating-rounds
+  :context-bindings-once-per-batch-outside-timing
+  :ordinary-entry-reference-retains-original-guard-loop
+  :new-direct-selection-is-a-correctness-change-not-a-reference-control
+  :direct-and-evidence-sites-have-no-before-control
+  :counter-instrumentation-separate-from-timing
+  :no-time-assertions
+  :no-cache-of-live-host-root-or-argument-predicate-verdicts
+  :full-call-comparison-disables-direct-hook-in-both-modes
+  :preparation-and-startup-excluded-from-entry-timing],
+ :evidence-site
+ [{:wall-ns-per-call 3921.921875,
+   :cpu-ns-per-call 3926.03125,
+   :bytes-per-call 2560.140625}
+  {:wall-ns-per-call 3919.96875,
+   :cpu-ns-per-call 3921.78125,
+   :bytes-per-call 2560.140625}
+  {:wall-ns-per-call 4076.57421875,
+   :cpu-ns-per-call 4077.646484375,
+   :bytes-per-call 2560.140625}
+  {:wall-ns-per-call 3634.755859375,
+   :cpu-ns-per-call 3635.6953125,
+   :bytes-per-call 2560.140625}
+  {:wall-ns-per-call 2615.814453125,
+   :cpu-ns-per-call 2616.818359375,
+   :bytes-per-call 2560.25}
+  {:wall-ns-per-call 2498.94921875,
+   :cpu-ns-per-call 2499.869140625,
+   :bytes-per-call 2560.140625}
+  {:wall-ns-per-call 2367.51171875,
+   :cpu-ns-per-call 2368.208984375,
+   :bytes-per-call 2560.140625}
+  {:wall-ns-per-call 2319.638671875,
+   :cpu-ns-per-call 2320.353515625,
+   :bytes-per-call 2560.140625}
+  {:wall-ns-per-call 2240.498046875,
+   :cpu-ns-per-call 2241.375,
+   :bytes-per-call 2560.140625}],
+ :preparation-usage {:work 14909, :bytes 4912, :emissions 3}}

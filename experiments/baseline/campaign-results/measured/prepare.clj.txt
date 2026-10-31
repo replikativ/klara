@@ -1,0 +1,81 @@
+(ns klara.compile.prepare
+  "Shared bounded preparation jobs for before-use and later adaptive callers.
+   Jobs hold counters, not policy authority; no profiling policy is implied."
+  (:require [klara.compile.baseline :as baseline] [klara.compile.budget :as budget]
+            [klara.compile.compose :as compose]
+            [klara.compile.strategy :as strategy]
+            [klara.compile.staged :as staged] [klara.stage :as stage]))
+
+(defn job
+  "Reuse one job across startup files to retain the session allowance. Limits
+   bound counted work/emissions, not JVM compilation, JIT or GC latency."
+  ([] (job {}))
+  ([options]
+   (when-not (or (nil? (:local-call-planner options)) (symbol? (:local-call-planner options)))
+     (throw (ex-info "local-call planner must name a world definition" {:reason :invalid-planner})))
+   (compose/rounds! (:rewrite-rounds options compose/default-rounds))
+   (strategy/steps! (:strategy-steps options strategy/default-steps))
+   (when-not (or (nil? (:strategy options)) (symbol? (:strategy options)))
+     (throw (ex-info "strategy must name a world function" {:reason :invalid-strategy})))
+   {:budget (budget/budget (merge budget/session-limits (:session-limits options)))
+              :local-call-planner (:local-call-planner options)
+              :rewrite-rounds (:rewrite-rounds options compose/default-rounds)
+              :strategy (:strategy options) :strategy-steps (:strategy-steps options strategy/default-steps)
+              :policy-root (:policy-root options) :selection (:selection options)
+              :file-limits (merge budget/file-limits (:file-limits options))
+              :definition-limits (merge budget/definition-limits (:definition-limits options))}))
+
+(defn prepare!
+  "Prepare definition requests {:name symbol :file identity} against exactly
+   root. Each invocation owns its dependency memo; no verdict crosses roots.
+   Declines never undo a semantic load. Cache publication follows prevalidation."
+  [job root requests cache]
+  (when-not (vector? requests)
+    (throw (ex-info "preparation requests must be a vector" {:reason :invalid-requests})))
+  (if-not cache
+    {:status :skipped :reason :no-cache}
+    (let [files (atom {}) memo (atom {}) installed (atom #{}) reports (atom [])]
+      (binding [baseline/*memo* memo]
+        (loop [remaining requests]
+          (when (seq remaining)
+          (let [{:keys [name file]} (first remaining)
+                exhausted? (atom false)
+                b (or (get @files file)
+                      (let [b (budget/budget (:file-limits job) (:budget job))]
+                        (swap! files assoc file b) b))]
+            (binding [baseline/*budget* b]
+              (try
+                (budget/charge! b :work 1)
+                (if (@installed name)
+                  (swap! reports conj {:name name :status :deduplicated})
+                  (let [options {:definition-limits (:definition-limits job)
+                                 :local-call-planner (:local-call-planner job)
+                                 :rewrite-rounds (:rewrite-rounds job compose/default-rounds)
+                                 :strategy (:strategy job) :strategy-steps (:strategy-steps job strategy/default-steps)
+                                 :policy-root (:policy-root job) :selection (:selection job)}
+                        candidate (staged/prevalidate (staged/prepare-definition root name options))
+                        result (staged/install! cache root candidate)]
+                    (when (= :installed (:status result)) (swap! installed conj name))
+                    (swap! reports conj (assoc result :name name))
+                    ;; Acyclic callees were already funded and emitted to check
+                    ;; their control contracts. Publish those exact memo entries.
+                    (doseq [[callee exe] @memo
+                            :when (and (map? exe) (not (@installed callee)))]
+                      (let [p (staged/prevalidate (staged/prepare-definition root callee options))
+                            r (staged/install! cache root p)]
+                        (when (= :installed (:status r)) (swap! installed conj callee))
+                        (swap! reports conj (assoc r :name callee :dependency? true))))))
+                (catch Exception e
+                  (when (= :budget-exhausted (:reason (ex-data e))) (reset! exhausted? true))
+                  (swap! reports conj {:name name :status :declined
+                                       :reason (or (:reason (ex-data e)) :preparation-error)}))))
+            (if @exhausted?
+              (swap! reports conj {:status :skipped :reason :budget-exhausted
+                                   :remaining (count (subvec remaining 1))})
+              (recur (subvec remaining 1)))))))
+      {:status :complete :definitions @reports :usage (budget/usage (:budget job))
+       :files (into {} (map (fn [[file b]] [file (budget/usage b)])) @files)})))
+
+(defn after-load! [root requests options]
+  (prepare! (or (:preparation-job options) (job options)) root requests
+            (or (:cache options) stage/*cache*)))

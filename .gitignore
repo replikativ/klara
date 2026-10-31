@@ -17,3 +17,13 @@ doc/reviews/tmp/
 *.fls
 *.synctex.gz
 *.toc
+
+# Local agent and environment configuration
+/.agents/
+/.codex/
+/.aws/
+
+# Editor tooling caches
+.clj-kondo/.cache/
+.clj-kondo/imports/
+.lsp/.cache/

@@ -1,0 +1,50 @@
+[
+  {
+    "label": "admitted-0",
+    "exit_code": 0,
+    "experiment_process_wall_seconds": 3.8216377230128273,
+    "command": [
+      "clojure",
+      "-J-Xmx1g",
+      "-J-Xss16m",
+      "-Sdeps",
+      "{:paths [\"src\" \"experiments\"]}",
+      "-M",
+      "-m",
+      "baseline.campaign",
+      "admitted-0"
+    ]
+  },
+  {
+    "label": "admitted-1",
+    "exit_code": 0,
+    "experiment_process_wall_seconds": 3.7006543279858306,
+    "command": [
+      "clojure",
+      "-J-Xmx1g",
+      "-J-Xss16m",
+      "-Sdeps",
+      "{:paths [\"src\" \"experiments\"]}",
+      "-M",
+      "-m",
+      "baseline.campaign",
+      "admitted-1"
+    ]
+  },
+  {
+    "label": "admitted-2",
+    "exit_code": 0,
+    "experiment_process_wall_seconds": 3.9716922719962895,
+    "command": [
+      "clojure",
+      "-J-Xmx1g",
+      "-J-Xss16m",
+      "-Sdeps",
+      "{:paths [\"src\" \"experiments\"]}",
+      "-M",
+      "-m",
+      "baseline.campaign",
+      "admitted-2"
+    ]
+  }
+]

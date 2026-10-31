@@ -1,0 +1,93 @@
+(ns klara.compile.view
+  "Bounded inspection and scope-checked structural rebuilding of closed Code.
+   Opaque node cursors preserve binders; descriptions cannot forge syntax."
+  (:require [klara.code :as code] [klara.core :as core]
+            [klara.compile.budget :as budget] [klara.compile.service :as service]))
+
+(def limits {:nodes 512 :depth 64 :work 32768})
+(deftype Cursor [term scope child-scopes allowance limits])
+(defmethod print-method Cursor [_ out] (.write out "#<code-cursor>"))
+
+(defn- fail! [check]
+  (throw (ex-info "Code view rejected" {:reason :code-view :check check})))
+
+(defn- scan!
+  "Checks scope while bounding traversal, before conversion/free-var hashing."
+  [b limits term scope]
+  (loop [todo [[term scope 0]] n 0]
+    (if-let [[t bound depth] (peek todo)]
+      (do
+        (budget/charge! b :work 1)
+        (when (or (>= n (:nodes limits)) (> depth (:depth limits)))
+          (budget/exhausted! :code-view-size))
+        (when-not (contains? #{clojure.lang.PersistentArrayMap clojure.lang.PersistentHashMap} (class t))
+          (fail! :syntax))
+        (when-not (contains? #{:quote :var :fn :let :if :letrec :app :prim :resolve} (:op t))
+          (fail! :control-fragment))
+        (when (= :quote (:op t)) (service/data! b (:datum t)))
+        (when (and (= :var (:op t)) (not (contains? bound (:name t)))) (fail! :scope))
+        (let [arity (code/binder-arity t) names (vec (:names t))]
+          (when-not (and (= arity (count names)) (<= 0 arity 20)
+                         (= (count names) (count (distinct names)))
+                         (every? #(and (instance? klara.code.Gen %) (<= (count (str (:base %))) 4096)) names))
+            (fail! :binders))
+          (let [inner (into bound names) parts (code/parts t)]
+            (when (> (count parts) (- (:nodes limits) (inc n) (count (pop todo))))
+              (budget/exhausted! :code-view-size))
+            (recur (into (pop todo) (map (fn [[child under?]] [child (if under? inner bound) (inc depth)])) parts)
+                   (inc n))))) n)))
+
+(defn inspect
+  "Describe a closed finite Core fragment. Each description has :at (opaque
+   cursor), :code (possibly open fragment), and child indices. Freshening every
+   binder occurrence prevents aliases from repeated Code splices becoming a
+   cross-sibling capture channel. Limits may only reduce the default allowance."
+  ([source] (inspect source {}))
+  ([source options]
+   (when-not (code/code? source) (fail! :code-required))
+   (budget/validate-limits! options (set (keys limits)))
+   (let [limits (merge limits options)
+         _ (when-not (every? (fn [[k v]] (<= v (get klara.compile.view/limits k))) limits) (fail! :limits))
+         b (budget/budget {:work (:work limits)})
+         _ (scan! b limits (code/code-term source) #{})
+         original (code/s->core (code/code-term source))
+         _ (core/assert-wf! original)
+         fresh (code/core->s original)
+         nodes (atom [])]
+     (letfn [(visit [t scope]
+               (budget/charge! b :work 1)
+               (let [id (long (count @nodes))
+                     _ (swap! nodes conj nil)
+                     inner (into scope (:names t))
+                     child-scopes (mapv (fn [[_ under?]] (if under? inner scope)) (code/parts t))
+                     children (mapv (fn [[child _] child-scope] (visit child child-scope))
+                                    (code/parts t) child-scopes)
+                     cursor (Cursor. t scope child-scopes b limits)
+                     description (merge {:at cursor :code (code/->code t) :op (:op t) :children children}
+                                        (select-keys t [:datum :id :name :rest?])
+                                        (when (= :fn (:op t)) {:arity (long (:arity t))}))]
+                 ;; :name on :var is an internal binding token; keep it opaque.
+                 (swap! nodes assoc id (if (= :var (:op t)) (dissoc description :name) description))
+                 id))]
+       (let [root (visit fresh #{})]
+         {:source-id (core/code-id original) :root root
+          :nodes @nodes :node-count (long (count @nodes))})))))
+
+(defn rebuild
+  "Reassemble one existing node with ordered Code children. Its operation and
+   binders come from the cursor, never the caller's description map. Child
+   free names must be valid at their original positions. This checks scope,
+   not semantic equivalence of replacements or effect-preserving motion."
+  [cursor children]
+  (when-not (instance? Cursor cursor) (fail! :cursor-required))
+  (let [^Cursor cursor cursor b (.-allowance cursor) limits (.-limits cursor)
+        scopes (.-child-scopes cursor)]
+    (budget/charge! b :work 1)
+    (when-not (and (= clojure.lang.PersistentVector (class children))
+                   (= (count scopes) (count children)) (every? code/code? children))
+      (fail! :children))
+    (doseq [[child scope] (map vector children scopes)]
+      (scan! b limits (code/code-term child) scope))
+    (let [term (code/reassemble (.-term cursor) (mapv code/code-term children) (:names (.-term cursor)))]
+      (scan! b limits term (.-scope cursor))
+      (code/->code term))))

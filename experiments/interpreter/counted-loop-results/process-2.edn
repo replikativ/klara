@@ -1,0 +1,950 @@
+{:clojure "1.12.4",
+ :jvm-arguments
+ ["-XX:ThreadPriorityPolicy=1"
+  "-XX:+UnlockExperimentalVMOptions"
+  "-XX:+EnableJVMCIProduct"
+  "-XX:+EnableJVMCI"
+  "-XX:-UnlockExperimentalVMOptions"
+  "-XX:-OmitStackTraceInFastThrow"
+  "-Xmx1g"
+  "-Xss16m"
+  "-Dclojure.basis=.cpcache/4257271087.basis"],
+ :source-sha256
+ {"deps.edn"
+  "1f90365ec52312bdd07dcfb2ad33c13f990f7147fd6d948b0f88c8a950376fe1",
+  "experiments/consolidation/admission_benchmark.clj"
+  "7d2be2b305f06597a8e915e8b38e1c97b80471535b7627be3499edf9772819ab",
+  "experiments/consolidation/benchmark.clj"
+  "6a538213776a8dfda6d1b1e4f25070cdc36ef1d1cc76786a76e30db4441adf65",
+  "experiments/consolidation/checked_pipeline.clj"
+  "5d6e3920734142e1fde5cc70520a5ca0819530dd4d927fbf3e1c9391e5e1c088",
+  "experiments/consolidation/checked_pipeline_test.clj"
+  "cc9a6296fcca12d9ebd3bc2358e85a237fbb9f39bf03716bd943d4f0b0e9c430",
+  "experiments/consolidation/counted_core.clj"
+  "b47249348cea7fd793958ba580c3d93900e91d1f7091115fadf2210c5b94ee3a",
+  "experiments/consolidation/counted_loop.clj"
+  "894ad5800173c33664c9b35c51f43282833b3d0463e141fea6ea2d9afb43c3e5",
+  "experiments/consolidation/counted_loop_model.clj"
+  "30041910bb43b0647fda88a561c3c9c86c0ee97ed7f8d6014a7c6bcb9adebc0c",
+  "experiments/consolidation/counted_loop_test.clj"
+  "ed19d63c529454b9ba8788cbfc47a8e4fbfc3c66abd1270039f5bf7e8d8e44fe",
+  "experiments/consolidation/demand.clj"
+  "752a6cb22c1cace47bc587b2e147a1bc08f78c5043dd95b492196128b8beaf6e",
+  "experiments/consolidation/demand_model.clj"
+  "98b7e8518103b509b8ed4a92428d78ee6ebda7bfdf57e52c2651319249eee7cc",
+  "experiments/consolidation/demand_test.clj"
+  "78a6c62fb11038ad52de71d8c23895e7c204a58819f5343462966c044c74c501",
+  "experiments/consolidation/fold_model.clj"
+  "72a599a69385edd2cfb99277ba4ad56d73024acb4df385c173bb7b8b31f84c9f",
+  "experiments/consolidation/helper_bridge.clj"
+  "d542873510e293cb9ca57313b036f741abe805d18a9e7b6efed8088622c971f9",
+  "experiments/consolidation/helper_bridge_test.clj"
+  "b223234f9afbc311a5e4f17efc5b7c2c9a1c73198ff062983c786003e9d150af",
+  "experiments/consolidation/interval.clj"
+  "01163f98303df420ae29d03edc4ea416846d4797acc17e902f4f3b7113cd185e",
+  "experiments/consolidation/interval_test.clj"
+  "93376703da9fec1b305a29c7b788c762b972c2e64d31d18405a388ac481e50e6",
+  "experiments/consolidation/native_pipeline_test.clj"
+  "5af338c44040d8cde29a4bf7ae410c749feb7166ddf1bf64bb72180743dcecd3",
+  "experiments/consolidation/planning.clj"
+  "9c69a89ef0ee2a0743b41737bc87d87c03849192f859c32cd480cee4017974b4",
+  "experiments/consolidation/planning_test.clj"
+  "1a7109f0861f0f7f91ec609f9b66305f4a983d30543bbcc40b52d8c0f9283622",
+  "experiments/consolidation/private_state.clj"
+  "7498a86a6bab7b21108702edb5930ada7429c71ba8023eac2460a647c38d4184",
+  "experiments/consolidation/private_state_test.clj"
+  "4b319a1230802e17d46888a926c1bd9023dbc687395a588126912c3d05de4105",
+  "experiments/consolidation/producer_consumer.clj"
+  "404fd62aa9515b0298640c87c34096b74c7ff84bbe802c18763c0c213d0415a5",
+  "experiments/consolidation/producer_consumer_test.clj"
+  "33e5464fc5d317d11367fee569171f948122ffa2a757d247ce5da55781d1c1a2",
+  "experiments/consolidation/producer_model.clj"
+  "9725b71d3d5dbb2a5724d54667e4f687af85af86ecf8e311f2bb24189a21346f",
+  "experiments/consolidation/proved_accumulator.clj"
+  "46167a9b6d3851253a724bda2bc59d5680d8ab00fe332794340892f11bf125a6",
+  "experiments/consolidation/proved_accumulator_test.clj"
+  "a3bdfa1c513174c4101935bddb64d04cd31034c5603f8dcbfca619d05b5d7656",
+  "experiments/consolidation/run.clj"
+  "6fae1cfb9769be6578a4c4d4298acfb8a15637653b3501b05724e9a8a5468439",
+  "experiments/consolidation/scalar_block.clj"
+  "d43bbf766aaac2b65bff508e5263f78a3bfb3d89fd155f8549386a179856aba4",
+  "experiments/consolidation/scalar_block_test.clj"
+  "8fdf5377bd5d2075e54ad8c2513c06f778116fc4609aa82e9345262c29d3cb1c",
+  "experiments/consolidation/scalar_cek.clj"
+  "99698e5a30dacb8c98941f858f1a374372eb5fb6a9d1b06377440c1b5c0a403a",
+  "experiments/consolidation/scalar_cek_test.clj"
+  "79afd9da5ff9d866525a04e0a9be5521f966def961292e00ec2ffaa140465344",
+  "experiments/consolidation/scalar_core.clj"
+  "10ff880e4a71ed00478310d89a8cc908c3d86c57aa66fd79b91b990332fa8de5",
+  "experiments/consolidation/scalar_core_test.clj"
+  "5d6e58459af65ebc8f300d138bcfb1de2ad1921b63640120f7e64c30408eb7e8",
+  "experiments/consolidation/scalar_driver.clj"
+  "d31319ee7c223de000650e5873a95d240a1abc13252f0586df485cc79f5c2a57",
+  "experiments/consolidation/scalar_finite.clj"
+  "4eb08f63e5ca66990dd64a53e4d94ea7df452a73273005f7921ee27c9cab385a",
+  "experiments/consolidation/scalar_finite_test.clj"
+  "21801aad5974176e917cb1a4be30039140929ea1145c5a52ad860ce4ed23a87d",
+  "experiments/consolidation/scalar_sum.clj"
+  "b7922c5b15bc925c09581a7f3e4fb10384b93cd9853c6f6858fc69bb0dafe7ff",
+  "experiments/consolidation/source_model.clj"
+  "5337bafbe09792e5f471fb176cb99b365db4925bd56cabe19ab517ce074fefed",
+  "experiments/consolidation/source_model_test.clj"
+  "c9311350d30d527d92aa55a77a3cd4edf8ac6da11c0fe44287cd92b779fd037f",
+  "experiments/consolidation/world_evolution.clj"
+  "b3c6e7410f0611c28d027d94fe2e4b57a4d6dc056bc0dd34f52c3d5c017812cf",
+  "experiments/interpreter/activation.clj"
+  "25676fd2f11da577f18e779ff64e32724785c4fc4502c79513a011087e8e9a40",
+  "experiments/interpreter/activation_bench.clj"
+  "1d42d9e508c6ad371bfe8bd6d29f345fe582f7da6835a637f27ca8e3037072cd",
+  "experiments/interpreter/activation_checks.clj"
+  "39d70a29ec6cd0b35938b7d85fbd32abbbd7bc7ccae9bf25bc236921d0385636",
+  "experiments/interpreter/activation_followup.clj"
+  "44e1e229b99740d5367bbb22c98bb8c43f26fdc6f6cc9240e53aa4660ac6bda1",
+  "experiments/interpreter/activation_followup_summary.clj"
+  "b299acc8927f618a2c4ab812b24826a962bfc8af0b17ac8a38b5db8d8f2aa2a8",
+  "experiments/interpreter/activation_summary.clj"
+  "41c52686a8ac66e535f592e243565fee9bed947aee13b81799bc4e3a4c83de55",
+  "experiments/interpreter/bridge.clj"
+  "d78cfa87857548c471d9913c7d8b9ca056048ad643c582a235ca5671bcd4d985",
+  "experiments/interpreter/bridge_checks.clj"
+  "df636a053207b3f94c440112bd590eb94db1de86522d8dd5229fc22fb681e255",
+  "experiments/interpreter/capture_contract.clj"
+  "dbb2098770f4a9557d291995b989f2e4b2f19ea38ac8c25fc31755f5a44e3639",
+  "experiments/interpreter/counted_loop_bench.clj"
+  "c9feb94bb359ea00c925853cc43a072b686e409037006837bf4b068962e09e8a",
+  "experiments/interpreter/counted_loop_summary.clj"
+  "06063b5bb7b89763652f226bdb9b20c78fec54027bbbc29fa701bf54d30c6f20",
+  "experiments/interpreter/dynamic_context_contract.clj"
+  "95bae699ebe59536508543918d6bdf33b7263aa655f56675da356227a67cff65",
+  "experiments/interpreter/mutable.clj"
+  "0c459949f966165cfcabf8269adb1ab4761eb8e20b711ec1aa307b1c74a3252e",
+  "experiments/interpreter/mutable_bench.clj"
+  "2d9365759e9c6f1aef1c03e499ce5c3b91ad2e9fd57d6773eed88752199275d7",
+  "experiments/interpreter/mutable_checks.clj"
+  "b705ed16402e98195065de759ce23a874fb4b348afe8734ab7bf3eaf5734a520",
+  "experiments/interpreter/mutable_snapshots.clj"
+  "a28c9155e5d31a1113f8f63741f02a92a7bc3de29171c1e8778dc094d2789e19",
+  "experiments/interpreter/mutable_summary.clj"
+  "a568ff4a88b752e220f4a081db23adf919a3d43a02d0dd7e3d9442c52ef1cbe5",
+  "experiments/interpreter/refinement_checks.clj"
+  "9c314dec2d9a5f78ab76d373c997ad4ab64640e48c58b4269c5829da48dc3ea4",
+  "experiments/interpreter/run.clj"
+  "095e1a4e4a348713e6d49eebf08e2a7f08123e3993446a90e7958f5164d4a6cb",
+  "experiments/interpreter/summarize.clj"
+  "165d74a16bf51aee67a74f6e758b9d37342dded00ff9ac71cd8ee93f0b6647c6",
+  "src/klara/affine.clj"
+  "fe4c6984af77f93aefb9862401f23eec70a3aebd7c5cdbdae4106d98ce1f787b",
+  "src/klara/authority.clj"
+  "70c91dac1f5beace4e6426913f27a8a4dca3a5517f70bc86516f50f4ac369a9d",
+  "src/klara/code.clj"
+  "9a4663239a849215d83cc21ce24390d6ba3f6c3b80a4951d758285fffe7f80e8",
+  "src/klara/compile/affine_erase.clj"
+  "82fd2b1100f426e72f84412e84c9c1ed92733fba9aa1be9b8c6d1aa69d91686d",
+  "src/klara/compile/analysis.clj"
+  "8c29cd30f8b8814efd55094db8a4310a815c33584e1b8a6ee39dabaf34245ebc",
+  "src/klara/compile/core.clj"
+  "af77730b28e3033ee1bb84abd70ee3849bb0e5627d117570f8d23236f94f35f9",
+  "src/klara/compile/emit.clj"
+  "bfaa6b6a2f8cc59199e1f096dda2f032967020380c5d5bb21b31c0efc2c8a4ff",
+  "src/klara/compile/escape.clj"
+  "6ea0f55f13b8fc4ce1d430a43864f8bae66b8481be921aa5e7d1f7658caaa4cf",
+  "src/klara/compile/hof.clj"
+  "07188ab272fe59cae69d8f0a495f191a743835d13b1c28c28a7cbb341ec9af96",
+  "src/klara/compile/infer_affine.clj"
+  "a5631d2d71cfd5d74a3a8a15c27d146b8db3b957f019209e6bc3e948d61c5ce0",
+  "src/klara/compile/inline.clj"
+  "2c06694af339b84e6f501fc035ac17023d55dd5da0babbd74becd849966f8f8a",
+  "src/klara/compile/ir.clj"
+  "04da4006359a881b8f5c849632d64714cc0ee43c3717e13b81f70b2ff8557989",
+  "src/klara/compile/pe.clj"
+  "4f91d077a3ab0e94f8d096e48523b9077b712c0e32c004e24f0ced09ca2b3c2d",
+  "src/klara/compile/requirements.clj"
+  "b551f12324b50024fbae1f448e3819736e2004d602ed8cdfde02674c22300969",
+  "src/klara/compile/runtime.clj"
+  "f4fcfcf98fc25874f6cb4ad120751b2d66ad4ca16fcc27bb3a51b5000cc16a74",
+  "src/klara/compile/scalar.clj"
+  "546da8e3fab88a7b2c5500566fc6a562bc81580ad3b18ba73645cd0b2397b904",
+  "src/klara/compile/speculate.clj"
+  "0c322d771e8da13d944c86e0b9af6b18cb8795f215608bcc1d8a48778be713c9",
+  "src/klara/compile/staged.clj"
+  "c8fcd85d2cb1b329c0ccc62bbb2c94b334282afa4ce9ef0358109c192366b020",
+  "src/klara/compile/strict_fold.clj"
+  "bd35e878609a1822e127d90f7b668465386b4c2cc56c36e0c16eb56ce3f4d28d",
+  "src/klara/compile/unbox.clj"
+  "9ff452448cd733833d2b4ace8afc158cdc20b071d8b91031df0b285738cc8a4c",
+  "src/klara/compile/updates.clj"
+  "446b74e76cb10a9f77e7eefebc2ae68401b3adf6bf7a3bd1f567e1873e0cc721",
+  "src/klara/core.clj"
+  "3615a76ace4b7eeb556a014dc4d08045af8be4fb3b6d5cd47850e927e962d61f",
+  "src/klara/defs.clj"
+  "fa2cef5153903f49de13676785c8d0075d87086f6bdd78fb66c61cfbd3d0c436",
+  "src/klara/deploy.clj"
+  "88e3503486932d88ecdd900ba148637e645d18aa5d2605a9d65d343fb5c30c75",
+  "src/klara/effect_class.clj"
+  "354e1100fe88a79195d8bb5958ce38053ed67657440c59e5e04a1918c87870fe",
+  "src/klara/eval.clj"
+  "f3426a67ec736d5e07c1e1e836a7d242ed6f5efdc1ebb16ab079afcf3d80ad65",
+  "src/klara/expand.clj"
+  "c89a1c988eb4b134d49050302bee0361c984f8c4ca669047795cf22f6c6374fe",
+  "src/klara/fusion.clj"
+  "8e88dbe66640c4d60be5a1dafc07c86a17bef5b0633c08179256f56a1658a356",
+  "src/klara/fusion/kernel.clj"
+  "edc582a5b412a83e61b465c45a980f3811c770167627188da1ba3ad18e1c9453",
+  "src/klara/load.clj"
+  "7d8b5c877847b21a30473424a6fbf376e0bac0f0add5e56690b8e0e020d2d89c",
+  "src/klara/nrepl.clj"
+  "3be4020b9334fe3d432c619dc1306b19251b49e0fd1efae6e68987013b38cc32",
+  "src/klara/repl.clj"
+  "e3887cdc0aa70786ad3507b966d090adb55221bc7e2bc8047c30e74eaf7bb140",
+  "src/klara/stage.clj"
+  "7ca7171c20ea4ac0f8af1f19a04f0e687f1ba3e6698c3c2d0ab2b5cd32dc15ed",
+  "src/klara/syntax.clj"
+  "8963b902a00dd3f778ba0fbb5efd2ef15244c904070195fd4a47a48d5825db44",
+  "src/klara/world.clj"
+  "29ea09915982d5daa246251c87da3095f0014c0f7680ff017e618e36fd9e9286"},
+ :process 2,
+ :java "25.0.1+8-LTS-jvmci-b01",
+ :measurement
+ {:warmup-per-engine-per-size 200,
+  :samples 9,
+  :calls-per-sample 10,
+  :order :rotating},
+ :model-bootstrap-ns 3326361595,
+ :limits
+ [:closed-two-state-scalar-fragment
+  :one-machine
+  :not-guaranteed-steady-state
+  :no-GC-or-retained-heap-profile
+  :body-only-excludes-entry-guards
+  :no-compiled-interior-recovery
+  :compilation-preparation-measured-once],
+ :workloads
+ [{:name :sum,
+   :source
+   {:op :fn,
+    :arity 1,
+    :rest? false,
+    :body
+    {:op :let,
+     :init {:op :quote, :datum 0},
+     :body
+     {:op :let,
+      :init {:op :quote, :datum 0},
+      :body
+      {:op :letrec,
+       :inits
+       [{:op :fn,
+         :arity 2,
+         :rest? false,
+         :body
+         {:op :if,
+          :test
+          {:op :prim,
+           :name <,
+           :args [{:op :local, :index 1} {:op :local, :index 5}]},
+          :then
+          {:op :app,
+           :fn {:op :local, :index 2},
+           :args
+           [{:op :prim,
+             :name +,
+             :args [{:op :local, :index 1} {:op :quote, :datum 1}]}
+            {:op :prim,
+             :name +,
+             :args [{:op :local, :index 0} {:op :local, :index 1}]}]},
+          :else {:op :local, :index 0}}}],
+       :body
+       {:op :app,
+        :fn {:op :local, :index 0},
+        :args [{:op :local, :index 2} {:op :local, :index 1}]}}}}},
+   :forms
+   {:generic
+    (fn
+     [add mul less]
+     (fn
+      [n initial-i initial-s fuel]
+      (let
+       [limit
+        (long n)
+        initial
+        (long initial-i)
+        end-index
+        (+ initial (min (long fuel) (- limit initial)))
+        stop
+        (identity end-index)]
+       (loop
+        [i initial-i s initial-s]
+        (if
+         (less i stop)
+         (let
+          [next-index
+           (let
+            [slot0
+             s
+             slot1
+             i
+             slot2
+             slot1
+             slot3
+             1
+             slot4
+             (add slot2 slot3)]
+            slot4)
+           next-acc
+           (let
+            [slot0
+             s
+             slot1
+             i
+             slot2
+             slot0
+             slot3
+             slot1
+             slot4
+             (add slot2 slot3)]
+            slot4)]
+          (recur next-index next-acc))
+         [(if (= i limit) :done :paused) i s]))))),
+    :primitive
+    (fn
+     [add mul less]
+     (fn
+      [n initial-i initial-s fuel]
+      (let
+       [limit
+        (long n)
+        initial
+        (long initial-i)
+        end-index
+        (+ initial (min (long fuel) (- limit initial)))
+        stop
+        end-index]
+       (loop
+        [i
+         (clojure.core/long initial-i)
+         s
+         (clojure.core/long initial-s)]
+        (if
+         (clojure.core/< i stop)
+         (let
+          [next-index
+           (let
+            [slot0
+             s
+             slot1
+             i
+             slot2
+             slot1
+             slot3
+             (clojure.core/long 1)
+             slot4
+             (clojure.core/+ slot2 slot3)]
+            slot4)
+           next-acc
+           (let
+            [slot0
+             s
+             slot1
+             i
+             slot2
+             slot0
+             slot3
+             slot1
+             slot4
+             (clojure.core/+ slot2 slot3)]
+            slot4)]
+          (recur next-index next-acc))
+         [(if (= i limit) :done :paused) i s])))))},
+   :preparation-ns
+   {:certificate 72695049,
+    :admission-and-both-emitters 21634691,
+    :nodes 933171,
+    :t0-entry 115464,
+    :clojure 685030},
+   :rows
+   [{:n 1000,
+     :expected 499500,
+     :engines
+     {:clojure
+      {:median-ns 461.7,
+       :median-bytes 30.4,
+       :samples
+       [{:ns 551.9, :bytes 30.4, :value 499500}
+        {:ns 480.8, :bytes 30.4, :value 499500}
+        {:ns 488.6, :bytes 30.4, :value 499500}
+        {:ns 461.7, :bytes 30.4, :value 499500}
+        {:ns 433.5, :bytes 30.4, :value 499500}
+        {:ns 457.7, :bytes 30.4, :value 499500}
+        {:ns 383.8, :bytes 30.4, :value 499500}
+        {:ns 467.9, :bytes 30.4, :value 499500}
+        {:ns 416.5, :bytes 30.4, :value 499500}]},
+      :generic-body
+      {:median-ns 936.0,
+       :median-bytes 238.4,
+       :samples
+       [{:ns 1359.2, :bytes 238.4, :value 499500}
+        {:ns 1200.4, :bytes 238.4, :value 499500}
+        {:ns 936.0, :bytes 238.4, :value 499500}
+        {:ns 912.8, :bytes 238.4, :value 499500}
+        {:ns 834.3, :bytes 238.4, :value 499500}
+        {:ns 2005.1, :bytes 238.4, :value 499500}
+        {:ns 2672.1, :bytes 238.4, :value 499500}
+        {:ns 705.4, :bytes 238.4, :value 499500}
+        {:ns 704.7, :bytes 238.4, :value 499500}]},
+      :primitive-body
+      {:median-ns 551.9,
+       :median-bytes 214.4,
+       :samples
+       [{:ns 1545.0, :bytes 236.0, :value 499500}
+        {:ns 536.6, :bytes 214.4, :value 499500}
+        {:ns 551.9, :bytes 214.4, :value 499500}
+        {:ns 503.0, :bytes 214.4, :value 499500}
+        {:ns 462.2, :bytes 214.4, :value 499500}
+        {:ns 721.2, :bytes 214.4, :value 499500}
+        {:ns 1256.2, :bytes 214.4, :value 499500}
+        {:ns 500.8, :bytes 214.4, :value 499500}
+        {:ns 644.7, :bytes 214.4, :value 499500}]},
+      :generic
+      {:median-ns 3296.4,
+       :median-bytes 2286.4,
+       :samples
+       [{:ns 3962.8, :bytes 2286.4, :value 499500}
+        {:ns 9157.3, :bytes 2286.4, :value 499500}
+        {:ns 3296.4, :bytes 2286.4, :value 499500}
+        {:ns 2748.2, :bytes 2286.4, :value 499500}
+        {:ns 2610.4, :bytes 2286.4, :value 499500}
+        {:ns 3903.8, :bytes 2286.4, :value 499500}
+        {:ns 2810.4, :bytes 2286.4, :value 499500}
+        {:ns 3471.3, :bytes 2286.4, :value 499500}
+        {:ns 2966.7, :bytes 2286.4, :value 499500}]},
+      :primitive
+      {:median-ns 1810.8,
+       :median-bytes 2262.4,
+       :samples
+       [{:ns 1642.3, :bytes 2262.4, :value 499500}
+        {:ns 2008.9, :bytes 2262.4, :value 499500}
+        {:ns 4198.5, :bytes 2262.4, :value 499500}
+        {:ns 1650.5, :bytes 2262.4, :value 499500}
+        {:ns 1595.3, :bytes 2262.4, :value 499500}
+        {:ns 1810.8, :bytes 2262.4, :value 499500}
+        {:ns 1940.2, :bytes 2262.4, :value 499500}
+        {:ns 1782.2, :bytes 2262.4, :value 499500}
+        {:ns 1863.0, :bytes 2262.4, :value 499500}]},
+      :nodes
+      {:median-ns 226393.0,
+       :median-bytes 48398.4,
+       :samples
+       [{:ns 223741.0, :bytes 48398.4, :value 499500}
+        {:ns 237613.7, :bytes 48398.4, :value 499500}
+        {:ns 219974.0, :bytes 48398.4, :value 499500}
+        {:ns 226393.0, :bytes 48398.4, :value 499500}
+        {:ns 228376.4, :bytes 48398.4, :value 499500}
+        {:ns 229599.6, :bytes 48398.4, :value 499500}
+        {:ns 238842.5, :bytes 48398.4, :value 499500}
+        {:ns 219879.5, :bytes 48398.4, :value 499500}
+        {:ns 219650.5, :bytes 48398.4, :value 499500}]},
+      :t0
+      {:median-ns 972926.3,
+       :median-bytes 3412102.4,
+       :samples
+       [{:ns 1212268.3, :bytes 3412102.4, :value 499500}
+        {:ns 979235.4, :bytes 3412102.4, :value 499500}
+        {:ns 932817.8, :bytes 3412102.4, :value 499500}
+        {:ns 972926.3, :bytes 3412102.4, :value 499500}
+        {:ns 999789.0, :bytes 3412102.4, :value 499500}
+        {:ns 926209.6, :bytes 3412102.4, :value 499500}
+        {:ns 943184.0, :bytes 3412102.4, :value 499500}
+        {:ns 931974.6, :bytes 3412102.4, :value 499500}
+        {:ns 1028941.9, :bytes 3412102.4, :value 499500}]},
+      :reference
+      {:median-ns 2075528.8,
+       :median-bytes 9927998.4,
+       :samples
+       [{:ns 2080450.7, :bytes 9927998.4, :value 499500}
+        {:ns 2085232.3, :bytes 9927998.4, :value 499500}
+        {:ns 2075528.8, :bytes 9927998.4, :value 499500}
+        {:ns 2033141.2, :bytes 9927998.4, :value 499500}
+        {:ns 2043058.7, :bytes 9927998.4, :value 499500}
+        {:ns 2113530.9, :bytes 9927998.4, :value 499500}
+        {:ns 2099706.9, :bytes 9927998.4, :value 499500}
+        {:ns 2033661.0, :bytes 9927998.4, :value 499500}
+        {:ns 2035817.5, :bytes 9927998.4, :value 499500}]}}}
+    {:n 10000,
+     :expected 49995000,
+     :engines
+     {:clojure
+      {:median-ns 3327.1,
+       :median-bytes 30.4,
+       :samples
+       [{:ns 3263.4, :bytes 30.4, :value 49995000}
+        {:ns 3229.0, :bytes 30.4, :value 49995000}
+        {:ns 3327.1, :bytes 30.4, :value 49995000}
+        {:ns 3337.8, :bytes 30.4, :value 49995000}
+        {:ns 3441.7, :bytes 30.4, :value 49995000}
+        {:ns 3702.0, :bytes 30.4, :value 49995000}
+        {:ns 3318.6, :bytes 30.4, :value 49995000}
+        {:ns 3318.4, :bytes 30.4, :value 49995000}
+        {:ns 3513.8, :bytes 30.4, :value 49995000}]},
+      :generic-body
+      {:median-ns 3056.1,
+       :median-bytes 238.4,
+       :samples
+       [{:ns 3054.8, :bytes 238.4, :value 49995000}
+        {:ns 2996.3, :bytes 238.4, :value 49995000}
+        {:ns 3152.9, :bytes 238.4, :value 49995000}
+        {:ns 3044.8, :bytes 238.4, :value 49995000}
+        {:ns 3227.2, :bytes 238.4, :value 49995000}
+        {:ns 3111.6, :bytes 238.4, :value 49995000}
+        {:ns 3056.1, :bytes 238.4, :value 49995000}
+        {:ns 2899.2, :bytes 238.4, :value 49995000}
+        {:ns 3059.2, :bytes 238.4, :value 49995000}]},
+      :primitive-body
+      {:median-ns 2752.5,
+       :median-bytes 214.4,
+       :samples
+       [{:ns 2998.4, :bytes 214.4, :value 49995000}
+        {:ns 2704.2, :bytes 214.4, :value 49995000}
+        {:ns 2752.5, :bytes 214.4, :value 49995000}
+        {:ns 2756.1, :bytes 214.4, :value 49995000}
+        {:ns 2758.5, :bytes 214.4, :value 49995000}
+        {:ns 2741.8, :bytes 214.4, :value 49995000}
+        {:ns 2707.3, :bytes 214.4, :value 49995000}
+        {:ns 2537.9, :bytes 214.4, :value 49995000}
+        {:ns 3021.8, :bytes 214.4, :value 49995000}]},
+      :generic
+      {:median-ns 6394.3,
+       :median-bytes 2286.4,
+       :samples
+       [{:ns 4668.2, :bytes 2286.4, :value 49995000}
+        {:ns 5925.8, :bytes 2286.4, :value 49995000}
+        {:ns 13553.7, :bytes 2286.4, :value 49995000}
+        {:ns 6753.7, :bytes 2286.4, :value 49995000}
+        {:ns 6394.3, :bytes 2286.4, :value 49995000}
+        {:ns 6155.1, :bytes 2286.4, :value 49995000}
+        {:ns 7263.6, :bytes 2286.4, :value 49995000}
+        {:ns 5947.9, :bytes 2286.4, :value 49995000}
+        {:ns 6396.7, :bytes 2286.4, :value 49995000}]},
+      :primitive
+      {:median-ns 4020.8,
+       :median-bytes 2262.4,
+       :samples
+       [{:ns 3967.3, :bytes 2262.4, :value 49995000}
+        {:ns 3941.7, :bytes 2262.4, :value 49995000}
+        {:ns 6879.7, :bytes 2262.4, :value 49995000}
+        {:ns 4020.8, :bytes 2262.4, :value 49995000}
+        {:ns 3989.0, :bytes 2262.4, :value 49995000}
+        {:ns 4065.0, :bytes 2262.4, :value 49995000}
+        {:ns 4067.6, :bytes 2262.4, :value 49995000}
+        {:ns 3740.3, :bytes 2262.4, :value 49995000}
+        {:ns 4044.7, :bytes 2262.4, :value 49995000}]},
+      :nodes
+      {:median-ns 2284931.5,
+       :median-bytes 482990.4,
+       :samples
+       [{:ns 2279766.2, :bytes 482990.4, :value 49995000}
+        {:ns 2303579.1, :bytes 482990.4, :value 49995000}
+        {:ns 2227430.1, :bytes 482990.4, :value 49995000}
+        {:ns 2279282.2, :bytes 482990.4, :value 49995000}
+        {:ns 2300557.5, :bytes 482990.4, :value 49995000}
+        {:ns 2284931.5, :bytes 482990.4, :value 49995000}
+        {:ns 2302423.6, :bytes 482990.4, :value 49995000}
+        {:ns 2219032.1, :bytes 482990.4, :value 49995000}
+        {:ns 2332039.1, :bytes 482990.4, :value 49995000}]},
+      :t0
+      {:median-ns 9723922.6,
+       :median-bytes 3.40841024E7,
+       :samples
+       [{:ns 9736610.6, :bytes 3.40841024E7, :value 49995000}
+        {:ns 9535256.3, :bytes 3.40841024E7, :value 49995000}
+        {:ns 9733287.7, :bytes 3.40841024E7, :value 49995000}
+        {:ns 9723922.6, :bytes 3.40841024E7, :value 49995000}
+        {:ns 9767848.6, :bytes 3.40841024E7, :value 49995000}
+        {:ns 9722506.8, :bytes 3.40841024E7, :value 49995000}
+        {:ns 9797603.1, :bytes 3.40841024E7, :value 49995000}
+        {:ns 9368848.5, :bytes 3.40841024E7, :value 49995000}
+        {:ns 9627279.3, :bytes 3.40841024E7, :value 49995000}]},
+      :reference
+      {:median-ns 2.11650581E7,
+       :median-bytes 9.92079984E7,
+       :samples
+       [{:ns 2.1210463E7, :bytes 9.92079984E7, :value 49995000}
+        {:ns 2.10190831E7, :bytes 9.92079984E7, :value 49995000}
+        {:ns 2.14583414E7, :bytes 9.92079984E7, :value 49995000}
+        {:ns 2.11650581E7, :bytes 9.92079984E7, :value 49995000}
+        {:ns 2.11804636E7, :bytes 9.92079984E7, :value 49995000}
+        {:ns 2.12665248E7, :bytes 9.92079984E7, :value 49995000}
+        {:ns 2.08281098E7, :bytes 9.92079984E7, :value 49995000}
+        {:ns 2.08002784E7, :bytes 9.92079984E7, :value 49995000}
+        {:ns 2.07558809E7, :bytes 9.92079984E7, :value 49995000}]}}}]}
+  {:name :sum-squares,
+   :source
+   {:op :fn,
+    :arity 1,
+    :rest? false,
+    :body
+    {:op :let,
+     :init {:op :quote, :datum 0},
+     :body
+     {:op :let,
+      :init {:op :quote, :datum 0},
+      :body
+      {:op :letrec,
+       :inits
+       [{:op :fn,
+         :arity 2,
+         :rest? false,
+         :body
+         {:op :if,
+          :test
+          {:op :prim,
+           :name <,
+           :args [{:op :local, :index 1} {:op :local, :index 5}]},
+          :then
+          {:op :app,
+           :fn {:op :local, :index 2},
+           :args
+           [{:op :prim,
+             :name +,
+             :args [{:op :local, :index 1} {:op :quote, :datum 1}]}
+            {:op :prim,
+             :name +,
+             :args
+             [{:op :local, :index 0}
+              {:op :prim,
+               :name *,
+               :args
+               [{:op :local, :index 1} {:op :local, :index 1}]}]}]},
+          :else {:op :local, :index 0}}}],
+       :body
+       {:op :app,
+        :fn {:op :local, :index 0},
+        :args [{:op :local, :index 2} {:op :local, :index 1}]}}}}},
+   :forms
+   {:generic
+    (fn
+     [add mul less]
+     (fn
+      [n initial-i initial-s fuel]
+      (let
+       [limit
+        (long n)
+        initial
+        (long initial-i)
+        end-index
+        (+ initial (min (long fuel) (- limit initial)))
+        stop
+        (identity end-index)]
+       (loop
+        [i initial-i s initial-s]
+        (if
+         (less i stop)
+         (let
+          [next-index
+           (let
+            [slot0
+             s
+             slot1
+             i
+             slot2
+             slot1
+             slot3
+             1
+             slot4
+             (add slot2 slot3)]
+            slot4)
+           next-acc
+           (let
+            [slot0
+             s
+             slot1
+             i
+             slot2
+             slot0
+             slot3
+             slot1
+             slot4
+             slot1
+             slot5
+             (mul slot3 slot4)
+             slot6
+             (add slot2 slot5)]
+            slot6)]
+          (recur next-index next-acc))
+         [(if (= i limit) :done :paused) i s]))))),
+    :primitive
+    (fn
+     [add mul less]
+     (fn
+      [n initial-i initial-s fuel]
+      (let
+       [limit
+        (long n)
+        initial
+        (long initial-i)
+        end-index
+        (+ initial (min (long fuel) (- limit initial)))
+        stop
+        end-index]
+       (loop
+        [i
+         (clojure.core/long initial-i)
+         s
+         (clojure.core/long initial-s)]
+        (if
+         (clojure.core/< i stop)
+         (let
+          [next-index
+           (let
+            [slot0
+             s
+             slot1
+             i
+             slot2
+             slot1
+             slot3
+             (clojure.core/long 1)
+             slot4
+             (clojure.core/+ slot2 slot3)]
+            slot4)
+           next-acc
+           (let
+            [slot0
+             s
+             slot1
+             i
+             slot2
+             slot0
+             slot3
+             slot1
+             slot4
+             slot1
+             slot5
+             (clojure.core/* slot3 slot4)
+             slot6
+             (clojure.core/+ slot2 slot5)]
+            slot6)]
+          (recur next-index next-acc))
+         [(if (= i limit) :done :paused) i s])))))},
+   :preparation-ns
+   {:certificate 91249652,
+    :admission-and-both-emitters 26588532,
+    :nodes 188494,
+    :t0-entry 47296,
+    :clojure 404308},
+   :rows
+   [{:n 1000,
+     :expected 332833500,
+     :engines
+     {:clojure
+      {:median-ns 553.3,
+       :median-bytes 30.4,
+       :samples
+       [{:ns 546.6, :bytes 30.4, :value 332833500}
+        {:ns 515.5, :bytes 30.4, :value 332833500}
+        {:ns 575.3, :bytes 30.4, :value 332833500}
+        {:ns 533.2, :bytes 30.4, :value 332833500}
+        {:ns 555.8, :bytes 30.4, :value 332833500}
+        {:ns 561.4, :bytes 30.4, :value 332833500}
+        {:ns 553.3, :bytes 30.4, :value 332833500}
+        {:ns 1003.3, :bytes 30.4, :value 332833500}
+        {:ns 494.1, :bytes 30.4, :value 332833500}]},
+      :generic-body
+      {:median-ns 711.9,
+       :median-bytes 238.4,
+       :samples
+       [{:ns 705.8, :bytes 238.4, :value 332833500}
+        {:ns 696.6, :bytes 238.4, :value 332833500}
+        {:ns 798.8, :bytes 238.4, :value 332833500}
+        {:ns 669.8, :bytes 238.4, :value 332833500}
+        {:ns 756.3, :bytes 238.4, :value 332833500}
+        {:ns 752.2, :bytes 238.4, :value 332833500}
+        {:ns 595.3, :bytes 238.4, :value 332833500}
+        {:ns 711.9, :bytes 238.4, :value 332833500}
+        {:ns 734.4, :bytes 238.4, :value 332833500}]},
+      :primitive-body
+      {:median-ns 560.4,
+       :median-bytes 214.4,
+       :samples
+       [{:ns 675.8, :bytes 214.4, :value 332833500}
+        {:ns 538.5, :bytes 214.4, :value 332833500}
+        {:ns 553.2, :bytes 214.4, :value 332833500}
+        {:ns 531.1, :bytes 214.4, :value 332833500}
+        {:ns 566.2, :bytes 214.4, :value 332833500}
+        {:ns 564.5, :bytes 214.4, :value 332833500}
+        {:ns 560.4, :bytes 214.4, :value 332833500}
+        {:ns 558.3, :bytes 214.4, :value 332833500}
+        {:ns 769.5, :bytes 214.4, :value 332833500}]},
+      :generic
+      {:median-ns 2751.2,
+       :median-bytes 2286.4,
+       :samples
+       [{:ns 2113.0, :bytes 2286.4, :value 332833500}
+        {:ns 2641.8, :bytes 2286.4, :value 332833500}
+        {:ns 5221.8, :bytes 2286.4, :value 332833500}
+        {:ns 2588.5, :bytes 2286.4, :value 332833500}
+        {:ns 2859.1, :bytes 2286.4, :value 332833500}
+        {:ns 2773.7, :bytes 2286.4, :value 332833500}
+        {:ns 2414.4, :bytes 2286.4, :value 332833500}
+        {:ns 2751.2, :bytes 2286.4, :value 332833500}
+        {:ns 3193.5, :bytes 2286.4, :value 332833500}]},
+      :primitive
+      {:median-ns 1793.0,
+       :median-bytes 2262.4,
+       :samples
+       [{:ns 1653.0, :bytes 2262.4, :value 332833500}
+        {:ns 1864.1, :bytes 2262.4, :value 332833500}
+        {:ns 4430.4, :bytes 2262.4, :value 332833500}
+        {:ns 1677.4, :bytes 2262.4, :value 332833500}
+        {:ns 1795.3, :bytes 2262.4, :value 332833500}
+        {:ns 1793.0, :bytes 2262.4, :value 332833500}
+        {:ns 1706.9, :bytes 2262.4, :value 332833500}
+        {:ns 1682.8, :bytes 2262.4, :value 332833500}
+        {:ns 1843.5, :bytes 2262.4, :value 332833500}]},
+      :nodes
+      {:median-ns 296887.9,
+       :median-bytes 72894.4,
+       :samples
+       [{:ns 284561.7, :bytes 72894.4, :value 332833500}
+        {:ns 296941.8, :bytes 72894.4, :value 332833500}
+        {:ns 296887.9, :bytes 72894.4, :value 332833500}
+        {:ns 299719.1, :bytes 72894.4, :value 332833500}
+        {:ns 295439.1, :bytes 72894.4, :value 332833500}
+        {:ns 297842.3, :bytes 72894.4, :value 332833500}
+        {:ns 295995.9, :bytes 72894.4, :value 332833500}
+        {:ns 301041.2, :bytes 72894.4, :value 332833500}
+        {:ns 296787.0, :bytes 72894.4, :value 332833500}]},
+      :t0
+      {:median-ns 1185598.9,
+       :median-bytes 3916030.4,
+       :samples
+       [{:ns 1182276.8, :bytes 3916030.4, :value 332833500}
+        {:ns 1257922.9, :bytes 3916030.4, :value 332833500}
+        {:ns 1239341.4, :bytes 3916030.4, :value 332833500}
+        {:ns 1179934.0, :bytes 3916030.4, :value 332833500}
+        {:ns 1175392.9, :bytes 3916030.4, :value 332833500}
+        {:ns 1208122.0, :bytes 3916030.4, :value 332833500}
+        {:ns 1184929.5, :bytes 3916030.4, :value 332833500}
+        {:ns 1196915.9, :bytes 3916030.4, :value 332833500}
+        {:ns 1185598.9, :bytes 3916030.4, :value 332833500}]},
+      :reference
+      {:median-ns 2638450.1,
+       :median-bytes 1.19919264E7,
+       :samples
+       [{:ns 2591409.8, :bytes 1.19919264E7, :value 332833500}
+        {:ns 2599861.2, :bytes 1.19919264E7, :value 332833500}
+        {:ns 2593175.4, :bytes 1.19919264E7, :value 332833500}
+        {:ns 2643413.5, :bytes 1.19919264E7, :value 332833500}
+        {:ns 2647157.9, :bytes 1.19919264E7, :value 332833500}
+        {:ns 2632779.3, :bytes 1.19919264E7, :value 332833500}
+        {:ns 2647998.4, :bytes 1.19919264E7, :value 332833500}
+        {:ns 2640090.1, :bytes 1.19919264E7, :value 332833500}
+        {:ns 2638450.1, :bytes 1.19919264E7, :value 332833500}]}}}
+    {:n 10000,
+     :expected 333283335000,
+     :engines
+     {:clojure
+      {:median-ns 4265.3,
+       :median-bytes 30.4,
+       :samples
+       [{:ns 4234.8, :bytes 30.4, :value 333283335000}
+        {:ns 4218.2, :bytes 30.4, :value 333283335000}
+        {:ns 4226.1, :bytes 30.4, :value 333283335000}
+        {:ns 4265.3, :bytes 30.4, :value 333283335000}
+        {:ns 4472.3, :bytes 30.4, :value 333283335000}
+        {:ns 4388.9, :bytes 30.4, :value 333283335000}
+        {:ns 4481.4, :bytes 30.4, :value 333283335000}
+        {:ns 4169.6, :bytes 30.4, :value 333283335000}
+        {:ns 4516.4, :bytes 30.4, :value 333283335000}]},
+      :generic-body
+      {:median-ns 4096.6,
+       :median-bytes 238.4,
+       :samples
+       [{:ns 3748.0, :bytes 238.4, :value 333283335000}
+        {:ns 4371.7, :bytes 238.4, :value 333283335000}
+        {:ns 3964.8, :bytes 238.4, :value 333283335000}
+        {:ns 3925.0, :bytes 238.4, :value 333283335000}
+        {:ns 4119.4, :bytes 238.4, :value 333283335000}
+        {:ns 4119.3, :bytes 238.4, :value 333283335000}
+        {:ns 3989.6, :bytes 238.4, :value 333283335000}
+        {:ns 4096.6, :bytes 238.4, :value 333283335000}
+        {:ns 4185.5, :bytes 238.4, :value 333283335000}]},
+      :primitive-body
+      {:median-ns 3580.0,
+       :median-bytes 214.4,
+       :samples
+       [{:ns 3687.7, :bytes 214.4, :value 333283335000}
+        {:ns 3392.6, :bytes 214.4, :value 333283335000}
+        {:ns 3700.9, :bytes 214.4, :value 333283335000}
+        {:ns 3385.7, :bytes 214.4, :value 333283335000}
+        {:ns 3523.2, :bytes 214.4, :value 333283335000}
+        {:ns 3612.1, :bytes 214.4, :value 333283335000}
+        {:ns 3428.7, :bytes 214.4, :value 333283335000}
+        {:ns 3580.0, :bytes 214.4, :value 333283335000}
+        {:ns 3921.4, :bytes 214.4, :value 333283335000}]},
+      :generic
+      {:median-ns 8087.4,
+       :median-bytes 2286.4,
+       :samples
+       [{:ns 6633.6, :bytes 2286.4, :value 333283335000}
+        {:ns 8040.7, :bytes 2286.4, :value 333283335000}
+        {:ns 8113.1, :bytes 2286.4, :value 333283335000}
+        {:ns 7634.7, :bytes 2286.4, :value 333283335000}
+        {:ns 8221.3, :bytes 2286.4, :value 333283335000}
+        {:ns 8592.3, :bytes 2286.4, :value 333283335000}
+        {:ns 7808.7, :bytes 2286.4, :value 333283335000}
+        {:ns 8087.4, :bytes 2286.4, :value 333283335000}
+        {:ns 8851.6, :bytes 2286.4, :value 333283335000}]},
+      :primitive
+      {:median-ns 4903.3,
+       :median-bytes 2262.4,
+       :samples
+       [{:ns 4854.8, :bytes 2262.4, :value 333283335000}
+        {:ns 4903.3, :bytes 2262.4, :value 333283335000}
+        {:ns 8916.5, :bytes 2262.4, :value 333283335000}
+        {:ns 4994.4, :bytes 2262.4, :value 333283335000}
+        {:ns 5402.4, :bytes 2262.4, :value 333283335000}
+        {:ns 4886.3, :bytes 2262.4, :value 333283335000}
+        {:ns 4722.2, :bytes 2262.4, :value 333283335000}
+        {:ns 4752.6, :bytes 2262.4, :value 333283335000}
+        {:ns 4973.1, :bytes 2262.4, :value 333283335000}]},
+      :nodes
+      {:median-ns 2924068.7,
+       :median-bytes 723614.4,
+       :samples
+       [{:ns 2918562.3, :bytes 723614.4, :value 333283335000}
+        {:ns 2924068.7, :bytes 723614.4, :value 333283335000}
+        {:ns 2903246.8, :bytes 723614.4, :value 333283335000}
+        {:ns 2838489.4, :bytes 723614.4, :value 333283335000}
+        {:ns 2934195.1, :bytes 723614.4, :value 333283335000}
+        {:ns 2929380.5, :bytes 723614.4, :value 333283335000}
+        {:ns 2930315.9, :bytes 723614.4, :value 333283335000}
+        {:ns 2920448.2, :bytes 723614.4, :value 333283335000}
+        {:ns 2935362.6, :bytes 723614.4, :value 333283335000}]},
+      :t0
+      {:median-ns 1.19623353E7,
+       :median-bytes 3.91240304E7,
+       :samples
+       [{:ns 1.20468272E7, :bytes 3.91240304E7, :value 333283335000}
+        {:ns 1.19488455E7, :bytes 3.91240304E7, :value 333283335000}
+        {:ns 1.2121358E7, :bytes 3.91240304E7, :value 333283335000}
+        {:ns 1.17531201E7, :bytes 3.91240304E7, :value 333283335000}
+        {:ns 1.19814337E7, :bytes 3.91240304E7, :value 333283335000}
+        {:ns 1.19623353E7, :bytes 3.91240304E7, :value 333283335000}
+        {:ns 1.19759682E7, :bytes 3.91240304E7, :value 333283335000}
+        {:ns 1.17617042E7, :bytes 3.91240304E7, :value 333283335000}
+        {:ns 1.19396104E7, :bytes 3.91240304E7, :value 333283335000}]},
+      :reference
+      {:median-ns 2.61522621E7,
+       :median-bytes 1.198479264E8,
+       :samples
+       [{:ns 2.702817E7, :bytes 1.198479264E8, :value 333283335000}
+        {:ns 2.57633278E7, :bytes 1.198479264E8, :value 333283335000}
+        {:ns 2.57095933E7, :bytes 1.198479264E8, :value 333283335000}
+        {:ns 2.58698573E7, :bytes 1.198479264E8, :value 333283335000}
+        {:ns 2.68450286E7, :bytes 1.198479264E8, :value 333283335000}
+        {:ns 2.63801716E7, :bytes 1.198479264E8, :value 333283335000}
+        {:ns 2.58579861E7, :bytes 1.198479264E8, :value 333283335000}
+        {:ns 2.61522621E7, :bytes 1.198479264E8, :value 333283335000}
+        {:ns 2.63112204E7,
+         :bytes 1.198479264E8,
+         :value 333283335000}]}}}]}]}

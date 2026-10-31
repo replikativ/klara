@@ -106,7 +106,7 @@ state across requests. The host does not implement that learning loop.
 Start one host REPL from the repository root:
 
 ```sh
-clojure -Sdeps '{:paths ["src" "experiments"]}' -M
+clojure -Sdeps '{:paths ["src" "experiments" "verification" "verification/proof_staging"]}' -M
 ```
 
 The bootstrap owns worker cleanup; there is no executor plumbing in the example:
@@ -222,7 +222,7 @@ a kernel proof of the generator or the concurrent scheduling protocol. The
 existing scalar compiler's proof/trust boundaries still apply.
 Compilation failure also falls back and still trains on the true observation.
 
-The earlier [predictor benchmark](../../experiments/adaptive_affine/predictor.clj)
+The earlier [predictor benchmark](../../verification/adaptive_affine/predictor.clj)
 and its [recorded measurements](../../experiments/adaptive_affine/README.md)
 remain separate evidence for host-orchestrated speculation. Its training and
 scheduling measurements have not been relabeled as results for this prototype.

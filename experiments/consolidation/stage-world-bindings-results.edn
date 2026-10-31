@@ -1,0 +1,44 @@
+{:scope :current-behavior-not-approved-phase-contract,
+ :late-global
+ {:old-result 11,
+  :new-result 21,
+  :definition-pending? false,
+  :reads #{[:absent +] [:def setting]}},
+ :early-value
+ {:saved-code-result 11,
+  :definition-pending? true,
+  :reads
+  #{[:absent +]
+    [:value
+     setting
+     "klara/value/d849a48c-40bc-461f-90a6-32045b9e0084/9896"]
+    [:absent let]
+    [:def setting]}},
+ :lifted-pinned-closure
+ {:original-result 10,
+  :new-world-result 20,
+  :old-world-result 10,
+  :pin-preserved-across-worlds? false,
+  :residual (fn [] setting)},
+ :open-decision
+ [:preserve-reference-basis
+  :reject-unsupported-pinned-lift
+  :require-explicit-relocation],
+ :limits
+ [:one-pure-example
+  :no-general-stage-binding-specification
+  :no-runtime-change
+  :no-claim-of-universal-lift-correctness],
+ :source-sha256
+ {"src/klara/defs.clj"
+  "fa2cef5153903f49de13676785c8d0075d87086f6bdd78fb66c61cfbd3d0c436",
+  "src/klara/world.clj"
+  "29ea09915982d5daa246251c87da3095f0014c0f7680ff017e618e36fd9e9286",
+  "src/klara/eval.clj"
+  "f3426a67ec736d5e07c1e1e836a7d242ed6f5efdc1ebb16ab079afcf3d80ad65",
+  "src/klara/code.clj"
+  "9a4663239a849215d83cc21ce24390d6ba3f6c3b80a4951d758285fffe7f80e8",
+  "src/klara/expand.clj"
+  "3e4dd3ce7fe4a2b197344549ed3966a628ac1399c860ea24d0c69e0687e4f124",
+  "experiments/consolidation/stage_world_bindings.clj"
+  "5758d7f469843a2c04db5be2c68a6cdcee2b01ebee1fcb74a88170a6a8967a70"}}

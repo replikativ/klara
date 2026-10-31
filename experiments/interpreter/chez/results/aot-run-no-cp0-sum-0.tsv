@@ -1,0 +1,11 @@
+0	no-cp0	sum	load-object	0	97876	ok
+0	no-cp0	sum	first-call	0	5490	49995000
+0	no-cp0	sum	warm-call	0	5190.4	49995000
+0	no-cp0	sum	warm-call	1	5138.8	49995000
+0	no-cp0	sum	warm-call	2	5664.94	49995000
+0	no-cp0	sum	warm-call	3	5313.8	49995000
+0	no-cp0	sum	warm-call	4	5501.38	49995000
+0	no-cp0	sum	warm-call	5	5088.0	49995000
+0	no-cp0	sum	warm-call	6	5486.94	49995000
+0	no-cp0	sum	warm-call	7	5583.8	49995000
+0	no-cp0	sum	warm-call	8	5117.3	49995000

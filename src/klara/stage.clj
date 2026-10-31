@@ -25,7 +25,10 @@
                             the caller's continuation (the reference
                             handler answers them, as the executable assumes)
 
-  The cache is keyed by (CodeId, assumption set). T0 consults it through
+  Legacy cache slots are keyed by (CodeId, assumption set); explicit variants
+  use (CodeId, variant name). Eligible entries are ordered by descending
+  priority, then variant name; legacy ties use stable installation order.
+  Preference metadata is independent of semantic admission. T0 consults it through
   klara.eval/*entry-hook*; no hit means the generic closure body runs.
   Deleting the cache therefore changes no result (gate R3): it only ever
   replaces a generic run by an executable whose guards hold, and the
@@ -252,7 +255,7 @@
 (def ^:dynamic *cache* nil)
 
 (defn make-cache []
-  (let [cache (atom {:entries {}
+  (let [cache (atom {:entries {} :ordered {} :next-install 0
                      :counters (zipmap counter-keys (repeatedly #(LongAdder.)))
                      :feedback (make-feedback)})]
     (swap! cache assoc :direct-entry (make-entry-site cache))
@@ -261,7 +264,7 @@
 (defn- count! [c k] (.increment ^LongAdder (get (:counters c) k)))
 
 (defn clear! "Delete every executable (R3)." [cache]
-  (swap! cache assoc :entries {}) cache)
+  (swap! cache assoc :entries {} :ordered {}) cache)
 
 (defn stats
   "{:hits :misses :fallbacks :revalidations :deopts}. Revalidations count
@@ -432,26 +435,92 @@
 
 (defn- world-guard? [g] (= :world (nth g 0)))
 
+(def ^:private canonical-guard-evaluator guard-holds?)
+
+(defn- host-binding-plan [[kind name]]
+  ;; Do not require a namespace at publication: loading it may run code.
+  ;; Read the Var from the exact immutable mapping snapshot we retain.
+  (when (and (= :host-root kind) (qualified-symbol? name))
+    (let [prefix (symbol (namespace name)) local (symbol (clojure.core/name name))]
+      (when-let [n (clojure.lang.Namespace/find prefix)]
+        (let [m (.getMappings ^clojure.lang.Namespace n) v (get m local)]
+          (when (var? v) [n prefix (WeakReference. m) v]))))))
+
+(defn- runtime-plan [guards]
+  (mapv (fn [g] [g (host-binding-plan g)]) guards))
+
+(defn- host-binding-holds?
+  [guard [n prefix mappings v] ctx]
+  (let [alias (.lookupAlias ^clojure.lang.Namespace *ns* prefix)
+        generation (.get ^WeakReference mappings)]
+    (if (and (identical? n (clojure.lang.Namespace/find prefix))
+             (or (nil? alias) (identical? n alias))
+             (identical? generation (.getMappings ^clojure.lang.Namespace n)))
+      ;; Deref, not getRawRoot: dynamic bindings are part of the current call.
+      ;; The root verdict is never retained between guards or invocations.
+      (identical? (nth guard 2) (.deref ^clojure.lang.Var v))
+      (guard-holds? guard ctx))))
+
+(defn- planned-guard-holds? [evaluator [guard binding] ctx]
+  (if (and binding (identical? evaluator canonical-guard-evaluator)
+           (identical? evaluator @#'guard-holds?))
+    (host-binding-holds? guard binding ctx)
+    (guard-holds? guard ctx)))
+
+(defn- runtime-holds? [exe ctx]
+  (if-let [^clojure.lang.IPersistentVector checks (::runtime-plan exe)]
+    (let [evaluator (::guard-evaluator exe) n (.count checks)]
+      (loop [i (long 0)]
+        (if (< i n)
+          (and (planned-guard-holds? evaluator (.nth checks (int i)) ctx) (recur (inc i))) true)))
+    (every? #(guard-holds? % ctx) (::runtime exe))))
+
+(def ^:dynamic *entry-mode*
+  "Diagnostic :reference preserves the original ordinary-entry guard loop.
+   Both modes use the same candidates, priority and guard premises."
+  :planned)
+
 (defn- prepare
   "The installed form: guards split into world guards (a function of the
   root, memoized per root) and runtime guards, plus the memo."
   [exe]
-  (let [gs (vec (:guards exe))]
+  (let [gs (vec (:guards exe)) runtime (filterv (complement world-guard?) gs)
+        hosts (filterv #(= :host-root (first %)) gs)]
     (assoc exe
            ::world (filterv world-guard? gs)
-           ::runtime (filterv (complement world-guard?) gs)
-           ::host-roots (filterv #(= :host-root (first %)) gs)
+           ::runtime runtime ::runtime-plan (runtime-plan runtime)
+           ::guard-evaluator @#'guard-holds?
+           ::host-roots hosts
            ::memo (atom []))))
 
 (deftype ValidatedExecutable [executable registry])
 (defmethod print-method ValidatedExecutable [_ out] (.write ^java.io.Writer out "#<validated-executable>"))
+
+(defn selection-error
+  "Selection is preference metadata, never semantic evidence. Explicit variant
+   names are stable replacement slots per source; legacy slots use guards."
+  [selection]
+  (when (and (some? selection)
+             (not (and (map? selection) (= #{:variant :priority} (set (keys selection)))
+                       (keyword? (:variant selection)) (<= (count (str (:variant selection))) 128)
+                       (integer? (:priority selection))
+                       (<= Long/MIN_VALUE (:priority selection) Long/MAX_VALUE))))
+    :invalid-selection))
+
+(defn- candidate-order [exe]
+  (if-let [{:keys [variant priority]} (:selection exe)]
+    [(-' priority) 0 (str variant)]
+    [0 1 (::installation-order exe)]))
+
+(defn- ordered-candidates [entries]
+  (vec (sort-by candidate-order (vals entries))))
 
 (defn validate-executable
   "Check immutable executable/evidence once in the compiler job. Registry
    identity seals the entire trusted checker dependency snapshot."
   [exe]
   (let [registry @checkers]
-   (when-let [reason (or (check-certificate exe)
+   (when-let [reason (or (selection-error (:selection exe)) (check-certificate exe)
                         (when-let [e (frame-states-error exe)]
                           (if (keyword? e) e :bad-frame-state)))]
     (throw (ex-info (str "stage: certificate rejected: " (name reason))
@@ -466,8 +535,17 @@
     (throw (ex-info "expected checker-issued validation" {:reason :unvalidated})))
   (when-not (identical? (.-registry checked) @checkers)
     (throw (ex-info "checker registry changed since validation" {:reason :checker-registry-changed})))
-  (let [exe (.-executable checked)]
-    (swap! cache assoc-in [:entries (:code-id exe) (set (:guards exe))] (prepare exe)) exe))
+  (let [exe (.-executable checked) cid (:code-id exe)
+        key (if-let [selection (:selection exe)] [::variant (:variant selection)] (set (:guards exe)))
+        installed (prepare exe)]
+    (swap! cache
+      (fn [state]
+        (let [previous (get-in state [:entries cid key])
+              order (or (::installation-order previous) (:next-install state) 0)
+              entries (assoc (get-in state [:entries cid] {}) key (assoc installed ::installation-order order))]
+          (-> state (assoc-in [:entries cid] entries)
+              (assoc-in [:ordered cid] (ordered-candidates entries))
+              (cond-> (nil? previous) (update :next-install (fnil inc 0))))))) exe))
 
 (defn validated-for? [checked exe]
   (and (instance? ValidatedExecutable checked)
@@ -480,20 +558,30 @@
 ;; entry and invalidation
 ;; ---------------------------------------------------------------------------
 
-;; CodeIds of closure terms on the entry path: a small direct-mapped table
-;; keyed by term identity, so entry does not hash or compare the term
-;; CodeId implementation identity is included for live-REPL version changes.
-(def ^:private cid-table (object-array 512))
+;; CodeIds of closure terms on entry: four ways per identity slot prevent
+;; a caller and its local loop/helper from evicting each other every call.
+;; This bounded optimization retains at most 2048 terms. CodeId implementation
+;; identity is part of the key; collisions/eviction only repeat hashing.
+(def ^:private ^java.util.concurrent.atomic.AtomicReferenceArray cid-table
+  (java.util.concurrent.atomic.AtomicReferenceArray. 512))
 
 (defn- term-code-id [t]
   (let [implementation @#'c/code-id
         i (bit-and (System/identityHashCode t) 511)
-        e (aget ^objects cid-table i)]
-    (if (and e (identical? t (nth e 0)) (identical? implementation (get e 2)))
-      (nth e 1)
-      (let [cid (implementation t)]
-        (aset ^objects cid-table i [t cid implementation])
-        cid))))
+        ^clojure.lang.IPersistentVector entries (.get cid-table i)
+        found (when entries
+                (loop [j (long 0)]
+                  (when (< j (.count entries))
+                    (let [entry (.nth entries (int j))]
+                      (if (and (identical? t (nth entry 0)) (identical? implementation (nth entry 2)))
+                        (nth entry 1) (recur (inc j)))))))]
+    (or found
+        (let [cid (implementation t)]
+          (loop []
+            (let [old (.get cid-table i)
+                  next (into [[t cid implementation]] (take 3 old))]
+              (when-not (.compareAndSet cid-table i old next) (recur))))
+          cid))))
 
 (def ^:private memo-size 4)
 
@@ -527,16 +615,20 @@
   [cache f statics args basis kont]
   (when (ev/closure? f)
     (let [c @cache
-          cands (get (:entries c) (term-code-id (ev/closure-term f)))]
+          ^clojure.lang.IPersistentVector cands (get (:ordered c) (term-code-id (ev/closure-term f)))]
       (if (empty? cands)
         (do (count! c :misses) nil)
         (let [ctx {:basis basis :captures (ev/closure-locals f) :statics statics
                    :args (vec args) :kont (concat kont (mapcat identity ev/*outer-k*))}
-              exe (some (fn [[_ exe]]
-                          (when (and (valid-in? c exe basis)
-                                     (every? #(guard-holds? % ctx) (::runtime exe)))
-                            exe))
-                        cands)]
+              exe (if (= *entry-mode* :reference)
+                    (some (fn [exe]
+                            (when (and (valid-in? c exe basis)
+                                       (every? #(guard-holds? % ctx) (::runtime exe))) exe)) cands)
+                    (loop [i (long 0)]
+                      (when (< i (.count cands))
+                        (let [exe (.nth cands (int i))]
+                          (if (and (valid-in? c exe basis) (runtime-holds? exe ctx)) exe
+                            (recur (inc i)))))))]
           (count! c (if exe :hits :fallbacks))
           exe)))))
 
@@ -549,20 +641,22 @@
         allowed #{:klara.compile/checked-chain :klara.compile/inferred-affine :klara.compile/strict-fold
                   :klara.compile/demand-prefix}]
     (fn [evidence basis kont]
-      (let [entries (:entries @cache) old (.get slot)
+      (let [state @cache entries (:entries state) old (.get slot)
             value (evidence-value evidence)
             ctx {:basis basis :captures (ev/closure-locals f) :statics [] :args [value] :kont kont}
             accepts? (fn [exe]
                        (and (fn? (:invoke1 exe)) (contains? allowed (get-in exe [:certificate :checker]))
-                            (every? (fn [[kind i pred :as g]]
+                            (every? (fn [[g :as plan]]
+                                      (let [[kind i pred] g]
                                       (if (= kind :arg)
                                         (and (= i 0) (evidence-holds? evidence pred value))
-                                        (guard-holds? g ctx))) (::runtime exe))))
+                                        (planned-guard-holds? (::guard-evaluator exe) plan ctx))))
+                                    (or (::runtime-plan exe) (mapv vector (::runtime exe))))))
             candidates (if (and old (identical? entries (nth old 0))
                                 (identical? basis (nth old 1)) (identical? kont (nth old 2)))
                          (nth old 3)
                          (let [cs (vec (filter #(valid-in? @cache % basis)
-                                               (vals (get entries (term-code-id (ev/closure-term f))))))]
+                                               (get (:ordered state) (term-code-id (ev/closure-term f)))))]
                            (.set slot [entries basis kont cs]) cs))
             exe (some #(when (accepts? %) %) candidates)]
         (count! @cache (if exe :hits :fallbacks))
@@ -575,12 +669,13 @@
   (let [n (volatile! 0)
         ok? (fn [exe] (every? (fn [[k :as g]] (or (not= :world k) (guard-holds? g {:basis root})))
                               (:guards exe)))]
-    (swap! cache update :entries
-           (fn [es] (vreset! n 0)
-             (into {} (keep (fn [[cid m]]
+    (swap! cache
+           (fn [state] (vreset! n 0)
+             (let [entries (into {} (keep (fn [[cid m]]
                               (let [m' (into {} (filter (fn [[_ exe]] (or (ok? exe) (do (vswap! n inc) false)))) m)]
                                 (when (seq m') [cid m']))))
-                   es)))
+                   (:entries state))]
+               (assoc state :entries entries :ordered (update-vals entries ordered-candidates)))))
     @n))
 
 (defn record-deopt!
@@ -611,39 +706,60 @@
 
 (def ^:private arity-tokens (mapv #(vec (repeat % nil)) (range 21)))
 
+(defn- direct-shape-guard? [[kind value]]
+  (case kind
+    :world true
+    :host-root true
+    (:captures :statics) (and (= clojure.lang.PersistentVector (class value)) (empty? value))
+    :arity (and (integer? value) (<= 0 value 20))
+    :unhandled (and (= clojure.lang.PersistentHashSet (class value)) (every? keyword? value))
+    false))
+
+(defn- direct-candidates [candidates root n]
+  (when (and (seq candidates) (contains? arity-tokens n)
+             (every? #(and (= :s12-v1 (:abi %))
+                           (contains? #{:klara.compile/tested :klara.compile/baseline}
+                                      (get-in % [:certificate :checker]))
+                           (every? direct-shape-guard? (:guards %))) candidates))
+    (let [ctx {:basis root :captures [] :statics [] :args (get arity-tokens n) :kont []}]
+      (vec (for [exe candidates]
+             [exe (mapv (fn [[guard :as plan]]
+                          (if (= :host-root (first guard)) [plan false nil]
+                            [plan true (guard-holds? guard ctx)]))
+                        (or (::runtime-plan exe) (runtime-plan (::runtime exe))))])))))
+
+(defn- select-direct [state root candidates]
+  ;; Retain runtime guard order. Even a candidate with a false stable guard
+  ;; must perform any earlier live host checks, including resolution failures.
+  (some (fn [[exe checks]]
+          (when (and (valid-in? state exe root)
+                     (every? (fn [[plan stable? result]]
+                               (if stable? result (planned-guard-holds? canonical-guard-evaluator plan {}))) checks))
+            exe)) candidates))
+
 (defn make-entry-site
-  "Bounded identity slots. A hit reuses an S7 verdict under the same root
-  and entries generation. The context form takes an arity, without an
-  argument container. Only compiler contracts use these count-only slots."
+  "Bounded identity slots retain ordered candidates and pure shape facts.
+   Host roots are checked live, in guard order, on every call. Layout-sensitive
+   or opaque candidates use ordinary entry with real arguments."
   [cache]
   (let [slots (java.util.concurrent.atomic.AtomicReferenceArray. 32)
         admitted? (make-handler-admission)]
     (letfn [(select [f n root outer]
               (when (and (ev/closure? f) (empty? (ev/closure-locals f))
+                         (identical? canonical-guard-evaluator @#'guard-holds?)
                          (admitted? outer))
                 (let [term (ev/closure-term f) i (bit-and (System/identityHashCode term) 31)
-                      entries (:entries @cache) old (.get slots i)]
-                  (if (and old (identical? root (nth old 0))
-                           (identical? term (nth old 1)) (identical? entries (nth old 2))
-                           (= n (nth old 3)))
-                    (let [exe (nth old 4)]
-                      (when (or (empty? (::host-roots exe))
-                                (every? #(guard-holds? % {}) (::host-roots exe))) exe))
-                    (let [candidates (vals (get entries (term-code-id term)))
-                          ;; An argument-sensitive or mixed set must enter
-                          ;; through T0 with the real arguments, exactly once.
-                          compiler-only? (and (seq candidates)
-                                              (every? #(and (= :s12-v1 (:abi %))
-                                                            (= :klara.compile/tested (get-in % [:certificate :checker])))
-                                                      candidates))
-                          count-only? #(every? (fn [g] (contains? #{:world :captures :statics :arity :unhandled :host-root} (first g)))
-                                               (:guards %))
-                          exe (when (and compiler-only? (contains? arity-tokens n)
-                                         (every? count-only? candidates))
-                                (enter cache f [] (get arity-tokens n) root []))
-                          direct (when (and (= :s12-v1 (:abi exe)) (count-only? exe)) exe)]
-                      (.set slots i [root term entries n direct])
-                      direct)))))]
+                      state @cache entries (:entries state) old (.get slots i)
+                      hit? (and old (identical? root (nth old 0))
+                                (identical? term (nth old 1)) (identical? entries (nth old 2))
+                                (= n (nth old 3)))
+                      candidates (if hit? (nth old 4)
+                                   (direct-candidates (get (:ordered state) (term-code-id term)) root n))
+                      exe (select-direct state root candidates)]
+                  (when-not hit?
+                    (.set slots i [root term entries n candidates])
+                    (when candidates (count! state (if exe :hits :fallbacks))))
+                  exe)))]
       (fn
         ([f args root] (select f (count args) root ev/*outer-k*))
         ([f n root outer] (select f n root outer))))))

@@ -48,9 +48,9 @@ tests, trusted bridges and unsupported observations.
 | Reference execution | `eval.clj` | CEK frames, closures, staged construction, handlers and compiler entry hooks |
 | Live authority | `authority.clj` | Resource use, branch settlement, budgets, evidence and randomness |
 | Executable cache | `stage.clj` | Candidate checks, per-root admission, runtime facts and publication |
-| General compiler subset | `compile.clj`, `compile/` | Named IR, scalar analysis, direct calls, layouts, deopt and JVM paths |
+| General compiler subset | `compile/core.clj`, `compile/` | Named IR, scalar analysis, direct calls, layouts, deopt and JVM paths |
 | Certified fusion | `fusion.clj`, `fusion/` | Restricted elaboration, proof construction, dependency guards and lowering |
-| Checked seed backend | `compile/staged.clj` | Closed scalar Code to isolated preparation and guarded installation |
+| Preparation lifecycle | `compile/{prepare,staged,service}.clj` | Funded baseline requests, explicit scheduling, isolated preparation, validation and publication; legacy scalar adapter |
 | Shared private-memory path | `compile/{analysis,infer_affine,strict_fold,updates,affine_erase}.clj` | Known-helper analysis, ordered normalization, snapshot updates, ownership checking and primitive arrays |
 | Deployment | `deploy.clj` | Supported source/Core/data bundles and compatible fresh-process restore |
 
@@ -167,3 +167,28 @@ emitters and runtime services. Foreign host behavior must remain explicit at the
 interop boundary. Full Clojure source compatibility is a goal, not a current
 coverage claim. Languages and opt-in static layers are covered by the
 [RFC index](../rfc/README.md).
+
+## Repository layout
+
+| Path | Role |
+|---|---|
+| `src/klara/` | Hosted language implementation: Core, syntax, worlds, CEK, authority, cache and tooling |
+| `src/klara/compile/` | Preparation, analysis, checked recipes, lowering, emission and explicit investment |
+| `examples/` | Runnable language examples, including guest optimizer programs |
+| `test/` | Core language/compiler regressions and generated differential families (`:test`) |
+| `verification/` | Maintained proof models, semantic bridges and scenario tests (`:verify`) |
+| `spec/`, `test-spec/` | Smaller formal calculus and optional spec/T0 differential suite |
+| `test-nrepl/`, `test-integration/` | Optional tooling and sibling-project integration checks |
+| `doc/`, `rfc/` | Public guides, current contracts, evidence boundaries and language proposals |
+| `experiments/` | Benchmark drivers, attributed raw cohorts and supporting historical sources |
+| `notebooks/`, `scripts/` | Walkthroughs, reproduction and public artifact packaging |
+| `target/` | Ignored generated outputs and temporary builds |
+| `.internal/` | Ignored research notes, superseded plans, development transcripts and manuscript work |
+
+Within `src/klara/`, follow `load`/`defs` → `expand` → `core` → `eval` for
+ordinary execution. World roots and live authority provide separate state
+boundaries. Optional preparation follows `compile.prepare`/`compile.staged` →
+strategy and checked recipe adapters → baseline lowering/emission → validation
+and `stage` installation. Ordinary entry selects an already admitted executable
+or falls back to the CEK; it does not execute optimizer passes on each call.
+The [compiler map](engineering/compiler.md) describes these boundaries in detail.

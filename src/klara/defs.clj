@@ -35,27 +35,35 @@
         v (binding [w/*reads* reads] (ev/run term {:basis root :mint nil}))]
     [v (into #{} (remove #(= self (second %))) @reads)]))
 
-(defn- make-entry [{:keys [kind name term code-id reads syntax?]} root form]
+(defn- make-entry [{:keys [kind name term code-id reads syntax? module]} root form]
   (let [[v ereads] (evaluate term root name)]
-    {:kind kind :syntax? syntax? :value v :code term :code-id code-id
+    {:kind kind :syntax? syntax? :module module :value v :code term :code-id code-id
      :value-id (w/fresh-value-id)
      :expansion-reads reads :eval-reads ereads :reads (into reads ereads)
      :form form}))
+
+(defn define-expanded!
+  "Publish a definition already expanded against root. The caller must supply
+   the actual expand-recorded result for form and root. Re-expands only when
+   concurrent publication breaks its reads; trusted initializer effects may
+   therefore be repeated on retry, as with define!."
+  [wo form root res]
+  (loop [root root res res]
+    (let [_ (when-not (#{:def :macro} (:kind res))
+              (throw (ex-info "define!: not a definition" {:form form})))
+          e (make-entry res root form)
+          r (w/commit! wo root (:reads e) #(w/put-entry % (:name res) e))]
+      (if (= ::w/retry r)
+        (let [root (w/snapshot wo)]
+          (recur root (x/expand-recorded form root)))
+        (select-keys (assoc e :name (:name res)) [:name :kind :code-id :value-id :reads])))))
 
 (defn define!
   "Define (def n e), (defmacro n [ps] body..) or a top-level macro call
   that expands to one of them, in world wo. Returns a summary."
   [wo form]
-  (loop []
-    (let [root (w/snapshot wo)
-          res (x/expand-recorded form root)
-          _ (when-not (#{:def :macro} (:kind res))
-              (throw (ex-info "define!: not a definition" {:form form})))
-          e (make-entry res root form)
-          r (w/commit! wo root (:reads e) #(w/put-entry % (:name res) e))]
-      (if (= ::w/retry r)
-        (recur)
-        (select-keys (assoc e :name (:name res)) [:name :kind :code-id :value-id :reads])))))
+  (let [root (w/snapshot wo)]
+    (define-expanded! wo form root (x/expand-recorded form root))))
 
 ;; ---------------------------------------------------------------------------
 ;; invalidation
@@ -79,7 +87,7 @@
                    [root (update rep :green conj dep) more]
 
                    (seq (w/invalid-reads root (:expansion-reads e)))
-                   (let [res (x/expand-recorded (:form e) root)
+                   (let [res (binding [x/*module* (:module e)] (x/expand-recorded (:form e) root))
                          rep (update rep :reexpanded conj dep)]
                      (if (and (= (:code-id res) (:code-id e))
                               (empty? (w/invalid-reads root (:eval-reads e))))

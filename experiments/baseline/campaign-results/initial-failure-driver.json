@@ -1,0 +1,18 @@
+[
+  {
+    "label": "consolidation-0",
+    "exit_code": 1,
+    "experiment_process_wall_seconds": 4.049487527023302,
+    "command": [
+      "clojure",
+      "-J-Xmx1g",
+      "-J-Xss16m",
+      "-Sdeps",
+      "{:paths [\"src\" \"experiments\"]}",
+      "-M",
+      "-m",
+      "baseline.campaign",
+      "consolidation-0"
+    ]
+  }
+]

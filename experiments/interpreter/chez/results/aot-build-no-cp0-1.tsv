@@ -1,0 +1,4 @@
+1	no-cp0	sum	compile-file	0	961708	2074
+1	no-cp0	calls	compile-file	0	877333	2149
+1	no-cp0	copy-vector	compile-file	0	438961	2381
+1	no-cp0	ledger	compile-file	0	775117	3748

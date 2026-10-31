@@ -55,15 +55,30 @@
 
 ;; ---------------------------------------------------------------------------
 ;; Tier L primitives: names in the core, Clojure functions as their
-;; reference implementation (same name, same behaviour on non-failing
-;; programs — the naming rule).
+;; reference implementation. Most follow the same-name Clojure naming rule;
+;; literal-map is Klara's intrinsic for map syntax. These names are opcodes
+;; after expansion, not a declaration of guest imports or namespace lookup.
 ;; ---------------------------------------------------------------------------
+
+(defn literal-map
+  "Reference construction for map syntax, distinct from explicit hash-map.
+   RT selects the host representation by size and checks evaluated keys."
+  [& keyvals]
+  (when (odd? (count keyvals))
+    (throw (IllegalArgumentException. "map literal requires key/value pairs")))
+  (clojure.lang.RT/map (object-array keyvals)))
+
+(defn primitive-symbol
+  "Host implementation of a Core primitive opcode, not guest name resolution."
+  [name]
+  (if (= name 'literal-map) 'klara.core/literal-map
+    (symbol "clojure.core" (clojure.core/name name))))
 
 (def prims
   {'+ +, '- -, '* *, '/ /, 'quot quot, 'rem rem, 'mod mod, 'inc inc, 'dec dec
    '< <, '> >, '<= <=, '>= >=, '= =, 'not= not=, 'not not, 'zero? zero?
    'pos? pos?, 'neg? neg?, 'even? even?, 'odd? odd?, 'identity identity
-   'list list, 'vector vector, 'hash-map hash-map, 'hash-set hash-set
+   'list list, 'vector vector, 'hash-map hash-map, 'literal-map literal-map, 'hash-set hash-set
    'cons cons, 'first first, 'second second, 'rest rest, 'next next
    'seq seq, 'empty? empty?, 'count count, 'nth nth, 'get get, 'assoc assoc
    'dissoc dissoc, 'conj conj, 'concat concat, 'vec vec, 'str str

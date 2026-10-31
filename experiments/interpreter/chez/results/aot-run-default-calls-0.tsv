@@ -1,0 +1,11 @@
+0	default	calls	load-object	0	110253	ok
+0	default	calls	first-call	0	7591	50005000
+0	default	calls	warm-call	0	7412.26	50005000
+0	default	calls	warm-call	1	7713.28	50005000
+0	default	calls	warm-call	2	8495.06	50005000
+0	default	calls	warm-call	3	7784.0	50005000
+0	default	calls	warm-call	4	7699.08	50005000
+0	default	calls	warm-call	5	7435.74	50005000
+0	default	calls	warm-call	6	7449.94	50005000
+0	default	calls	warm-call	7	8234.92	50005000
+0	default	calls	warm-call	8	7942.86	50005000

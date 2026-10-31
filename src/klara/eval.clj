@@ -1,6 +1,7 @@
 (ns klara.eval
-  "T0: the reference interpreter of Klara Core K0 — the executable draft
-  of the specification. Clarity over speed.
+  "T0: the handwritten interpreter of Klara Core K0. Explicit reference
+  transitions remain available; ordinary execution fuses immediate operands
+  and avoids some transient machine states.
 
   A CEK machine. The state is [mode control env kont]:
     mode :eval  control is a term to evaluate,
@@ -686,7 +687,26 @@
                     "); only data and functions over data persist into code")
                :lift {:value v}))
 
+(defn- check-lift-basis! [f]
+  ;; Reification carries lexical captures, not their inherited global context.
+  ;; Include reachable open closures conservatively under a pinned parent.
+  (when (closure-basis f)
+    (loop [todo [f] seen #{}]
+      (when (seq todo)
+        (let [v (peek todo)]
+        (if (contains? seen v)
+          (recur (pop todo) seen)
+          (let [children (cond
+                           (closure? v) (do
+                                          (when (seq (core/free-globals (closure-term v)))
+                                            (throw (stage-error "cannot lift a world-dependent pinned closure" :lift)))
+                                          (closure-locals v))
+                           (pap? v) (cons (pap-fn v) (pap-statics v))
+                           (coll? v) (seq v))]
+            (recur (into (pop todo) children) (conj seen v)))))))))
+
 (defn- lift-closure [f seen]
+  (check-lift-basis! f)
   (code/core->s (closure-term f)
                 (fn [i]
                   (let [ls (closure-locals f)
@@ -701,7 +721,8 @@
   (cond
     (or (plain-data? v) (contains? seen v)) nil
     (record? v) (throw (resource-error v))
-    (closure? v) (doseq [l (closure-locals v)] (scan-resources l (conj seen v)))
+    (closure? v) (do (check-lift-basis! v)
+                     (doseq [l (closure-locals v)] (scan-resources l (conj seen v))))
     (pap? v) (doseq [x (cons (pap-fn v) (pap-statics v))] (scan-resources x (conj seen v)))
     (coll? v) (doseq [x v] (scan-resources x seen))
     (code/code-var? v) nil
@@ -710,7 +731,7 @@
 
 (defn lift-term
   "The s-term that rebuilds present value v in generated code: data as a
-  literal, closures as their code over lifted captures, partial
+  literal, world-independent closures as their code over lifted captures, partial
   applications as specialize, host functions and self-referential
   closures as opaque constants. Values holding resources (atoms, handler
   instances, continuations, other host objects) and code values are
@@ -1139,8 +1160,14 @@
     :finish (finish c x (nth state 3) (nth state 4))
     :ret (if (empty? k) state (step-ret c k))))
 
-(defn drive
-  "Run the machine from state to a final value."
+(def ^:dynamic *reference-driver*
+  "Use the original transition-at-a-time driver, including in nested host
+   callbacks. A differential/measurement control, not a guest memory mode."
+  false)
+
+(defn drive-reference
+  "Run through the original explicit transitions. step-state exposes the
+   same transitions for bounded stepping and state inspection."
   [state]
   (loop [state state]
     (let [[mode c x k] state]
@@ -1149,6 +1176,86 @@
         :build (recur (step-build c x k))
         :finish (let [[_ node vals env k] state] (recur (finish node vals env k)))
         :ret (if (empty? k) c (recur (step-ret c k)))))))
+
+(def ^:private scalar-primitives
+  ;; Anchor actual functions, not just names: a host override can call back
+  ;; into Klara and must retain host-apply's outer-continuation binding.
+  (select-keys core/prims '[+ - * / quot rem mod inc dec < > <= >= zero? pos? neg?]))
+
+(defn- numeric-lane? [v]
+  (let [c (class v)] (or (identical? c Long) (identical? c Double))))
+
+(defn- finish-operands [node vals env k]
+  (let [n (count vals)
+        f (when (= :prim (:op node)) (get scalar-primitives (:name node)))]
+    (if (and f (identical? f (get core/prims (:name node))) (<= n 2)
+             (or (zero? n) (numeric-lane? (nth vals 0)))
+             (or (< n 2) (numeric-lane? (nth vals 1))))
+      ;; Exact Long/Double arithmetic through these functions cannot reenter
+      ;; guest code. Preserve checked arithmetic and exception dispatch, while
+      ;; avoiding apply and a dynamic Var frame for every scalar operation.
+      (try [:ret (case n 0 (f) 1 (f (nth vals 0)) 2 (f (nth vals 0) (nth vals 1))) env k]
+           (catch Throwable t (raise t env k)))
+      (finish node vals env k))))
+
+(defn- eval-operands
+  "Fuse immediate operand transitions. Quotes, locals and closure creation
+   cannot perform guest effects. Suspend with the ordinary immutable :list
+   frame at every other term; capture, handlers and deopt keep their format."
+  [node terms vals env k]
+  (loop [terms (seq terms) vals vals]
+    (if terms
+      (let [term (first terms)]
+        (case (:op term)
+          :quote (recur (next terms) (conj vals (:datum term)))
+          :local (let [v (lookup env (:index term))]
+                   (recur (next terms)
+                          (conj vals (if (code/code-var? v)
+                                       (code/->code (code/var-term (code/code-var-name v))) v))))
+          :fn (recur (next terms) (conj vals (Closure. term (:locals env) (:mint env))))
+          [:eval term env (conj k {:tag :list :node node :env env
+                                  :vals vals :todo (rest terms)})]))
+      (finish-operands node vals env k))))
+
+(defmacro ^:private continue-state [state]
+  `(let [s# ~state]
+     (recur (nth s# 0) (nth s# 1) (nth s# 2) (nth s# 3) (nth s# 4 nil))))
+
+(defn- drive-operands [state]
+  ;; Driver registers are loop locals, never captured mutable objects. The
+  ;; fifth slot is used only for the existing [:finish node vals env k] state.
+  (loop [mode (nth state 0) c (nth state 1) x (nth state 2)
+         k (nth state 3) extra (nth state 4 nil)]
+    (case mode
+      :eval (case (:op c)
+              :quote (recur :ret (:datum c) nil k nil)
+              :local (let [v (lookup x (:index c))]
+                       (recur :ret (if (code/code-var? v)
+                                     (code/->code (code/var-term (code/code-var-name v))) v)
+                              nil k nil))
+              :fn (recur :ret (Closure. c (:locals x) (:mint x)) nil k nil)
+              :let (recur :eval (:init c) x (conj k {:tag :let :body (:body c) :env x}) nil)
+              :if (recur :eval (:test c) x (conj k {:tag :if :node c :env x}) nil)
+              (:app :prim :perform :specialize :handle)
+              (continue-state (eval-operands c (list-terms c) [] x k))
+              (continue-state (step-eval c x k)))
+      :build (continue-state (step-build c x k))
+      :finish (continue-state (finish c x k extra))
+      :ret (if (empty? k) c
+             (let [f (peek k)]
+               (case (:tag f)
+                 :let (recur :eval (:body f) (push (:env f) c) (pop k) nil)
+                 :if (let [node (:node f)]
+                       (recur :eval (if c (:then node) (:else node)) (:env f) (pop k) nil))
+                 :list (continue-state
+                         (eval-operands (:node f) (:todo f) (conj (:vals f) c) (:env f) (pop k)))
+                 (continue-state (step-ret c k))))))))
+
+(defn drive
+  "Run to a value. Immediate operands share a dispatch iteration; effectful
+   boundaries retain the reference continuation representation."
+  [state]
+  (if *reference-driver* (drive-reference state) (drive-operands state)))
 
 ;; ---------------------------------------------------------------------------
 ;; entry points

@@ -55,7 +55,7 @@ Clojure code can take part in two ways (`doc/engineering/correctness.md` §9):
 
 | Level | How | What you get |
 |---|---|---|
-| **L0 linked** | plain `require`; the code is compiled by Clojure | everything runs; its state lives outside the world and is **shared by all forks** |
+| **L0 linked** | host Clojure loading or explicit host interop; the code is compiled by Clojure | its state lives outside the world and is **shared by all forks** |
 | **L1 hosted** | the code is expanded by Klara's expander | its definitions live in the world: recorded reads, redefinition with invalidation, forks |
 | **L2 Klara-idiomatic** | uses Klara's own names (`handle`, `perform`, `fork`, …) | the full language |
 
@@ -77,10 +77,16 @@ k=> @counter
 The fork's `swap!` changed the parent's atom. Explicit resource wrappers and
 transfer-only authority are implemented (RFC 0001; chapter 4), but raw hosted
 atoms are not automatically branchable cells, and Java objects are not
-automatically wrapped. Loading a
-Clojure namespace as hosted code (`require-hosted`) is also design only;
-today hosted code is what you define at the REPL or with
-`klara.defs/define!`.
+automatically wrapped. The [guest loader](../tooling.md) now supports a bounded
+`ns`/`:require` subset and `.clj`/`.cljc` source files. At the guest REPL,
+`require` routes to that loader; it is not host Clojure's `require`.
+Full Clojure library compatibility remains work.
+
+Explicit Core host effects are interception points, not complete contracts
+for everything a host function can do. Mutable reads as well as writes,
+including state reached through callbacks, need modelling before a compiler
+can move or eliminate them or an isolated fork can safely execute them.
+Arbitrary host interop has no general isolation or JIT-safety guarantee.
 
 ## The naming rule
 

@@ -1,0 +1,39 @@
+{:scope :one-process-same-source-same-colliding-terms,
+ :attempt 3,
+ :slots [431 393 431],
+ :source
+ (fn
+  [n bias limit]
+  (let
+   [step
+    (fn
+     [acc i]
+     (assoc (assoc acc 0 (+ (nth acc 0) i)) 1 (+ (nth acc 1) bias)))]
+   (let
+    [acc
+     (loop
+      [i 0 acc [0 0]]
+      (if (< i n) (recur (inc i) (step acc i)) acc))]
+    (< (+ (nth acc 0) (nth acc 1)) limit)))),
+ :legacy
+ {:wall-ns-per-call 1031126.15625,
+  :cpu-ns-per-call 995723.625,
+  :bytes-per-call 4194976.5625},
+ :four-way
+ {:wall-ns-per-call 5524.890625,
+  :cpu-ns-per-call 5534.7265625,
+  :bytes-per-call 10528.5625},
+ :limits
+ [:forced-collision
+  :single-order
+  :diagnostic-not-a-language-speedup
+  :four-way-cache-still-has-capacity-misses],
+ :source-sha256
+ {"src/klara/stage.clj"
+  "9cf3c97d2cdc8181810e5262951f924383b5acfc051c947139de75d503c44856",
+  "src/klara/core.clj"
+  "4fde378a632e9259d5133c166c118c951e3afb44eb84e0eb896a45e041684e6f",
+  "src/klara/eval.clj"
+  "f3426a67ec736d5e07c1e1e836a7d242ed6f5efdc1ebb16ab079afcf3d80ad65",
+  "experiments/baseline/entry_collision.clj"
+  "27bc31e2857d2f9748edc123614e67c8c082e7e365bf9935024b81352907152b"}}

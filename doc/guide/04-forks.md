@@ -91,7 +91,7 @@ computation rather than of the world.
 ```clojure klara-repl
 k=> (handle [h {:split (fn [k] [(k :left) (k :right)])}]
       (let [x (perform h :split)] {:branch x :n (count (str x))}))
-[{:n 5, :branch :left} {:n 6, :branch :right}]
+[{:branch :left, :n 5} {:branch :right, :n 6}]
 ```
 
 Particle filters resample this way (`examples/klara/07-smc.md`). In T0,

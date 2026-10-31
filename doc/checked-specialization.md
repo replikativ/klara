@@ -221,7 +221,7 @@ flowchart LR
   E --> G[Reference fallback when guards fail]
 ```
 
-`experiments/consolidation/planning.clj` supplies the restricted pure execution
+`verification/consolidation/planning.clj` supplies the restricted pure execution
 boundary, checked preparation handler and investment controller. Pure policy
 execution has a T0 transition limit; preparation is charged by elapsed time but
 is not preempted at a hard deadline. Cost estimates are supplied fixtures, not

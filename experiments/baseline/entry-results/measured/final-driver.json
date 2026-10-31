@@ -1,0 +1,68 @@
+[
+  {
+    "label": "core",
+    "command": [
+      "clojure",
+      "-M:test"
+    ],
+    "exit": 0,
+    "process_wall_s": 23.033311092003714
+  },
+  {
+    "label": "verify",
+    "command": [
+      "clojure",
+      "-M:verify"
+    ],
+    "exit": 0,
+    "process_wall_s": 20.83113063100609
+  },
+  {
+    "label": "final-0",
+    "command": [
+      "clojure",
+      "-J-Xmx1g",
+      "-J-Xss16m",
+      "-Sdeps",
+      "{:paths [\"src\" \"experiments\"]}",
+      "-M",
+      "-m",
+      "baseline.entry",
+      "final-0"
+    ],
+    "exit": 0,
+    "process_wall_s": 4.000161262025358
+  },
+  {
+    "label": "final-1",
+    "command": [
+      "clojure",
+      "-J-Xmx1g",
+      "-J-Xss16m",
+      "-Sdeps",
+      "{:paths [\"src\" \"experiments\"]}",
+      "-M",
+      "-m",
+      "baseline.entry",
+      "final-1"
+    ],
+    "exit": 0,
+    "process_wall_s": 4.212778596003773
+  },
+  {
+    "label": "final-2",
+    "command": [
+      "clojure",
+      "-J-Xmx1g",
+      "-J-Xss16m",
+      "-Sdeps",
+      "{:paths [\"src\" \"experiments\"]}",
+      "-M",
+      "-m",
+      "baseline.entry",
+      "final-2"
+    ],
+    "exit": 0,
+    "process_wall_s": 5.4911962269979995
+  }
+]

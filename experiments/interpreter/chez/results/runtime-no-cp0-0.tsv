@@ -1,0 +1,80 @@
+0	no-cp0	sum	compile-first	0	236257	ok
+0	no-cp0	sum	first-call	0	5569	49995000
+0	no-cp0	sum	warm-call	0	5076.72	49995000
+0	no-cp0	sum	warm-call	1	5568.7	49995000
+0	no-cp0	sum	warm-call	2	5890.6	49995000
+0	no-cp0	sum	warm-call	3	5963.42	49995000
+0	no-cp0	sum	warm-call	4	6085.5	49995000
+0	no-cp0	sum	warm-call	5	5707.68	49995000
+0	no-cp0	sum	warm-call	6	6064.8	49995000
+0	no-cp0	sum	warm-call	7	6182.72	49995000
+0	no-cp0	sum	warm-call	8	5766.9	49995000
+0	no-cp0	sum	compile-repeat	0	277744	#t
+0	no-cp0	sum	compile-repeat	1	244544	#t
+0	no-cp0	sum	compile-repeat	2	372797	#t
+0	no-cp0	sum	compile-repeat	3	137892	#t
+0	no-cp0	sum	compile-repeat	4	126385	#t
+0	no-cp0	sum	compile-repeat	5	120299	#t
+0	no-cp0	sum	compile-repeat	6	116643	#t
+0	no-cp0	sum	compile-repeat	7	136940	#t
+0	no-cp0	sum	compile-repeat	8	163892	#t
+0	no-cp0	calls	compile-first	0	141123	ok
+0	no-cp0	calls	first-call	0	7786	50005000
+0	no-cp0	calls	warm-call	0	7561.7	50005000
+0	no-cp0	calls	warm-call	1	7850.24	50005000
+0	no-cp0	calls	warm-call	2	8491.9	50005000
+0	no-cp0	calls	warm-call	3	7632.88	50005000
+0	no-cp0	calls	warm-call	4	7596.78	50005000
+0	no-cp0	calls	warm-call	5	8177.96	50005000
+0	no-cp0	calls	warm-call	6	7933.82	50005000
+0	no-cp0	calls	warm-call	7	8294.92	50005000
+0	no-cp0	calls	warm-call	8	7905.36	50005000
+0	no-cp0	calls	compile-repeat	0	157135	#t
+0	no-cp0	calls	compile-repeat	1	158607	#t
+0	no-cp0	calls	compile-repeat	2	137803	#t
+0	no-cp0	calls	compile-repeat	3	134105	#t
+0	no-cp0	calls	compile-repeat	4	133714	#t
+0	no-cp0	calls	compile-repeat	5	132484	#t
+0	no-cp0	calls	compile-repeat	6	134608	#t
+0	no-cp0	calls	compile-repeat	7	128813	#t
+0	no-cp0	calls	compile-repeat	8	127514	#t
+0	no-cp0	copy-vector	compile-first	0	192485	ok
+0	no-cp0	copy-vector	first-call	0	28692	#(49995000 10000)
+0	no-cp0	copy-vector	warm-call	0	13628.4	#(49995000 10000)
+0	no-cp0	copy-vector	warm-call	1	13965.98	#(49995000 10000)
+0	no-cp0	copy-vector	warm-call	2	14509.14	#(49995000 10000)
+0	no-cp0	copy-vector	warm-call	3	13978.54	#(49995000 10000)
+0	no-cp0	copy-vector	warm-call	4	13604.16	#(49995000 10000)
+0	no-cp0	copy-vector	warm-call	5	14617.62	#(49995000 10000)
+0	no-cp0	copy-vector	warm-call	6	14330.54	#(49995000 10000)
+0	no-cp0	copy-vector	warm-call	7	14812.9	#(49995000 10000)
+0	no-cp0	copy-vector	warm-call	8	14285.3	#(49995000 10000)
+0	no-cp0	copy-vector	compile-repeat	0	400090	#t
+0	no-cp0	copy-vector	compile-repeat	1	212148	#t
+0	no-cp0	copy-vector	compile-repeat	2	214761	#t
+0	no-cp0	copy-vector	compile-repeat	3	174821	#t
+0	no-cp0	copy-vector	compile-repeat	4	164954	#t
+0	no-cp0	copy-vector	compile-repeat	5	166969	#t
+0	no-cp0	copy-vector	compile-repeat	6	165580	#t
+0	no-cp0	copy-vector	compile-repeat	7	169283	#t
+0	no-cp0	copy-vector	compile-repeat	8	208364	#t
+0	no-cp0	ledger	compile-first	0	504584	ok
+0	no-cp0	ledger	first-call	0	45638	(499500 1000 124750)
+0	no-cp0	ledger	warm-call	0	38061.52	(499500 1000 124750)
+0	no-cp0	ledger	warm-call	1	36873.32	(499500 1000 124750)
+0	no-cp0	ledger	warm-call	2	37527.72	(499500 1000 124750)
+0	no-cp0	ledger	warm-call	3	37642.5	(499500 1000 124750)
+0	no-cp0	ledger	warm-call	4	37266.04	(499500 1000 124750)
+0	no-cp0	ledger	warm-call	5	36944.22	(499500 1000 124750)
+0	no-cp0	ledger	warm-call	6	37633.32	(499500 1000 124750)
+0	no-cp0	ledger	warm-call	7	39647.28	(499500 1000 124750)
+0	no-cp0	ledger	warm-call	8	38158.76	(499500 1000 124750)
+0	no-cp0	ledger	compile-repeat	0	818771	#t
+0	no-cp0	ledger	compile-repeat	1	498108	#t
+0	no-cp0	ledger	compile-repeat	2	482671	#t
+0	no-cp0	ledger	compile-repeat	3	473599	#t
+0	no-cp0	ledger	compile-repeat	4	444291	#t
+0	no-cp0	ledger	compile-repeat	5	422780	#t
+0	no-cp0	ledger	compile-repeat	6	576494	#t
+0	no-cp0	ledger	compile-repeat	7	456961	#t
+0	no-cp0	ledger	compile-repeat	8	468307	#t

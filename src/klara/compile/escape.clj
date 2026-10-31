@@ -6,7 +6,8 @@
   recognized projection or direct local closure call. Preserve initializer
   order, including unused fields and exceptions. No partial escape analysis."
   (:require [clojure.set :as set]
-            [klara.compile.ir :as ir] [klara.compile.hof :as hof] [klara.core :as c]))
+            [klara.compile.ir :as ir] [klara.compile.hof :as hof]
+            [klara.compile.loop :as loop] [klara.core :as c]))
 
 (defn alias-closure
   "Bidirectional transitive aliases, ported from raster memory analysis."
@@ -57,7 +58,7 @@
              ;; get distinguishes boxed integral key classes: Short/Byte
              ;; are absent, although nth coerces them. Require known keys.
              (or (not= 'get n) (instance? Long i) (instance? Integer i))) i
-        (and (= 'hash-map (:name init)) (= 'get n) (= 2 (count as))
+        (and (contains? '#{hash-map literal-map} (:name init)) (= 'get n) (= 2 (count as))
              (= :quote (:op (second as))))
         (last (keep-indexed (fn [j [k _]] (when (= (:datum k) (:datum (second as))) (inc (* 2 j))))
                            (partition 2 (:args init))))))))
@@ -65,7 +66,8 @@
 (defn analyze [body s init]
   (let [sites (atom []) escapes (atom false)]
     (letfn [(go [t]
-              (cond
+              (let [region (when (= :letrec (:op t)) (loop/view t))]
+               (cond
                 (some? (projection t s init)) (swap! sites conj {:kind :projection :term t})
                 (and (= :fn (:op init)) (= :app (:op t)) (= {:op :local :name s} (:fn t)))
                 (do (swap! sites conj {:kind :call :term t}) (doseq [a (:args t)] (go a)))
@@ -74,12 +76,27 @@
                 (do (swap! sites conj {:kind :callback :term t})
                     (doseq [a (rest (:args t))] (go a)))
                 (= {:op :local :name s} t) (reset! escapes true)
+                ;; A validated direct self-tail region is a control boundary,
+                ;; not an escaping closure. Check all entry and body uses of s;
+                ;; arbitrary nested functions still take the capture rejection.
+                region (do (doseq [a (get-in region [:entry :node :args])] (go a))
+                           (go (:body (:function region))))
                 ;; A capture is an escape even when its eventual use looks local.
                 (and (= :fn (:op t)) (pos? (ir/uses t s))) (reset! escapes true)
-                :else (ir/map-children #(do (go %) %) t)))]
+                :else (ir/map-children #(do (go %) %) t))))]
       (go body)
       {:aliases #{s} :use-count (ir/uses body s) :last-use (some-> @sites last :term)
        :escapes? @escapes :sites @sites})))
+
+(defn- map-allocation? [init]
+  (let [keys (take-nth 2 (:args init))]
+    (and (contains? '#{hash-map literal-map} (:name init))
+         (even? (count (:args init)))
+         (every? #(and (= :quote (:op %)) (keyword? (:datum %))) keys)
+         ;; Literal construction must retain duplicate-key failures even if
+         ;; its result is unused. Explicit hash-map keeps last-key-wins.
+         (or (= 'hash-map (:name init))
+             (= (count keys) (count (distinct (map :datum keys))))))))
 
 (defn run [term]
   (let [removed (atom 0) evidence (atom [])]
@@ -87,11 +104,7 @@
               (let [t (ir/map-children go t) init (:init t) s (:name t)
                     allocation? (or (= :fn (:op init))
                                     (and (= :prim (:op init))
-                                         (or (= 'vector (:name init))
-                                             (and (= 'hash-map (:name init))
-                                                  (even? (count (:args init)))
-                                                  (every? #(and (= :quote (:op %)) (keyword? (:datum %)))
-                                                          (take-nth 2 (:args init)))))))]
+                                         (or (= 'vector (:name init)) (map-allocation? init))))]
                 (if (and (= :let (:op t)) allocation?)
                   (let [a (analyze (:body t) s init)]
                     (swap! evidence conj (assoc (dissoc a :sites :last-use) :binding s))

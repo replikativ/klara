@@ -8,6 +8,11 @@
             [klara.code :as code]
             [klara.core :as core]
             [klara.compile.ir :as ir]
+            [klara.compile.baseline :as baseline]
+            [klara.compile.budget :as budget]
+            [klara.compile.subject :as subject]
+            [klara.compile.funding :as funding]
+            [klara.compile.view :as view]
             [klara.compile.scalar :as scalar]
             [klara.eval :as ev]
             [klara.stage :as stage]
@@ -80,7 +85,18 @@
                   (fn? (:run exe)))
      :invalid-scalar-executable)))
 
-(defn prepare
+(defmacro ^:private isolated [& body]
+  `(binding [authority/*store* (authority/new-store)
+             ev/*entry-hook* nil ev/*direct-hook* nil ev/*context-hook* nil
+             ev/*outer-k* [] ev/*fiber* nil world/*reads* nil]
+     ~@body))
+
+(defn- prepared-baseline [source exe]
+  (Prepared. source exe (select-keys exe [:name :code-id :guards :compile-ms :pass-log
+                                        :rewrite-receipts :rewrite-summary :strategy-history
+                                        :compiler-reads :private-region])))
+
+(defn- prepare-scalar
   "Analyze/emit without publishing. Input must be closed code of a fixed
    function with <=4 Long arguments. The compiler gets an immutable root and
    a fresh authority store, never the caller's operational capabilities.
@@ -88,9 +104,7 @@
   [root source]
   (let [start (System/nanoTime)]
     (when-not (and (code/code? source) (code/closed? source)) (fail "prepare requires closed code"))
-    (binding [authority/*store* (authority/new-store)
-              ev/*entry-hook* nil ev/*direct-hook* nil ev/*context-hook* nil
-              ev/*outer-k* [] ev/*fiber* nil world/*reads* nil]
+    (isolated
       (let [generic (code/s->core (code/code-term source)) named (ir/named generic)]
         (when-not (and (= :fn (:op named)) (not (:rest? named)) (<= 0 (:arity named) 4))
           (fail "prepare requires a fixed scalar function of at most four arguments"))
@@ -121,7 +135,82 @@
                           :compile-ms (/ (- (System/nanoTime) start) 1e6))]
           (Prepared. source exe info))))))
 
-(defn prepared-info [^Prepared p] (dissoc (.-info p) ::validation))
+(defn prepare
+  "One Prepared lifecycle for scalar specialization and generic baseline.
+   The two-argument entry preserves the scalar backend. :backend :baseline
+   retains the original Core entry with optional shared :budget and an explicit
+   :local-call-planner selecting the checked local-call recipe."
+  ([root source] (prepare root source {}))
+  ([root source options]
+   (let [reference? (subject/subject? source)
+         policy-root (or (:policy-root options) root)
+         root (if reference? (subject/reference-root source) root)
+         source (if reference? (subject/source source) source)
+         backend (if reference? (get options :backend :baseline) (:backend options))
+         contract (if (= :baseline backend) subject/core-contract subject/scalar-contract)
+         _ (when (or (contains? options :observations) (contains? options :contract)
+                     (and (:required-contract options) (not= contract (:required-contract options))))
+             (throw (ex-info "requested observation contract is unsupported" {:reason :unsupported-contract})))
+         _ (when (and reference? (not= :baseline backend))
+             (throw (ex-info "subject backend contract differs" {:reason :unsupported-contract})))
+         _ (when-not (contains? #{nil :baseline :scalar} backend)
+             (throw (ex-info "unsupported backend" {:reason :unsupported-backend})))
+         options (assoc options :policy-root policy-root)]
+   (if (= :baseline backend)
+     (binding [baseline/*budget* (or baseline/*budget* (:budget options) (budget/budget))]
+       (when-not (code/code? source) (fail "prepare requires closed code"))
+       (baseline/scan! (code/code-term source) (merge budget/definition-limits (:definition-limits options)))
+       (when-not (code/closed? source) (fail "prepare requires closed code"))
+       (isolated
+         (let [exe (baseline/compile-source root (code/s->core (code/code-term source)) options)]
+           (prepared-baseline source exe))))
+     (prepare-scalar root source)))))
+
+(defn prepare-definition
+  "Prepare a current definition through the same baseline backend/options.
+   Dependency validation shares the caller's job budget and memo."
+  [root sym options]
+  (isolated
+    (let [exe (baseline/compile-definition root sym options)]
+      (prepared-baseline nil exe))))
+
+(defn prepared-info [^Prepared p]
+  (let [exe (.-executable p)]
+    (cond-> (assoc (dissoc (.-info p) ::validation) :subject (subject/executable-summary exe)
+                   :selection (:selection exe))
+      (= :klara.compile/baseline (get-in exe [:certificate :checker]))
+      (assoc :relation ((requiring-resolve 'klara.compile.relation/summary) exe)))))
+
+(defn- preparation-outcome [b prepare!]
+  (try
+    (let [candidate (prepare!)]
+      {:status :prepared :candidate candidate :info (prepared-info candidate) :usage (budget/usage b)})
+    (catch clojure.lang.ExceptionInfo e
+      (let [data (ex-data e) reason (:reason data)
+            status (cond
+                     (= :budget-exhausted reason) :exhausted
+                     (or (= :compile (:klara/error data))
+                         (contains? #{:unsupported-region :unsupported-contract :unsupported-backend
+                                      :compiler-policy-declined} reason)) :declined
+                     (contains? #{:compiler-service :local-call-plan :recipe-chain :unchecked-edge
+                                  :invalid-strategy-action :invalid-selection :private-analysis :stale-host-root} reason) :rejected)]
+        (if status {:status status :reason reason :usage (budget/usage b)} (throw e))))))
+
+(defn request
+  "Normalized, explicitly funded baseline preparation. Scalar Java and owned
+   endpoints remain legacy experiments until they share this metered protocol."
+  [root source options]
+  (let [job (:job options)
+        _ (when-not (funding/funding? job)
+            (throw (ex-info "preparation request requires a funding capability" {:reason :invalid-budget})))
+        b (funding/counter job)]
+    (preparation-outcome b
+      #(do
+         (when-let [reason (stage/selection-error (:selection options))]
+           (throw (ex-info "invalid candidate selection policy" {:reason reason})))
+         (when-not (= :baseline (get options :backend :baseline))
+           (throw (ex-info "funded request supports only baseline emission" {:reason :unsupported-backend})))
+         (prepare root source (assoc (dissoc options :job) :budget b :backend :baseline))))))
 
 (defn prevalidate
   "Discharge certificate checking in preparation, before publication. The
@@ -156,13 +245,32 @@
 (ev/register-reference-handler! :stage/layout
  (fn [[args] _]
    (if (and (vector? args) (every? #(instance? Long %) args)) :long :generic)))
+(ev/register-reference-handler! :stage/subject
+ (fn [[source] env] (subject/closed (:basis env) source)))
+(ev/register-reference-handler! :stage/subject-info
+ (fn [[source] _] (subject/describe source)))
+(ev/register-reference-handler! :stage/job
+ (fn [[limits] _] (funding/create (or limits {}))))
+(ev/register-reference-handler! :stage/job-usage
+ (fn [[job] _] (funding/usage job)))
+(ev/register-reference-handler! :stage/prepare-request
+ (fn [[source options] env] (request (:basis env) source (or options {}))))
+(ev/register-reference-handler! :stage/inspect
+ (fn [[source options] _] (view/inspect source (or options {}))))
+(ev/register-reference-handler! :stage/rebuild
+ (fn [[cursor children] _] (view/rebuild cursor children)))
+(ev/register-reference-handler! :stage/compose
+ (fn [[cursor template arguments] _] (view/compose cursor template arguments)))
 (ev/register-reference-handler! :stage/prepare
- (fn [[source] env]
-   (try (prepare (:basis env) source)
-        (catch clojure.lang.ExceptionInfo e
-          (if (= :unsupported-region (:reason (ex-data e)))
-            {:status :declined :reason :unsupported-region}
-            (throw e))))))
+ (fn [[source options] env]
+   (let [options (or options {})
+         result (if (or (:job options) (subject/subject? source) (= :baseline (:backend options)))
+                  (request (:basis env) source
+                           (assoc options :job (or (:job options) (funding/create {}))))
+                  ;; Historical scalar endpoint is explicitly outside funded
+                  ;; strategies; preserve its return and normalized declines.
+                  (preparation-outcome nil #(prepare (:basis env) source options)))]
+     (if (= :prepared (:status result)) (:candidate result) result))))
 (ev/register-reference-handler! :stage/install
  (fn [[candidate] env]
    (if (instance? Prepared candidate) (install! stage/*cache* (:basis env) candidate) candidate)))

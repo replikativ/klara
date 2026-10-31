@@ -23,9 +23,9 @@ clojure -Sdeps '{:paths ["src" "test"]}' -M
          '[klara.infer-affine-test]
          '[klara.affine-test]
          '[klara.staged-compile-test])
-(load-file "experiments/adaptive_affine/bench.clj")
-(load-file "experiments/adaptive_affine/predictor.clj")
-(load-file "experiments/adaptive_affine/predictor_test.clj")
+(load-file "verification/adaptive_affine/bench.clj")
+(load-file "verification/adaptive_affine/predictor.clj")
+(load-file "verification/adaptive_affine/predictor_test.clj")
 (test/run-tests 'klara.infer-affine-test 'klara.affine-test
                 'klara.staged-compile-test 'adaptive-affine.predictor-test)
 

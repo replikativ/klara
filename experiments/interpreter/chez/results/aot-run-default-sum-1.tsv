@@ -1,0 +1,11 @@
+1	default	sum	load-object	0	90778	ok
+1	default	sum	first-call	0	5241	49995000
+1	default	sum	warm-call	0	5674.1	49995000
+1	default	sum	warm-call	1	5419.3	49995000
+1	default	sum	warm-call	2	5100.26	49995000
+1	default	sum	warm-call	3	5504.6	49995000
+1	default	sum	warm-call	4	5828.66	49995000
+1	default	sum	warm-call	5	5506.4	49995000
+1	default	sum	warm-call	6	5584.36	49995000
+1	default	sum	warm-call	7	5612.02	49995000
+1	default	sum	warm-call	8	6299.0	49995000

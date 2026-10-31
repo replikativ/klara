@@ -1,0 +1,11 @@
+2	default	copy-vector	load-object	0	90600	ok
+2	default	copy-vector	first-call	0	117080	#(49995000 10000)
+2	default	copy-vector	warm-call	0	13494.3	#(49995000 10000)
+2	default	copy-vector	warm-call	1	14070.92	#(49995000 10000)
+2	default	copy-vector	warm-call	2	14229.44	#(49995000 10000)
+2	default	copy-vector	warm-call	3	14407.52	#(49995000 10000)
+2	default	copy-vector	warm-call	4	14989.06	#(49995000 10000)
+2	default	copy-vector	warm-call	5	14578.48	#(49995000 10000)
+2	default	copy-vector	warm-call	6	14402.2	#(49995000 10000)
+2	default	copy-vector	warm-call	7	14205.74	#(49995000 10000)
+2	default	copy-vector	warm-call	8	14319.48	#(49995000 10000)

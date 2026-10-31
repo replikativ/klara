@@ -1,0 +1,9 @@
+version	"Chez Scheme Version 10.5.0"
+machine	ta6le
+exact-promotes-beyond-long	9223372036854775808
+fixnum-maximum	1152921504606846975
+scheme-empty-list-is-true	true
+proper-tail-million	1000000
+capture-first	(10 1)
+resume-first	(20 2)
+resume-second	(30 3)

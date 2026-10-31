@@ -1,0 +1,74 @@
+{
+  "src/klara/compile/inline_check.clj": {
+    "snapshot": "source/src__klara__compile__inline_check.clj.txt",
+    "sha256": "ddb58eb90ac27f5d7ddeee5931703be6923f007b2d7c2e94e0cc6d74d8705187"
+  },
+  "src/klara/compile/local_calls.clj": {
+    "snapshot": "source/src__klara__compile__local_calls.clj.txt",
+    "sha256": "aa88567411e0f6efd92813c2d0b0e7469392f91d71d8b9fd559e594cfb28d470"
+  },
+  "src/klara/compile/relation.clj": {
+    "snapshot": "source/src__klara__compile__relation.clj.txt",
+    "sha256": "e9e6bf13c1d6931cfcfb4c25a52b5432c5b09b294d8deca7746615fadb901139"
+  },
+  "src/klara/compile/investment.clj": {
+    "snapshot": "source/src__klara__compile__investment.clj.txt",
+    "sha256": "34a505cd69f03272f22435bea5baea18a283ab90d090510add945b41d156eab6"
+  },
+  "src/klara/compile/ir.clj": {
+    "snapshot": "source/src__klara__compile__ir.clj.txt",
+    "sha256": "04da4006359a881b8f5c849632d64714cc0ee43c3717e13b81f70b2ff8557989"
+  },
+  "src/klara/compile/analysis.clj": {
+    "snapshot": "source/src__klara__compile__analysis.clj.txt",
+    "sha256": "8c29cd30f8b8814efd55094db8a4310a815c33584e1b8a6ee39dabaf34245ebc"
+  },
+  "src/klara/compile/private_accumulator.clj": {
+    "snapshot": "source/src__klara__compile__private_accumulator.clj.txt",
+    "sha256": "1b96f35740df42f5a2e77c3f75abb18b4f360041ac556ae43c6cbcd616ed3416"
+  },
+  "src/klara/compile/affine_erase.clj": {
+    "snapshot": "source/src__klara__compile__affine_erase.clj.txt",
+    "sha256": "d5cc50d9ee7009e1c0635f5838aebf0f705d2be2312934cc39d851882235e756"
+  },
+  "src/klara/compile/updates.clj": {
+    "snapshot": "source/src__klara__compile__updates.clj.txt",
+    "sha256": "446b74e76cb10a9f77e7eefebc2ae68401b3adf6bf7a3bd1f567e1873e0cc721"
+  },
+  "src/klara/compile/baseline.clj": {
+    "snapshot": "source/src__klara__compile__baseline.clj.txt",
+    "sha256": "be1fda2ebf41a1aeaf4cd4b5da4e029af6766e65992ed2fcf610508d9345385c"
+  },
+  "src/klara/compile/staged.clj": {
+    "snapshot": "source/src__klara__compile__staged.clj.txt",
+    "sha256": "7d0861ab553b1484c31632e7dfe347161745cb478c089802949becb6201b585d"
+  },
+  "experiments/consolidation/indexed_binding.clj": {
+    "snapshot": "source/experiments__consolidation__indexed_binding.clj.txt",
+    "sha256": "fd9541ce5db6a742ce6c4ea1515ee2b6eef4a23249204b1c130651101abfae1a"
+  },
+  "experiments/consolidation/indexed_binding_test.clj": {
+    "snapshot": "source/experiments__consolidation__indexed_binding_test.clj.txt",
+    "sha256": "5d45c288d021cf66e6a4c3c4411b42bbfa653c2649c9302e6a2e4ad205b94cec"
+  },
+  "test/klara/compile/inline_check_test.clj": {
+    "snapshot": "source/test__klara__compile__inline_check_test.clj.txt",
+    "sha256": "5e4eea62870b2d2da3d4ff269962a9670be48da85e922ed2ce1909e85c584acb"
+  },
+  "test/klara/compile/investment_test.clj": {
+    "snapshot": "source/test__klara__compile__investment_test.clj.txt",
+    "sha256": "6fd1c13cfc5d6a37ae6b087dfadcd991f187dcf3516537efb0153613f2e2629c"
+  },
+  "experiments/baseline/investment_policy.clj": {
+    "snapshot": "source/experiments__baseline__investment_policy.clj.txt",
+    "sha256": "76bb8cf5b2074c0ba299c0c557da31661f4759d7418b5412391f1239c60b92b5"
+  },
+  "experiments/baseline/campaign.clj": {
+    "snapshot": "source/experiments__baseline__campaign.clj.txt",
+    "sha256": "da93ee566f0c81da327ec366b698a8d9bed6d232901dfc95f31b95b099bf52be"
+  },
+  "experiments/consolidation/run.clj": {
+    "snapshot": "source/experiments__consolidation__run.clj.txt",
+    "sha256": "650a6c59242d32d7c777c54fef9c9b23d734e6c2a108853bbdfe78910c18a5eb"
+  }
+}

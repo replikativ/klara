@@ -121,8 +121,8 @@
                    (range (count (:rows (first reports)))))
         source-paths ["src/klara/stage.clj" "src/klara/compile/analysis.clj" "src/klara/compile/updates.clj"
                       "src/klara/compile/infer_affine.clj" "src/klara/compile/affine_erase.clj"
-                      "src/klara/compile/strict_fold.clj" "experiments/consolidation/checked_pipeline.clj"
-                      "experiments/consolidation/fold_model.clj" "experiments/proof_staging/proof_staging.clj"]
+                      "src/klara/compile/strict_fold.clj" "verification/consolidation/checked_pipeline.clj"
+                      "verification/consolidation/fold_model.clj" "verification/proof_staging/proof_staging.clj"]
         result {:processes ids :aggregation :median-and-range-of-process-medians :rows rows
                 :hardware "Intel Core Ultra 7 258V, x86_64, 8 cores; no CPU pinning"
                 :source-sha256 (into {} (map (fn [p] [p (c/sha256 (slurp p))]) source-paths))

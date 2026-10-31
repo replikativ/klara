@@ -1,8 +1,10 @@
 (ns klara.compile.unbox
   "Closed numeric loop facts. Runtime class guards license initial values;
   this small abstract interpreter proves every backedge preserves the class.
-  Unknown operations, promotion, division and captures decline the layout.
-  Checked Clojure arithmetic remains checked; no algebraic rewriting.")
+  Unknown carried layouts, promotion and division decline the layout. A generic
+  comparison may establish Boolean without establishing its operand layouts.
+  Checked Clojure arithmetic remains checked; no algebraic rewriting."
+  (:require [klara.compile.loop :as loop]))
 
 (def arithmetic '#{+ - * inc dec})
 (def comparisons '#{< > <= >= = not= zero? pos? neg?})
@@ -51,9 +53,14 @@
                       (let [a (infer (:then t) env) b (infer (:else t) env)]
                         (when (and a b) (if (= a :recur) b (if (= b :recur) a (when (= a b) a))))))
                 :prim (let [ks (mapv #(infer % env) (:args t)) n (:name t)]
-                        (when (and (seq ks) (every? #{:long :double} ks))
-                          (cond (arithmetic n) (if (some #{:double} ks) :double :long)
-                                (comparisons n) :boolean)))
+                        (when (seq ks)
+                          (cond
+                            ;; A comparison returns Boolean on normal completion,
+                            ;; even when an operand layout is unknown. Its emitted
+                            ;; evaluation stays generic and can still throw.
+                            (comparisons n) :boolean
+                            (and (arithmetic n) (every? #{:long :double} ks))
+                            (if (some #{:double} ks) :double :long))))
                 :app (cond
                        (and (= {:op :local :name recursive} (:fn t))
                             (= (count (:params f)) (count (:args t)))
@@ -66,12 +73,9 @@
       (boolean (infer (:body f) facts)))))
 
 (defn loop-kinds [t summaries]
-  (let [s (first (:names t)) f (first (:inits t)) b (:body t)]
-    (when (and (= 1 (count (:inits t))) (not (:rest? f))
-               (= :app (:op b)) (= {:op :local :name s} (:fn b))
-               (= (:arity f) (count (:args b))))
-      (filterv (fn [kind]
-                 (and (every? #(or (not= :quote (:op %))
-                                   (if (= kind :long) (instance? Long (:datum %))
-                                       (instance? Double (:datum %)))) (:args b))
-                      (invariant? f s kind summaries))) [:long :double]))))
+  (when-let [{:keys [self function entry]} (loop/view t)]
+    (filterv (fn [kind]
+               (and (every? #(or (not= :quote (:op %))
+                                (if (= kind :long) (instance? Long (:datum %))
+                                    (instance? Double (:datum %)))) (get-in entry [:node :args]))
+                    (invariant? function self kind summaries))) [:long :double])))

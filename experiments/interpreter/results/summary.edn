@@ -1,0 +1,168 @@
+{:cohort
+ {:source-sha256
+  {"src/klara/compile/inline.clj"
+   "2c06694af339b84e6f501fc035ac17023d55dd5da0babbd74becd849966f8f8a",
+   "src/klara/compile/unbox.clj"
+   "9ff452448cd733833d2b4ace8afc158cdc20b071d8b91031df0b285738cc8a4c",
+   "src/klara/compile/speculate.clj"
+   "0c322d771e8da13d944c86e0b9af6b18cb8795f215608bcc1d8a48778be713c9",
+   "src/klara/compile/core.clj"
+   "af77730b28e3033ee1bb84abd70ee3849bb0e5627d117570f8d23236f94f35f9",
+   "src/klara/compile/affine_erase.clj"
+   "82fd2b1100f426e72f84412e84c9c1ed92733fba9aa1be9b8c6d1aa69d91686d",
+   "src/klara/fusion/kernel.clj"
+   "edc582a5b412a83e61b465c45a980f3811c770167627188da1ba3ad18e1c9453",
+   "src/klara/compile/pe.clj"
+   "4f91d077a3ab0e94f8d096e48523b9077b712c0e32c004e24f0ced09ca2b3c2d",
+   "src/klara/deploy.clj"
+   "88e3503486932d88ecdd900ba148637e645d18aa5d2605a9d65d343fb5c30c75",
+   "src/klara/compile/infer_affine.clj"
+   "a5631d2d71cfd5d74a3a8a15c27d146b8db3b957f019209e6bc3e948d61c5ce0",
+   "src/klara/compile/emit.clj"
+   "bfaa6b6a2f8cc59199e1f096dda2f032967020380c5d5bb21b31c0efc2c8a4ff",
+   "src/klara/world.clj"
+   "29ea09915982d5daa246251c87da3095f0014c0f7680ff017e618e36fd9e9286",
+   "src/klara/core.clj"
+   "3615a76ace4b7eeb556a014dc4d08045af8be4fb3b6d5cd47850e927e962d61f",
+   "src/klara/affine.clj"
+   "fe4c6984af77f93aefb9862401f23eec70a3aebd7c5cdbdae4106d98ce1f787b",
+   "src/klara/repl.clj"
+   "e3887cdc0aa70786ad3507b966d090adb55221bc7e2bc8047c30e74eaf7bb140",
+   "src/klara/load.clj"
+   "7d8b5c877847b21a30473424a6fbf376e0bac0f0add5e56690b8e0e020d2d89c",
+   "src/klara/compile/escape.clj"
+   "6ea0f55f13b8fc4ce1d430a43864f8bae66b8481be921aa5e7d1f7658caaa4cf",
+   "src/klara/code.clj"
+   "9a4663239a849215d83cc21ce24390d6ba3f6c3b80a4951d758285fffe7f80e8",
+   "src/klara/compile/ir.clj"
+   "04da4006359a881b8f5c849632d64714cc0ee43c3717e13b81f70b2ff8557989",
+   "src/klara/defs.clj"
+   "fa2cef5153903f49de13676785c8d0075d87086f6bdd78fb66c61cfbd3d0c436",
+   "src/klara/expand.clj"
+   "c89a1c988eb4b134d49050302bee0361c984f8c4ca669047795cf22f6c6374fe",
+   "src/klara/effect_class.clj"
+   "354e1100fe88a79195d8bb5958ce38053ed67657440c59e5e04a1918c87870fe",
+   "src/klara/nrepl.clj"
+   "3be4020b9334fe3d432c619dc1306b19251b49e0fd1efae6e68987013b38cc32",
+   "src/klara/compile/hof.clj"
+   "07188ab272fe59cae69d8f0a495f191a743835d13b1c28c28a7cbb341ec9af96",
+   "src/klara/compile/staged.clj"
+   "c8fcd85d2cb1b329c0ccc62bbb2c94b334282afa4ce9ef0358109c192366b020",
+   "src/klara/syntax.clj"
+   "8963b902a00dd3f778ba0fbb5efd2ef15244c904070195fd4a47a48d5825db44",
+   "deps.edn"
+   "dd4164ec597e8a78234d9cd37d8a37808b198de7d9aa215e4c5911181c34b79b",
+   "src/klara/compile/runtime.clj"
+   "f4fcfcf98fc25874f6cb4ad120751b2d66ad4ca16fcc27bb3a51b5000cc16a74",
+   "src/klara/compile/scalar.clj"
+   "546da8e3fab88a7b2c5500566fc6a562bc81580ad3b18ba73645cd0b2397b904",
+   "src/klara/stage.clj"
+   "7ca7171c20ea4ac0f8af1f19a04f0e687f1ba3e6698c3c2d0ab2b5cd32dc15ed",
+   "src/klara/compile/analysis.clj"
+   "8c29cd30f8b8814efd55094db8a4310a815c33584e1b8a6ee39dabaf34245ebc",
+   "src/klara/compile/updates.clj"
+   "446b74e76cb10a9f77e7eefebc2ae68401b3adf6bf7a3bd1f567e1873e0cc721",
+   "src/klara/fusion.clj"
+   "8e88dbe66640c4d60be5a1dafc07c86a17bef5b0633c08179256f56a1658a356",
+   "src/klara/authority.clj"
+   "70c91dac1f5beace4e6426913f27a8a4dca3a5517f70bc86516f50f4ac369a9d",
+   "src/klara/compile/strict_fold.clj"
+   "bd35e878609a1822e127d90f7b668465386b4c2cc56c36e0c16eb56ce3f4d28d",
+   "src/klara/eval.clj"
+   "f3426a67ec736d5e07c1e1e836a7d242ed6f5efdc1ebb16ab079afcf3d80ad65",
+   "experiments/interpreter/run.clj"
+   "095e1a4e4a348713e6d49eebf08e2a7f08123e3993446a90e7958f5164d4a6cb",
+   "src/klara/compile/requirements.clj"
+   "b551f12324b50024fbae1f448e3819736e2004d602ed8cdfde02674c22300969"},
+  :java "25.0.1+8-LTS-jvmci-b01",
+  :clojure "1.12.4",
+  :os
+  {:name "Linux",
+   :arch "amd64",
+   :version "7.0.0-38-generic",
+   :available-processors 8},
+  :jvm-arguments
+  ["-XX:ThreadPriorityPolicy=1"
+   "-XX:+UnlockExperimentalVMOptions"
+   "-XX:+EnableJVMCIProduct"
+   "-XX:+EnableJVMCI"
+   "-XX:-UnlockExperimentalVMOptions"
+   "-XX:-OmitStackTraceInFastThrow"
+   "-Xmx1g"
+   "-Dclojure.basis=.cpcache/4229326033.basis"],
+  :measurement
+  {:warmup-calls-per-driver 40,
+   :samples 9,
+   :calls-per-sample 5,
+   :order :alternating,
+   :allocation :current-thread-only}},
+ :reports
+ ["target/interpreter/process-0.edn"
+  "target/interpreter/process-1.edn"
+  "target/interpreter/process-2.edn"],
+ :aggregation :ranges-of-process-medians-and-within-process-ratios,
+ :rows
+ [{:workload :sum,
+   :n 1000,
+   :reference-ns [2611441.8 8678256.0],
+   :fused-ns [2145529.4 4868820.0],
+   :speedup [1.1693525283071113 1.782414630238949],
+   :reference-bytes [9126628.8 1.04391888E7],
+   :fused-bytes [3242732.8 3306876.8],
+   :allocation-reduction [0.6446553228697776 0.6832247348567928]}
+  {:workload :calls,
+   :n 1000,
+   :reference-ns [4336733.4 4839034.0],
+   :fused-ns [1946617.8 2052775.8],
+   :speedup [2.1126191179767417 2.4011027032584407],
+   :reference-bytes [1.39076288E7 1.57001888E7],
+   :fused-bytes [5559732.8 5687876.8],
+   :allocation-reduction [0.6002141125871903 0.6377192101027473]}
+  {:workload :persistent-update,
+   :n 1000,
+   :reference-ns [5835425.4 7424310.6],
+   :fused-ns [3249217.6 3835486.6],
+   :speedup [1.7851226881822664 1.9356893594674531],
+   :reference-bytes [1.87795808E7 2.17561408E7],
+   :fused-bytes [8535684.8 9847828.8],
+   :allocation-reduction [0.5454640487193584 0.5473540601465495]}
+  {:workload :host-callback,
+   :n 1000,
+   :reference-ns [1402731.4 2148772.8],
+   :fused-ns [1158213.0 1315945.2],
+   :speedup [1.1139293882888117 1.6328740740875836],
+   :reference-bytes [4238380.8 4296124.8],
+   :fused-bytes [2370556.8 2444300.8],
+   :allocation-reduction [0.43104520613553876 0.44069282307054625]}
+  {:workload :handler,
+   :n 100,
+   :reference-ns [1506569.6 1944445.6],
+   :fused-ns [1255820.2 1603119.2],
+   :speedup [1.0479174274217589 1.2129139243045683],
+   :reference-bytes [1727668.8 1913828.8],
+   :fused-bytes [888980.8 908324.8],
+   :allocation-reduction [0.481765808478968 0.5253886868041697]}
+  {:workload :multi-shot,
+   :n 100,
+   :reference-ns [3217015.4 3980497.0],
+   :fused-ns [2768121.6 3435159.8],
+   :speedup [1.1587516248880183 1.271264470149338],
+   :reference-bytes [3353412.8 3678916.8],
+   :fused-bytes [2212716.8 2371404.8],
+   :allocation-reduction [0.337390476776697 0.3554067871282113]}
+  {:workload :exceptions,
+   :n 100,
+   :reference-ns [821962.2 1900506.4],
+   :fused-ns [721805.0 1272022.4],
+   :speedup [1.1387593602150166 1.4940824941447572],
+   :reference-bytes [1759708.8 1984652.8],
+   :fused-bytes [864540.8 919340.8],
+   :allocation-reduction [0.5042561587462653 0.5367749966140173]}
+  {:workload :staging,
+   :n 10,
+   :reference-ns [552788.0 573339.6],
+   :fused-ns [252755.6 515518.8],
+   :speedup [1.1042341346795375 2.268355676392531],
+   :reference-bytes [300724.8 319180.8],
+   :fused-bytes [205124.8 207012.8],
+   :allocation-reduction [0.31591525540228305 0.35295356111645815]}]}

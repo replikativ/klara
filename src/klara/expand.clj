@@ -284,9 +284,27 @@
 ;; free identifiers: world (recorded), then built-ins and host
 ;; ---------------------------------------------------------------------------
 
+(def ^:dynamic *module* nil)
+(defn module-id [name] (symbol (str name) "$module"))
+(defn- global-id [ctx bare]
+  (let [module (:module ctx)]
+   (if (or module (qualified-symbol? bare))
+    (let [descriptor (w/entry (:basis ctx) (module-id (or module 'user)) :value)
+          aliases (get-in descriptor [:value :aliases])]
+      (if-let [prefix (namespace bare)]
+        (if-let [target (get aliases (symbol prefix))]
+          (symbol (str target) (name bare)) bare)
+        (symbol (str module) (name bare))))
+    bare)))
+
+(defn- definition-id [ctx sym]
+  (if (and (:module ctx) (not (qualified-symbol? sym)))
+    (with-meta (symbol (str (:module ctx)) (name sym)) (meta sym)) sym))
+
 (defn- world-entry [ctx bare]
-  (when-not (= bare (:self ctx))
-    (w/entry (:basis ctx) bare :exists)))
+  (let [id (global-id ctx bare)]
+    (when-not (= id (:self ctx))
+      (w/entry (:basis ctx) id :exists))))
 
 (defn- host-var [sym]
   (let [v (if (qualified-symbol? sym)
@@ -304,20 +322,25 @@
   "A free identifier in value position."
   [ctx bare]
   (cond
+    (= (global-id ctx bare) (:self ctx)) (c/resolve* (:self ctx))
+
     (qualified-symbol? bare)
-    (cond
+    (let [id (global-id ctx bare) entry (world-entry ctx bare)]
+     (cond
+      (= :def (:kind entry)) (c/resolve* id)
+      (= :macro (:kind entry)) (throw (ex-info "expand: macro used as value" {:sym id}))
       (host-fn bare) (c/perform nil :host/var (c/quote* (host-fn bare)))
       (class? (resolve (symbol (namespace bare))))
       (c/perform nil :host/static-field (c/quote* (symbol (namespace bare)))
                  (c/quote* (symbol (name bare))))
-      :else (unbound! bare))
+      :else (unbound! bare)))
 
     (= bare (:self ctx)) (c/resolve* bare)
 
     :else
     (let [e (world-entry ctx bare)]
       (cond
-        (= :def (:kind e)) (c/resolve* bare)
+        (= :def (:kind e)) (c/resolve* (global-id ctx bare))
         (= :macro (:kind e)) (throw (ex-info (str "expand: macro " bare " used as value")
                                              {:sym bare}))
         :else (if-let [q (or (staging-builtins bare) (host-fn bare))]
@@ -657,15 +680,20 @@
       (resolve-id ctx head) (expand-app form ctx env)
       (local-transformer ctx head)
       (call-macro (local-transformer ctx head) bare form ctx env)
+      (= (global-id ctx bare) (:self ctx)) (expand-app form ctx env)
       (qualified-symbol? bare)
-      (if-let [v (host-macro bare)]
+      (let [entry (world-entry ctx bare)]
+       (case (:kind entry)
+        :macro (call-macro (world-transformer entry (:basis ctx)) bare form ctx env)
+        :def (expand-app form ctx env)
+        (if-let [v (host-macro bare)]
         (call-macro (host-transformer v) bare form ctx env)
         (cond
           (host-fn bare) (apply c/perform nil :host/call (c/quote* (host-fn bare)) (args))
           (class? (resolve (symbol (namespace bare))))
           (apply c/perform nil :host/static (c/quote* (symbol (namespace bare)))
                  (c/quote* (symbol (name bare))) (args))
-          :else (unbound! bare)))
+          :else (unbound! bare)))))
       (= bare (:self ctx)) (expand-app form ctx env)
       :else
       (let [e (world-entry ctx bare)]
@@ -698,7 +726,12 @@
     (seq? form) (if (empty? form) (c/quote* ()) (expand-seq form ctx env))
     (and (coll? form) (constant? form)) (c/quote* (strip form))
     (vector? form) (apply c/prim 'vector (map #(expand % ctx env) form))
-    (map? form) (apply c/prim 'hash-map (mapcat (fn [[k v]] [(expand k ctx env) (expand v ctx env)]) form))
+    (map? form) (let [args (vec (mapcat (fn [[k v]] [(expand k ctx env) (expand v ctx env)]) form))
+                      keys (take-nth 2 args)]
+                  (when (and (every? #(= :quote (:op %)) keys)
+                             (not= (count keys) (count (distinct (map :datum keys)))))
+                    (throw (IllegalArgumentException. "Duplicate constant keys in map")))
+                  (apply c/prim 'literal-map args))
     (set? form) (apply c/prim 'hash-set (map #(expand % ctx env) form))
     :else (c/quote* form)))
 
@@ -712,13 +745,11 @@
   (when (and (seq? form) (symbol? (first form)))
     (let [bare (with-meta (first form) nil)]
       (when-not (or (contains? special-forms bare) (contains? '#{defmacro defsyntax defsyntax-class} bare))
-        (if (qualified-symbol? bare)
-          (some-> (host-macro bare) host-transformer)
           (let [e (world-entry ctx bare)]
             (case (:kind e)
               :macro (world-transformer e (:basis ctx))
               :def nil
-              (or (builtin-macros bare) (some-> (host-macro bare) host-transformer)))))))))
+              (or (builtin-macros bare) (some-> (host-macro bare) host-transformer))))))))
 
 (defn expand-recorded
   "Expand a top-level form against basis root. Returns
@@ -729,7 +760,7 @@
   ([form root] (expand-recorded form root (new-ctx root)))
   ([form root ctx]
    (swap! expansions inc)
-   (let [ctx (assoc ctx :basis root)
+   (let [ctx (assoc ctx :basis root :module *module*)
          reads (atom #{})]
      (binding [w/*reads* reads]
        (let [res (loop [form form]
@@ -737,7 +768,7 @@
                                 (with-meta (first form) nil))]
                      (cond
                        (= 'defsyntax-class head)
-                       (let [[_ nm pattern] form
+                       (let [[_ nm pattern] form nm (definition-id ctx nm)
                              _ (syn/validate-pattern! pattern)
                              input (gensym "syntax")]
                          {:kind :def :name nm
@@ -746,14 +777,14 @@
                                                     (list 'syntax-e input)))
                                         (assoc ctx :self nm) empty-env)})
                        (= 'def head)
-                       (let [[_ nm init] form
+                       (let [[_ nm init] form nm (definition-id ctx nm)
                              declared? (:affine (meta nm)) nm (with-meta nm nil)
                              term (expand init (assoc ctx :self nm) empty-env)
                              derivation (when declared? (affine/check term :declared))]
                          {:kind :def :name nm
                           :term (cond-> term derivation (vary-meta assoc :klara/affine derivation))})
                        (contains? '#{defmacro defsyntax} head)
-                       (let [[_ nm params & body] form nm (with-meta nm nil)]
+                       (let [[_ nm params & body] form nm (with-meta (definition-id ctx nm) nil)]
                          {:kind :macro :name nm :syntax? (= 'defsyntax head)
                           :term (expand (if (= 'defsyntax head)
                                           (let [args (gensym "args") matches (gensym "matches")
@@ -771,7 +802,7 @@
                                     (flip-scope (invoke-transformer t (flip-scope form intro) ctx empty-env) intro))))
                          {:kind :expr :term (expand form ctx empty-env)}))))]
          (c/assert-wf! (:term res))
-         (assoc res :code-id (c/code-id (:term res))
+         (assoc res :module *module* :code-id (c/code-id (:term res))
                 :reads (into #{} (remove #(= (:name res) (second %))) @reads)))))))
 
 (defn expand-expr
@@ -802,7 +833,7 @@
               (cond
                 (symbol? f) (if-let [r (resolve-id ctx f)]
                               [:l (:index (local-term env r))]
-                              [:f (with-meta f nil)])
+                              [:f (global-id ctx (with-meta f nil))])
                 (seq? f) (if (= 'quote (first f)) [:q (strip f)] (mapv walk f))
                 (vector? f) [:vec (mapv walk f)]
                 (map? f) [:map (sort-by pr-str (map #(mapv walk %) f))]

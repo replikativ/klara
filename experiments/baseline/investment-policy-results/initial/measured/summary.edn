@@ -1,0 +1,328 @@
+{:cohorts ["policy-0" "policy-1" "policy-2"],
+ :processes 3,
+ :rows
+ [{:workload :short-helper,
+   :mode :never,
+   :trace-ms {:min 1.172476, :median 2.344984, :max 3.069204},
+   :cpu-ms {:min 1.173451, :median 2.297557, :max 3.070847},
+   :allocated-bytes {:min 882120.0, :median 882288.0, :max 930200.0},
+   :investment-ms {:min 0.0, :median 0.0, :max 0.0},
+   :statuses [[] [] []]}
+  {:workload :short-helper,
+   :mode :always,
+   :trace-ms {:min 42.98567, :median 81.038292, :max 117.632782},
+   :cpu-ms {:min 38.681021, :median 68.583159, :max 113.961716},
+   :allocated-bytes
+   {:min 2.6220376E7, :median 5.1744536E7, :max 5.2718224E7},
+   :investment-ms {:min 42.151413, :median 79.577582, :max 115.56567},
+   :statuses
+   [[{:at 0, :status :installed, :reason nil}]
+    [{:at 0, :status :installed, :reason nil}]
+    [{:at 0, :status :installed, :reason nil}]]}
+  {:workload :short-helper,
+   :mode :threshold,
+   :trace-ms {:min 29.252972, :median 43.064351, :max 124.993126},
+   :cpu-ms {:min 23.102126, :median 38.603694, :max 119.693005},
+   :allocated-bytes
+   {:min 2.7633696E7, :median 2.8048888E7, :max 5.311236E7},
+   :investment-ms {:min 24.757028, :median 41.233721, :max 118.015538},
+   :statuses
+   [[{:at 8, :status :installed, :reason nil}]
+    [{:at 8, :status :installed, :reason nil}]
+    [{:at 8, :status :installed, :reason nil}]]}
+  {:workload :short-helper,
+   :mode :bounded,
+   :trace-ms {:min 5.609502, :median 6.083108, :max 10.870585},
+   :cpu-ms {:min 5.292234, :median 5.441866, :max 10.771577},
+   :allocated-bytes
+   {:min 1824416.0, :median 1840200.0, :max 1862480.0},
+   :investment-ms {:min 3.751252, :median 4.248255, :max 7.862078},
+   :statuses
+   [[{:at 8, :status :stopped, :reason :policy}]
+    [{:at 8, :status :stopped, :reason :policy}]
+    [{:at 8, :status :stopped, :reason :policy}]]}
+  {:workload :hot-helper,
+   :mode :never,
+   :trace-ms {:min 241.216597, :median 262.532266, :max 291.343343},
+   :cpu-ms {:min 226.194732, :median 255.012059, :max 288.575388},
+   :allocated-bytes
+   {:min 2.02857656E8, :median 2.05124248E8, :max 2.05489648E8},
+   :investment-ms {:min 0.0, :median 0.0, :max 0.0},
+   :statuses [[] [] []]}
+  {:workload :hot-helper,
+   :mode :always,
+   :trace-ms {:min 20.62167, :median 28.957283, :max 35.300061},
+   :cpu-ms {:min 20.478198, :median 22.984275, :max 31.769246},
+   :allocated-bytes
+   {:min 3.3297464E7, :median 3.4280576E7, :max 3.5364528E7},
+   :investment-ms {:min 14.269426, :median 21.957488, :max 23.780778},
+   :statuses
+   [[{:at 0, :status :installed, :reason nil}]
+    [{:at 0, :status :installed, :reason nil}]
+    [{:at 0, :status :installed, :reason nil}]]}
+  {:workload :hot-helper,
+   :mode :threshold,
+   :trace-ms {:min 25.050571, :median 50.218864, :max 58.546849},
+   :cpu-ms {:min 24.990015, :median 46.591127, :max 49.593853},
+   :allocated-bytes
+   {:min 3.5707168E7, :median 3.7240464E7, :max 3.7766736E7},
+   :investment-ms {:min 15.107644, :median 31.795258, :max 32.965192},
+   :statuses
+   [[{:at 8, :status :installed, :reason nil}]
+    [{:at 8, :status :installed, :reason nil}]
+    [{:at 8, :status :installed, :reason nil}]]}
+  {:workload :hot-helper,
+   :mode :bounded,
+   :trace-ms {:min 65.988795, :median 69.026487, :max 98.24778},
+   :cpu-ms {:min 65.620407, :median 65.962127, :max 87.512945},
+   :allocated-bytes
+   {:min 4.0160632E7, :median 4.1112936E7, :max 4.1216952E7},
+   :investment-ms {:min 48.112857, :median 48.876859, :max 60.298509},
+   :statuses
+   [[{:at 8, :status :installed, :reason nil}]
+    [{:at 8, :status :installed, :reason nil}]
+    [{:at 8, :status :installed, :reason nil}]]}
+  {:workload :held-out-branch,
+   :mode :never,
+   :trace-ms {:min 154.585766, :median 218.801457, :max 219.859821},
+   :cpu-ms {:min 149.185332, :median 212.36595, :max 217.206099},
+   :allocated-bytes
+   {:min 2.13605E8, :median 2.16566944E8, :max 2.17306184E8},
+   :investment-ms {:min 0.0, :median 0.0, :max 0.0},
+   :statuses [[] [] []]}
+  {:workload :held-out-branch,
+   :mode :always,
+   :trace-ms {:min 25.448536, :median 39.514551, :max 40.823169},
+   :cpu-ms {:min 25.29995, :median 39.515406, :max 40.069051},
+   :allocated-bytes
+   {:min 4.1791216E7, :median 4.2433456E7, :max 4.304684E7},
+   :investment-ms {:min 18.607642, :median 28.703249, :max 29.698555},
+   :statuses
+   [[{:at 0, :status :installed, :reason nil}]
+    [{:at 0, :status :installed, :reason nil}]
+    [{:at 0, :status :installed, :reason nil}]]}
+  {:workload :held-out-branch,
+   :mode :threshold,
+   :trace-ms {:min 26.06854, :median 45.395467, :max 50.115957},
+   :cpu-ms {:min 25.734825, :median 34.318868, :max 42.509757},
+   :allocated-bytes
+   {:min 4.4094792E7, :median 4.5233728E7, :max 4.6528608E7},
+   :investment-ms {:min 17.842387, :median 30.559878, :max 36.628452},
+   :statuses
+   [[{:at 8, :status :installed, :reason nil}]
+    [{:at 8, :status :installed, :reason nil}]
+    [{:at 8, :status :installed, :reason nil}]]}
+  {:workload :held-out-branch,
+   :mode :bounded,
+   :trace-ms {:min 41.624612, :median 41.68258, :max 59.751067},
+   :cpu-ms {:min 32.687494, :median 37.633024, :max 55.707041},
+   :allocated-bytes
+   {:min 4.8049808E7, :median 4.989968E7, :max 4.9994152E7},
+   :investment-ms {:min 30.580624, :median 32.399315, :max 43.381027},
+   :statuses
+   [[{:at 8, :status :installed, :reason nil}]
+    [{:at 8, :status :installed, :reason nil}]
+    [{:at 8, :status :installed, :reason nil}]]}
+  {:workload :hot-private,
+   :mode :never,
+   :trace-ms {:min 204.812894, :median 224.153579, :max 235.294255},
+   :cpu-ms {:min 198.816428, :median 218.568113, :max 227.122541},
+   :allocated-bytes
+   {:min 4.13836512E8, :median 4.1481168E8, :max 4.63046488E8},
+   :investment-ms {:min 0.0, :median 0.0, :max 0.0},
+   :statuses [[] [] []]}
+  {:workload :hot-private,
+   :mode :always,
+   :trace-ms {:min 59.165415, :median 118.790861, :max 133.24309},
+   :cpu-ms {:min 56.232221, :median 113.974903, :max 128.992736},
+   :allocated-bytes
+   {:min 8.7689664E7, :median 1.15020536E8, :max 1.1735108E8},
+   :investment-ms {:min 47.325072, :median 97.770507, :max 101.312893},
+   :statuses
+   [[{:at 0, :status :installed, :reason nil}]
+    [{:at 0, :status :installed, :reason nil}]
+    [{:at 0, :status :installed, :reason nil}]]}
+  {:workload :hot-private,
+   :mode :threshold,
+   :trace-ms {:min 60.091262, :median 76.149627, :max 86.501355},
+   :cpu-ms {:min 55.505341, :median 73.146874, :max 83.631966},
+   :allocated-bytes
+   {:min 8.9373336E7, :median 9.1240968E7, :max 9.2017144E7},
+   :investment-ms {:min 47.554189, :median 58.253207, :max 61.619149},
+   :statuses
+   [[{:at 8, :status :installed, :reason nil}]
+    [{:at 8, :status :installed, :reason nil}]
+    [{:at 8, :status :installed, :reason nil}]]}
+  {:workload :hot-private,
+   :mode :bounded,
+   :trace-ms {:min 68.488984, :median 82.041922, :max 98.47347},
+   :cpu-ms {:min 66.220029, :median 79.132229, :max 97.737869},
+   :allocated-bytes
+   {:min 9.4801864E7, :median 9.6620024E7, :max 1.28467392E8},
+   :investment-ms {:min 48.856453, :median 58.820689, :max 78.055651},
+   :statuses
+   [[{:at 8, :status :installed, :reason nil}]
+    [{:at 8, :status :installed, :reason nil}]
+    [{:at 8, :status :installed, :reason nil}]]}
+  {:workload :layout-shift,
+   :mode :never,
+   :trace-ms {:min 154.082647, :median 194.368286, :max 215.193213},
+   :cpu-ms {:min 151.876511, :median 182.51789, :max 207.970269},
+   :allocated-bytes
+   {:min 4.24138792E8, :median 4.24437496E8, :max 4.7586668E8},
+   :investment-ms {:min 0.0, :median 0.0, :max 0.0},
+   :statuses [[] [] []]}
+  {:workload :layout-shift,
+   :mode :always,
+   :trace-ms {:min 192.904275, :median 222.402656, :max 295.076876},
+   :cpu-ms {:min 186.733755, :median 217.800376, :max 283.132124},
+   :allocated-bytes
+   {:min 4.75119688E8, :median 4.7642956E8, :max 5.20643472E8},
+   :investment-ms {:min 32.64862, :median 32.941607, :max 49.442038},
+   :statuses
+   [[{:at 0, :status :installed, :reason nil}]
+    [{:at 0, :status :installed, :reason nil}]
+    [{:at 0, :status :installed, :reason nil}]]}
+  {:workload :layout-shift,
+   :mode :threshold,
+   :trace-ms {:min 215.155375, :median 218.967594, :max 283.281119},
+   :cpu-ms {:min 211.224468, :median 213.470518, :max 259.22945},
+   :allocated-bytes
+   {:min 4.77672032E8, :median 4.78657088E8, :max 5.24646232E8},
+   :investment-ms {:min 36.794354, :median 50.425401, :max 50.963398},
+   :statuses
+   [[{:at 8, :status :installed, :reason nil}]
+    [{:at 8, :status :installed, :reason nil}]
+    [{:at 8, :status :installed, :reason nil}]]}
+  {:workload :layout-shift,
+   :mode :bounded,
+   :trace-ms {:min 247.775319, :median 248.470067, :max 282.854925},
+   :cpu-ms {:min 240.403669, :median 242.797889, :max 276.707859},
+   :allocated-bytes
+   {:min 5.60567304E8, :median 5.76944392E8, :max 6.0578096E8},
+   :investment-ms {:min 67.944788, :median 77.30874, :max 89.360844},
+   :statuses
+   [[{:at 8, :status :installed, :reason nil}
+     {:at 64, :status :declined, :reason :guard-miss-or-shadowed}]
+    [{:at 8, :status :installed, :reason nil}
+     {:at 64, :status :declined, :reason :guard-miss-or-shadowed}]
+    [{:at 8, :status :installed, :reason nil}
+     {:at 64, :status :declined, :reason :guard-miss-or-shadowed}]]}],
+ :aggregation :min-median-max-of-complete-process-traces,
+ :source-sha256
+ {"src/klara/compile/inline.clj"
+  "2c06694af339b84e6f501fc035ac17023d55dd5da0babbd74becd849966f8f8a",
+  "src/klara/compile/unbox.clj"
+  "0e449e139a657bc5b4bac26f5f951c9cd606afd1b851e69244700f5cd9438917",
+  "src/klara/compile/speculate.clj"
+  "80d54937c925ed2fc593bd8cb6f216e8ec8298bcab40041be2255ba94cd3173f",
+  "src/klara/compile/core.clj"
+  "8c59aa51f636c8e7a38b1d63cd07a4badd775ca23582155ef4deb64800cdd128",
+  "src/klara/compile/affine_erase.clj"
+  "d5cc50d9ee7009e1c0635f5838aebf0f705d2be2312934cc39d851882235e756",
+  "src/klara/fusion/kernel.clj"
+  "edc582a5b412a83e61b465c45a980f3811c770167627188da1ba3ad18e1c9453",
+  "src/klara/compile/private_accumulator.clj"
+  "1b96f35740df42f5a2e77c3f75abb18b4f360041ac556ae43c6cbcd616ed3416",
+  "src/klara/compile/pe.clj"
+  "728a7c15b318edb6ebfb69517e9c4dba245cde8d64e434c83622758ee5bb1b70",
+  "src/klara/compile/relation.clj"
+  "e9e6bf13c1d6931cfcfb4c25a52b5432c5b09b294d8deca7746615fadb901139",
+  "src/klara/deploy.clj"
+  "88e3503486932d88ecdd900ba148637e645d18aa5d2605a9d65d343fb5c30c75",
+  "src/klara/compile/funding.clj"
+  "4272444d0fe0a2c69f6295224868048fac048679bc3039f5b319865963bef95f",
+  "src/klara/compile/view.clj"
+  "7a58c4612ca77720b807eb19cc024968b0ca1c2e8fb8e9fdbab17eb521155c3c",
+  "src/klara/compile/infer_affine.clj"
+  "1ea336ef960114d11d4e7480381a0cedfb373797622353b36c587a9725c4d0de",
+  "src/klara/compile/emit.clj"
+  "55c966534f4e08d84176d5ba73b2f08ec59c5e17473f9ace690b5b153aba4165",
+  "experiments/consolidation/indexed_binding.clj"
+  "fd9541ce5db6a742ce6c4ea1515ee2b6eef4a23249204b1c130651101abfae1a",
+  "src/klara/compile/investment.clj"
+  "bae05d891ebcf8553ed16ff35fa1a893aceb334fc35561c5029202283c7c82b3",
+  "src/klara/world.clj"
+  "29ea09915982d5daa246251c87da3095f0014c0f7680ff017e618e36fd9e9286",
+  "src/klara/core.clj"
+  "4fde378a632e9259d5133c166c118c951e3afb44eb84e0eb896a45e041684e6f",
+  "src/klara/affine.clj"
+  "7bceeeb76fb1f30adb60b0e17c9a879a4e626be6697ff5d2c24b8dc917b4e8af",
+  "src/klara/compile/budget.clj"
+  "a14c2c3a158f950915b6e12e39266ac68b9f07614b386932ca2f5655eade70f2",
+  "src/klara/compile/host.clj"
+  "5ccd09307e7bdbc3794eee27adcce08f2a742e07c54fd79e1d73464e9e35ad20",
+  "src/klara/repl.clj"
+  "13dd5b6feb07238fc1e976d027beb638ec6db9c8e753acfde3778b27c9a3a031",
+  "test/klara/compile/investment_test.clj"
+  "6cf8e61ee53665542786c4a215ba0349aa0c92735886756ea66fa9679f4eabd5",
+  "src/klara/load.clj"
+  "13360862c46395b41c048d5e19fc9d08dfad74e80046b4a1d3e3d685cd4e1968",
+  "src/klara/compile/strategy.clj"
+  "e11d64865f0647f8025361b3de0b9e47349e5674543b9ffacc83da1e9bfefbc5",
+  "src/klara/compile/edge.clj"
+  "93f90ed2d3571f89223a60182af01655e239a776333824f0fa4b0edb014a3e9f",
+  "src/klara/compile/escape.clj"
+  "0b0cbd23e2a031ddaf1d2a5e66f68209901cf5e6ecd9f4771acdccb5d606d462",
+  "src/klara/code.clj"
+  "9a4663239a849215d83cc21ce24390d6ba3f6c3b80a4951d758285fffe7f80e8",
+  "src/klara/compile/ir.clj"
+  "04da4006359a881b8f5c849632d64714cc0ee43c3717e13b81f70b2ff8557989",
+  "src/klara/defs.clj"
+  "fa2cef5153903f49de13676785c8d0075d87086f6bdd78fb66c61cfbd3d0c436",
+  "src/klara/compile/guest.clj"
+  "53c4aaee0ada0e7284c884d72e39adf0577c388870712b80042475c77ff6f2d1",
+  "src/klara/compile/inline_check.clj"
+  "ddb58eb90ac27f5d7ddeee5931703be6923f007b2d7c2e94e0cc6d74d8705187",
+  "src/klara/expand.clj"
+  "3e4dd3ce7fe4a2b197344549ed3966a628ac1399c860ea24d0c69e0687e4f124",
+  "src/klara/compile/subject.clj"
+  "4ff05a76d70ec93f902d9301217755f743c47b3eac121118dce948b709072ae6",
+  "src/klara/compile/baseline.clj"
+  "be1fda2ebf41a1aeaf4cd4b5da4e029af6766e65992ed2fcf610508d9345385c",
+  "src/klara/effect_class.clj"
+  "354e1100fe88a79195d8bb5958ce38053ed67657440c59e5e04a1918c87870fe",
+  "test/klara/compile/inline_check_test.clj"
+  "5e4eea62870b2d2da3d4ff269962a9670be48da85e922ed2ce1909e85c584acb",
+  "src/klara/compile/compose.clj"
+  "0ab8e752e5ef9a76255b247f6858062e526f8b0e9c727e4f57534ea330b39906",
+  "src/klara/compile/loop.clj"
+  "70288d9e58db5ac74f631404da32cb209bb29cba9fc71d56bf67a49d90ed5b47",
+  "src/klara/nrepl.clj"
+  "087b57b1b3d925efe37d72c14f0d9e515591b88dc885e29f67dfad359405b8b1",
+  "src/klara/compile/hof.clj"
+  "b16d14a9c70532ceb5e00c2ef8fdb4167b8b5cc0b3eaca8a3f4c65255661d519",
+  "experiments/baseline/investment_policy.clj"
+  "76bb8cf5b2074c0ba299c0c557da31661f4759d7418b5412391f1239c60b92b5",
+  "src/klara/compile/staged.clj"
+  "7d0861ab553b1484c31632e7dfe347161745cb478c089802949becb6201b585d",
+  "src/klara/syntax.clj"
+  "8963b902a00dd3f778ba0fbb5efd2ef15244c904070195fd4a47a48d5825db44",
+  "src/klara/compile/runtime.clj"
+  "f4fcfcf98fc25874f6cb4ad120751b2d66ad4ca16fcc27bb3a51b5000cc16a74",
+  "src/klara/compile/scalar.clj"
+  "352012cdc752465d36452302da1d8cc60cd521fd79081f8f4915da209d273966",
+  "src/klara/stage.clj"
+  "9cf3c97d2cdc8181810e5262951f924383b5acfc051c947139de75d503c44856",
+  "src/klara/compile/analysis.clj"
+  "8c29cd30f8b8814efd55094db8a4310a815c33584e1b8a6ee39dabaf34245ebc",
+  "src/klara/compile/updates.clj"
+  "446b74e76cb10a9f77e7eefebc2ae68401b3adf6bf7a3bd1f567e1873e0cc721",
+  "src/klara/fusion.clj"
+  "8e88dbe66640c4d60be5a1dafc07c86a17bef5b0633c08179256f56a1658a356",
+  "src/klara/compile/diagnostics.clj"
+  "f7b7d848edcfa22ff05d4dd81b154444e4ba68c1794d9a42177f40eece1ea089",
+  "src/klara/authority.clj"
+  "70c91dac1f5beace4e6426913f27a8a4dca3a5517f70bc86516f50f4ac369a9d",
+  "src/klara/compile/service.clj"
+  "f0cad0e231d18b2602ea67e89bda3eb41d728f8fb2e43efca9088e51fe4f9c0b",
+  "src/klara/compile/strict_fold.clj"
+  "bd35e878609a1822e127d90f7b668465386b4c2cc56c36e0c16eb56ce3f4d28d",
+  "src/klara/eval.clj"
+  "f3426a67ec736d5e07c1e1e836a7d242ed6f5efdc1ebb16ab079afcf3d80ad65",
+  "src/klara/compile/local_calls.clj"
+  "aa88567411e0f6efd92813c2d0b0e7469392f91d71d8b9fd559e594cfb28d470",
+  "src/klara/compile/prepare.clj"
+  "2de9e4921590cfdb4abf96acd40b412af2aad002dd1b3a30836c7523e9eb9f0d",
+  "src/klara/compile/requirements.clj"
+  "b551f12324b50024fbae1f448e3819736e2004d602ed8cdfde02674c22300969"}}

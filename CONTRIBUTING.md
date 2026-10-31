@@ -48,3 +48,9 @@ the gitignored `.internal/` folder. Public guides should describe current
 contracts and link to tracked tests, proofs or measurements. A reproducible
 source snapshot needs frozen identities; a mutable development branch is not
 an immutable archive.
+
+For the directory map, see [repository layout](doc/architecture.md#repository-layout).
+Private material in `.internal/` is local working state: it is neither published
+nor needed for builds, tests or public artifact reproduction. Before publishing,
+inspect staged paths as well as ignore rules: ignoring a file does not untrack a
+previously committed copy.

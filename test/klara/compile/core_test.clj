@@ -86,6 +86,40 @@
     (is (= 4 (ev/call-value f [(fn [v] (reset! retained v)) 4])))
     (is (= [4 5] @retained))))
 
+(deftest local-functions-inside-direct-loops
+  (doseq [program ['(fn [n] (let [score (fn [x] (+ (* x x) 1))]
+                             (loop [i 0 total 0]
+                               (if (< i n) (recur (inc i) (+ total (score i))) total))))
+                   '(fn [n salt] (let [score (fn [x] (+ (* x x) salt))]
+                                  (loop [i 0 total 0]
+                                    (if (< i n) (recur (inc i) (+ total (score i))) total))))
+                   ;; Inlining must evaluate even an unused argument.
+                   '(fn [n] (let [score (fn [x unused] x)]
+                             (loop [i 0 total 0]
+                               (if (< i n) (recur (inc i) (+ total (score i (/ 1 0)))) total))))]]
+    (let [world (setup program) cache (stage/make-cache)
+          compiled (cc/compile-def world 'f {})
+          arity (count (second program))]
+      (is (pos? (:allocations-removed compiled)))
+      (stage/install! cache compiled)
+      (doseq [n [0 1 5 5.5 5N nil "bad"]
+              salt (if (= arity 2) [1 0.5 1/2 Long/MAX_VALUE] [nil])
+              :let [form (if (= arity 2) (list 'f n salt) (list 'f n))]]
+        (is (= (observe world form (stage/make-cache)) (observe world form cache))
+            (pr-str [program form]))))))
+
+(deftest loop-recognition-does-not-license-escaping-captures
+  (doseq [program ['(fn [n] (let [score (fn [x] (+ x 1))]
+                             (loop [i n] (if (> i 0) (recur (dec i)) score))))
+                   '(fn [n] (let [score (fn [x] (+ x 1))]
+                             (loop [i n] (if (> i 0) (recur (dec i)) (fn [x] (score x))))))
+                   '(fn [n] (let [score (fn [x] (+ x 1))]
+                             (loop [i n] (if (> i 0) (recur (dec i)) [score]))))]]
+    (let [term (ir/named (x/expand-expr program w/empty-root))
+          result (escape/run term)]
+      (is (some :escapes? (:bindings result)))
+      (is (thrown? clojure.lang.ExceptionInfo (cc/compile-def (setup program) 'f {}))))))
+
 (deftest unsupported-control-stays-in-t0
   (doseq [program ['(fn [x] (handle [h {:choose (fn [k] (+ (k 1) (k 2)))}] (+ x (perform h :choose))))
                    '(fn [x] (println x))

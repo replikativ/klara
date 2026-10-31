@@ -1,0 +1,116 @@
+Compiled from "NO_SOURCE_FILE"
+public final class consolidation.counted_loop$eval21659$fn__21660$fn__21661 extends clojure.lang.AFunction {
+  public static final clojure.lang.Keyword const__7;
+
+  public static final clojure.lang.Keyword const__8;
+
+  public consolidation.counted_loop$eval21659$fn__21660$fn__21661();
+    Code:
+         0: aload_0
+         1: invokespecial #9                  // Method clojure/lang/AFunction."<init>":()V
+         4: return
+
+  public java.lang.Object invoke(java.lang.Object, java.lang.Object, java.lang.Object, java.lang.Object);
+    Code:
+         0: aload_1
+         1: aconst_null
+         2: astore_1
+         3: invokestatic  #17                 // Method clojure/lang/RT.longCast:(Ljava/lang/Object;)J
+         6: lstore        5
+         8: aload_2
+         9: invokestatic  #17                 // Method clojure/lang/RT.longCast:(Ljava/lang/Object;)J
+        12: lstore        7
+        14: lload         7
+        16: aload         4
+        18: aconst_null
+        19: astore        4
+        21: invokestatic  #17                 // Method clojure/lang/RT.longCast:(Ljava/lang/Object;)J
+        24: lload         5
+        26: lload         7
+        28: invokestatic  #23                 // Method clojure/lang/Numbers.minus:(JJ)J
+        31: invokestatic  #26                 // Method clojure/lang/Numbers.min:(JJ)J
+        34: invokestatic  #29                 // Method clojure/lang/Numbers.add:(JJ)J
+        37: lstore        9
+        39: lload         9
+        41: lstore        11
+        43: aload_2
+        44: aconst_null
+        45: astore_2
+        46: invokestatic  #17                 // Method clojure/lang/RT.longCast:(Ljava/lang/Object;)J
+        49: lstore        13
+        51: aload_3
+        52: aconst_null
+        53: astore_3
+        54: invokestatic  #17                 // Method clojure/lang/RT.longCast:(Ljava/lang/Object;)J
+        57: lstore        15
+        59: lload         13
+        61: lload         11
+        63: lcmp
+        64: ifge          140
+        67: lload         15
+        69: lstore        17
+        71: lload         13
+        73: lstore        19
+        75: lload         19
+        77: lstore        21
+        79: lconst_1
+        80: nop
+        81: lstore        23
+        83: lload         21
+        85: lload         23
+        87: invokestatic  #29                 // Method clojure/lang/Numbers.add:(JJ)J
+        90: lstore        25
+        92: lload         25
+        94: lstore        17
+        96: lload         15
+        98: lstore        19
+       100: lload         13
+       102: lstore        21
+       104: lload         19
+       106: lstore        23
+       108: lload         21
+       110: lstore        25
+       112: lload         23
+       114: lload         25
+       116: invokestatic  #29                 // Method clojure/lang/Numbers.add:(JJ)J
+       119: lstore        27
+       121: lload         27
+       123: lstore        19
+       125: lload         17
+       127: lload         19
+       129: lstore        15
+       131: lstore        13
+       133: goto          59
+       136: nop
+       137: nop
+       138: athrow
+       139: athrow
+       140: lload         13
+       142: lload         5
+       144: lcmp
+       145: ifne          155
+       148: getstatic     #41                 // Field const__7:Lclojure/lang/Keyword;
+       151: goto          158
+       154: athrow
+       155: getstatic     #44                 // Field const__8:Lclojure/lang/Keyword;
+       158: lload         13
+       160: invokestatic  #48                 // Method clojure/lang/Numbers.num:(J)Ljava/lang/Number;
+       163: lload         15
+       165: invokestatic  #48                 // Method clojure/lang/Numbers.num:(J)Ljava/lang/Number;
+       168: invokestatic  #54                 // Method clojure/lang/Tuple.create:(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)Lclojure/lang/IPersistentVector;
+       171: areturn
+
+  public static {};
+    Code:
+         0: aconst_null
+         1: ldc           #75                 // String done
+         3: invokestatic  #79                 // Method clojure/lang/RT.keyword:(Ljava/lang/String;Ljava/lang/String;)Lclojure/lang/Keyword;
+         6: checkcast     #70                 // class clojure/lang/Keyword
+         9: putstatic     #41                 // Field const__7:Lclojure/lang/Keyword;
+        12: aconst_null
+        13: ldc           #81                 // String paused
+        15: invokestatic  #79                 // Method clojure/lang/RT.keyword:(Ljava/lang/String;Ljava/lang/String;)Lclojure/lang/Keyword;
+        18: checkcast     #70                 // class clojure/lang/Keyword
+        21: putstatic     #44                 // Field const__8:Lclojure/lang/Keyword;
+        24: return
+}

@@ -1,0 +1,5 @@
+Execution error (ExceptionInfo) at klara.stage/install-validated! (stage.clj:487).
+checker registry changed since validation
+
+Full report at:
+/tmp/clojure-375691245850756973.edn

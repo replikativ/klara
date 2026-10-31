@@ -1,0 +1,1683 @@
+{:cohort
+ {:java "25.0.1+8-LTS-jvmci-b01",
+  :source-sha256
+  {"src/klara/compile/inline.clj"
+   "2c06694af339b84e6f501fc035ac17023d55dd5da0babbd74becd849966f8f8a",
+   "src/klara/compile/unbox.clj"
+   "36580c8fb6d74c2f27f0e62689cbc71c29195da9033f7f43a0a6aa7034ddecf6",
+   "src/klara/compile/speculate.clj"
+   "0c322d771e8da13d944c86e0b9af6b18cb8795f215608bcc1d8a48778be713c9",
+   "src/klara/compile/core.clj"
+   "8c59aa51f636c8e7a38b1d63cd07a4badd775ca23582155ef4deb64800cdd128",
+   "src/klara/compile/affine_erase.clj"
+   "6753d87aba8efec5821c80ae4e85761e3a26399838e3e2fb83de5b58a5cf079d",
+   "src/klara/fusion/kernel.clj"
+   "edc582a5b412a83e61b465c45a980f3811c770167627188da1ba3ad18e1c9453",
+   "src/klara/compile/pe.clj"
+   "4f91d077a3ab0e94f8d096e48523b9077b712c0e32c004e24f0ced09ca2b3c2d",
+   "src/klara/deploy.clj"
+   "88e3503486932d88ecdd900ba148637e645d18aa5d2605a9d65d343fb5c30c75",
+   "src/klara/compile/view.clj"
+   "25d71302d28b14c6096f02c4988bd7614a74cf4faf55268722110a56d9589cfb",
+   "src/klara/compile/infer_affine.clj"
+   "a5631d2d71cfd5d74a3a8a15c27d146b8db3b957f019209e6bc3e948d61c5ce0",
+   "src/klara/compile/emit.clj"
+   "0740e0d1b044c85ff624fbcc8fdbdd95392f187379ccdd1b4098e643b4ad6725",
+   "src/klara/world.clj"
+   "29ea09915982d5daa246251c87da3095f0014c0f7680ff017e618e36fd9e9286",
+   "src/klara/core.clj"
+   "3615a76ace4b7eeb556a014dc4d08045af8be4fb3b6d5cd47850e927e962d61f",
+   "src/klara/affine.clj"
+   "fe4c6984af77f93aefb9862401f23eec70a3aebd7c5cdbdae4106d98ce1f787b",
+   "src/klara/compile/budget.clj"
+   "a14c2c3a158f950915b6e12e39266ac68b9f07614b386932ca2f5655eade70f2",
+   "src/klara/repl.clj"
+   "13dd5b6feb07238fc1e976d027beb638ec6db9c8e753acfde3778b27c9a3a031",
+   "src/klara/load.clj"
+   "13360862c46395b41c048d5e19fc9d08dfad74e80046b4a1d3e3d685cd4e1968",
+   "src/klara/compile/escape.clj"
+   "6ea0f55f13b8fc4ce1d430a43864f8bae66b8481be921aa5e7d1f7658caaa4cf",
+   "experiments/baseline/investment.clj"
+   "100f9459f3c707f2414610ed90a68cfae3a836f19692e27753e0ddfcccdd0a7a",
+   "experiments/baseline/run.clj"
+   "a7f6699d247e83c296f6c14f4d4abd40a428d17574adfff3c419222e2361e297",
+   "src/klara/code.clj"
+   "9a4663239a849215d83cc21ce24390d6ba3f6c3b80a4951d758285fffe7f80e8",
+   "src/klara/compile/ir.clj"
+   "04da4006359a881b8f5c849632d64714cc0ee43c3717e13b81f70b2ff8557989",
+   "experiments/baseline/coverage.clj"
+   "9ee09452892050d0f726eaa885949ce89c6400a08865ac6f72221167769abcc0",
+   "src/klara/defs.clj"
+   "fa2cef5153903f49de13676785c8d0075d87086f6bdd78fb66c61cfbd3d0c436",
+   "src/klara/compile/guest.clj"
+   "53c4aaee0ada0e7284c884d72e39adf0577c388870712b80042475c77ff6f2d1",
+   "src/klara/expand.clj"
+   "c89a1c988eb4b134d49050302bee0361c984f8c4ca669047795cf22f6c6374fe",
+   "src/klara/compile/baseline.clj"
+   "da87d844736255212e5af062e2b6de2e5bf7ce7c9eefe883d031f3d1d00f26c7",
+   "src/klara/effect_class.clj"
+   "354e1100fe88a79195d8bb5958ce38053ed67657440c59e5e04a1918c87870fe",
+   "experiments/interpreter/activation.clj"
+   "25676fd2f11da577f18e779ff64e32724785c4fc4502c79513a011087e8e9a40",
+   "experiments/interpreter/bridge.clj"
+   "d78cfa87857548c471d9913c7d8b9ca056048ad643c582a235ca5671bcd4d985",
+   "experiments/interpreter/mutable.clj"
+   "0c459949f966165cfcabf8269adb1ab4761eb8e20b711ec1aa307b1c74a3252e",
+   "src/klara/compile/loop.clj"
+   "70288d9e58db5ac74f631404da32cb209bb29cba9fc71d56bf67a49d90ed5b47",
+   "src/klara/nrepl.clj"
+   "087b57b1b3d925efe37d72c14f0d9e515591b88dc885e29f67dfad359405b8b1",
+   "src/klara/compile/hof.clj"
+   "07188ab272fe59cae69d8f0a495f191a743835d13b1c28c28a7cbb341ec9af96",
+   "src/klara/compile/staged.clj"
+   "5dd9205f69c081b85b6e8940e0814914761856fe1b1f4760cfca9c8fbc549df1",
+   "src/klara/syntax.clj"
+   "8963b902a00dd3f778ba0fbb5efd2ef15244c904070195fd4a47a48d5825db44",
+   "deps.edn"
+   "1f90365ec52312bdd07dcfb2ad33c13f990f7147fd6d948b0f88c8a950376fe1",
+   "src/klara/compile/runtime.clj"
+   "f4fcfcf98fc25874f6cb4ad120751b2d66ad4ca16fcc27bb3a51b5000cc16a74",
+   "src/klara/compile/scalar.clj"
+   "352012cdc752465d36452302da1d8cc60cd521fd79081f8f4915da209d273966",
+   "src/klara/stage.clj"
+   "021fef386accd9e9c64d4a66f072b715bcca7401afb2851a4720fb4e74a1c123",
+   "src/klara/compile/analysis.clj"
+   "8c29cd30f8b8814efd55094db8a4310a815c33584e1b8a6ee39dabaf34245ebc",
+   "src/klara/compile/updates.clj"
+   "446b74e76cb10a9f77e7eefebc2ae68401b3adf6bf7a3bd1f567e1873e0cc721",
+   "src/klara/fusion.clj"
+   "8e88dbe66640c4d60be5a1dafc07c86a17bef5b0633c08179256f56a1658a356",
+   "src/klara/authority.clj"
+   "70c91dac1f5beace4e6426913f27a8a4dca3a5517f70bc86516f50f4ac369a9d",
+   "src/klara/compile/service.clj"
+   "c0ec5761d3c2112bba94536b1b758c43e2585124bfd0ecf9ba3d6c9a9f68df9a",
+   "src/klara/compile/strict_fold.clj"
+   "bd35e878609a1822e127d90f7b668465386b4c2cc56c36e0c16eb56ce3f4d28d",
+   "src/klara/eval.clj"
+   "f3426a67ec736d5e07c1e1e836a7d242ed6f5efdc1ebb16ab079afcf3d80ad65",
+   "src/klara/compile/prepare.clj"
+   "d1f6f5fe4b3cb62cd784712e526f1953db99f6e081d65dfdb437a0eb031d839f",
+   "src/klara/compile/requirements.clj"
+   "b551f12324b50024fbae1f448e3819736e2004d602ed8cdfde02674c22300969"},
+  :jvm-arguments
+  ["-XX:ThreadPriorityPolicy=1"
+   "-XX:+UnlockExperimentalVMOptions"
+   "-XX:+EnableJVMCIProduct"
+   "-XX:+EnableJVMCI"
+   "-XX:-UnlockExperimentalVMOptions"
+   "-XX:-OmitStackTraceInFastThrow"
+   "-Xmx1g"
+   "-Dclojure.basis=.cpcache/1803097264.basis"],
+  :measurement
+  {:warmup 200,
+   :samples 9,
+   :small-batch 100,
+   :large-batch 5,
+   :order :rotating,
+   :mutual-support-not-timed true}},
+ :rows
+ [{:workload :histogram,
+   :n 1000,
+   :preparation
+   [{:clojure {:total-ns 1356870},
+     :sci {:total-ns 16562621},
+     :t0 {:total-ns 40158665},
+     :nodes
+     {:declined? true,
+      :total-ns 1211948,
+      :unsupported
+      {:message "mutable CEK: unsupported",
+       :decline :quoted-host-value}},
+     :activation
+     {:declined? true,
+      :total-ns 278762,
+      :unsupported
+      {:message "mutable CEK: unsupported",
+       :decline :quoted-host-value}},
+     :baseline
+     {:compile {:ns 71624572, :bytes 16212936},
+      :validation {:ns 547711, :bytes 359176},
+      :installation {:ns 209948, :bytes 5624},
+      :usage {:work 172, :bytes 1575, :emissions 2},
+      :pass-log
+      [{:pass :baseline-admission}
+       {:pass :lower}
+       {:pass :emit,
+        :backend :clojure,
+        :typed-loops? false,
+        :direct-loops? true}],
+      :transfer-receipts
+      [{:version :ordered-transfer-v1,
+        :arity 2,
+        :destinations [v13373 v13374],
+        :argument-ids
+        ["4aa2af06064969d1ddbcb43f44437a27ccc9e93467b8560f28a318c39434b4bc"
+         "aadbdf8e04d25ee21da555cf6cca9b18adff4dc263c2d0058810b98dfca17ec1"],
+        :plan-id
+        "9cc21fa173d904fffce7d4104e7b7e45fe0039152ea2c5378c56a468dae87207",
+        :producer :klara-baseline,
+        :producer-code-id
+        "c36e86c477235203453381c8ff6199acd1c5e606dd4323ff4a93c99ef61747de"}],
+      :loop-layouts [[]],
+      :total-ns 72382231},
+     :optimizing
+     {:compile {:ns 34475997, :bytes 3863048},
+      :validation {:ns 6973473, :bytes 2561360},
+      :installation {:ns 49929, :bytes 4648},
+      :usage {},
+      :pass-log
+      [{:pass :speculate, :sites 1}
+       {:pass :inline, :changes 0}
+       {:pass :lower, :hof-rewrites 0, :classes {}}
+       {:pass :pe, :rounds 1, :fuel-exhausted? false}
+       {:pass :escape, :allocations-removed 0}
+       {:pass :pe, :rounds 0, :fuel-exhausted? false}
+       {:pass :emit, :backend :clojure}],
+      :transfer-receipts nil,
+      :loop-layouts [[]],
+      :total-ns 41499399}}
+    {:clojure {:total-ns 5393861},
+     :sci {:total-ns 41452757},
+     :t0 {:total-ns 55066417},
+     :nodes
+     {:declined? true,
+      :total-ns 3073855,
+      :unsupported
+      {:message "mutable CEK: unsupported",
+       :decline :quoted-host-value}},
+     :activation
+     {:declined? true,
+      :total-ns 1257914,
+      :unsupported
+      {:message "mutable CEK: unsupported",
+       :decline :quoted-host-value}},
+     :optimizing
+     {:compile {:ns 56949054, :bytes 3888048},
+      :validation {:ns 12429505, :bytes 2563160},
+      :installation {:ns 748950, :bytes 5368},
+      :usage {},
+      :pass-log
+      [{:pass :speculate, :sites 1}
+       {:pass :inline, :changes 0}
+       {:pass :lower, :hof-rewrites 0, :classes {}}
+       {:pass :pe, :rounds 1, :fuel-exhausted? false}
+       {:pass :escape, :allocations-removed 0}
+       {:pass :pe, :rounds 0, :fuel-exhausted? false}
+       {:pass :emit, :backend :clojure}],
+      :transfer-receipts nil,
+      :loop-layouts [[]],
+      :total-ns 70127509},
+     :baseline
+     {:compile {:ns 127325139, :bytes 16182928},
+      :validation {:ns 5754049, :bytes 351496},
+      :installation {:ns 202877, :bytes 4904},
+      :usage {:work 172, :bytes 1575, :emissions 2},
+      :pass-log
+      [{:pass :baseline-admission}
+       {:pass :lower}
+       {:pass :emit,
+        :backend :clojure,
+        :typed-loops? false,
+        :direct-loops? true}],
+      :transfer-receipts
+      [{:version :ordered-transfer-v1,
+        :arity 2,
+        :destinations [v13393 v13394],
+        :argument-ids
+        ["c895f57004c67aa51bc106e5f9d2fbd81c604488e429115b6964cb691d8e1ab1"
+         "4bcaf14a30ed3b8a4bbfbf166b37a87cb5cfac36b93c1fa2df2f02f3a9b732f2"],
+        :plan-id
+        "ddde0b227774e0538a104fec687396814da9fb9219c315e392ca269df61be727",
+        :producer :klara-baseline,
+        :producer-code-id
+        "c36e86c477235203453381c8ff6199acd1c5e606dd4323ff4a93c99ef61747de"}],
+      :loop-layouts [[]],
+      :total-ns 133282065}}
+    {:clojure {:total-ns 6960632},
+     :sci {:total-ns 38587024},
+     :t0 {:total-ns 68680885},
+     :nodes
+     {:declined? true,
+      :total-ns 2737610,
+      :unsupported
+      {:message "mutable CEK: unsupported",
+       :decline :quoted-host-value}},
+     :activation
+     {:declined? true,
+      :total-ns 2488763,
+      :unsupported
+      {:message "mutable CEK: unsupported",
+       :decline :quoted-host-value}},
+     :baseline
+     {:compile {:ns 147789196, :bytes 18548000},
+      :validation {:ns 5073286, :bytes 353392},
+      :installation {:ns 2030049, :bytes 5624},
+      :usage {:work 172, :bytes 1575, :emissions 2},
+      :pass-log
+      [{:pass :baseline-admission}
+       {:pass :lower}
+       {:pass :emit,
+        :backend :clojure,
+        :typed-loops? false,
+        :direct-loops? true}],
+      :transfer-receipts
+      [{:version :ordered-transfer-v1,
+        :arity 2,
+        :destinations [v13373 v13374],
+        :argument-ids
+        ["4aa2af06064969d1ddbcb43f44437a27ccc9e93467b8560f28a318c39434b4bc"
+         "aadbdf8e04d25ee21da555cf6cca9b18adff4dc263c2d0058810b98dfca17ec1"],
+        :plan-id
+        "9cc21fa173d904fffce7d4104e7b7e45fe0039152ea2c5378c56a468dae87207",
+        :producer :klara-baseline,
+        :producer-code-id
+        "c36e86c477235203453381c8ff6199acd1c5e606dd4323ff4a93c99ef61747de"}],
+      :loop-layouts [[]],
+      :total-ns 154892531},
+     :optimizing
+     {:compile {:ns 33843112, :bytes 3830336},
+      :validation {:ns 8163280, :bytes 2562784},
+      :installation {:ns 171026, :bytes 4648},
+      :usage {},
+      :pass-log
+      [{:pass :speculate, :sites 1}
+       {:pass :inline, :changes 0}
+       {:pass :lower, :hof-rewrites 0, :classes {}}
+       {:pass :pe, :rounds 1, :fuel-exhausted? false}
+       {:pass :escape, :allocations-removed 0}
+       {:pass :pe, :rounds 0, :fuel-exhausted? false}
+       {:pass :emit, :backend :clojure}],
+      :transfer-receipts nil,
+      :loop-layouts [[]],
+      :total-ns 42177418}}],
+   :engines
+   {:clojure {:ns [101258.6 113022.4], :bytes [302747.2 303548.8]},
+    :sci {:ns [118962.4 138703.8], :bytes [303684.8 303748.8]},
+    :t0 {:ns [2859515.8 4865381.4], :bytes [7197828.8 7197892.8]},
+    :baseline {:ns [113071.6 131484.0], :bytes [305193.6 305929.6]},
+    :optimizing {:ns [152838.2 195859.6], :bytes [305164.8 305228.8]}}}
+  {:workload :histogram,
+   :n 10000,
+   :preparation
+   [{:clojure {:total-ns 1356870},
+     :sci {:total-ns 16562621},
+     :t0 {:total-ns 40158665},
+     :nodes
+     {:declined? true,
+      :total-ns 1211948,
+      :unsupported
+      {:message "mutable CEK: unsupported",
+       :decline :quoted-host-value}},
+     :activation
+     {:declined? true,
+      :total-ns 278762,
+      :unsupported
+      {:message "mutable CEK: unsupported",
+       :decline :quoted-host-value}},
+     :baseline
+     {:compile {:ns 71624572, :bytes 16212936},
+      :validation {:ns 547711, :bytes 359176},
+      :installation {:ns 209948, :bytes 5624},
+      :usage {:work 172, :bytes 1575, :emissions 2},
+      :pass-log
+      [{:pass :baseline-admission}
+       {:pass :lower}
+       {:pass :emit,
+        :backend :clojure,
+        :typed-loops? false,
+        :direct-loops? true}],
+      :transfer-receipts
+      [{:version :ordered-transfer-v1,
+        :arity 2,
+        :destinations [v13373 v13374],
+        :argument-ids
+        ["4aa2af06064969d1ddbcb43f44437a27ccc9e93467b8560f28a318c39434b4bc"
+         "aadbdf8e04d25ee21da555cf6cca9b18adff4dc263c2d0058810b98dfca17ec1"],
+        :plan-id
+        "9cc21fa173d904fffce7d4104e7b7e45fe0039152ea2c5378c56a468dae87207",
+        :producer :klara-baseline,
+        :producer-code-id
+        "c36e86c477235203453381c8ff6199acd1c5e606dd4323ff4a93c99ef61747de"}],
+      :loop-layouts [[]],
+      :total-ns 72382231},
+     :optimizing
+     {:compile {:ns 34475997, :bytes 3863048},
+      :validation {:ns 6973473, :bytes 2561360},
+      :installation {:ns 49929, :bytes 4648},
+      :usage {},
+      :pass-log
+      [{:pass :speculate, :sites 1}
+       {:pass :inline, :changes 0}
+       {:pass :lower, :hof-rewrites 0, :classes {}}
+       {:pass :pe, :rounds 1, :fuel-exhausted? false}
+       {:pass :escape, :allocations-removed 0}
+       {:pass :pe, :rounds 0, :fuel-exhausted? false}
+       {:pass :emit, :backend :clojure}],
+      :transfer-receipts nil,
+      :loop-layouts [[]],
+      :total-ns 41499399}}
+    {:clojure {:total-ns 5393861},
+     :sci {:total-ns 41452757},
+     :t0 {:total-ns 55066417},
+     :nodes
+     {:declined? true,
+      :total-ns 3073855,
+      :unsupported
+      {:message "mutable CEK: unsupported",
+       :decline :quoted-host-value}},
+     :activation
+     {:declined? true,
+      :total-ns 1257914,
+      :unsupported
+      {:message "mutable CEK: unsupported",
+       :decline :quoted-host-value}},
+     :optimizing
+     {:compile {:ns 56949054, :bytes 3888048},
+      :validation {:ns 12429505, :bytes 2563160},
+      :installation {:ns 748950, :bytes 5368},
+      :usage {},
+      :pass-log
+      [{:pass :speculate, :sites 1}
+       {:pass :inline, :changes 0}
+       {:pass :lower, :hof-rewrites 0, :classes {}}
+       {:pass :pe, :rounds 1, :fuel-exhausted? false}
+       {:pass :escape, :allocations-removed 0}
+       {:pass :pe, :rounds 0, :fuel-exhausted? false}
+       {:pass :emit, :backend :clojure}],
+      :transfer-receipts nil,
+      :loop-layouts [[]],
+      :total-ns 70127509},
+     :baseline
+     {:compile {:ns 127325139, :bytes 16182928},
+      :validation {:ns 5754049, :bytes 351496},
+      :installation {:ns 202877, :bytes 4904},
+      :usage {:work 172, :bytes 1575, :emissions 2},
+      :pass-log
+      [{:pass :baseline-admission}
+       {:pass :lower}
+       {:pass :emit,
+        :backend :clojure,
+        :typed-loops? false,
+        :direct-loops? true}],
+      :transfer-receipts
+      [{:version :ordered-transfer-v1,
+        :arity 2,
+        :destinations [v13393 v13394],
+        :argument-ids
+        ["c895f57004c67aa51bc106e5f9d2fbd81c604488e429115b6964cb691d8e1ab1"
+         "4bcaf14a30ed3b8a4bbfbf166b37a87cb5cfac36b93c1fa2df2f02f3a9b732f2"],
+        :plan-id
+        "ddde0b227774e0538a104fec687396814da9fb9219c315e392ca269df61be727",
+        :producer :klara-baseline,
+        :producer-code-id
+        "c36e86c477235203453381c8ff6199acd1c5e606dd4323ff4a93c99ef61747de"}],
+      :loop-layouts [[]],
+      :total-ns 133282065}}
+    {:clojure {:total-ns 6960632},
+     :sci {:total-ns 38587024},
+     :t0 {:total-ns 68680885},
+     :nodes
+     {:declined? true,
+      :total-ns 2737610,
+      :unsupported
+      {:message "mutable CEK: unsupported",
+       :decline :quoted-host-value}},
+     :activation
+     {:declined? true,
+      :total-ns 2488763,
+      :unsupported
+      {:message "mutable CEK: unsupported",
+       :decline :quoted-host-value}},
+     :baseline
+     {:compile {:ns 147789196, :bytes 18548000},
+      :validation {:ns 5073286, :bytes 353392},
+      :installation {:ns 2030049, :bytes 5624},
+      :usage {:work 172, :bytes 1575, :emissions 2},
+      :pass-log
+      [{:pass :baseline-admission}
+       {:pass :lower}
+       {:pass :emit,
+        :backend :clojure,
+        :typed-loops? false,
+        :direct-loops? true}],
+      :transfer-receipts
+      [{:version :ordered-transfer-v1,
+        :arity 2,
+        :destinations [v13373 v13374],
+        :argument-ids
+        ["4aa2af06064969d1ddbcb43f44437a27ccc9e93467b8560f28a318c39434b4bc"
+         "aadbdf8e04d25ee21da555cf6cca9b18adff4dc263c2d0058810b98dfca17ec1"],
+        :plan-id
+        "9cc21fa173d904fffce7d4104e7b7e45fe0039152ea2c5378c56a468dae87207",
+        :producer :klara-baseline,
+        :producer-code-id
+        "c36e86c477235203453381c8ff6199acd1c5e606dd4323ff4a93c99ef61747de"}],
+      :loop-layouts [[]],
+      :total-ns 154892531},
+     :optimizing
+     {:compile {:ns 33843112, :bytes 3830336},
+      :validation {:ns 8163280, :bytes 2562784},
+      :installation {:ns 171026, :bytes 4648},
+      :usage {},
+      :pass-log
+      [{:pass :speculate, :sites 1}
+       {:pass :inline, :changes 0}
+       {:pass :lower, :hof-rewrites 0, :classes {}}
+       {:pass :pe, :rounds 1, :fuel-exhausted? false}
+       {:pass :escape, :allocations-removed 0}
+       {:pass :pe, :rounds 0, :fuel-exhausted? false}
+       {:pass :emit, :backend :clojure}],
+      :transfer-receipts nil,
+      :loop-layouts [[]],
+      :total-ns 42177418}}],
+   :engines
+   {:clojure {:ns [654026.2 1562438.0], :bytes [2981068.8 2981068.8]},
+    :sci {:ns [932905.6 1716854.8], :bytes [3218156.8 3218156.8]},
+    :t0
+    {:ns [2.76099302E7 5.17285632E7],
+     :bytes [7.21043008E7 7.21043008E7]},
+    :baseline {:ns [681707.4 1567282.6], :bytes [2983441.6 2983449.6]},
+    :optimizing
+    {:ns [942153.6 1805356.4], :bytes [3219636.8 3219644.8]}}}
+  {:workload :local-callback,
+   :n 1000,
+   :preparation
+   [{:clojure {:total-ns 1649570},
+     :sci {:total-ns 27082382},
+     :t0 {:total-ns 18419941},
+     :nodes {:ns 1655150, :bytes 226984, :total-ns 1655150},
+     :activation {:ns 4922847, :bytes 314160, :total-ns 4922847},
+     :baseline
+     {:declined? true,
+      :total-ns 5913154,
+      :unsupported
+      {:message "compile: unsupported form :fn",
+       :klara/error :compile,
+       :reason "unsupported form :fn",
+       :op :fn}},
+     :optimizing
+     {:declined? true,
+      :total-ns 8074668,
+      :unsupported
+      {:message "compile: unsupported form :fn",
+       :klara/error :compile,
+       :reason "unsupported form :fn",
+       :op :fn}}}
+    {:clojure {:total-ns 1392823},
+     :sci {:total-ns 2842458},
+     :t0 {:total-ns 3424043},
+     :nodes {:ns 1408297, :bytes 224616, :total-ns 1408297},
+     :activation {:ns 1447665, :bytes 311792, :total-ns 1447665},
+     :optimizing
+     {:declined? true,
+      :total-ns 1610977,
+      :unsupported
+      {:message "compile: unsupported form :fn",
+       :klara/error :compile,
+       :reason "unsupported form :fn",
+       :op :fn}},
+     :baseline
+     {:declined? true,
+      :total-ns 490575,
+      :unsupported
+      {:message "compile: unsupported form :fn",
+       :klara/error :compile,
+       :reason "unsupported form :fn",
+       :op :fn}}}
+    {:clojure {:total-ns 5185583},
+     :sci {:total-ns 8601679},
+     :t0 {:total-ns 12582396},
+     :nodes {:ns 4114919, :bytes 226968, :total-ns 4114919},
+     :activation {:ns 4693442, :bytes 314160, :total-ns 4693442},
+     :baseline
+     {:declined? true,
+      :total-ns 2707514,
+      :unsupported
+      {:message "compile: unsupported form :fn",
+       :klara/error :compile,
+       :reason "unsupported form :fn",
+       :op :fn}},
+     :optimizing
+     {:declined? true,
+      :total-ns 4163144,
+      :unsupported
+      {:message "compile: unsupported form :fn",
+       :klara/error :compile,
+       :reason "unsupported form :fn",
+       :op :fn}}}],
+   :engines
+   {:clojure {:ns [1183.2 41423.4], :bytes [36.8 107918.4]},
+    :sci {:ns [41601.4 67137.0], :bytes [116460.8 116460.8]},
+    :t0 {:ns [2219300.6 4978873.8], :bytes [6194796.8 6194796.8]},
+    :nodes {:ns [422154.8 1029533.2], :bytes [177222.4 177222.4]},
+    :activation {:ns [331611.2 597910.0], :bytes [143742.4 143742.4]}}}
+  {:workload :local-callback,
+   :n 10000,
+   :preparation
+   [{:clojure {:total-ns 1649570},
+     :sci {:total-ns 27082382},
+     :t0 {:total-ns 18419941},
+     :nodes {:ns 1655150, :bytes 226984, :total-ns 1655150},
+     :activation {:ns 4922847, :bytes 314160, :total-ns 4922847},
+     :baseline
+     {:declined? true,
+      :total-ns 5913154,
+      :unsupported
+      {:message "compile: unsupported form :fn",
+       :klara/error :compile,
+       :reason "unsupported form :fn",
+       :op :fn}},
+     :optimizing
+     {:declined? true,
+      :total-ns 8074668,
+      :unsupported
+      {:message "compile: unsupported form :fn",
+       :klara/error :compile,
+       :reason "unsupported form :fn",
+       :op :fn}}}
+    {:clojure {:total-ns 1392823},
+     :sci {:total-ns 2842458},
+     :t0 {:total-ns 3424043},
+     :nodes {:ns 1408297, :bytes 224616, :total-ns 1408297},
+     :activation {:ns 1447665, :bytes 311792, :total-ns 1447665},
+     :optimizing
+     {:declined? true,
+      :total-ns 1610977,
+      :unsupported
+      {:message "compile: unsupported form :fn",
+       :klara/error :compile,
+       :reason "unsupported form :fn",
+       :op :fn}},
+     :baseline
+     {:declined? true,
+      :total-ns 490575,
+      :unsupported
+      {:message "compile: unsupported form :fn",
+       :klara/error :compile,
+       :reason "unsupported form :fn",
+       :op :fn}}}
+    {:clojure {:total-ns 5185583},
+     :sci {:total-ns 8601679},
+     :t0 {:total-ns 12582396},
+     :nodes {:ns 4114919, :bytes 226968, :total-ns 4114919},
+     :activation {:ns 4693442, :bytes 314160, :total-ns 4693442},
+     :baseline
+     {:declined? true,
+      :total-ns 2707514,
+      :unsupported
+      {:message "compile: unsupported form :fn",
+       :klara/error :compile,
+       :reason "unsupported form :fn",
+       :op :fn}},
+     :optimizing
+     {:declined? true,
+      :total-ns 4163144,
+      :unsupported
+      {:message "compile: unsupported form :fn",
+       :klara/error :compile,
+       :reason "unsupported form :fn",
+       :op :fn}}}],
+   :engines
+   {:clojure {:ns [7425.0 7630.2], :bytes [36.8 36.8]},
+    :sci {:ns [330391.8 388889.8], :bytes [1196460.8 1196460.8]},
+    :t0
+    {:ns [2.19981808E7 4.00011408E7],
+     :bytes [6.19227968E7 6.19227968E7]},
+    :nodes {:ns [4145247.2 6400473.2], :bytes [1765422.4 1765422.4]},
+    :activation
+    {:ns [3228276.4 7938173.8], :bytes [1441142.4 1441142.4]}}}
+  {:workload :records,
+   :n 1000,
+   :preparation
+   [{:clojure {:total-ns 1893067},
+     :sci {:total-ns 14179808},
+     :t0 {:total-ns 15768150},
+     :nodes
+     {:declined? true,
+      :total-ns 482600,
+      :unsupported
+      {:message "mutable CEK: unsupported", :decline :primitive}},
+     :activation
+     {:declined? true,
+      :total-ns 121788,
+      :unsupported
+      {:message "mutable CEK: unsupported", :decline :primitive}},
+     :baseline
+     {:compile {:ns 25140983, :bytes 6219328},
+      :validation {:ns 648900, :bytes 575184},
+      :installation {:ns 134791, :bytes 5248},
+      :usage {:work 276, :bytes 1320, :emissions 1},
+      :pass-log
+      [{:pass :baseline-admission}
+       {:pass :lower}
+       {:pass :emit,
+        :backend :clojure,
+        :typed-loops? false,
+        :direct-loops? true}],
+      :transfer-receipts
+      [{:version :ordered-transfer-v1,
+        :arity 2,
+        :destinations [v13543 v13544],
+        :argument-ids
+        ["870ff5559f728440597778a62e5ffcfec0ee7794c09cdae8dd5ac2778762a266"
+         "d950a174e4a9f2e58a8a0a5148a27464cc016d6f357a7241a7f0fce7c98de7a3"],
+        :plan-id
+        "a975ad52e8d954774685b7fe9eea92adf6090c48ad339c53013ec2b22d3b6085",
+        :producer :klara-baseline,
+        :producer-code-id
+        "c36e86c477235203453381c8ff6199acd1c5e606dd4323ff4a93c99ef61747de"}
+       {:version :ordered-transfer-v1,
+        :arity 2,
+        :destinations [v13548 v13549],
+        :argument-ids
+        ["96480ad14b91f02b7509e695dcd823e3524947b48b50cf886f269b4fc78392ce"
+         "d8fd6ae455cbf9bd5a656b44310d4a9fc39f17d6a0f4a9422f2bab43561c6b88"],
+        :plan-id
+        "b8bbf1dcb6ab979170cf94e07053c40883a17f8c5c69a60c0c5c13198d3a453b",
+        :producer :klara-baseline,
+        :producer-code-id
+        "c36e86c477235203453381c8ff6199acd1c5e606dd4323ff4a93c99ef61747de"}],
+      :loop-layouts [[] []],
+      :total-ns 25924674},
+     :optimizing
+     {:compile {:ns 29317736, :bytes 7728312},
+      :validation {:ns 18803437, :bytes 5625248},
+      :installation {:ns 166373, :bytes 4648},
+      :usage {},
+      :pass-log
+      [{:pass :speculate, :sites 1}
+       {:pass :inline, :changes 0}
+       {:pass :lower, :hof-rewrites 0, :classes {}}
+       {:pass :pe, :rounds 1, :fuel-exhausted? false}
+       {:pass :escape, :allocations-removed 0}
+       {:pass :pe, :rounds 0, :fuel-exhausted? false}
+       {:pass :emit, :backend :clojure}],
+      :transfer-receipts nil,
+      :loop-layouts [[] []],
+      :total-ns 48287546}}
+    {:clojure {:total-ns 2155749},
+     :sci {:total-ns 5414907},
+     :t0 {:total-ns 6775474},
+     :nodes
+     {:declined? true,
+      :total-ns 453479,
+      :unsupported
+      {:message "mutable CEK: unsupported", :decline :primitive}},
+     :activation
+     {:declined? true,
+      :total-ns 513365,
+      :unsupported
+      {:message "mutable CEK: unsupported", :decline :primitive}},
+     :optimizing
+     {:compile {:ns 19074174, :bytes 7731864},
+      :validation {:ns 2728790, :bytes 5629152},
+      :installation {:ns 94025, :bytes 4648},
+      :usage {},
+      :pass-log
+      [{:pass :speculate, :sites 1}
+       {:pass :inline, :changes 0}
+       {:pass :lower, :hof-rewrites 0, :classes {}}
+       {:pass :pe, :rounds 1, :fuel-exhausted? false}
+       {:pass :escape, :allocations-removed 0}
+       {:pass :pe, :rounds 0, :fuel-exhausted? false}
+       {:pass :emit, :backend :clojure}],
+      :transfer-receipts nil,
+      :loop-layouts [[] []],
+      :total-ns 21896989},
+     :baseline
+     {:compile {:ns 39299960, :bytes 6230168},
+      :validation {:ns 2345766, :bytes 574216},
+      :installation {:ns 139853, :bytes 5248},
+      :usage {:work 276, :bytes 1320, :emissions 1},
+      :pass-log
+      [{:pass :baseline-admission}
+       {:pass :lower}
+       {:pass :emit,
+        :backend :clojure,
+        :typed-loops? false,
+        :direct-loops? true}],
+      :transfer-receipts
+      [{:version :ordered-transfer-v1,
+        :arity 2,
+        :destinations [v13572 v13573],
+        :argument-ids
+        ["b444879703240035b58a02073a2bdfdd1bb91e6e98f649f53a5b92d72be7c677"
+         "a28e2d909f57e23dbe0d8f1737f78688c4ce3c07ad0d2007330aa8b499e0259f"],
+        :plan-id
+        "23443563d06eb9361a0e39aca30ce3d5459ff6cb6f5592227d0f9b36d2e5dd43",
+        :producer :klara-baseline,
+        :producer-code-id
+        "c36e86c477235203453381c8ff6199acd1c5e606dd4323ff4a93c99ef61747de"}
+       {:version :ordered-transfer-v1,
+        :arity 2,
+        :destinations [v13577 v13578],
+        :argument-ids
+        ["fec6d54755793ee6be0228fa2d6004920e47de86c84331eeede441f31d2b0ebb"
+         "1b114c5bc428ea65b7d1b514843acfe3054220bd6dd534fe855e4d31d0189f8d"],
+        :plan-id
+        "41da2b80b6273f3b8881bd014ce661a3a3e329a87e374ad5c24c68237fd07ad7",
+        :producer :klara-baseline,
+        :producer-code-id
+        "c36e86c477235203453381c8ff6199acd1c5e606dd4323ff4a93c99ef61747de"}],
+      :loop-layouts [[] []],
+      :total-ns 41785579}}
+    {:clojure {:total-ns 1806487},
+     :sci {:total-ns 3854966},
+     :t0 {:total-ns 9884914},
+     :nodes
+     {:declined? true,
+      :total-ns 391487,
+      :unsupported
+      {:message "mutable CEK: unsupported", :decline :primitive}},
+     :activation
+     {:declined? true,
+      :total-ns 113790,
+      :unsupported
+      {:message "mutable CEK: unsupported", :decline :primitive}},
+     :baseline
+     {:compile {:ns 11586234, :bytes 6221768},
+      :validation {:ns 815491, :bytes 574064},
+      :installation {:ns 90193, :bytes 5280},
+      :usage {:work 276, :bytes 1320, :emissions 1},
+      :pass-log
+      [{:pass :baseline-admission}
+       {:pass :lower}
+       {:pass :emit,
+        :backend :clojure,
+        :typed-loops? false,
+        :direct-loops? true}],
+      :transfer-receipts
+      [{:version :ordered-transfer-v1,
+        :arity 2,
+        :destinations [v13543 v13544],
+        :argument-ids
+        ["870ff5559f728440597778a62e5ffcfec0ee7794c09cdae8dd5ac2778762a266"
+         "d950a174e4a9f2e58a8a0a5148a27464cc016d6f357a7241a7f0fce7c98de7a3"],
+        :plan-id
+        "a975ad52e8d954774685b7fe9eea92adf6090c48ad339c53013ec2b22d3b6085",
+        :producer :klara-baseline,
+        :producer-code-id
+        "c36e86c477235203453381c8ff6199acd1c5e606dd4323ff4a93c99ef61747de"}
+       {:version :ordered-transfer-v1,
+        :arity 2,
+        :destinations [v13548 v13549],
+        :argument-ids
+        ["96480ad14b91f02b7509e695dcd823e3524947b48b50cf886f269b4fc78392ce"
+         "d8fd6ae455cbf9bd5a656b44310d4a9fc39f17d6a0f4a9422f2bab43561c6b88"],
+        :plan-id
+        "b8bbf1dcb6ab979170cf94e07053c40883a17f8c5c69a60c0c5c13198d3a453b",
+        :producer :klara-baseline,
+        :producer-code-id
+        "c36e86c477235203453381c8ff6199acd1c5e606dd4323ff4a93c99ef61747de"}],
+      :loop-layouts [[] []],
+      :total-ns 12491918},
+     :optimizing
+     {:compile {:ns 9462311, :bytes 7732472},
+      :validation {:ns 2891323, :bytes 5629248},
+      :installation {:ns 52293, :bytes 4648},
+      :usage {},
+      :pass-log
+      [{:pass :speculate, :sites 1}
+       {:pass :inline, :changes 0}
+       {:pass :lower, :hof-rewrites 0, :classes {}}
+       {:pass :pe, :rounds 1, :fuel-exhausted? false}
+       {:pass :escape, :allocations-removed 0}
+       {:pass :pe, :rounds 0, :fuel-exhausted? false}
+       {:pass :emit, :backend :clojure}],
+      :transfer-receipts nil,
+      :loop-layouts [[] []],
+      :total-ns 12405927}}],
+   :engines
+   {:clojure {:ns [138175.6 210014.6], :bytes [461116.8 461116.8]},
+    :sci {:ns [313886.8 344287.0], :bytes [775268.8 775268.8]},
+    :t0
+    {:ns [8407538.0 1.15145934E7], :bytes [2.03718848E7 2.03718848E7]},
+    :baseline {:ns [268757.6 294216.4], :bytes [728321.6 877265.6]},
+    :optimizing {:ns [377739.4 421387.6], :bytes [919171.2 920676.8]}}}
+  {:workload :records,
+   :n 5000,
+   :preparation
+   [{:clojure {:total-ns 1893067},
+     :sci {:total-ns 14179808},
+     :t0 {:total-ns 15768150},
+     :nodes
+     {:declined? true,
+      :total-ns 482600,
+      :unsupported
+      {:message "mutable CEK: unsupported", :decline :primitive}},
+     :activation
+     {:declined? true,
+      :total-ns 121788,
+      :unsupported
+      {:message "mutable CEK: unsupported", :decline :primitive}},
+     :baseline
+     {:compile {:ns 25140983, :bytes 6219328},
+      :validation {:ns 648900, :bytes 575184},
+      :installation {:ns 134791, :bytes 5248},
+      :usage {:work 276, :bytes 1320, :emissions 1},
+      :pass-log
+      [{:pass :baseline-admission}
+       {:pass :lower}
+       {:pass :emit,
+        :backend :clojure,
+        :typed-loops? false,
+        :direct-loops? true}],
+      :transfer-receipts
+      [{:version :ordered-transfer-v1,
+        :arity 2,
+        :destinations [v13543 v13544],
+        :argument-ids
+        ["870ff5559f728440597778a62e5ffcfec0ee7794c09cdae8dd5ac2778762a266"
+         "d950a174e4a9f2e58a8a0a5148a27464cc016d6f357a7241a7f0fce7c98de7a3"],
+        :plan-id
+        "a975ad52e8d954774685b7fe9eea92adf6090c48ad339c53013ec2b22d3b6085",
+        :producer :klara-baseline,
+        :producer-code-id
+        "c36e86c477235203453381c8ff6199acd1c5e606dd4323ff4a93c99ef61747de"}
+       {:version :ordered-transfer-v1,
+        :arity 2,
+        :destinations [v13548 v13549],
+        :argument-ids
+        ["96480ad14b91f02b7509e695dcd823e3524947b48b50cf886f269b4fc78392ce"
+         "d8fd6ae455cbf9bd5a656b44310d4a9fc39f17d6a0f4a9422f2bab43561c6b88"],
+        :plan-id
+        "b8bbf1dcb6ab979170cf94e07053c40883a17f8c5c69a60c0c5c13198d3a453b",
+        :producer :klara-baseline,
+        :producer-code-id
+        "c36e86c477235203453381c8ff6199acd1c5e606dd4323ff4a93c99ef61747de"}],
+      :loop-layouts [[] []],
+      :total-ns 25924674},
+     :optimizing
+     {:compile {:ns 29317736, :bytes 7728312},
+      :validation {:ns 18803437, :bytes 5625248},
+      :installation {:ns 166373, :bytes 4648},
+      :usage {},
+      :pass-log
+      [{:pass :speculate, :sites 1}
+       {:pass :inline, :changes 0}
+       {:pass :lower, :hof-rewrites 0, :classes {}}
+       {:pass :pe, :rounds 1, :fuel-exhausted? false}
+       {:pass :escape, :allocations-removed 0}
+       {:pass :pe, :rounds 0, :fuel-exhausted? false}
+       {:pass :emit, :backend :clojure}],
+      :transfer-receipts nil,
+      :loop-layouts [[] []],
+      :total-ns 48287546}}
+    {:clojure {:total-ns 2155749},
+     :sci {:total-ns 5414907},
+     :t0 {:total-ns 6775474},
+     :nodes
+     {:declined? true,
+      :total-ns 453479,
+      :unsupported
+      {:message "mutable CEK: unsupported", :decline :primitive}},
+     :activation
+     {:declined? true,
+      :total-ns 513365,
+      :unsupported
+      {:message "mutable CEK: unsupported", :decline :primitive}},
+     :optimizing
+     {:compile {:ns 19074174, :bytes 7731864},
+      :validation {:ns 2728790, :bytes 5629152},
+      :installation {:ns 94025, :bytes 4648},
+      :usage {},
+      :pass-log
+      [{:pass :speculate, :sites 1}
+       {:pass :inline, :changes 0}
+       {:pass :lower, :hof-rewrites 0, :classes {}}
+       {:pass :pe, :rounds 1, :fuel-exhausted? false}
+       {:pass :escape, :allocations-removed 0}
+       {:pass :pe, :rounds 0, :fuel-exhausted? false}
+       {:pass :emit, :backend :clojure}],
+      :transfer-receipts nil,
+      :loop-layouts [[] []],
+      :total-ns 21896989},
+     :baseline
+     {:compile {:ns 39299960, :bytes 6230168},
+      :validation {:ns 2345766, :bytes 574216},
+      :installation {:ns 139853, :bytes 5248},
+      :usage {:work 276, :bytes 1320, :emissions 1},
+      :pass-log
+      [{:pass :baseline-admission}
+       {:pass :lower}
+       {:pass :emit,
+        :backend :clojure,
+        :typed-loops? false,
+        :direct-loops? true}],
+      :transfer-receipts
+      [{:version :ordered-transfer-v1,
+        :arity 2,
+        :destinations [v13572 v13573],
+        :argument-ids
+        ["b444879703240035b58a02073a2bdfdd1bb91e6e98f649f53a5b92d72be7c677"
+         "a28e2d909f57e23dbe0d8f1737f78688c4ce3c07ad0d2007330aa8b499e0259f"],
+        :plan-id
+        "23443563d06eb9361a0e39aca30ce3d5459ff6cb6f5592227d0f9b36d2e5dd43",
+        :producer :klara-baseline,
+        :producer-code-id
+        "c36e86c477235203453381c8ff6199acd1c5e606dd4323ff4a93c99ef61747de"}
+       {:version :ordered-transfer-v1,
+        :arity 2,
+        :destinations [v13577 v13578],
+        :argument-ids
+        ["fec6d54755793ee6be0228fa2d6004920e47de86c84331eeede441f31d2b0ebb"
+         "1b114c5bc428ea65b7d1b514843acfe3054220bd6dd534fe855e4d31d0189f8d"],
+        :plan-id
+        "41da2b80b6273f3b8881bd014ce661a3a3e329a87e374ad5c24c68237fd07ad7",
+        :producer :klara-baseline,
+        :producer-code-id
+        "c36e86c477235203453381c8ff6199acd1c5e606dd4323ff4a93c99ef61747de"}],
+      :loop-layouts [[] []],
+      :total-ns 41785579}}
+    {:clojure {:total-ns 1806487},
+     :sci {:total-ns 3854966},
+     :t0 {:total-ns 9884914},
+     :nodes
+     {:declined? true,
+      :total-ns 391487,
+      :unsupported
+      {:message "mutable CEK: unsupported", :decline :primitive}},
+     :activation
+     {:declined? true,
+      :total-ns 113790,
+      :unsupported
+      {:message "mutable CEK: unsupported", :decline :primitive}},
+     :baseline
+     {:compile {:ns 11586234, :bytes 6221768},
+      :validation {:ns 815491, :bytes 574064},
+      :installation {:ns 90193, :bytes 5280},
+      :usage {:work 276, :bytes 1320, :emissions 1},
+      :pass-log
+      [{:pass :baseline-admission}
+       {:pass :lower}
+       {:pass :emit,
+        :backend :clojure,
+        :typed-loops? false,
+        :direct-loops? true}],
+      :transfer-receipts
+      [{:version :ordered-transfer-v1,
+        :arity 2,
+        :destinations [v13543 v13544],
+        :argument-ids
+        ["870ff5559f728440597778a62e5ffcfec0ee7794c09cdae8dd5ac2778762a266"
+         "d950a174e4a9f2e58a8a0a5148a27464cc016d6f357a7241a7f0fce7c98de7a3"],
+        :plan-id
+        "a975ad52e8d954774685b7fe9eea92adf6090c48ad339c53013ec2b22d3b6085",
+        :producer :klara-baseline,
+        :producer-code-id
+        "c36e86c477235203453381c8ff6199acd1c5e606dd4323ff4a93c99ef61747de"}
+       {:version :ordered-transfer-v1,
+        :arity 2,
+        :destinations [v13548 v13549],
+        :argument-ids
+        ["96480ad14b91f02b7509e695dcd823e3524947b48b50cf886f269b4fc78392ce"
+         "d8fd6ae455cbf9bd5a656b44310d4a9fc39f17d6a0f4a9422f2bab43561c6b88"],
+        :plan-id
+        "b8bbf1dcb6ab979170cf94e07053c40883a17f8c5c69a60c0c5c13198d3a453b",
+        :producer :klara-baseline,
+        :producer-code-id
+        "c36e86c477235203453381c8ff6199acd1c5e606dd4323ff4a93c99ef61747de"}],
+      :loop-layouts [[] []],
+      :total-ns 12491918},
+     :optimizing
+     {:compile {:ns 9462311, :bytes 7732472},
+      :validation {:ns 2891323, :bytes 5629248},
+      :installation {:ns 52293, :bytes 4648},
+      :usage {},
+      :pass-log
+      [{:pass :speculate, :sites 1}
+       {:pass :inline, :changes 0}
+       {:pass :lower, :hof-rewrites 0, :classes {}}
+       {:pass :pe, :rounds 1, :fuel-exhausted? false}
+       {:pass :escape, :allocations-removed 0}
+       {:pass :pe, :rounds 0, :fuel-exhausted? false}
+       {:pass :emit, :backend :clojure}],
+      :transfer-receipts nil,
+      :loop-layouts [[] []],
+      :total-ns 12405927}}],
+   :engines
+   {:clojure {:ns [565406.4 741000.6], :bytes [2333948.8 2333948.8]},
+    :sci {:ns [1406041.6 1719642.6], :bytes [3928100.8 3928100.8]},
+    :t0
+    {:ns [3.80785498E7 4.9399059E7],
+     :bytes [1.018607168E8 1.018607168E8]},
+    :baseline {:ns [998540.0 1167122.4], :bytes [3657145.6 3657153.6]},
+    :optimizing
+    {:ns [1150060.8 2013857.0], :bytes [3889476.8 4049484.8]}}}
+  {:workload :tree-worklist,
+   :n 8,
+   :preparation
+   [{:clojure {:total-ns 9764228},
+     :sci {:total-ns 2767436},
+     :t0 {:total-ns 9581096},
+     :nodes
+     {:declined? true,
+      :total-ns 369369,
+      :unsupported
+      {:message "mutable CEK: unsupported", :decline :primitive}},
+     :activation
+     {:declined? true,
+      :total-ns 78330,
+      :unsupported
+      {:message "mutable CEK: unsupported", :decline :primitive}},
+     :baseline
+     {:compile {:ns 27280533, :bytes 10605904},
+      :validation {:ns 696324, :bytes 634232},
+      :installation {:ns 58653, :bytes 5448},
+      :usage {:work 252, :bytes 1328, :emissions 1},
+      :pass-log
+      [{:pass :baseline-admission}
+       {:pass :lower}
+       {:pass :emit,
+        :backend :clojure,
+        :typed-loops? false,
+        :direct-loops? true}],
+      :transfer-receipts
+      [{:version :ordered-transfer-v1,
+        :arity 2,
+        :destinations [v13654 v13655],
+        :argument-ids
+        ["5e3971cd21f51b7fbccdc479db29a27efc83c0d1e7938b02a0dbf9c5a5b0a6d5"
+         "17754d582899df5462f79ac4f27d275bd2c4df50a3c7129125314ff512562ea6"],
+        :plan-id
+        "7e118c1c3f8ca2d5890cae2c6f4f9db967c14d65e8f16613b02d9df86412a765",
+        :producer :klara-baseline,
+        :producer-code-id
+        "c36e86c477235203453381c8ff6199acd1c5e606dd4323ff4a93c99ef61747de"}
+       {:version :ordered-transfer-v1,
+        :arity 2,
+        :destinations [v13659 v13660],
+        :argument-ids
+        ["8adf3e551b05b708de6ed55cb21b920575b7725e10a9a2420519f8937f2c3813"
+         "8e3cf665b0a0adab3e51b624dc4431f1f5872d96b77c9404bba7050b2a81b921"],
+        :plan-id
+        "d67654210c0c2054af2c043d0cbe1abf7b8ee852b8db8d1333203ed351228105",
+        :producer :klara-baseline,
+        :producer-code-id
+        "c36e86c477235203453381c8ff6199acd1c5e606dd4323ff4a93c99ef61747de"}
+       {:version :ordered-transfer-v1,
+        :arity 2,
+        :destinations [v13659 v13660],
+        :argument-ids
+        ["2f191063e7601f65b00cff82d1515501427597f7db06b9182a8732cc6af2c673"
+         "60293d58cc84411adba00be43efc1249cc9766308be2a2ad5373de01c89e9432"],
+        :plan-id
+        "44c53fcb7e63665b74b406c388c5f5b01f70e8bcb0dfa0d3c820660e5f74d82c",
+        :producer :klara-baseline,
+        :producer-code-id
+        "c36e86c477235203453381c8ff6199acd1c5e606dd4323ff4a93c99ef61747de"}],
+      :loop-layouts [[] []],
+      :total-ns 28035510},
+     :optimizing
+     {:compile {:ns 8051867, :bytes 1879096},
+      :validation {:ns 3271660, :bytes 213736},
+      :installation {:ns 71818, :bytes 4648},
+      :usage {},
+      :pass-log
+      [{:pass :speculate, :sites 0}
+       {:pass :inline, :changes 0}
+       {:pass :lower, :hof-rewrites 0, :classes {}}
+       {:pass :pe, :rounds 1, :fuel-exhausted? false}
+       {:pass :escape, :allocations-removed 0}
+       {:pass :pe, :rounds 0, :fuel-exhausted? false}
+       {:pass :emit, :backend :clojure}],
+      :transfer-receipts nil,
+      :loop-layouts [[] []],
+      :total-ns 11395345}}
+    {:clojure {:total-ns 1730560},
+     :sci {:total-ns 3092146},
+     :t0 {:total-ns 5298104},
+     :nodes
+     {:declined? true,
+      :total-ns 512506,
+      :unsupported
+      {:message "mutable CEK: unsupported", :decline :primitive}},
+     :activation
+     {:declined? true,
+      :total-ns 84306,
+      :unsupported
+      {:message "mutable CEK: unsupported", :decline :primitive}},
+     :optimizing
+     {:compile {:ns 5817574, :bytes 1878448},
+      :validation {:ns 181801, :bytes 214336},
+      :installation {:ns 43032, :bytes 4648},
+      :usage {},
+      :pass-log
+      [{:pass :speculate, :sites 0}
+       {:pass :inline, :changes 0}
+       {:pass :lower, :hof-rewrites 0, :classes {}}
+       {:pass :pe, :rounds 1, :fuel-exhausted? false}
+       {:pass :escape, :allocations-removed 0}
+       {:pass :pe, :rounds 0, :fuel-exhausted? false}
+       {:pass :emit, :backend :clojure}],
+      :transfer-receipts nil,
+      :loop-layouts [[] []],
+      :total-ns 6042407},
+     :baseline
+     {:compile {:ns 9356712, :bytes 10612048},
+      :validation {:ns 578891, :bytes 635728},
+      :installation {:ns 53378, :bytes 5384},
+      :usage {:work 252, :bytes 1328, :emissions 1},
+      :pass-log
+      [{:pass :baseline-admission}
+       {:pass :lower}
+       {:pass :emit,
+        :backend :clojure,
+        :typed-loops? false,
+        :direct-loops? true}],
+      :transfer-receipts
+      [{:version :ordered-transfer-v1,
+        :arity 2,
+        :destinations [v13680 v13681],
+        :argument-ids
+        ["9ff030b6d92dd2b66839cf94907af4b3cf75f8410eb98af33961af80112889ad"
+         "6a9ed9f6a5b4f2876154e00ce28253b7071903e5d4cf52796da87f4987ab50d8"],
+        :plan-id
+        "c0e593847ad2b2ec5999fb92f247c89442f5588bfea4caf130cb24de39cc09cf",
+        :producer :klara-baseline,
+        :producer-code-id
+        "c36e86c477235203453381c8ff6199acd1c5e606dd4323ff4a93c99ef61747de"}
+       {:version :ordered-transfer-v1,
+        :arity 2,
+        :destinations [v13685 v13686],
+        :argument-ids
+        ["4654ebb96774d0fd13d700169d6c4095b3232dcc49b32bb22af258eb59dc711e"
+         "f98df27b4563c243d7a0a969bdc1f4c0f063e83497cf272df8fa97aba5496161"],
+        :plan-id
+        "9c8e06c9df408198f3269b721e39fc5a7aa5ad6a3af77947f7ef795252adcddf",
+        :producer :klara-baseline,
+        :producer-code-id
+        "c36e86c477235203453381c8ff6199acd1c5e606dd4323ff4a93c99ef61747de"}
+       {:version :ordered-transfer-v1,
+        :arity 2,
+        :destinations [v13685 v13686],
+        :argument-ids
+        ["52a59d47631d3081ddc215226ea79ba7afcd315b517c48a9ca0c11e3dc5f7bc8"
+         "978178e6f6e8bda676a19c844c9aa5c73c2d9f15a0b78c8b6a9a5140ffea272e"],
+        :plan-id
+        "cdf70c70e3412b212ce00e82f33174e7792977fa782511327a14437a9b5366b4",
+        :producer :klara-baseline,
+        :producer-code-id
+        "c36e86c477235203453381c8ff6199acd1c5e606dd4323ff4a93c99ef61747de"}],
+      :loop-layouts [[] []],
+      :total-ns 9988981}}
+    {:clojure {:total-ns 3520236},
+     :sci {:total-ns 8174810},
+     :t0 {:total-ns 8656270},
+     :nodes
+     {:declined? true,
+      :total-ns 451042,
+      :unsupported
+      {:message "mutable CEK: unsupported", :decline :primitive}},
+     :activation
+     {:declined? true,
+      :total-ns 86304,
+      :unsupported
+      {:message "mutable CEK: unsupported", :decline :primitive}},
+     :baseline
+     {:compile {:ns 54414957, :bytes 10599712},
+      :validation {:ns 4213473, :bytes 628128},
+      :installation {:ns 70281, :bytes 5384},
+      :usage {:work 252, :bytes 1328, :emissions 1},
+      :pass-log
+      [{:pass :baseline-admission}
+       {:pass :lower}
+       {:pass :emit,
+        :backend :clojure,
+        :typed-loops? false,
+        :direct-loops? true}],
+      :transfer-receipts
+      [{:version :ordered-transfer-v1,
+        :arity 2,
+        :destinations [v13654 v13655],
+        :argument-ids
+        ["5e3971cd21f51b7fbccdc479db29a27efc83c0d1e7938b02a0dbf9c5a5b0a6d5"
+         "17754d582899df5462f79ac4f27d275bd2c4df50a3c7129125314ff512562ea6"],
+        :plan-id
+        "7e118c1c3f8ca2d5890cae2c6f4f9db967c14d65e8f16613b02d9df86412a765",
+        :producer :klara-baseline,
+        :producer-code-id
+        "c36e86c477235203453381c8ff6199acd1c5e606dd4323ff4a93c99ef61747de"}
+       {:version :ordered-transfer-v1,
+        :arity 2,
+        :destinations [v13659 v13660],
+        :argument-ids
+        ["8adf3e551b05b708de6ed55cb21b920575b7725e10a9a2420519f8937f2c3813"
+         "8e3cf665b0a0adab3e51b624dc4431f1f5872d96b77c9404bba7050b2a81b921"],
+        :plan-id
+        "d67654210c0c2054af2c043d0cbe1abf7b8ee852b8db8d1333203ed351228105",
+        :producer :klara-baseline,
+        :producer-code-id
+        "c36e86c477235203453381c8ff6199acd1c5e606dd4323ff4a93c99ef61747de"}
+       {:version :ordered-transfer-v1,
+        :arity 2,
+        :destinations [v13659 v13660],
+        :argument-ids
+        ["2f191063e7601f65b00cff82d1515501427597f7db06b9182a8732cc6af2c673"
+         "60293d58cc84411adba00be43efc1249cc9766308be2a2ad5373de01c89e9432"],
+        :plan-id
+        "44c53fcb7e63665b74b406c388c5f5b01f70e8bcb0dfa0d3c820660e5f74d82c",
+        :producer :klara-baseline,
+        :producer-code-id
+        "c36e86c477235203453381c8ff6199acd1c5e606dd4323ff4a93c99ef61747de"}],
+      :loop-layouts [[] []],
+      :total-ns 58698711},
+     :optimizing
+     {:compile {:ns 19836067, :bytes 1882296},
+      :validation {:ns 234196, :bytes 215104},
+      :installation {:ns 65817, :bytes 4648},
+      :usage {},
+      :pass-log
+      [{:pass :speculate, :sites 0}
+       {:pass :inline, :changes 0}
+       {:pass :lower, :hof-rewrites 0, :classes {}}
+       {:pass :pe, :rounds 1, :fuel-exhausted? false}
+       {:pass :escape, :allocations-removed 0}
+       {:pass :pe, :rounds 0, :fuel-exhausted? false}
+       {:pass :emit, :backend :clojure}],
+      :transfer-receipts nil,
+      :loop-layouts [[] []],
+      :total-ns 20136080}}],
+   :engines
+   {:clojure {:ns [8092.41 9101.96], :bytes [47520.64 47520.64]},
+    :sci {:ns [43220.03 54297.69], :bytes [50872.64 50872.64]},
+    :t0 {:ns [2056905.44 2387849.2], :bytes [5997929.28 5997968.64]},
+    :baseline {:ns [11335.69 13722.99], :bytes [50976.88 50984.88]},
+    :optimizing {:ns [11705.99 13142.01], :bytes [52192.64 52200.64]}}}
+  {:workload :tree-worklist,
+   :n 12,
+   :preparation
+   [{:clojure {:total-ns 9764228},
+     :sci {:total-ns 2767436},
+     :t0 {:total-ns 9581096},
+     :nodes
+     {:declined? true,
+      :total-ns 369369,
+      :unsupported
+      {:message "mutable CEK: unsupported", :decline :primitive}},
+     :activation
+     {:declined? true,
+      :total-ns 78330,
+      :unsupported
+      {:message "mutable CEK: unsupported", :decline :primitive}},
+     :baseline
+     {:compile {:ns 27280533, :bytes 10605904},
+      :validation {:ns 696324, :bytes 634232},
+      :installation {:ns 58653, :bytes 5448},
+      :usage {:work 252, :bytes 1328, :emissions 1},
+      :pass-log
+      [{:pass :baseline-admission}
+       {:pass :lower}
+       {:pass :emit,
+        :backend :clojure,
+        :typed-loops? false,
+        :direct-loops? true}],
+      :transfer-receipts
+      [{:version :ordered-transfer-v1,
+        :arity 2,
+        :destinations [v13654 v13655],
+        :argument-ids
+        ["5e3971cd21f51b7fbccdc479db29a27efc83c0d1e7938b02a0dbf9c5a5b0a6d5"
+         "17754d582899df5462f79ac4f27d275bd2c4df50a3c7129125314ff512562ea6"],
+        :plan-id
+        "7e118c1c3f8ca2d5890cae2c6f4f9db967c14d65e8f16613b02d9df86412a765",
+        :producer :klara-baseline,
+        :producer-code-id
+        "c36e86c477235203453381c8ff6199acd1c5e606dd4323ff4a93c99ef61747de"}
+       {:version :ordered-transfer-v1,
+        :arity 2,
+        :destinations [v13659 v13660],
+        :argument-ids
+        ["8adf3e551b05b708de6ed55cb21b920575b7725e10a9a2420519f8937f2c3813"
+         "8e3cf665b0a0adab3e51b624dc4431f1f5872d96b77c9404bba7050b2a81b921"],
+        :plan-id
+        "d67654210c0c2054af2c043d0cbe1abf7b8ee852b8db8d1333203ed351228105",
+        :producer :klara-baseline,
+        :producer-code-id
+        "c36e86c477235203453381c8ff6199acd1c5e606dd4323ff4a93c99ef61747de"}
+       {:version :ordered-transfer-v1,
+        :arity 2,
+        :destinations [v13659 v13660],
+        :argument-ids
+        ["2f191063e7601f65b00cff82d1515501427597f7db06b9182a8732cc6af2c673"
+         "60293d58cc84411adba00be43efc1249cc9766308be2a2ad5373de01c89e9432"],
+        :plan-id
+        "44c53fcb7e63665b74b406c388c5f5b01f70e8bcb0dfa0d3c820660e5f74d82c",
+        :producer :klara-baseline,
+        :producer-code-id
+        "c36e86c477235203453381c8ff6199acd1c5e606dd4323ff4a93c99ef61747de"}],
+      :loop-layouts [[] []],
+      :total-ns 28035510},
+     :optimizing
+     {:compile {:ns 8051867, :bytes 1879096},
+      :validation {:ns 3271660, :bytes 213736},
+      :installation {:ns 71818, :bytes 4648},
+      :usage {},
+      :pass-log
+      [{:pass :speculate, :sites 0}
+       {:pass :inline, :changes 0}
+       {:pass :lower, :hof-rewrites 0, :classes {}}
+       {:pass :pe, :rounds 1, :fuel-exhausted? false}
+       {:pass :escape, :allocations-removed 0}
+       {:pass :pe, :rounds 0, :fuel-exhausted? false}
+       {:pass :emit, :backend :clojure}],
+      :transfer-receipts nil,
+      :loop-layouts [[] []],
+      :total-ns 11395345}}
+    {:clojure {:total-ns 1730560},
+     :sci {:total-ns 3092146},
+     :t0 {:total-ns 5298104},
+     :nodes
+     {:declined? true,
+      :total-ns 512506,
+      :unsupported
+      {:message "mutable CEK: unsupported", :decline :primitive}},
+     :activation
+     {:declined? true,
+      :total-ns 84306,
+      :unsupported
+      {:message "mutable CEK: unsupported", :decline :primitive}},
+     :optimizing
+     {:compile {:ns 5817574, :bytes 1878448},
+      :validation {:ns 181801, :bytes 214336},
+      :installation {:ns 43032, :bytes 4648},
+      :usage {},
+      :pass-log
+      [{:pass :speculate, :sites 0}
+       {:pass :inline, :changes 0}
+       {:pass :lower, :hof-rewrites 0, :classes {}}
+       {:pass :pe, :rounds 1, :fuel-exhausted? false}
+       {:pass :escape, :allocations-removed 0}
+       {:pass :pe, :rounds 0, :fuel-exhausted? false}
+       {:pass :emit, :backend :clojure}],
+      :transfer-receipts nil,
+      :loop-layouts [[] []],
+      :total-ns 6042407},
+     :baseline
+     {:compile {:ns 9356712, :bytes 10612048},
+      :validation {:ns 578891, :bytes 635728},
+      :installation {:ns 53378, :bytes 5384},
+      :usage {:work 252, :bytes 1328, :emissions 1},
+      :pass-log
+      [{:pass :baseline-admission}
+       {:pass :lower}
+       {:pass :emit,
+        :backend :clojure,
+        :typed-loops? false,
+        :direct-loops? true}],
+      :transfer-receipts
+      [{:version :ordered-transfer-v1,
+        :arity 2,
+        :destinations [v13680 v13681],
+        :argument-ids
+        ["9ff030b6d92dd2b66839cf94907af4b3cf75f8410eb98af33961af80112889ad"
+         "6a9ed9f6a5b4f2876154e00ce28253b7071903e5d4cf52796da87f4987ab50d8"],
+        :plan-id
+        "c0e593847ad2b2ec5999fb92f247c89442f5588bfea4caf130cb24de39cc09cf",
+        :producer :klara-baseline,
+        :producer-code-id
+        "c36e86c477235203453381c8ff6199acd1c5e606dd4323ff4a93c99ef61747de"}
+       {:version :ordered-transfer-v1,
+        :arity 2,
+        :destinations [v13685 v13686],
+        :argument-ids
+        ["4654ebb96774d0fd13d700169d6c4095b3232dcc49b32bb22af258eb59dc711e"
+         "f98df27b4563c243d7a0a969bdc1f4c0f063e83497cf272df8fa97aba5496161"],
+        :plan-id
+        "9c8e06c9df408198f3269b721e39fc5a7aa5ad6a3af77947f7ef795252adcddf",
+        :producer :klara-baseline,
+        :producer-code-id
+        "c36e86c477235203453381c8ff6199acd1c5e606dd4323ff4a93c99ef61747de"}
+       {:version :ordered-transfer-v1,
+        :arity 2,
+        :destinations [v13685 v13686],
+        :argument-ids
+        ["52a59d47631d3081ddc215226ea79ba7afcd315b517c48a9ca0c11e3dc5f7bc8"
+         "978178e6f6e8bda676a19c844c9aa5c73c2d9f15a0b78c8b6a9a5140ffea272e"],
+        :plan-id
+        "cdf70c70e3412b212ce00e82f33174e7792977fa782511327a14437a9b5366b4",
+        :producer :klara-baseline,
+        :producer-code-id
+        "c36e86c477235203453381c8ff6199acd1c5e606dd4323ff4a93c99ef61747de"}],
+      :loop-layouts [[] []],
+      :total-ns 9988981}}
+    {:clojure {:total-ns 3520236},
+     :sci {:total-ns 8174810},
+     :t0 {:total-ns 8656270},
+     :nodes
+     {:declined? true,
+      :total-ns 451042,
+      :unsupported
+      {:message "mutable CEK: unsupported", :decline :primitive}},
+     :activation
+     {:declined? true,
+      :total-ns 86304,
+      :unsupported
+      {:message "mutable CEK: unsupported", :decline :primitive}},
+     :baseline
+     {:compile {:ns 54414957, :bytes 10599712},
+      :validation {:ns 4213473, :bytes 628128},
+      :installation {:ns 70281, :bytes 5384},
+      :usage {:work 252, :bytes 1328, :emissions 1},
+      :pass-log
+      [{:pass :baseline-admission}
+       {:pass :lower}
+       {:pass :emit,
+        :backend :clojure,
+        :typed-loops? false,
+        :direct-loops? true}],
+      :transfer-receipts
+      [{:version :ordered-transfer-v1,
+        :arity 2,
+        :destinations [v13654 v13655],
+        :argument-ids
+        ["5e3971cd21f51b7fbccdc479db29a27efc83c0d1e7938b02a0dbf9c5a5b0a6d5"
+         "17754d582899df5462f79ac4f27d275bd2c4df50a3c7129125314ff512562ea6"],
+        :plan-id
+        "7e118c1c3f8ca2d5890cae2c6f4f9db967c14d65e8f16613b02d9df86412a765",
+        :producer :klara-baseline,
+        :producer-code-id
+        "c36e86c477235203453381c8ff6199acd1c5e606dd4323ff4a93c99ef61747de"}
+       {:version :ordered-transfer-v1,
+        :arity 2,
+        :destinations [v13659 v13660],
+        :argument-ids
+        ["8adf3e551b05b708de6ed55cb21b920575b7725e10a9a2420519f8937f2c3813"
+         "8e3cf665b0a0adab3e51b624dc4431f1f5872d96b77c9404bba7050b2a81b921"],
+        :plan-id
+        "d67654210c0c2054af2c043d0cbe1abf7b8ee852b8db8d1333203ed351228105",
+        :producer :klara-baseline,
+        :producer-code-id
+        "c36e86c477235203453381c8ff6199acd1c5e606dd4323ff4a93c99ef61747de"}
+       {:version :ordered-transfer-v1,
+        :arity 2,
+        :destinations [v13659 v13660],
+        :argument-ids
+        ["2f191063e7601f65b00cff82d1515501427597f7db06b9182a8732cc6af2c673"
+         "60293d58cc84411adba00be43efc1249cc9766308be2a2ad5373de01c89e9432"],
+        :plan-id
+        "44c53fcb7e63665b74b406c388c5f5b01f70e8bcb0dfa0d3c820660e5f74d82c",
+        :producer :klara-baseline,
+        :producer-code-id
+        "c36e86c477235203453381c8ff6199acd1c5e606dd4323ff4a93c99ef61747de"}],
+      :loop-layouts [[] []],
+      :total-ns 58698711},
+     :optimizing
+     {:compile {:ns 19836067, :bytes 1882296},
+      :validation {:ns 234196, :bytes 215104},
+      :installation {:ns 65817, :bytes 4648},
+      :usage {},
+      :pass-log
+      [{:pass :speculate, :sites 0}
+       {:pass :inline, :changes 0}
+       {:pass :lower, :hof-rewrites 0, :classes {}}
+       {:pass :pe, :rounds 1, :fuel-exhausted? false}
+       {:pass :escape, :allocations-removed 0}
+       {:pass :pe, :rounds 0, :fuel-exhausted? false}
+       {:pass :emit, :backend :clojure}],
+      :transfer-receipts nil,
+      :loop-layouts [[] []],
+      :total-ns 20136080}}],
+   :engines
+   {:clojure {:ns [131796.85 165390.46], :bytes [754336.64 754336.64]},
+    :sci {:ns [696526.57 813988.84], :bytes [849736.64 849736.64]},
+    :t0
+    {:ns [3.397517387E7 3.44557759E7],
+     :bytes [9.553284864E7 9.553296064E7]},
+    :baseline
+    {:ns [143096.24 147118.54], :bytes [757792.88 757800.88]},
+    :optimizing
+    {:ns [190347.77 209306.4], :bytes [851168.64 851176.64]}}}],
+ :mutual-support
+ [{:clojure
+   [{:n 64, :value true}
+    {:n 10000,
+     :error :stack-overflow,
+     :wrapper "java.lang.StackOverflowError"}],
+   :sci
+   [{:n 64, :value true}
+    {:n 10000,
+     :error :stack-overflow,
+     :wrapper "clojure.lang.ExceptionInfo"}],
+   :t0 [{:n 64, :value true} {:n 10000, :value true}],
+   :nodes [{:n 64, :value true} {:n 10000, :value true}],
+   :activation [{:n 64, :value true} {:n 10000, :value true}],
+   :baseline
+   {:unsupported
+    {:message "compile: only single-function letrec is emitted",
+     :klara/error :compile,
+     :reason "only single-function letrec is emitted",
+     :op :letrec}},
+   :optimizing
+   {:unsupported
+    {:message "compile: only single-function letrec is emitted",
+     :klara/error :compile,
+     :reason "only single-function letrec is emitted",
+     :op :letrec}}}
+  {:clojure
+   [{:n 64, :value true}
+    {:n 10000,
+     :error :stack-overflow,
+     :wrapper "java.lang.StackOverflowError"}],
+   :sci
+   [{:n 64, :value true}
+    {:n 10000,
+     :error :stack-overflow,
+     :wrapper "clojure.lang.ExceptionInfo"}],
+   :t0 [{:n 64, :value true} {:n 10000, :value true}],
+   :nodes [{:n 64, :value true} {:n 10000, :value true}],
+   :activation [{:n 64, :value true} {:n 10000, :value true}],
+   :optimizing
+   {:unsupported
+    {:message "compile: only single-function letrec is emitted",
+     :klara/error :compile,
+     :reason "only single-function letrec is emitted",
+     :op :letrec}},
+   :baseline
+   {:unsupported
+    {:message "compile: only single-function letrec is emitted",
+     :klara/error :compile,
+     :reason "only single-function letrec is emitted",
+     :op :letrec}}}
+  {:clojure
+   [{:n 64, :value true}
+    {:n 10000,
+     :error :stack-overflow,
+     :wrapper "java.lang.StackOverflowError"}],
+   :sci
+   [{:n 64, :value true}
+    {:n 10000,
+     :error :stack-overflow,
+     :wrapper "clojure.lang.ExceptionInfo"}],
+   :t0 [{:n 64, :value true} {:n 10000, :value true}],
+   :nodes [{:n 64, :value true} {:n 10000, :value true}],
+   :activation [{:n 64, :value true} {:n 10000, :value true}],
+   :baseline
+   {:unsupported
+    {:message "compile: only single-function letrec is emitted",
+     :klara/error :compile,
+     :reason "only single-function letrec is emitted",
+     :op :letrec}},
+   :optimizing
+   {:unsupported
+    {:message "compile: only single-function letrec is emitted",
+     :klara/error :compile,
+     :reason "only single-function letrec is emitted",
+     :op :letrec}}}],
+ :cache-stats
+ [[[:histogram
+    {:baseline
+     {:hits 1, :misses 0, :fallbacks 0, :revalidations 1, :deopts 0},
+     :optimizing
+     {:hits 1,
+      :misses 3000,
+      :fallbacks 0,
+      :revalidations 1,
+      :deopts 3}}]
+   [:local-callback {}]
+   [:records
+    {:baseline
+     {:hits 1, :misses 0, :fallbacks 0, :revalidations 1, :deopts 0},
+     :optimizing
+     {:hits 1,
+      :misses 3000,
+      :fallbacks 0,
+      :revalidations 1,
+      :deopts 3}}]
+   [:tree-worklist
+    {:baseline
+     {:hits 1, :misses 0, :fallbacks 0, :revalidations 1, :deopts 0},
+     :optimizing
+     {:hits 1, :misses 0, :fallbacks 0, :revalidations 1, :deopts 0}}]]
+  [[:histogram
+    {:optimizing
+     {:hits 1,
+      :misses 3000,
+      :fallbacks 0,
+      :revalidations 1,
+      :deopts 3},
+     :baseline
+     {:hits 1, :misses 0, :fallbacks 0, :revalidations 1, :deopts 0}}]
+   [:local-callback {}]
+   [:records
+    {:optimizing
+     {:hits 1,
+      :misses 3000,
+      :fallbacks 0,
+      :revalidations 1,
+      :deopts 3},
+     :baseline
+     {:hits 1, :misses 0, :fallbacks 0, :revalidations 1, :deopts 0}}]
+   [:tree-worklist
+    {:optimizing
+     {:hits 1, :misses 0, :fallbacks 0, :revalidations 1, :deopts 0},
+     :baseline
+     {:hits 1, :misses 0, :fallbacks 0, :revalidations 1, :deopts 0}}]]
+  [[:histogram
+    {:baseline
+     {:hits 1, :misses 0, :fallbacks 0, :revalidations 1, :deopts 0},
+     :optimizing
+     {:hits 1,
+      :misses 3000,
+      :fallbacks 0,
+      :revalidations 1,
+      :deopts 3}}]
+   [:local-callback {}]
+   [:records
+    {:baseline
+     {:hits 1, :misses 0, :fallbacks 0, :revalidations 1, :deopts 0},
+     :optimizing
+     {:hits 1,
+      :misses 3000,
+      :fallbacks 0,
+      :revalidations 1,
+      :deopts 3}}]
+   [:tree-worklist
+    {:baseline
+     {:hits 1, :misses 0, :fallbacks 0, :revalidations 1, :deopts 0},
+     :optimizing
+     {:hits 1,
+      :misses 0,
+      :fallbacks 0,
+      :revalidations 1,
+      :deopts 0}}]]]}

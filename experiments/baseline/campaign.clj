@@ -1,0 +1,167 @@
+(ns baseline.campaign
+  "Matched JVM families: preparation, first call, warm calls, allocation and
+   finite-horizon totals. Includes declines and layout fallback; no time asserts."
+  (:require [clojure.java.io :as io] [clojure.pprint :as pp]
+            [klara.compile.funding :as funding] [klara.compile.local-calls :as local]
+            [klara.compile.staged :as staged] [klara.defs :as defs] [klara.eval :as ev]
+            [klara.stage :as stage] [klara.world :as world] [klara.core :as core]
+            [baseline.private-accumulator :as private]))
+
+(def workloads
+  [{:id :helpers :form '(fn [n] (let [score (fn [x] (+ (* x x) 1))]
+                                  (loop [i 0 sum 0]
+                                    (if (< i n) (recur (inc i) (+ sum (score i))) sum))))
+    :inputs [[0] [16] [1000]]}
+   {:id :histogram :form '(fn [n] (loop [i 0 counts {}]
+                                  (if (< i n)
+                                    (let [k (rem i 32)]
+                                      (recur (inc i) (assoc counts k (inc (get counts k 0))))) counts)))
+    :inputs [[0] [16] [1000]]}
+   {:id :tree-worklist
+    :form '(fn [depth]
+             (let [tree (loop [d depth node [1]]
+                          (if (> d 0) (recur (dec d) [node node]) node))]
+               (loop [pending (list tree) total 0]
+                 (if (empty? pending) total
+                   (let [node (first pending) more (rest pending)]
+                     (if (= (count node) 1) (recur more (+ total (nth node 0)))
+                       (recur (cons (first node) (cons (second node) more)) total)))))))
+    :inputs [[0] [4] [8]]}
+   {:id :enclosed-accumulator :form private/source :private? true
+    :inputs [[0 4 100] [16 4 1000] [1000 4 600000] [16.5 4 1000]]}
+   {:id :escaping-closure :form '(fn [n] (fn [x] (+ n x)))
+    :function-result? true :inputs [[0] [16] [1000]]}])
+
+(def ^:private ^java.lang.management.ThreadMXBean thread-bean
+  (java.lang.management.ManagementFactory/getThreadMXBean))
+(def ^:private cpu-enabled? (and (.isCurrentThreadCpuTimeSupported thread-bean) (.isThreadCpuTimeEnabled thread-bean)))
+(def ^:private allocation-enabled?
+  (and (instance? com.sun.management.ThreadMXBean thread-bean)
+       (.isThreadAllocatedMemoryEnabled ^com.sun.management.ThreadMXBean thread-bean)))
+(defn- cpu [] (when cpu-enabled? (.getCurrentThreadCpuTime thread-bean)))
+(defn- allocated []
+  (when allocation-enabled?
+    (.getThreadAllocatedBytes ^com.sun.management.ThreadMXBean thread-bean (.getId (Thread/currentThread)))))
+
+(defn measure [batch f]
+  (let [sink (volatile! nil) a (allocated) c (cpu) start (System/nanoTime)]
+    (dotimes [_ batch] (vreset! sink (f)))
+    (let [ns (- (System/nanoTime) start) end-cpu (cpu) end-bytes (allocated)]
+      {:value @sink :wall-ns-per-call (/ (double ns) batch)
+       :cpu-ns-per-call (when (and c end-cpu) (/ (double (- end-cpu c)) batch))
+       :bytes-per-call (when (and a end-bytes) (/ (double (- end-bytes a)) batch))})))
+
+(defn- median [xs] (let [xs (vec (sort (remove nil? xs)))] (when (seq xs) (nth xs (quot (count xs) 2)))))
+(defn- delta [after before] (merge-with - after before))
+
+(defn- observe [workload value]
+  (if (:function-result? workload)
+    [:function-values (mapv #(if (ev/closure? value) (ev/call-value value [%]) (ev/invoke-boxed value [%])) [0 1])]
+    [:value value]))
+
+(defn run-family [workload]
+  (let [load-start (System/nanoTime) w (world/make-world) _ (local/bootstrap! w)
+        _ (defs/define! w (list 'def 'policy private/policy-source))
+        _ (defs/define! w (list 'def 'f (:form workload))) root (world/snapshot w)
+        code (defs/eval-form root (list 'code (:form workload))) f (defs/lookup root 'f)
+        load-ns (- (System/nanoTime) load-start) job (funding/create {})
+        variants (cond-> [[:baseline {:local-call-planner local/planner-symbol
+                                     :selection {:variant :baseline :priority 0}}]]
+                   (:private? workload) (conj [:private {:strategy 'policy
+                                                       :selection {:variant :private :priority 10}}]))
+        prepared (into {} (for [[k opts] variants]
+                            (let [before (funding/usage job)
+                                  timed (measure 1 #(staged/request root code (assoc opts :job job)))
+                                  outcome (:value timed) p (:candidate outcome)
+                                  checked (when p (measure 1 #(staged/prevalidate p)))
+                                  cache (stage/make-cache)
+                                  installed (when p (measure 1 #(staged/install! cache root (:value checked))))]
+                              [k {:candidate (some-> checked :value) :cache cache
+                                  :report {:status (:status outcome) :reason (:reason outcome)
+                                           :preparation (dissoc timed :value)
+                                           :validation (some-> checked (dissoc :value))
+                                           :installation (some-> installed (dissoc :value))
+                                           :usage (delta (funding/usage job) before)}}])))
+        portfolio (stage/make-cache)
+        renewals (atom 0)
+        portfolio-installation (measure 1 #(doseq [[_ p] prepared :when (:candidate p)]
+                                             (try (staged/install! portfolio root (:candidate p))
+                                                  (catch clojure.lang.ExceptionInfo e
+                                                    (if (= :checker-registry-changed (:reason (ex-data e)))
+                                                      (do (swap! renewals inc)
+                                                          (staged/install! portfolio root (staged/prevalidate (:candidate p))))
+                                                      (throw e))))))
+        host-preparation (measure 1 #(binding [*ns* (the-ns 'baseline.campaign) *unchecked-math* false]
+                                      (eval (:form workload))))
+        host (:value host-preparation)
+        caches (merge {:reference (stage/make-cache) :portfolio portfolio}
+                      (into {} (for [[k p] prepared] [k (:cache p)])))
+        engines (conj (vec (keys caches)) :clojure)
+        observations
+        (binding [ev/*basis* root ev/*mint* root]
+          (mapv
+            (fn [args]
+              (let [call (fn [k]
+                           (if (= :clojure k) (ev/invoke-boxed host args)
+                             (stage/with-cache (caches k) (ev/call-value f args))))
+                    expected (observe workload (call :reference))
+                    batch (if (<= (first args) 16) 8 1)
+                    first-calls (into {} (for [k engines]
+                                          (let [r (measure 1 #(call k))]
+                                            (assert (= expected (observe workload (:value r))))
+                                            [k (dissoc r :value)])))
+                    selected (some-> (stage/enter portfolio f [] args root []) :selection :variant)
+                    _ (dotimes [_ 8] (doseq [k engines] (call k)))
+                    samples (mapv (fn [round]
+                                    (into {} (for [k (take (count engines) (drop round (cycle engines)))]
+                                               (let [r (measure batch #(call k))]
+                                                 (assert (= expected (observe workload (:value r))))
+                                                 [k (dissoc r :value)])))) (range 7))
+                    medians (into {} (for [k engines]
+                                       [k (into {} (for [metric [:wall-ns-per-call :cpu-ns-per-call :bytes-per-call]]
+                                                     [metric (median (map #(get-in % [k metric]) samples))]))]))
+                    total (fn [k horizon]
+                            (let [prep (if (= :clojure k) (:wall-ns-per-call host-preparation)
+                                         (if (= :portfolio k)
+                                           (+ (:wall-ns-per-call portfolio-installation)
+                                              (reduce + (for [[_ p] prepared]
+                                                          (reduce + (keep #(get-in p [:report % :wall-ns-per-call])
+                                                                          [:preparation :validation])))))
+                                           (reduce + (keep #(get-in prepared [k :report % :wall-ns-per-call])
+                                                           [:preparation :validation :installation]))))]
+                              (+ prep (get-in first-calls [k :wall-ns-per-call])
+                                 (* (dec horizon) (get-in medians [k :wall-ns-per-call])))))]
+                {:arguments args :expected expected :portfolio-selected selected :batch batch
+                 :first-observed first-calls :samples samples :medians medians
+                 :estimated-total-ns (into {} (for [k engines]
+                                              [k (into {} (for [h [1 10 1000]] [h (total k h)]))]))}))
+            (:inputs workload)))]
+    {:id (:id workload) :form (:form workload) :load-ns load-ns :engine-order engines
+     :portfolio-installation (dissoc portfolio-installation :value)
+     :portfolio-revalidations @renewals
+     :preparation (update-vals prepared :report) :host-preparation (dissoc host-preparation :value)
+     :job-usage (funding/usage job) :cases observations
+     :cache-stats (update-vals caches stage/stats)}))
+
+(defn run-study! [label]
+  (let [report {:label label :java (System/getProperty "java.runtime.version")
+                :os (System/getProperty "os.name") :arch (System/getProperty "os.arch")
+                :processors (.availableProcessors (Runtime/getRuntime))
+                :harness-noop (dissoc (measure 1000 (constantly nil)) :value)
+                :families (mapv run-family workloads)
+                :limits [:first-observed-is-not-cold-JVM :serial-preparation-order
+                         :reference-oracle-runs-before-timing :earlier-inputs-warm-the-same-engines
+                         :shared-JIT-GC-state :fixed-workloads :seven-rotating-warm-rounds
+                         :estimated-horizons-not-measured-traces :load-reported-separately
+                         :common-invocation-harness-included :no-time-assertions
+                         :training-and-autonomous-investment-not-implemented]
+                :source-sha256 (into {} (for [path (concat ["experiments/baseline/campaign.clj"
+                                                          "scripts/run_compiler_campaign.py"
+                                                          "experiments/baseline/private_accumulator.clj"]
+                                                         (map str (filter #(.isFile %) (file-seq (io/file "src")))))]
+                                         [path (core/sha256 (slurp path))]))}
+        path (str "target/compiler-campaign/" label ".edn")]
+    (io/make-parents path) (spit path (with-out-str (pp/pprint report)))
+    (mapv #(select-keys % [:id :job-usage :preparation]) (:families report))))
+
+(defn -main [& [label]] (prn (run-study! (or label "fresh"))) (shutdown-agents))

@@ -1,0 +1,11 @@
+2	no-cp0	calls	load-object	0	92595	ok
+2	no-cp0	calls	first-call	0	7733	50005000
+2	no-cp0	calls	warm-call	0	7393.52	50005000
+2	no-cp0	calls	warm-call	1	8129.86	50005000
+2	no-cp0	calls	warm-call	2	8319.08	50005000
+2	no-cp0	calls	warm-call	3	7657.92	50005000
+2	no-cp0	calls	warm-call	4	7582.4	50005000
+2	no-cp0	calls	warm-call	5	7570.68	50005000
+2	no-cp0	calls	warm-call	6	8198.06	50005000
+2	no-cp0	calls	warm-call	7	7680.22	50005000
+2	no-cp0	calls	warm-call	8	7682.86	50005000

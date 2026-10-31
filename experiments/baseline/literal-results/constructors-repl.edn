@@ -1,0 +1,220 @@
+{:engines
+ {:clojure-literal
+  {:median-ns 515818.95,
+   :median-bytes 2416907.2,
+   :samples
+   [{:ns-per-call 516895.25, :bytes-per-call 2416907.2}
+    {:ns-per-call 518819.15, :bytes-per-call 2416907.2}
+    {:ns-per-call 515818.95, :bytes-per-call 2416907.2}
+    {:ns-per-call 519521.55, :bytes-per-call 2416907.2}
+    {:ns-per-call 511745.05, :bytes-per-call 2416907.2}
+    {:ns-per-call 511948.25, :bytes-per-call 2416907.2}
+    {:ns-per-call 515238.35, :bytes-per-call 2416907.2}
+    {:ns-per-call 519192.5, :bytes-per-call 2416907.2}
+    {:ns-per-call 515455.05, :bytes-per-call 2416907.2}]},
+  :clojure-explicit
+  {:median-ns 755128.45,
+   :median-bytes 3853939.2,
+   :samples
+   [{:ns-per-call 1013442.8, :bytes-per-call 4297355.2}
+    {:ns-per-call 832912.45, :bytes-per-call 4297355.2}
+    {:ns-per-call 829774.85, :bytes-per-call 4297355.2}
+    {:ns-per-call 704714.05, :bytes-per-call 3853939.2}
+    {:ns-per-call 755128.45, :bytes-per-call 3853939.2}
+    {:ns-per-call 696517.4, :bytes-per-call 3853939.2}
+    {:ns-per-call 755241.75, :bytes-per-call 3853939.2}
+    {:ns-per-call 698148.05, :bytes-per-call 3853939.2}
+    {:ns-per-call 704201.35, :bytes-per-call 3853939.2}]},
+  :baseline-literal
+  {:median-ns 437467.1,
+   :median-bytes 2337299.2,
+   :samples
+   [{:ns-per-call 577372.9, :bytes-per-call 2420267.2}
+    {:ns-per-call 571322.0, :bytes-per-call 2420267.2}
+    {:ns-per-call 575542.4, :bytes-per-call 2420267.2}
+    {:ns-per-call 576296.8, :bytes-per-call 2420267.2}
+    {:ns-per-call 373921.3, :bytes-per-call 2337299.2}
+    {:ns-per-call 367895.9, :bytes-per-call 2337299.2}
+    {:ns-per-call 372741.35, :bytes-per-call 2337299.2}
+    {:ns-per-call 437467.1, :bytes-per-call 2337299.2}
+    {:ns-per-call 365690.35, :bytes-per-call 2337299.2}]},
+  :baseline-explicit
+  {:median-ns 1034903.85,
+   :median-bytes 4264555.2,
+   :samples
+   [{:ns-per-call 1065811.3, :bytes-per-call 4264555.2}
+    {:ns-per-call 1093955.95, :bytes-per-call 4264555.2}
+    {:ns-per-call 1034903.85, :bytes-per-call 4264555.2}
+    {:ns-per-call 1096547.45, :bytes-per-call 4264555.2}
+    {:ns-per-call 1039294.5, :bytes-per-call 4264555.2}
+    {:ns-per-call 825808.55, :bytes-per-call 4264555.2}
+    {:ns-per-call 824509.05, :bytes-per-call 4264555.2}
+    {:ns-per-call 822880.55, :bytes-per-call 4264558.0}
+    {:ns-per-call 827931.85, :bytes-per-call 4264555.2}]}},
+ :samples 9,
+ :execution
+ {:baseline-literal
+  {:hits 1, :misses 0, :fallbacks 0, :revalidations 1, :deopts 0},
+  :baseline-explicit
+  {:hits 1, :misses 0, :fallbacks 0, :revalidations 1, :deopts 0}},
+ :core-id
+ "e3c5fa9423bd5d5b475ab4ec96a128ed3e9f8676cc2036dfa36affc01fcc1992",
+ :n 5000,
+ :source-sha256
+ {"src/klara/compile/inline.clj"
+  "2c06694af339b84e6f501fc035ac17023d55dd5da0babbd74becd849966f8f8a",
+  "src/klara/compile/unbox.clj"
+  "0e449e139a657bc5b4bac26f5f951c9cd606afd1b851e69244700f5cd9438917",
+  "src/klara/compile/speculate.clj"
+  "80d54937c925ed2fc593bd8cb6f216e8ec8298bcab40041be2255ba94cd3173f",
+  "src/klara/compile/core.clj"
+  "8c59aa51f636c8e7a38b1d63cd07a4badd775ca23582155ef4deb64800cdd128",
+  "src/klara/compile/affine_erase.clj"
+  "d5cc50d9ee7009e1c0635f5838aebf0f705d2be2312934cc39d851882235e756",
+  "src/klara/fusion/kernel.clj"
+  "edc582a5b412a83e61b465c45a980f3811c770167627188da1ba3ad18e1c9453",
+  "src/klara/compile/pe.clj"
+  "728a7c15b318edb6ebfb69517e9c4dba245cde8d64e434c83622758ee5bb1b70",
+  "src/klara/deploy.clj"
+  "88e3503486932d88ecdd900ba148637e645d18aa5d2605a9d65d343fb5c30c75",
+  "src/klara/compile/view.clj"
+  "7a58c4612ca77720b807eb19cc024968b0ca1c2e8fb8e9fdbab17eb521155c3c",
+  "src/klara/compile/infer_affine.clj"
+  "a5631d2d71cfd5d74a3a8a15c27d146b8db3b957f019209e6bc3e948d61c5ce0",
+  "src/klara/compile/emit.clj"
+  "55c966534f4e08d84176d5ba73b2f08ec59c5e17473f9ace690b5b153aba4165",
+  "src/klara/world.clj"
+  "29ea09915982d5daa246251c87da3095f0014c0f7680ff017e618e36fd9e9286",
+  "src/klara/core.clj"
+  "eb3ccb714f222894f197978a888ade9d90c5af959f1b732056cb3a5969cadc2e",
+  "src/klara/affine.clj"
+  "7bceeeb76fb1f30adb60b0e17c9a879a4e626be6697ff5d2c24b8dc917b4e8af",
+  "src/klara/compile/budget.clj"
+  "a14c2c3a158f950915b6e12e39266ac68b9f07614b386932ca2f5655eade70f2",
+  "src/klara/compile/host.clj"
+  "5ccd09307e7bdbc3794eee27adcce08f2a742e07c54fd79e1d73464e9e35ad20",
+  "src/klara/repl.clj"
+  "13dd5b6feb07238fc1e976d027beb638ec6db9c8e753acfde3778b27c9a3a031",
+  "src/klara/load.clj"
+  "13360862c46395b41c048d5e19fc9d08dfad74e80046b4a1d3e3d685cd4e1968",
+  "src/klara/compile/escape.clj"
+  "0b0cbd23e2a031ddaf1d2a5e66f68209901cf5e6ecd9f4771acdccb5d606d462",
+  "experiments/baseline/investment.clj"
+  "100f9459f3c707f2414610ed90a68cfae3a836f19692e27753e0ddfcccdd0a7a",
+  "experiments/baseline/run.clj"
+  "a7f6699d247e83c296f6c14f4d4abd40a428d17574adfff3c419222e2361e297",
+  "experiments/baseline/constructors.clj"
+  "4bbeccb640764f310d9752eefc60176828d6dd54a3c2fa1752c574776e2cfb7e",
+  "src/klara/code.clj"
+  "9a4663239a849215d83cc21ce24390d6ba3f6c3b80a4951d758285fffe7f80e8",
+  "src/klara/compile/ir.clj"
+  "04da4006359a881b8f5c849632d64714cc0ee43c3717e13b81f70b2ff8557989",
+  "experiments/baseline/coverage.clj"
+  "9ee09452892050d0f726eaa885949ce89c6400a08865ac6f72221167769abcc0",
+  "src/klara/defs.clj"
+  "fa2cef5153903f49de13676785c8d0075d87086f6bdd78fb66c61cfbd3d0c436",
+  "src/klara/compile/guest.clj"
+  "53c4aaee0ada0e7284c884d72e39adf0577c388870712b80042475c77ff6f2d1",
+  "src/klara/expand.clj"
+  "3e4dd3ce7fe4a2b197344549ed3966a628ac1399c860ea24d0c69e0687e4f124",
+  "src/klara/compile/baseline.clj"
+  "1125bcd166d08d6ce23ab1b3375ad496cc6600aac17a4627126895fc4cfe03e8",
+  "src/klara/effect_class.clj"
+  "354e1100fe88a79195d8bb5958ce38053ed67657440c59e5e04a1918c87870fe",
+  "experiments/interpreter/activation.clj"
+  "25676fd2f11da577f18e779ff64e32724785c4fc4502c79513a011087e8e9a40",
+  "experiments/interpreter/bridge.clj"
+  "d78cfa87857548c471d9913c7d8b9ca056048ad643c582a235ca5671bcd4d985",
+  "experiments/interpreter/mutable.clj"
+  "0c459949f966165cfcabf8269adb1ab4761eb8e20b711ec1aa307b1c74a3252e",
+  "src/klara/compile/loop.clj"
+  "70288d9e58db5ac74f631404da32cb209bb29cba9fc71d56bf67a49d90ed5b47",
+  "src/klara/nrepl.clj"
+  "087b57b1b3d925efe37d72c14f0d9e515591b88dc885e29f67dfad359405b8b1",
+  "src/klara/compile/hof.clj"
+  "b16d14a9c70532ceb5e00c2ef8fdb4167b8b5cc0b3eaca8a3f4c65255661d519",
+  "src/klara/compile/staged.clj"
+  "259fff1c11466d0e465933dc52645d9caddb13a00dd86618c852afb35e81398f",
+  "src/klara/syntax.clj"
+  "8963b902a00dd3f778ba0fbb5efd2ef15244c904070195fd4a47a48d5825db44",
+  "deps.edn"
+  "1f90365ec52312bdd07dcfb2ad33c13f990f7147fd6d948b0f88c8a950376fe1",
+  "src/klara/compile/runtime.clj"
+  "f4fcfcf98fc25874f6cb4ad120751b2d66ad4ca16fcc27bb3a51b5000cc16a74",
+  "src/klara/compile/scalar.clj"
+  "352012cdc752465d36452302da1d8cc60cd521fd79081f8f4915da209d273966",
+  "src/klara/stage.clj"
+  "021fef386accd9e9c64d4a66f072b715bcca7401afb2851a4720fb4e74a1c123",
+  "src/klara/compile/analysis.clj"
+  "8c29cd30f8b8814efd55094db8a4310a815c33584e1b8a6ee39dabaf34245ebc",
+  "src/klara/compile/updates.clj"
+  "446b74e76cb10a9f77e7eefebc2ae68401b3adf6bf7a3bd1f567e1873e0cc721",
+  "src/klara/fusion.clj"
+  "8e88dbe66640c4d60be5a1dafc07c86a17bef5b0633c08179256f56a1658a356",
+  "src/klara/authority.clj"
+  "70c91dac1f5beace4e6426913f27a8a4dca3a5517f70bc86516f50f4ac369a9d",
+  "src/klara/compile/service.clj"
+  "c6584f7ec3e4b9881b9e8ca6724f626ab7c23189b0c4b3b7d4dc0f4313d68a25",
+  "src/klara/compile/strict_fold.clj"
+  "bd35e878609a1822e127d90f7b668465386b4c2cc56c36e0c16eb56ce3f4d28d",
+  "src/klara/eval.clj"
+  "f3426a67ec736d5e07c1e1e836a7d242ed6f5efdc1ebb16ab079afcf3d80ad65",
+  "src/klara/compile/prepare.clj"
+  "d1f6f5fe4b3cb62cd784712e526f1953db99f6e081d65dfdb437a0eb031d839f",
+  "src/klara/compile/requirements.clj"
+  "b551f12324b50024fbae1f448e3819736e2004d602ed8cdfde02674c22300969"},
+ :process "repl-fixed-1",
+ :vm "Java HotSpot(TM) 64-Bit Server VM",
+ :source
+ (fn
+  [n]
+  (let
+   [rows
+    (loop
+     [i 0 rows []]
+     (if
+      (< i n)
+      (recur (inc i) (conj rows {:bucket (rem i 16), :value (* i i)}))
+      rows))]
+   (loop
+    [i 0 totals {}]
+    (if
+     (< i (count rows))
+     (let
+      [row (nth rows i) bucket (get row :bucket)]
+      (recur
+       (inc i)
+       (assoc
+        totals
+        bucket
+        (+ (get totals bucket 0) (get row :value)))))
+     totals)))),
+ :batch 20,
+ :java "25.0.1+8-LTS-jvmci-b01",
+ :explicit-source
+ (fn
+  [n]
+  (let
+   [rows
+    (loop
+     [i 0 rows []]
+     (if
+      (< i n)
+      (recur
+       (inc i)
+       (conj rows (hash-map :bucket (rem i 16) :value (* i i))))
+      rows))]
+   (loop
+    [i 0 totals {}]
+    (if
+     (< i (count rows))
+     (let
+      [row (nth rows i) bucket (get row :bucket)]
+      (recur
+       (inc i)
+       (assoc
+        totals
+        bucket
+        (+ (get totals bucket 0) (get row :value)))))
+     totals)))),
+ :warmup 500}

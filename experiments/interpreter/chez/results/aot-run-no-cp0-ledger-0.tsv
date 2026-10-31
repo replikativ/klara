@@ -1,0 +1,11 @@
+0	no-cp0	ledger	load-object	0	99127	ok
+0	no-cp0	ledger	first-call	0	105962	(499500 1000 124750)
+0	no-cp0	ledger	warm-call	0	36234.3	(499500 1000 124750)
+0	no-cp0	ledger	warm-call	1	38964.98	(499500 1000 124750)
+0	no-cp0	ledger	warm-call	2	37515.56	(499500 1000 124750)
+0	no-cp0	ledger	warm-call	3	37067.94	(499500 1000 124750)
+0	no-cp0	ledger	warm-call	4	39604.28	(499500 1000 124750)
+0	no-cp0	ledger	warm-call	5	36602.72	(499500 1000 124750)
+0	no-cp0	ledger	warm-call	6	37791.1	(499500 1000 124750)
+0	no-cp0	ledger	warm-call	7	36729.64	(499500 1000 124750)
+0	no-cp0	ledger	warm-call	8	36585.9	(499500 1000 124750)

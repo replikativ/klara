@@ -1,0 +1,32 @@
+{:samples
+ [{:ns-per-pair 7107.02, :bytes-per-pair 4642.0}
+  {:ns-per-pair 7046.27, :bytes-per-pair 4640.56}
+  {:ns-per-pair 10074.47, :bytes-per-pair 4640.56}
+  {:ns-per-pair 5726.69, :bytes-per-pair 4640.56}
+  {:ns-per-pair 5487.73, :bytes-per-pair 4640.56}
+  {:ns-per-pair 4650.13, :bytes-per-pair 4640.56}
+  {:ns-per-pair 4393.51, :bytes-per-pair 4640.56}
+  {:ns-per-pair 4289.58, :bytes-per-pair 4640.56}
+  {:ns-per-pair 4256.67, :bytes-per-pair 4640.56}],
+ :median-bytes 4640.56,
+ :source-sha256
+ {"deps.edn"
+  "a2385c01ca941f7d982c60cd0e3364dca1a2d6897ae80d4c664adf3892cbf837",
+  "experiments/interpreter/mutable.clj"
+  "553b57a6d38111122b98abf97947ca6fcd8a408c6dcbcd558fb0b1a385c6da93",
+  "experiments/interpreter/mutable_snapshots.clj"
+  "a28c9155e5d31a1113f8f63741f02a92a7bc3de29171c1e8778dc094d2789e19",
+  "experiments/interpreter/mutable_checks.clj"
+  "b705ed16402e98195065de759ce23a874fb4b348afe8734ab7bf3eaf5734a520"},
+ :median-ns 5487.73,
+ :scope :freeze-and-thaw-only,
+ :java "25.0.1+8-LTS-jvmci-b01",
+ :expected 987,
+ :limits
+ [:one-state
+  :one-process
+  :not-constant-time
+  :not-durable
+  :no-authority],
+ :workload :fib-16,
+ :paused-after-transitions 200}

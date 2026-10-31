@@ -1,0 +1,4 @@
+1	default	sum	compile-file	0	788122	2075
+1	default	calls	compile-file	0	757856	2152
+1	default	copy-vector	compile-file	0	507471	2389
+1	default	ledger	compile-file	0	873161	3695

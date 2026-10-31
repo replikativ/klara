@@ -1,0 +1,190 @@
+{:baseline {:reason "unsupported form :fn"},
+ :engines
+ {:clojure
+  {:median-ns 4801.26,
+   :median-bytes 26.0,
+   :samples
+   [{:ns-per-call 4175.43, :bytes-per-call 29.2, :value 333283345000}
+    {:ns-per-call 4720.07, :bytes-per-call 26.0, :value 333283345000}
+    {:ns-per-call 4801.26, :bytes-per-call 26.0, :value 333283345000}
+    {:ns-per-call 4634.53, :bytes-per-call 26.0, :value 333283345000}
+    {:ns-per-call 4845.06, :bytes-per-call 26.0, :value 333283345000}
+    {:ns-per-call 4809.64, :bytes-per-call 26.0, :value 333283345000}
+    {:ns-per-call 4671.17, :bytes-per-call 26.0, :value 333283345000}
+    {:ns-per-call 4867.32, :bytes-per-call 26.0, :value 333283345000}
+    {:ns-per-call 4854.74,
+     :bytes-per-call 26.0,
+     :value 333283345000}]},
+  :optimizing
+  {:median-ns 5267.93,
+   :median-bytes 450.24,
+   :samples
+   [{:ns-per-call 4717.88, :bytes-per-call 450.0, :value 333283345000}
+    {:ns-per-call 5027.44, :bytes-per-call 450.24, :value 333283345000}
+    {:ns-per-call 5003.21, :bytes-per-call 450.24, :value 333283345000}
+    {:ns-per-call 5341.95, :bytes-per-call 450.0, :value 333283345000}
+    {:ns-per-call 5357.96, :bytes-per-call 450.24, :value 333283345000}
+    {:ns-per-call 5110.06, :bytes-per-call 450.24, :value 333283345000}
+    {:ns-per-call 5345.42, :bytes-per-call 450.0, :value 333283345000}
+    {:ns-per-call 5443.74, :bytes-per-call 450.24, :value 333283345000}
+    {:ns-per-call 5267.93,
+     :bytes-per-call 450.24,
+     :value 333283345000}]},
+  :t0
+  {:median-ns 1.9176434E7,
+   :median-bytes 6.1923072E7,
+   :samples
+   [{:ns-per-call 1.8572818E7,
+     :bytes-per-call 6.1923072E7,
+     :value 333283345000}
+    {:ns-per-call 2.0422096E7,
+     :bytes-per-call 6.1923072E7,
+     :value 333283345000}
+    {:ns-per-call 1.9176434E7,
+     :bytes-per-call 6.1923072E7,
+     :value 333283345000}
+    {:ns-per-call 1.920541E7,
+     :bytes-per-call 6.1923072E7,
+     :value 333283345000}
+    {:ns-per-call 1.9172571E7,
+     :bytes-per-call 6.1923072E7,
+     :value 333283345000}
+    {:ns-per-call 1.9186025E7,
+     :bytes-per-call 6.1923072E7,
+     :value 333283345000}
+    {:ns-per-call 2.067453E7,
+     :bytes-per-call 6.1923072E7,
+     :value 333283345000}
+    {:ns-per-call 1.9113821E7,
+     :bytes-per-call 6.1923072E7,
+     :value 333283345000}
+    {:ns-per-call 1.9160617E7,
+     :bytes-per-call 6.1923072E7,
+     :value 333283345000}]}},
+ :clojure "1.12.4",
+ :jvm-arguments
+ ["-XX:ThreadPriorityPolicy=1"
+  "-XX:+UnlockExperimentalVMOptions"
+  "-XX:+EnableJVMCIProduct"
+  "-XX:+EnableJVMCI"
+  "-XX:-UnlockExperimentalVMOptions"
+  "-XX:-OmitStackTraceInFastThrow"
+  "-Xmx1g"
+  "-Dclojure.basis=.cpcache/4257271087.basis"],
+ :n 10000,
+ :preparation-ns
+ {:clojure 1045970, :optimizing 25427036, :installation 1060463},
+ :source-sha256
+ {"src/klara/compile/inline.clj"
+  "2c06694af339b84e6f501fc035ac17023d55dd5da0babbd74becd849966f8f8a",
+  "src/klara/compile/unbox.clj"
+  "0e449e139a657bc5b4bac26f5f951c9cd606afd1b851e69244700f5cd9438917",
+  "src/klara/compile/speculate.clj"
+  "80d54937c925ed2fc593bd8cb6f216e8ec8298bcab40041be2255ba94cd3173f",
+  "src/klara/compile/core.clj"
+  "8c59aa51f636c8e7a38b1d63cd07a4badd775ca23582155ef4deb64800cdd128",
+  "src/klara/compile/affine_erase.clj"
+  "d5cc50d9ee7009e1c0635f5838aebf0f705d2be2312934cc39d851882235e756",
+  "src/klara/fusion/kernel.clj"
+  "edc582a5b412a83e61b465c45a980f3811c770167627188da1ba3ad18e1c9453",
+  "src/klara/compile/pe.clj"
+  "728a7c15b318edb6ebfb69517e9c4dba245cde8d64e434c83622758ee5bb1b70",
+  "src/klara/deploy.clj"
+  "88e3503486932d88ecdd900ba148637e645d18aa5d2605a9d65d343fb5c30c75",
+  "experiments/baseline/local_calls.clj"
+  "2e0f08ec9db5657db136a3ea0f6948e34889acae7daad161e86ad6ae3c28689e",
+  "src/klara/compile/view.clj"
+  "7a58c4612ca77720b807eb19cc024968b0ca1c2e8fb8e9fdbab17eb521155c3c",
+  "src/klara/compile/infer_affine.clj"
+  "a5631d2d71cfd5d74a3a8a15c27d146b8db3b957f019209e6bc3e948d61c5ce0",
+  "src/klara/compile/emit.clj"
+  "55c966534f4e08d84176d5ba73b2f08ec59c5e17473f9ace690b5b153aba4165",
+  "src/klara/world.clj"
+  "29ea09915982d5daa246251c87da3095f0014c0f7680ff017e618e36fd9e9286",
+  "src/klara/core.clj"
+  "4fde378a632e9259d5133c166c118c951e3afb44eb84e0eb896a45e041684e6f",
+  "src/klara/affine.clj"
+  "7bceeeb76fb1f30adb60b0e17c9a879a4e626be6697ff5d2c24b8dc917b4e8af",
+  "src/klara/compile/budget.clj"
+  "a14c2c3a158f950915b6e12e39266ac68b9f07614b386932ca2f5655eade70f2",
+  "src/klara/compile/host.clj"
+  "5ccd09307e7bdbc3794eee27adcce08f2a742e07c54fd79e1d73464e9e35ad20",
+  "src/klara/repl.clj"
+  "13dd5b6feb07238fc1e976d027beb638ec6db9c8e753acfde3778b27c9a3a031",
+  "src/klara/load.clj"
+  "13360862c46395b41c048d5e19fc9d08dfad74e80046b4a1d3e3d685cd4e1968",
+  "src/klara/compile/escape.clj"
+  "0b0cbd23e2a031ddaf1d2a5e66f68209901cf5e6ecd9f4771acdccb5d606d462",
+  "src/klara/code.clj"
+  "9a4663239a849215d83cc21ce24390d6ba3f6c3b80a4951d758285fffe7f80e8",
+  "src/klara/compile/ir.clj"
+  "04da4006359a881b8f5c849632d64714cc0ee43c3717e13b81f70b2ff8557989",
+  "src/klara/defs.clj"
+  "fa2cef5153903f49de13676785c8d0075d87086f6bdd78fb66c61cfbd3d0c436",
+  "src/klara/compile/guest.clj"
+  "53c4aaee0ada0e7284c884d72e39adf0577c388870712b80042475c77ff6f2d1",
+  "src/klara/expand.clj"
+  "3e4dd3ce7fe4a2b197344549ed3966a628ac1399c860ea24d0c69e0687e4f124",
+  "src/klara/compile/baseline.clj"
+  "1125bcd166d08d6ce23ab1b3375ad496cc6600aac17a4627126895fc4cfe03e8",
+  "src/klara/effect_class.clj"
+  "354e1100fe88a79195d8bb5958ce38053ed67657440c59e5e04a1918c87870fe",
+  "src/klara/compile/loop.clj"
+  "70288d9e58db5ac74f631404da32cb209bb29cba9fc71d56bf67a49d90ed5b47",
+  "src/klara/nrepl.clj"
+  "087b57b1b3d925efe37d72c14f0d9e515591b88dc885e29f67dfad359405b8b1",
+  "src/klara/compile/hof.clj"
+  "b16d14a9c70532ceb5e00c2ef8fdb4167b8b5cc0b3eaca8a3f4c65255661d519",
+  "src/klara/compile/staged.clj"
+  "259fff1c11466d0e465933dc52645d9caddb13a00dd86618c852afb35e81398f",
+  "src/klara/syntax.clj"
+  "8963b902a00dd3f778ba0fbb5efd2ef15244c904070195fd4a47a48d5825db44",
+  "src/klara/compile/runtime.clj"
+  "f4fcfcf98fc25874f6cb4ad120751b2d66ad4ca16fcc27bb3a51b5000cc16a74",
+  "src/klara/compile/scalar.clj"
+  "352012cdc752465d36452302da1d8cc60cd521fd79081f8f4915da209d273966",
+  "src/klara/stage.clj"
+  "021fef386accd9e9c64d4a66f072b715bcca7401afb2851a4720fb4e74a1c123",
+  "src/klara/compile/analysis.clj"
+  "8c29cd30f8b8814efd55094db8a4310a815c33584e1b8a6ee39dabaf34245ebc",
+  "src/klara/compile/updates.clj"
+  "446b74e76cb10a9f77e7eefebc2ae68401b3adf6bf7a3bd1f567e1873e0cc721",
+  "src/klara/fusion.clj"
+  "8e88dbe66640c4d60be5a1dafc07c86a17bef5b0633c08179256f56a1658a356",
+  "src/klara/authority.clj"
+  "70c91dac1f5beace4e6426913f27a8a4dca3a5517f70bc86516f50f4ac369a9d",
+  "src/klara/compile/service.clj"
+  "c6584f7ec3e4b9881b9e8ca6724f626ab7c23189b0c4b3b7d4dc0f4313d68a25",
+  "src/klara/compile/strict_fold.clj"
+  "bd35e878609a1822e127d90f7b668465386b4c2cc56c36e0c16eb56ce3f4d28d",
+  "src/klara/eval.clj"
+  "f3426a67ec736d5e07c1e1e836a7d242ed6f5efdc1ebb16ab079afcf3d80ad65",
+  "src/klara/compile/prepare.clj"
+  "d1f6f5fe4b3cb62cd784712e526f1953db99f6e081d65dfdb437a0eb031d839f",
+  "src/klara/compile/requirements.clj"
+  "b551f12324b50024fbae1f448e3819736e2004d602ed8cdfde02674c22300969"},
+ :vm "Java HotSpot(TM) 64-Bit Server VM",
+ :source
+ (fn
+  [n]
+  (let
+   [score (fn [x] (+ (* x x) 1))]
+   (loop
+    [i 0 total 0]
+    (if (< i n) (recur (inc i) (+ total (score i))) total)))),
+ :java "25.0.1+8-LTS-jvmci-b01",
+ :emitted-form
+ "(:run (clojure.core/let [body82228 (clojure.core/fn [context82225 v82216] (clojure.core/let [initial82226 (quote 0) initial82227 (quote 0)] (if (clojure.core/and (clojure.core/instance? Long initial82226) (clojure.core/instance? Long initial82227)) (clojure.core/loop [v82222 (clojure.core/long initial82226) v82223 (clojure.core/long initial82227)] (if (clojure.core/< v82222 v82216) (recur (clojure.core/inc v82222) (clojure.core/+ v82223 (clojure.core/+ (clojure.core/* v82222 v82222) (quote 1)))) v82223)) (clojure.core/letfn [(v82221 [v82222 v82223] (if (clojure.core/or (clojure.core/and (:feedback context82225) (clojure.core/not (klara.stage/speculate-key? (:feedback context82225) (quote [[\"f2d729f593b500bae162b6a5c8914b3936c01596db6e06a528e978d69b98168f\" [:body :body :body :body :inits 0 :body]] :deopt])))) (clojure.core/and (clojure.core/instance? java.lang.Long v82222) (clojure.core/instance? java.lang.Long v82223))) (if (clojure.core/< v82222 v82216) (recur (clojure.core/inc v82222) (clojure.core/+ v82223 (clojure.core/+ (clojure.core/* v82222 v82222) (quote 1)))) v82223) (klara.eval/deopt! 0 [v82216 (quote 0) (quote 0) v82222 v82223])))] (v82221 initial82226 initial82227)))))] {:run (clojure.core/fn [v82216] (body82228 (klara.stage/current-context) v82216)), :invoke body82228}))",
+ :label "repl-checked",
+ :expected 333283345000,
+ :allocations-removed 1,
+ :repetitions {:clojure 100, :optimizing 100, :t0 1},
+ :limits
+ [:warm-process
+  :one-machine
+  :current-thread-allocation
+  :no-cold-start-claim
+  :no-interpreter-improvement],
+ :warmup {:clojure 2000, :optimizing 2000, :t0 20},
+ :loop-layouts [[:long]],
+ :stats {:hits 1, :misses 0, :fallbacks 0, :revalidations 1, :deopts 0}}

@@ -1,0 +1,492 @@
+{:process "1",
+ :java "25.0.1+8-LTS-jvmci-b01",
+ :source-sha256
+ {"src/klara/compile/inline.clj"
+  "2c06694af339b84e6f501fc035ac17023d55dd5da0babbd74becd849966f8f8a",
+  "src/klara/compile/unbox.clj"
+  "36580c8fb6d74c2f27f0e62689cbc71c29195da9033f7f43a0a6aa7034ddecf6",
+  "src/klara/compile/speculate.clj"
+  "0c322d771e8da13d944c86e0b9af6b18cb8795f215608bcc1d8a48778be713c9",
+  "src/klara/compile/core.clj"
+  "8c59aa51f636c8e7a38b1d63cd07a4badd775ca23582155ef4deb64800cdd128",
+  "src/klara/compile/affine_erase.clj"
+  "6753d87aba8efec5821c80ae4e85761e3a26399838e3e2fb83de5b58a5cf079d",
+  "src/klara/fusion/kernel.clj"
+  "edc582a5b412a83e61b465c45a980f3811c770167627188da1ba3ad18e1c9453",
+  "src/klara/compile/pe.clj"
+  "4f91d077a3ab0e94f8d096e48523b9077b712c0e32c004e24f0ced09ca2b3c2d",
+  "src/klara/deploy.clj"
+  "88e3503486932d88ecdd900ba148637e645d18aa5d2605a9d65d343fb5c30c75",
+  "experiments/baseline/loop_emission.clj"
+  "dccca54629cc662f298e0c46690128e4a1c12a539ebe724d1e02ff7debd47a6f",
+  "src/klara/compile/infer_affine.clj"
+  "a5631d2d71cfd5d74a3a8a15c27d146b8db3b957f019209e6bc3e948d61c5ce0",
+  "src/klara/compile/emit.clj"
+  "02800f48573946bf30c3c69f96a6efe6451b114ddaee6beddabf5c63d6573927",
+  "src/klara/world.clj"
+  "29ea09915982d5daa246251c87da3095f0014c0f7680ff017e618e36fd9e9286",
+  "src/klara/core.clj"
+  "3615a76ace4b7eeb556a014dc4d08045af8be4fb3b6d5cd47850e927e962d61f",
+  "src/klara/affine.clj"
+  "fe4c6984af77f93aefb9862401f23eec70a3aebd7c5cdbdae4106d98ce1f787b",
+  "src/klara/compile/budget.clj"
+  "a14c2c3a158f950915b6e12e39266ac68b9f07614b386932ca2f5655eade70f2",
+  "src/klara/repl.clj"
+  "13dd5b6feb07238fc1e976d027beb638ec6db9c8e753acfde3778b27c9a3a031",
+  "src/klara/load.clj"
+  "13360862c46395b41c048d5e19fc9d08dfad74e80046b4a1d3e3d685cd4e1968",
+  "src/klara/compile/escape.clj"
+  "6ea0f55f13b8fc4ce1d430a43864f8bae66b8481be921aa5e7d1f7658caaa4cf",
+  "experiments/baseline/investment.clj"
+  "100f9459f3c707f2414610ed90a68cfae3a836f19692e27753e0ddfcccdd0a7a",
+  "experiments/baseline/run.clj"
+  "a7f6699d247e83c296f6c14f4d4abd40a428d17574adfff3c419222e2361e297",
+  "src/klara/code.clj"
+  "9a4663239a849215d83cc21ce24390d6ba3f6c3b80a4951d758285fffe7f80e8",
+  "src/klara/compile/ir.clj"
+  "04da4006359a881b8f5c849632d64714cc0ee43c3717e13b81f70b2ff8557989",
+  "src/klara/defs.clj"
+  "fa2cef5153903f49de13676785c8d0075d87086f6bdd78fb66c61cfbd3d0c436",
+  "src/klara/compile/guest.clj"
+  "53c148b546e50de7511546435cb075129bf0e528fbc3cae3420e9d3848d72916",
+  "src/klara/expand.clj"
+  "c89a1c988eb4b134d49050302bee0361c984f8c4ca669047795cf22f6c6374fe",
+  "src/klara/compile/baseline.clj"
+  "5dc7ba061dcbf64fa26c9d481793bfbd42248a972afb91aaf35a8f6a0d03513c",
+  "src/klara/effect_class.clj"
+  "354e1100fe88a79195d8bb5958ce38053ed67657440c59e5e04a1918c87870fe",
+  "experiments/interpreter/activation.clj"
+  "25676fd2f11da577f18e779ff64e32724785c4fc4502c79513a011087e8e9a40",
+  "experiments/interpreter/bridge.clj"
+  "d78cfa87857548c471d9913c7d8b9ca056048ad643c582a235ca5671bcd4d985",
+  "experiments/interpreter/mutable.clj"
+  "0c459949f966165cfcabf8269adb1ab4761eb8e20b711ec1aa307b1c74a3252e",
+  "src/klara/compile/loop.clj"
+  "70288d9e58db5ac74f631404da32cb209bb29cba9fc71d56bf67a49d90ed5b47",
+  "src/klara/nrepl.clj"
+  "087b57b1b3d925efe37d72c14f0d9e515591b88dc885e29f67dfad359405b8b1",
+  "src/klara/compile/hof.clj"
+  "07188ab272fe59cae69d8f0a495f191a743835d13b1c28c28a7cbb341ec9af96",
+  "src/klara/compile/staged.clj"
+  "9ae66b1ed66e2d9307e0a188918312fce19fb0924fc973a488174d124d69fdf8",
+  "src/klara/syntax.clj"
+  "8963b902a00dd3f778ba0fbb5efd2ef15244c904070195fd4a47a48d5825db44",
+  "deps.edn"
+  "1f90365ec52312bdd07dcfb2ad33c13f990f7147fd6d948b0f88c8a950376fe1",
+  "src/klara/compile/runtime.clj"
+  "f4fcfcf98fc25874f6cb4ad120751b2d66ad4ca16fcc27bb3a51b5000cc16a74",
+  "src/klara/compile/scalar.clj"
+  "352012cdc752465d36452302da1d8cc60cd521fd79081f8f4915da209d273966",
+  "src/klara/stage.clj"
+  "021fef386accd9e9c64d4a66f072b715bcca7401afb2851a4720fb4e74a1c123",
+  "src/klara/compile/analysis.clj"
+  "8c29cd30f8b8814efd55094db8a4310a815c33584e1b8a6ee39dabaf34245ebc",
+  "src/klara/compile/updates.clj"
+  "446b74e76cb10a9f77e7eefebc2ae68401b3adf6bf7a3bd1f567e1873e0cc721",
+  "src/klara/fusion.clj"
+  "8e88dbe66640c4d60be5a1dafc07c86a17bef5b0633c08179256f56a1658a356",
+  "src/klara/authority.clj"
+  "70c91dac1f5beace4e6426913f27a8a4dca3a5517f70bc86516f50f4ac369a9d",
+  "src/klara/compile/strict_fold.clj"
+  "bd35e878609a1822e127d90f7b668465386b4c2cc56c36e0c16eb56ce3f4d28d",
+  "src/klara/eval.clj"
+  "f3426a67ec736d5e07c1e1e836a7d242ed6f5efdc1ebb16ab079afcf3d80ad65",
+  "src/klara/compile/prepare.clj"
+  "d1f6f5fe4b3cb62cd784712e526f1953db99f6e081d65dfdb437a0eb031d839f",
+  "src/klara/compile/requirements.clj"
+  "b551f12324b50024fbae1f448e3819736e2004d602ed8cdfde02674c22300969"},
+ :checks
+ [{:source
+   (fn
+    [n]
+    (loop [i 0 sum 0] (if (< i n) (recur (inc i) (+ sum i)) sum))),
+   :results
+   [{:input nil, :outcome [:error "java.lang.NullPointerException"]}
+    {:input false, :outcome [:error "java.lang.ClassCastException"]}
+    {:input -1,
+     :outcome
+     [:value
+      "5910edceded33405ec7edfed18e5db148fb47582441975802910f0c086e31882"
+      0]}
+    {:input 0,
+     :outcome
+     [:value
+      "5910edceded33405ec7edfed18e5db148fb47582441975802910f0c086e31882"
+      0]}
+    {:input 1,
+     :outcome
+     [:value
+      "5910edceded33405ec7edfed18e5db148fb47582441975802910f0c086e31882"
+      0]}
+    {:input 5,
+     :outcome
+     [:value
+      "1e0030451b8d8cf52c203e93665dda54399419d7da7a397b82b44cbd89957df8"
+      10]}
+    {:input 7.0,
+     :outcome
+     [:value
+      "e4c9b66d5fb86a3d9557eebf22b93919d2d705074325acd359ae37cbef854f3e"
+      21]}
+    {:input 7N,
+     :outcome
+     [:value
+      "e4c9b66d5fb86a3d9557eebf22b93919d2d705074325acd359ae37cbef854f3e"
+      21]}]}
+  {:source
+   (fn
+    [n]
+    (loop
+     [i 0 sum 0 bound n]
+     (if (< i bound) (recur (inc i) (+ sum i) bound) sum))),
+   :results
+   [{:input nil, :outcome [:error "java.lang.NullPointerException"]}
+    {:input false, :outcome [:error "java.lang.ClassCastException"]}
+    {:input -1,
+     :outcome
+     [:value
+      "5910edceded33405ec7edfed18e5db148fb47582441975802910f0c086e31882"
+      0]}
+    {:input 0,
+     :outcome
+     [:value
+      "5910edceded33405ec7edfed18e5db148fb47582441975802910f0c086e31882"
+      0]}
+    {:input 1,
+     :outcome
+     [:value
+      "5910edceded33405ec7edfed18e5db148fb47582441975802910f0c086e31882"
+      0]}
+    {:input 5,
+     :outcome
+     [:value
+      "1e0030451b8d8cf52c203e93665dda54399419d7da7a397b82b44cbd89957df8"
+      10]}
+    {:input 7.0,
+     :outcome
+     [:value
+      "e4c9b66d5fb86a3d9557eebf22b93919d2d705074325acd359ae37cbef854f3e"
+      21]}
+    {:input 7N,
+     :outcome
+     [:value
+      "e4c9b66d5fb86a3d9557eebf22b93919d2d705074325acd359ae37cbef854f3e"
+      21]}]}
+  {:source
+   (fn
+    [n]
+    (loop
+     [i n a [1] b [2]]
+     (if (> i 0) (recur (dec i) b (conj a i)) a))),
+   :results
+   [{:input nil, :outcome [:error "java.lang.NullPointerException"]}
+    {:input false, :outcome [:error "java.lang.ClassCastException"]}
+    {:input -1,
+     :outcome
+     [:value
+      "7c3b7af1507b839e8e71e07364d818f57d89598badb9a924597b8dcfa52aad61"
+      [1]]}
+    {:input 0,
+     :outcome
+     [:value
+      "7c3b7af1507b839e8e71e07364d818f57d89598badb9a924597b8dcfa52aad61"
+      [1]]}
+    {:input 1,
+     :outcome
+     [:value
+      "75bf32a7905a860229327e5ea9d7702a871a141cd82c3920c44f1dcbf566c335"
+      [2]]}
+    {:input 5,
+     :outcome
+     [:value
+      "db04816ca3e06d3a9634ec8b3fecf4e00530e1dfc05eba27c73ac24851f787b7"
+      [2 4 2]]}
+    {:input 7.0,
+     :outcome
+     [:value
+      "4bf84a667ccff24da14c00e4d4430e983eb437a380daef45b1436835c506de83"
+      [2 6.0 4.0 2.0]]}
+    {:input 7N,
+     :outcome
+     [:value
+      "c903600cb159f6593e9c75785840423c930f124e131156a26962fbe189fcbae9"
+      [2 6N 4N 2N]]}]}
+  {:source
+   (fn
+    [n]
+    (loop [i n a 1 b 2] (if (> i 0) (recur (dec i) b (+ a b)) a))),
+   :results
+   [{:input nil, :outcome [:error "java.lang.NullPointerException"]}
+    {:input false, :outcome [:error "java.lang.ClassCastException"]}
+    {:input -1,
+     :outcome
+     [:value
+      "037d8df7faa0f1858a702c3030940f3ee8ae0ac96bb19078e970a3c981a20f96"
+      1]}
+    {:input 0,
+     :outcome
+     [:value
+      "037d8df7faa0f1858a702c3030940f3ee8ae0ac96bb19078e970a3c981a20f96"
+      1]}
+    {:input 1,
+     :outcome
+     [:value
+      "86317e92590bd54ce0f1e695310a90d1f7f29dab3ad48d469da5ce8a9d57f383"
+      2]}
+    {:input 5,
+     :outcome
+     [:value
+      "a9b86ab023f2397a4762779f243b12ba69d72a03588030329eef06b2962badc0"
+      13]}
+    {:input 7.0,
+     :outcome
+     [:value
+      "352a137c462cf4ef62389d8dfc76e9bb6871909b0ad5ee5bf2c204896515b390"
+      34]}
+    {:input 7N,
+     :outcome
+     [:value
+      "352a137c462cf4ef62389d8dfc76e9bb6871909b0ad5ee5bf2c204896515b390"
+      34]}]}
+  {:source
+   (fn
+    [n]
+    (loop [i 0 sum n] (if (< i 3) (recur (inc i) (+ sum 1)) sum))),
+   :results
+   [{:input nil, :outcome [:error "java.lang.NullPointerException"]}
+    {:input false, :outcome [:error "java.lang.ClassCastException"]}
+    {:input -1,
+     :outcome
+     [:value
+      "86317e92590bd54ce0f1e695310a90d1f7f29dab3ad48d469da5ce8a9d57f383"
+      2]}
+    {:input 0,
+     :outcome
+     [:value
+      "de6188499566c0f326e4b6ed6832865f9c1169cbea31ed11b9c584636c3b7b09"
+      3]}
+    {:input 1,
+     :outcome
+     [:value
+      "8d4fbe0fd5aba137c92a9e36086c0aa4571d58f6b58e7329c801065022448bb8"
+      4]}
+    {:input 5,
+     :outcome
+     [:value
+      "b241fd661881ceab6cc6fc8f115c869d91fed403a87a78334b44e432a792c339"
+      8]}
+    {:input 7.0,
+     :outcome
+     [:value
+      "5c164211caa9828a1f9b56a56a8ef4b162af8e2e6cede88363f0da9cc2d0f625"
+      10.0]}
+    {:input 7N,
+     :outcome
+     [:value
+      "f7a6109f111f3d9b1593bdc6a748d6af0eb8bbb0dd1ccc03c0e84fbd88233424"
+      10N]}]}
+  {:source
+   (fn
+    [n]
+    (loop
+     [i 0 sum 9223372036854775807]
+     (if (< i n) (recur (inc i) (+ sum 1)) sum))),
+   :results
+   [{:input nil, :outcome [:error "java.lang.NullPointerException"]}
+    {:input false, :outcome [:error "java.lang.ClassCastException"]}
+    {:input -1,
+     :outcome
+     [:value
+      "78c1300ccf38161a644669463279e32dcc0902c7c0c7de1437ff9873cd3406d5"
+      9223372036854775807]}
+    {:input 0,
+     :outcome
+     [:value
+      "78c1300ccf38161a644669463279e32dcc0902c7c0c7de1437ff9873cd3406d5"
+      9223372036854775807]}
+    {:input 1, :outcome [:error "java.lang.ArithmeticException"]}
+    {:input 5, :outcome [:error "java.lang.ArithmeticException"]}
+    {:input 7.0, :outcome [:error "java.lang.ArithmeticException"]}
+    {:input 7N, :outcome [:error "java.lang.ArithmeticException"]}]}],
+ :warmup 3000,
+ :batch 100,
+ :samples 9,
+ :rows
+ [{:workload :loop,
+   :n 10000,
+   :engines
+   {:clojure
+    {:median-ns 3519.66,
+     :median-bytes 24.64,
+     :samples
+     [{:ns-per-call 4045.28, :bytes-per-call 26.48}
+      {:ns-per-call 3642.1, :bytes-per-call 24.64}
+      {:ns-per-call 3561.44, :bytes-per-call 24.64}
+      {:ns-per-call 3519.66, :bytes-per-call 24.64}
+      {:ns-per-call 3475.0, :bytes-per-call 24.64}
+      {:ns-per-call 3282.75, :bytes-per-call 24.64}
+      {:ns-per-call 3244.91, :bytes-per-call 24.64}
+      {:ns-per-call 8740.86, :bytes-per-call 24.64}
+      {:ns-per-call 3440.59, :bytes-per-call 24.64}]},
+    :letfn
+    {:median-ns 206845.53,
+     :median-bytes 476640.64,
+     :samples
+     [{:ns-per-call 107264.49, :bytes-per-call 476640.64}
+      {:ns-per-call 307131.75, :bytes-per-call 476640.64}
+      {:ns-per-call 260894.61, :bytes-per-call 476640.64}
+      {:ns-per-call 111904.43, :bytes-per-call 476640.64}
+      {:ns-per-call 110439.69, :bytes-per-call 476640.64}
+      {:ns-per-call 108517.82, :bytes-per-call 476640.64}
+      {:ns-per-call 321642.22, :bytes-per-call 476640.64}
+      {:ns-per-call 236330.27, :bytes-per-call 476640.64}
+      {:ns-per-call 206845.53, :bytes-per-call 476640.64}]},
+    :loop
+    {:median-ns 3327.97,
+     :median-bytes 72.64,
+     :samples
+     [{:ns-per-call 3821.91, :bytes-per-call 72.64}
+      {:ns-per-call 3288.2, :bytes-per-call 72.64}
+      {:ns-per-call 3191.19, :bytes-per-call 72.64}
+      {:ns-per-call 3327.97, :bytes-per-call 72.64}
+      {:ns-per-call 3330.17, :bytes-per-call 72.64}
+      {:ns-per-call 3225.73, :bytes-per-call 72.64}
+      {:ns-per-call 3408.07, :bytes-per-call 72.64}
+      {:ns-per-call 3330.52, :bytes-per-call 72.64}
+      {:ns-per-call 3019.87, :bytes-per-call 72.64}]},
+    :letfn-checks
+    {:median-ns 55082.99,
+     :median-bytes 237064.64,
+     :samples
+     [{:ns-per-call 52594.81, :bytes-per-call 237064.64}
+      {:ns-per-call 126757.91, :bytes-per-call 237064.64}
+      {:ns-per-call 122331.64, :bytes-per-call 237064.64}
+      {:ns-per-call 54267.12, :bytes-per-call 237064.64}
+      {:ns-per-call 55082.99, :bytes-per-call 237064.64}
+      {:ns-per-call 54285.25, :bytes-per-call 237064.64}
+      {:ns-per-call 104958.16, :bytes-per-call 237064.64}
+      {:ns-per-call 50762.86, :bytes-per-call 237064.64}
+      {:ns-per-call 91448.53, :bytes-per-call 237064.64}]},
+    :loop-checks
+    {:median-ns 10002.28,
+     :median-bytes 72.64,
+     :samples
+     [{:ns-per-call 10002.28, :bytes-per-call 72.64}
+      {:ns-per-call 9720.92, :bytes-per-call 72.64}
+      {:ns-per-call 9959.24, :bytes-per-call 72.64}
+      {:ns-per-call 9682.64, :bytes-per-call 72.64}
+      {:ns-per-call 10211.73, :bytes-per-call 72.64}
+      {:ns-per-call 9977.38, :bytes-per-call 72.64}
+      {:ns-per-call 10264.55, :bytes-per-call 72.64}
+      {:ns-per-call 82271.84, :bytes-per-call 72.64}
+      {:ns-per-call 47375.97, :bytes-per-call 72.64}]}}}
+  {:workload :loop-carried-bound,
+   :n 10000,
+   :engines
+   {:clojure
+    {:median-ns 3229.9,
+     :median-bytes 24.64,
+     :samples
+     [{:ns-per-call 3259.55, :bytes-per-call 24.64}
+      {:ns-per-call 3196.21, :bytes-per-call 24.64}
+      {:ns-per-call 3339.36, :bytes-per-call 24.64}
+      {:ns-per-call 3087.4, :bytes-per-call 24.64}
+      {:ns-per-call 3386.33, :bytes-per-call 24.64}
+      {:ns-per-call 3144.23, :bytes-per-call 24.64}
+      {:ns-per-call 3229.9, :bytes-per-call 24.64}
+      {:ns-per-call 3207.91, :bytes-per-call 24.64}
+      {:ns-per-call 3359.08, :bytes-per-call 24.64}]},
+    :letfn
+    {:median-ns 90247.85,
+     :median-bytes 476632.64,
+     :samples
+     [{:ns-per-call 93938.61, :bytes-per-call 476632.64}
+      {:ns-per-call 90247.85, :bytes-per-call 476632.64}
+      {:ns-per-call 81715.57, :bytes-per-call 476632.64}
+      {:ns-per-call 77459.86, :bytes-per-call 476632.64}
+      {:ns-per-call 81532.93, :bytes-per-call 476632.64}
+      {:ns-per-call 134583.31, :bytes-per-call 476632.64}
+      {:ns-per-call 77505.96, :bytes-per-call 476632.64}
+      {:ns-per-call 180619.38, :bytes-per-call 476632.64}
+      {:ns-per-call 98438.48, :bytes-per-call 476632.64}]},
+    :loop
+    {:median-ns 3195.8,
+     :median-bytes 72.64,
+     :samples
+     [{:ns-per-call 3296.02, :bytes-per-call 72.64}
+      {:ns-per-call 3089.82, :bytes-per-call 72.64}
+      {:ns-per-call 3158.73, :bytes-per-call 72.64}
+      {:ns-per-call 3004.42, :bytes-per-call 72.64}
+      {:ns-per-call 3335.46, :bytes-per-call 72.64}
+      {:ns-per-call 3195.8, :bytes-per-call 72.64}
+      {:ns-per-call 3234.74, :bytes-per-call 72.64}
+      {:ns-per-call 3392.87, :bytes-per-call 72.64}
+      {:ns-per-call 2973.57, :bytes-per-call 72.64}]},
+    :letfn-checks
+    {:median-ns 11455.6,
+     :median-bytes 112.64,
+     :samples
+     [{:ns-per-call 13487.38, :bytes-per-call 112.64}
+      {:ns-per-call 13440.8, :bytes-per-call 112.64}
+      {:ns-per-call 13780.13, :bytes-per-call 112.64}
+      {:ns-per-call 10754.61, :bytes-per-call 112.64}
+      {:ns-per-call 10812.54, :bytes-per-call 112.64}
+      {:ns-per-call 10721.49, :bytes-per-call 112.64}
+      {:ns-per-call 10585.47, :bytes-per-call 112.64}
+      {:ns-per-call 12216.39, :bytes-per-call 112.64}
+      {:ns-per-call 11455.6, :bytes-per-call 112.64}]},
+    :loop-checks
+    {:median-ns 9672.41,
+     :median-bytes 72.64,
+     :samples
+     [{:ns-per-call 9677.83, :bytes-per-call 72.64}
+      {:ns-per-call 10113.32, :bytes-per-call 72.64}
+      {:ns-per-call 9840.55, :bytes-per-call 72.64}
+      {:ns-per-call 8812.82, :bytes-per-call 72.64}
+      {:ns-per-call 9174.85, :bytes-per-call 72.64}
+      {:ns-per-call 8873.61, :bytes-per-call 72.64}
+      {:ns-per-call 9023.47, :bytes-per-call 72.64}
+      {:ns-per-call 10505.22, :bytes-per-call 72.64}
+      {:ns-per-call 9672.41, :bytes-per-call 72.64}]}}}
+  {:workload :recurrence,
+   :n 64,
+   :engines
+   {:clojure
+    {:median-ns 2866.23,
+     :median-bytes 8320.64,
+     :samples
+     [{:ns-per-call 3120.58, :bytes-per-call 8320.64}
+      {:ns-per-call 2959.71, :bytes-per-call 8320.64}
+      {:ns-per-call 2658.42, :bytes-per-call 8320.64}
+      {:ns-per-call 2866.23, :bytes-per-call 8320.64}
+      {:ns-per-call 90189.71, :bytes-per-call 8320.64}
+      {:ns-per-call 2630.21, :bytes-per-call 8320.64}
+      {:ns-per-call 2993.64, :bytes-per-call 8320.64}
+      {:ns-per-call 2819.0, :bytes-per-call 8320.64}
+      {:ns-per-call 2730.88, :bytes-per-call 8320.64}]},
+    :letfn
+    {:median-ns 3078.72,
+     :median-bytes 8384.64,
+     :samples
+     [{:ns-per-call 3078.72, :bytes-per-call 8384.64}
+      {:ns-per-call 2917.28, :bytes-per-call 8384.64}
+      {:ns-per-call 3084.13, :bytes-per-call 8384.64}
+      {:ns-per-call 3109.99, :bytes-per-call 8384.64}
+      {:ns-per-call 2906.94, :bytes-per-call 8384.64}
+      {:ns-per-call 4618.82, :bytes-per-call 8384.64}
+      {:ns-per-call 2963.17, :bytes-per-call 8384.64}
+      {:ns-per-call 2690.53, :bytes-per-call 8384.64}
+      {:ns-per-call 3106.72, :bytes-per-call 8384.64}]},
+    :loop
+    {:median-ns 2815.98,
+     :median-bytes 8368.64,
+     :samples
+     [{:ns-per-call 2824.08, :bytes-per-call 8368.64}
+      {:ns-per-call 2906.16, :bytes-per-call 8368.64}
+      {:ns-per-call 2722.22, :bytes-per-call 8368.64}
+      {:ns-per-call 2815.98, :bytes-per-call 8368.64}
+      {:ns-per-call 2818.47, :bytes-per-call 8368.64}
+      {:ns-per-call 3251.04, :bytes-per-call 8368.64}
+      {:ns-per-call 2746.88, :bytes-per-call 8368.64}
+      {:ns-per-call 2682.7, :bytes-per-call 8368.64}
+      {:ns-per-call 2713.68, :bytes-per-call 8368.64}]}}}]}

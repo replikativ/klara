@@ -2,7 +2,7 @@
   "Derivation-checked erasure and a small JVM representation emitter.
   Kept separate from numeric compilation. No checks on external tokens
   are erased: only locally allocated, nonescaping places are accepted."
-  (:require [klara.affine :as affine] [klara.core :as c]
+  (:require [klara.affine :as affine] [klara.core :as c] [klara.compile.host :as host]
             [klara.compile.updates :as updates]
             [klara.eval :as ev] [klara.stage :as stage] [klara.world :as w]))
 
@@ -54,7 +54,7 @@
                    :local (local (:index t))
                    :prim (let [args (mapv (fn [i a] (emit a env (conj p :args i) false)) (range) (:args t))
                                ty (updates/expression-type t (mapv :layout env))
-                               form (list* (symbol "clojure.core" (name (:name t))) (map :form args))]
+                               form (host/primitive-form (:name t) (mapv :form args))]
                            {:form (if (and (= ty :long) (#{'nth 'count} (:name t))) (list 'long form) form)
                             :layout ty})
                    :let (let [v (go (:init t) :init) s (gensym "place")
@@ -131,7 +131,7 @@
                                                            (list 'long (list 'clojure.core/nth (child (first as)) (child (second as)))))
                                                      count (if (= (c/local depth) (first as)) (:length v)
                                                              (list 'long (list 'clojure.core/count (child (first as)))))
-                                                     (list* (symbol "clojure.core" (name (:name t))) (map child as)))))))]
+                                                     (host/primitive-form (:name t) (mapv child as)))))))]
                                (assoc v :form
                                       (list 'let (into [(with-meta s {:tag 'longs}) (:form v)]
                                                        (mapcat (fn [tmp write] [tmp (rhs (:rhs write) callback-env 0)]) temps (:writes plan)))
@@ -155,23 +155,19 @@
                    (fn? (:run exe)))
       :invalid-affine-derivation)))
 
-(defn wrap-compiler
-  "One-line compile/core hook. Unsupported/inferred regions use the ordinary
-  compiler. Owned boundary contracts are never silently optimized."
-  [ordinary]
-  (fn compile-affine
-    ([world sym] (compile-affine world sym {}))
-    ([world sym opts]
-     (let [basis (if (instance? klara.world.World world) (w/snapshot world) world)
-           e (w/entry* basis sym) f (:value e)
+(defn compile-owned
+  "Return an owned executable or nil for ordinary dispatch. The ownership
+   checker remains independent of inferred optimization facts."
+  [basis sym]
+  (let [e (w/entry* basis sym) f (:value e)
            source (when (ev/closure? f) (ev/closure-term f))
            owned? (some #(and (= :perform (:op %)) (= "own" (namespace (:name %))))
                         (when source (tree-seq #(seq (c/children %)) c/children source)))
            d (when (and owned? (empty? (ev/closure-locals f)) (not (w/pending? basis e))) (affine/check source))]
-       (if-not d (ordinary world sym opts)
+       (when d
          (let [start (System/nanoTime) erased (erase source d)
                fast (erase source d {:unbox-parameters? true})
-               generic-run (eval (:form erased)) fast-run (eval (:form fast))
+               generic-run (host/evaluate (:form erased)) fast-run (host/evaluate (:form fast))
                guards #{[:captures []] [:statics []] [:unhandled #{:exn/raise}]}
                cert (-> (stage/certify (c/code-id source) guards :klara.affine/tested
                                       {:suite "test/klara/affine_test.clj" :obligation :AF3})
@@ -187,4 +183,4 @@
               :allocations-removed 0 :ir source
               :pass-log [{:pass :affine-erase :checks (:checks-erased erased)}
                          {:pass :affine-represent :buffers (count (:representations erased))}
-                         {:pass :emit :backend :clojure}]})))))))
+                         {:pass :emit :backend :clojure}]})))))

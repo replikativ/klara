@@ -1,0 +1,5 @@
+eb1a93e934d4fd29df6e2061ba0bf447568561764d758f4a5662c0e29370ffa9  /tmp/klara-chez-empirical/lz4.tar.gz
+2eefbdf29e0c7da04087e8c6fac4f6f0902e8d52105f572a4eb22055978edba0  /tmp/klara-chez-empirical/nanopass.tar.gz
+547b79d8d59dee125eba658acca939172feaaa6e95849a90cf0451598d593d5a  /tmp/klara-chez-empirical/stex.tar.gz
+b9258cf6254e7f7c37f1cd61dba943a1c5ea3cff5718c789834dac359094f5f7  /tmp/klara-chez-empirical/zlib.tar.gz
+024f9804c2c6a3b2afab05d0db1cc7cade88cf6930cf601ff3bc18f5f9ccfc26  /tmp/klara-chez-empirical/zuo.tar.gz

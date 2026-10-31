@@ -1,0 +1,171 @@
+(ns klara.compile.baseline
+  "Mandatory generic preparation by default. An explicitly funded guest local
+   planner may select a checked inline recipe. No general PE/speculation,
+   affine erasure or typed loop variants. Retains the guarded S12 control ABI."
+  (:require [klara.compile.budget :as budget] [klara.compile.compose :as compose]
+            [klara.compile.edge :as edge] [klara.compile.subject :as subject]
+            [klara.compile.emit :as emit] [klara.compile.ir :as ir]
+            [klara.core :as core] [klara.eval :as ev]
+            [klara.stage :as stage] [klara.world :as world]))
+
+(def ^:dynamic *budget* nil)
+(def ^:dynamic *memo* nil)
+(def ^:dynamic *active* #{})
+(def primitive-names (disj (set (keys core/prims)) 'vec 'concat))
+
+(defn- literal! [value limits]
+  ;; Exact persistent data only: never invoke arbitrary host protocols while
+  ;; planning. Aggregate size and depth are bounded before hashing/printing.
+  (loop [todo [[value 0]] units 0]
+    (if-let [[v depth] (peek todo)]
+      (do (budget/charge! *budget* :work 1)
+      (when (or (> depth (:depth limits)) (> units (:literal-bytes limits)))
+        (budget/exhausted! :literal-bytes))
+      (let [container? (contains? #{clojure.lang.PersistentVector
+                                    clojure.lang.PersistentArrayMap clojure.lang.PersistentHashMap
+                                    clojure.lang.PersistentHashSet clojure.lang.PersistentList
+                                    clojure.lang.PersistentList$EmptyList} (class v))
+            children (when container? (if (map? v) (mapcat identity v) v))
+            size (cond
+                   container? (+ 4 (* 2 (count v)))
+                   (or (nil? v) (instance? Long v) (instance? Double v) (boolean? v)) 32
+                   ;; Four UTF-8 bytes per UTF-16 unit plus delimiters/escapes
+                   ;; is a conservative bound for the admitted scalar spelling.
+                   (or (string? v) (symbol? v) (keyword? v)) (+ 8 (* 6 (count (str v))))
+                   :else (emit/unsupported nil "baseline literal must be bounded immutable data"))]
+        (when (> (+ units size) (:literal-bytes limits)) (budget/exhausted! :literal-bytes))
+        (recur (into (pop todo) (map #(vector % (inc depth))) children) (+ units size))))
+      units)))
+
+(defn scan!
+  "Bound source traversal before naming, hashing or host compilation. Source
+   comes from validated Core/Code; this is admission, not an arbitrary AST API."
+  [source limits]
+  (budget/validate-limits! limits #{:nodes :depth :literal-bytes})
+  (loop [todo [[source 0]] n 0 literal-bytes 0]
+    (when-let [[t depth] (peek todo)]
+      (budget/charge! *budget* :work 1)
+      (when (or (>= n (:nodes limits)) (> depth (:depth limits)))
+        (budget/exhausted! :nodes))
+      (doseq [children (keep t [:args :inits :names])]
+        (when (> (count children) (:nodes limits)) (budget/exhausted! :nodes)))
+      (when-not (contains? #{:quote :local :var :fn :let :if :letrec :app :resolve :prim} (:op t))
+        (emit/unsupported t "outside baseline control subset"))
+      (when (and (= :prim (:op t)) (not (contains? primitive-names (:name t))))
+        (emit/unsupported t "outside baseline primitive subset"))
+      (when (and (= :fn (:op t))
+                 (or (:rest? t) (not (<= 0 (:arity t) 20))))
+        (emit/unsupported t "baseline requires fixed arity of at most twenty"))
+      (let [literal-bytes (+ literal-bytes
+                             (if (= :quote (:op t))
+                               (literal! (:datum t) (update limits :literal-bytes - literal-bytes)) 0))
+            children (if (= :var (:op t)) [] (core/children t))]
+        (when (> (count children) (:nodes limits)) (budget/exhausted! :nodes))
+        (recur (into (pop todo) (map #(vector % (inc depth))) children) (inc n) literal-bytes)))))
+
+(stage/register-checker!
+ :klara.compile/baseline
+ (fn [exe]
+   (when-not (and (= :tested (get-in exe [:certificate :kind]))
+                  (= "baseline-1" (get-in exe [:certificate :checker-version]))
+                  (= (:code-id exe) (core/code-id (:generic exe)))
+                  (or (and (nil? (:rewrite-origin-id exe))
+                           (empty? (:checked-edges exe)) (empty? (:rewrite-receipts exe)))
+                      (and (edge/chain-valid? (:checked-edges exe) (:rewrite-origin-id exe)
+                                             (core/code-id (:ir exe)) subject/core-contract)
+                           (= (:rewrite-receipts exe) (mapv edge/info (:checked-edges exe)))))
+                  (= :s12-v1 (:abi exe)) (fn? (:run exe)))
+     :invalid-baseline-executable)))
+
+(declare compile-definition)
+
+(defn compile-source
+  "Shared backend for closed Code and world definitions. The original entry
+   identity is retained; an optional local-call planner uses a checked recipe.
+   Arbitrary residual generators need a separate source relation."
+  [basis source options]
+  (binding [*budget* (or *budget* (:budget options) (budget/budget))
+            *memo* (or *memo* (atom {}))]
+    (let [start (System/nanoTime)
+          _ (scan! source (merge budget/definition-limits (:definition-limits options)))
+          named (ir/lower (ir/named source))
+          _ (when (and (:strategy options) (:local-call-planner options))
+              (throw (ex-info "choose a strategy or the legacy planner" {:reason :invalid-strategy})))
+          local-pass
+          (cond
+            (:strategy options)
+            ((requiring-resolve 'klara.compile.strategy/run)
+             *budget* (or (:policy-root options) basis) named (:strategy options)
+             #(scan! % (merge budget/definition-limits (:definition-limits options)))
+             (:strategy-steps options 4))
+            (some? (:local-call-planner options))
+            (let [step (requiring-resolve 'klara.compile.local-calls/run)]
+              (compose/run *budget* named
+                #(step *budget* (or (:policy-root options) basis) % (:local-call-planner options))
+                #(scan! % (merge budget/definition-limits (:definition-limits options)))
+                (:rewrite-rounds options compose/default-rounds))))
+          term (or (:term local-pass) named)
+          callees (distinct (keep #(when (and (= :app (:op %)) (= :resolve (get-in % [:fn :op])))
+                                    (get-in % [:fn :id])) (ir/nodes term)))
+          dependencies (mapv #(compile-definition basis % options) callees)
+          reads (into (set (map (fn [s] [:world s (:value-id (world/entry* basis s))]) callees))
+                      (mapcat #(filter (fn [g] (= :world (first g))) (:guards %))) dependencies)
+          transfers (atom [])
+          out (binding [emit/*transfer-receipts* transfers
+                        emit/*transfer-producer*
+                        (when (not= false (:guest-transfer? options))
+                          ((requiring-resolve 'klara.compile.guest/producer) *budget*
+                           (or (:policy-root options) basis)))]
+                (emit/run term reads {} {:typed-loops? false
+                                       :direct-loops? (not= false (:direct-loops? options))
+                                       :before-eval (fn [form]
+                                                      (budget/charge! *budget* :bytes
+                                                                      (alength (.getBytes (pr-str form) java.nio.charset.StandardCharsets/UTF_8)))
+                                                      (budget/charge! *budget* :emissions 1))}))
+          host-guards (into #{} (keep (fn [t]
+                                       (when (= :prim (:op t))
+                                         [:host-root (core/primitive-symbol (:name t))
+                                          (get core/prims (:name t))]))) (ir/nodes term))
+          guards (into (into (into #{[:captures []] [:statics []] [:arity (:arity source)]
+                                      [:unhandled #{:exn/raise}]} reads) host-guards)
+                       (mapcat #(filter (fn [g] (contains? #{:unhandled :host-root} (first g))) (:guards %))) dependencies)
+          cid (core/code-id source)
+          cert (-> (stage/certify cid guards :klara.compile/baseline
+                                 {:suite "klara.compile.baseline-test" :obligation :T0-equivalence})
+                   (dissoc :digest) (assoc :kind :tested :checker-version "baseline-1"))]
+      (merge out {:generic source :code-id cid :guards guards :ir term
+                  :context-only? false :dependencies dependencies :transfer-receipts @transfers
+                  :compiler-reads (into (or (:compiler-reads local-pass) #{}) (mapcat :compiler-reads) @transfers)
+                  :rewrite-receipts (:receipts local-pass)
+                  :checked-edges (:edges local-pass)
+                  :rewrite-origin-id (when local-pass (core/code-id named))
+                  :rewrite-summary (when local-pass (select-keys local-pass [:rounds :stop :calls-inlined]))
+                  :strategy-history (:history local-pass)
+                  :certificate (assoc cert :digest (stage/digest cert))
+                  :compile-ms (/ (- (System/nanoTime) start) 1e6)
+                  :pass-log (cond-> [{:pass :baseline-admission} {:pass :lower}]
+                              local-pass (conj (assoc (select-keys local-pass [:rounds :stop :calls-inlined])
+                                                      :pass :checked-local-calls))
+                              true (conj {:pass :emit :backend :clojure :typed-loops? false
+                                          :direct-loops? (not= false (:direct-loops? options))}))}))))
+
+(defn compile-definition [basis sym options]
+  (binding [*budget* (or *budget* (:budget options) (budget/budget))
+            *memo* (or *memo* (atom {}))]
+    (budget/charge! *budget* :work 1)
+    (when (>= (count *active*) (get (merge budget/definition-limits (:definition-limits options)) :depth))
+      (budget/exhausted! :dependency-depth))
+    (when (*active* sym) (emit/unsupported nil "recursive world call requires a trampoline"))
+    (if-let [cached (get @*memo* sym)]
+      (if (instance? Throwable cached) (throw cached) cached)
+      (try
+        (let [entry (world/entry* basis sym) f (:value entry)]
+          (when-not (and (= :def (:kind entry)) (ev/closure? f)
+                         (empty? (ev/closure-locals f)) (not (world/pending? basis entry))
+                         (or (nil? (ev/closure-basis f)) (identical? basis (ev/closure-basis f))))
+            (emit/unsupported (:term entry) "definition must be a current, closed function"))
+          (let [exe (binding [*active* (conj *active* sym)]
+                      (assoc (compile-source basis (ev/closure-term f) options) :name sym))]
+            (swap! *memo* assoc sym exe) exe))
+        (catch clojure.lang.ExceptionInfo e
+          (swap! *memo* assoc sym e) (throw e))))))

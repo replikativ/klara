@@ -13,6 +13,12 @@ worked examples are in `examples/staging/`. The
 [correctness ledger](../engineering/correctness.md) state the operational
 boundaries and remaining proof obligations.
 
+The newer [bounded Code-view interface](../engineering/code-views.md) lets a
+guest walker inspect an existing closed fragment and rebuild it through opaque
+scope cursors. Its example regenerates functions and prunes literal branches;
+these operations and their correspondence obligations are outside the current
+small-step spec. Scope checking does not prove a rewrite semantically correct.
+
 ## Syntax
 
 | Form | Meaning | MetaOCaml |

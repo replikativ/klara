@@ -11,6 +11,13 @@ root. Publication uses compare-and-set; a fork initially shares the pinned
 parent root. Root publication is atomic for that world. Settling changes across
 several systems is not one multi-root atomic transaction.
 
+The bounded [guest loader](../tooling.md) stores namespace descriptors and aliases
+in these roots and records their use during expansion. This makes namespace
+resolution fork-local; it does not make objects stored in definitions deeply
+immutable. Ordinary host atoms and other mutable host objects remain shared.
+Core host effects expose interception points, but arbitrary host callbacks and
+mutable reads/writes have no general isolation or optimization contract.
+
 `klara.defs` records expansion and value dependencies. CodeIds identify expanded
 source under the current canonical profile. Value generations identify actual
 definition evaluations: identical source can evaluate to different data through
@@ -27,6 +34,17 @@ Code identity preserves quoted numeric representations and alpha-normalized
 syntax scopes. Ordinary metadata and arbitrary identity-sensitive host values
 remain outside a universal adequacy claim. See `code_identity_test.clj` and
 `syntax_test.clj` for concrete observations and counterexamples.
+
+## Before-use preparation
+
+The [baseline preparation path](compiler.md#consolidated-implementation-boundaries) is opt-in.
+Loading still expands/evaluates in sequence and publishes one root by CAS;
+preparation follows successful publication against that exact root. It never
+replays an initializer or a macro. Prepared generic functions retain guarded
+S12 calls, transitive world/host-root admission and T0 fallback. Compilation
+before a region's first call is the before-use/AOT case of the same job API;
+already-executed initialization is outside that benefit. Host JIT and persistent
+native deployment are separate concerns.
 
 ## Live authority and effects
 

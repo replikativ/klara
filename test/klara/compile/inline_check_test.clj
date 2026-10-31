@@ -1,0 +1,96 @@
+(ns klara.compile.inline-check-test
+  (:require [clojure.test :refer [deftest is]] [clojure.walk :as walk]
+            [klara.compile.inline-check :as syntax] [klara.compile.ir :as ir]
+            [klara.compile.analysis :as analysis] [klara.compile.local-calls :as local]
+            [klara.compile.core :as compiler] [klara.compile.funding :as funding]
+            [klara.compile.staged :as staged] [klara.compile.edge :as edge]
+            [klara.compile.infer-affine :as inference]
+            [klara.compile.support :as fixture]
+            [klara.compile.private-accumulator]
+            [klara.core :as core] [klara.defs :as defs] [klara.eval :as ev]
+            [klara.stage :as stage] [klara.world :as world]))
+
+(defn observation [f]
+  (try (let [v (f)] [:value v (class v)])
+       (catch Throwable e
+         (let [cause (last (take-while some? (iterate ex-cause e)))]
+           [:error (class cause) (.getMessage ^Throwable cause)]))))
+(defn compile-source [source]
+  (let [w (fixture/setup source) root (world/snapshot w)]
+    {:world w :root root :f (defs/lookup root 'f)
+     :exe (compiler/compile-def w 'f {:mode :baseline :local-call-planner local/planner-symbol})}))
+
+(def lexical-sources
+  ['(fn [x y] (let [h (fn [a b] (- a b))] (h y x)))
+   '(fn [x y] (let [h (fn [a b] (+ x (- a b)))] (let [x (+ x 10)] (h y x))))
+   '(fn [x y] (let [h (fn [a b] (let [x (+ a 1)] (- x b)))] [(h x y) (h y x)]))
+   '(fn [x y] (let [outer (fn [a] (let [inner (fn [b] (+ a b x))] (inner a)))] (outer y)))
+   '(fn [x y] (let [h (fn [a b] a)] (h x (inc y))))
+   '(fn [x y] (let [h (fn [] (+ x y))] (let [x 99] (h))))])
+
+(deftest indexed-elimination-corresponds-through-shadowing-captures-and-multiple-calls
+  (doseq [source lexical-sources]
+    (let [{:keys [root f exe]} (compile-source source)
+          cache (stage/make-cache) residual (ev/run (analysis/indexed (:ir exe)) {:basis root})]
+      (stage/install! cache exe)
+      (is (seq (:checked-edges exe)))
+      (doseq [e (:checked-edges exe)]
+        (is (= syntax/version (get-in (edge/info e) [:syntax-correspondence :version]))))
+      (doseq [args [[0 0] [3 7] [-2 4] [Long/MAX_VALUE 1] [1 Long/MAX_VALUE]]]
+        (binding [ev/*basis* root ev/*mint* root]
+          (let [source-result (observation #(stage/with-cache (stage/make-cache) (ev/call-value f args)))]
+            (is (= source-result (observation #(ev/call-value residual args))
+                                 (observation #(stage/with-cache cache (ev/call-value f args)))))))))))
+
+(deftest malformed-freshening-arguments-and-literal-representations-reject
+  (let [{:keys [exe]} (compile-source '(fn [x y] (let [h (fn [a b] (- a b))] (h x y))))
+        e (first (:checked-edges exe)) source (edge/source e) target (edge/target e)
+        positions (mapv :at (:bindings (edge/info e)))
+        check #(try (syntax/check! nil source % positions) nil
+                    (catch clojure.lang.ExceptionInfo e (:check (ex-data e))))]
+    (is (nil? (check target)))
+    (is (= :indexed-residual (check (assoc-in target [:body :init] (core/quote* 42)))))
+    (is (= :binder-freshness (check (assoc-in target [:body :name] (first (:params target)))))))
+  (let [{:keys [exe]} (compile-source '(fn [x] (let [h (fn [a] (+ a 1))] (h x))))
+        e (first (:checked-edges exe)) source (edge/source e) target (edge/target e)
+        changed (walk/postwalk #(if (= % (core/quote* 1)) (core/quote* 1N) %) target)]
+    (is (thrown? clojure.lang.ExceptionInfo
+                 (syntax/check! nil source changed (mapv :at (:bindings (edge/info e)))))))
+  ;; Two copies without freshening can appear numerically correct but violate
+  ;; the named representation's unique-binder invariant. Reject before emission.
+  (with-redefs [ir/freshen identity]
+    (is (thrown? clojure.lang.ExceptionInfo
+          (compile-source '(fn [x y] (let [h (fn [a] (+ a 1))] [(h x) (h y)])))))))
+
+(def owned-sources
+  ['(fn [n bias limit]
+      (let [step (fn [acc i] (assoc acc 0 (let [bias (+ bias i)] (+ (nth acc 0) bias))))]
+        (let [acc (loop [i 0 acc [0]] (if (< i n) (recur (inc i) (step acc i)) acc))]
+          (< (nth acc 0) limit))))
+   '(fn [n bias limit]
+      (let [step (fn [acc i]
+                   (let [next (fn [value] (+ value bias i))]
+                     (assoc acc 0 (next (nth acc 0)))))]
+        (let [acc (loop [i 0 acc [0]] (if (< i n) (recur (inc i) (step acc i)) acc))]
+          (< (inc (nth acc 0)) limit))))])
+
+(deftest actual-source-residual-owned-and-installed-results-and-failures-agree
+  (doseq [source owned-sources]
+    (let [w (fixture/setup source) root (world/snapshot w)
+          r (staged/request root (defs/eval-form root (list 'code source))
+                            {:job (funding/create {}) :strategy 'strategy})]
+      (is (= :prepared (:status r)))
+      (when-let [p (:candidate r)]
+        (let [exe (.-executable ^klara.compile.staged.Prepared p)
+              endpoint (:private-endpoint exe)
+              residual (ev/run (analysis/indexed (edge/source (peek (:checked-edges exe)))) {:basis root})
+              owned {:owned (.-owned ^klara.compile.private_accumulator.Endpoint endpoint)
+                     :derivation (.-derivation ^klara.compile.private_accumulator.Endpoint endpoint)}
+              cache (stage/make-cache) f (defs/lookup root 'f)]
+          (is (= :installed (:status (staged/install! cache root (staged/prevalidate p)))))
+          (doseq [args (for [n [0 1 3] bias [0 -2 Long/MAX_VALUE] limit [0 Long/MAX_VALUE]] [n bias limit])]
+            (binding [ev/*basis* root ev/*mint* root]
+              (is (= (observation #(stage/with-cache (stage/make-cache) (ev/call-value f args)))
+                     (observation #(ev/call-value residual args))
+                     (observation #(inference/execute-owned owned args))
+                     (observation #(stage/with-cache cache (ev/call-value f args))))))))))))

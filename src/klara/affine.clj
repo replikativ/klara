@@ -5,7 +5,7 @@
 
 (def version "s10-1")
 (def pure-functions
-  (into {} (for [s (keys c/prims)] [(symbol "clojure.core" (name s)) s])))
+  (into {} (for [s (keys c/prims)] [(c/primitive-symbol s) s])))
 
 (def ^:private scalar-classes
   (set (map class [true 1 (int 1) (short 1) (byte 1) 1.0 (float 1.0)

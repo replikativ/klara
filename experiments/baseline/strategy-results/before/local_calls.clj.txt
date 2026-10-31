@@ -1,0 +1,171 @@
+(ns klara.compile.local-calls
+  "Bounded guest use analysis and a checked, fixed local-call rewrite recipe.
+   The service selects bindings; it never supplies executable replacement IR."
+  (:require [klara.compile.budget :as budget] [klara.compile.escape :as escape]
+            [klara.compile.ir :as ir] [klara.compile.loop :as loops]
+            [klara.compile.service :as service] [klara.core :as core]
+            [klara.defs :as defs] [klara.world :as world]))
+
+(def analysis-symbol 'klara.compiler/local-uses)
+(def planner-symbol 'klara.compiler/local-calls)
+
+(def analysis-source
+  '(fn [nodes start binding arity]
+     (loop [i 0 work [[start false]] calls 0]
+       (if (< i (count work))
+         (let [task (nth work i) node (nth nodes (nth task 0)) nested (nth task 1)
+               op (get node :op)
+               direct (if (= op :app)
+                        (if (= binding (get node :callee))
+                          (if nested false (= arity (get node :arity))) false) false)
+               blocked (if (= op :fn) (if (get node :transparent?) nested true) nested)
+               children (get node :children)]
+           (if (if (= op :local) (= binding (get node :binding)) false)
+             {:safe? false :calls calls}
+             (let [next-work (loop [j (if direct 1 0) result work]
+                               (if (< j (count children))
+                                 (recur (inc j) (conj result [(nth children j) blocked])) result))]
+               (recur (inc i) next-work (if direct (inc calls) calls)))))
+         {:safe? true :calls calls}))))
+
+(def planner-source
+  '(fn [request]
+     (let [nodes (get request :nodes) candidates (get request :candidates)]
+       (loop [i 0 selected []]
+         (if (< i (count candidates))
+           (let [at (nth candidates i) node (nth nodes at)
+                 function (nth nodes (get node :init))
+                 result (klara.compiler/local-uses nodes (get node :body)
+                          (get node :binding) (get function :arity))]
+             (recur (inc i) (if (get result :safe?) (conj selected at) selected)))
+           {:source-id (get request :source-id) :bindings selected})))))
+
+(defn bootstrap!
+  "Explicitly publish missing ordinary Klara analyzer definitions. Preserve edits."
+  [w]
+  (let [base (world/snapshot w) child (world/make-world base)
+        installed (reduce (fn [names [sym source]]
+                            (if (world/entry* (world/snapshot child) sym) names
+                              (do (defs/define! child (list 'def sym source)) (conj names sym))))
+                          [] [[analysis-symbol analysis-source] [planner-symbol planner-source]])]
+    (when-not (compare-and-set! (:root w) base (world/snapshot child))
+      (throw (ex-info "local-call bootstrap publication conflict" {:reason :publication-conflict})))
+    {:status :bootstrapped :definitions installed}))
+
+(defn- reject! [check]
+  (throw (ex-info "local-call proposal rejected" {:reason :local-call-plan :check check})))
+
+(defn- local-binding? [node]
+  (and (= :let (:op node)) (= :fn (get-in node [:init :op]))
+       (not (get-in node [:init :rest?]))))
+
+(defn inspect
+  "Private read-only adapter for already bounded named IR. The service sees
+   node indices/binding names and structural loop facts, not literal objects.
+   Loop transparency asserts nonescape only; it is not purity evidence."
+  [b term]
+  (let [terms (atom []) descriptions (atom [])]
+    (letfn [(visit [node depth transparent?]
+              (budget/charge! b :work 1)
+              (when (or (>= (count @terms) 128) (> depth 64))
+                (budget/exhausted! :local-call-view))
+              (let [at (long (count @terms))
+                    _ (swap! terms conj node) _ (swap! descriptions conj nil)
+                    _ (when (= :letrec (:op node))
+                        (doseq [_ (ir/nodes node)] (budget/charge! b :work 1)))
+                    loop-function (when (= :letrec (:op node)) (:function (loops/view node)))
+                    children (atom [])
+                    _ (ir/map-children
+                        (fn [child]
+                          (swap! children conj (visit child (inc depth) (identical? child loop-function)))
+                          child) node)
+                    description
+                    (cond-> {:op (:op node) :children @children}
+                      (contains? #{:local :let} (:op node)) (assoc :binding (:name node))
+                      (= :let (:op node)) (assoc :init (first @children) :body (second @children))
+                      (= :fn (:op node)) (assoc :arity (long (:arity node)) :transparent? (boolean transparent?))
+                      (= :app (:op node))
+                      (assoc :arity (long (count (:args node)))
+                             :callee (when (= :local (get-in node [:fn :op])) (get-in node [:fn :name]))))]
+                (swap! descriptions assoc at description)
+                at))]
+      (visit term 0 false)
+      (let [candidates (vec (keep-indexed
+                             (fn [i t] (when (local-binding? t) i)) @terms))]
+        (when (> (count candidates) 8) (budget/exhausted! :local-call-candidates))
+        {:terms @terms
+         :request {:source-id (core/code-id term) :nodes @descriptions :candidates candidates}}))))
+
+(defn- check-plan!
+  "Bind a selection to exact source; independently check every selected use.
+   Does not trust the guest's analysis verdict, loop annotations or call count.
+   This is a tested hosted checker, not a universal semantic proof."
+  [b term view plan]
+  (service/data! b plan)
+  (when-not (and (map? plan) (= #{:source-id :bindings} (set (keys plan)))
+                 (= (core/code-id term) (:source-id plan))
+                 (vector? (:bindings plan)) (<= (count (:bindings plan)) 8)
+                 (= (count (:bindings plan)) (count (distinct (:bindings plan)))))
+    (reject! :source-or-shape))
+  ;; view is constructed privately by this pass, never supplied by the service.
+  (mapv (fn [at]
+          (when-not (and (integer? at) (some #{at} (get-in view [:request :candidates])))
+            (reject! :binding))
+          (let [node (nth (:terms view) at) s (:name node) f (:init node)
+                _ (doseq [_ (ir/nodes (:body node))] (budget/charge! b :work 1))
+                analysis (escape/analyze (:body node) s f)]
+            (when-not (and (not (:escapes? analysis))
+                           (= (:use-count analysis) (count (:sites analysis)))
+                           (every? #(and (= :call (:kind %))
+                                         (= (:arity f) (count (get-in % [:term :args])))) (:sites analysis)))
+              (reject! :escaping-or-indirect-use))
+            {:binding s :at at :calls (count (:sites analysis))})) (:bindings plan)))
+
+(defn- rewrite [b term selections]
+  (let [selected (set (map :binding selections))
+        copied (atom 0)]
+    (letfn [(go [node]
+              (budget/charge! b :work 1)
+              (let [node (ir/map-children go node)]
+                (if (and (= :let (:op node)) (selected (:name node)))
+                  (let [s (:name node) f (:init node)]
+                    (letfn [(replace-call [t]
+                              (budget/charge! b :work 1)
+                              (let [t (ir/map-children replace-call t)]
+                                (if (and (= :app (:op t)) (= {:op :local :name s} (:fn t)))
+                                  (do
+                                    (doseq [_ (ir/nodes f)] (budget/charge! b :work 1))
+                                    (let [copy (ir/freshen f)]
+                                      (swap! copied inc)
+                                      ;; The source checker established exact fixed arity.
+                                      ;; Preserve evaluation of unused arguments as lets.
+                                      (reduce (fn [body [parameter argument]]
+                                                (budget/charge! b :work 1)
+                                                {:op :let :name parameter :init argument :body body})
+                                              (:body copy) (reverse (map vector (:params copy) (:args t))))))
+                                  t)))]
+                      (replace-call (:body node)))) node)))]
+      {:term (go term) :calls-inlined @copied})))
+
+(defn run
+  "One bounded before-use/adaptive pass. Service reads are provenance; the
+   checked recipe, runtime source reads and backend guards determine validity."
+  [b root term planner]
+  (when-not (symbol? planner) (reject! :planner-symbol))
+  (let [b (or b (budget/budget))
+        candidates? (reduce (fn [found node]
+                              (budget/charge! b :work 1)
+                              (or found (local-binding? node))) false (ir/nodes term))]
+    (if-not candidates?
+      {:term term :calls-inlined 0 :compiler-reads #{}}
+      (let [view (inspect b term)
+            result (service/invoke b root planner [(:request view)] 16384)
+            selections (check-plan! b term view (:value result))
+            rewritten (rewrite b term selections)]
+        (assoc rewritten :compiler-reads (:compiler-reads result)
+               :receipt {:rule :local-call-inline-v1
+                         :source-id (get-in view [:request :source-id])
+                         :target-id (core/code-id (:term rewritten))
+                         :bindings (mapv #(dissoc % :binding) selections)
+                         :planner planner :transitions (:transitions result)
+                         :compiler-reads (:compiler-reads result)})))))

@@ -2,6 +2,7 @@
   (:require [clojure.test :refer [deftest is testing]]
             [klara.compile.core-test :refer [setup observe]]
             [klara.compile.core :as cc] [klara.compile.ir :as ir]
+            [klara.compile.unbox :as unbox]
             [klara.defs :as d] [klara.stage :as s]
             [klara.eval :as ev] [klara.world :as w]))
 
@@ -44,6 +45,30 @@
     (is (nil? (s/check-certificate exe)))
     (is (= :frame-state-mismatch
            (s/check-certificate (assoc-in exe [:frame-states 0 :env 0] [:const 0]))))))
+
+(deftest unknown-comparison-operands-do-not-prevent-carried-layout-proof
+  (let [world (setup '(fn [n] (let [score (fn [x] (+ (* x x) 1))]
+                               (loop [i 0 total 0]
+                                 (if (< i n) (recur (inc i) (+ total (score i))) total)))))
+        exe (cc/compile-def world 'f) cache (s/make-cache)
+        f (d/lookup (w/snapshot world) 'f)
+        loop (first (filter #(= :letrec (:op %)) (ir/nodes (:ir exe))))]
+    (is (= [:long] (unbox/loop-kinds loop {})))
+    (s/install! cache exe)
+    (doseq [n [0 3 3.5 7/2 3N nil :bad Double/NaN Double/NEGATIVE_INFINITY]]
+      (is (= (observation f [n] (s/make-cache)) (observation f [n] cache))))
+    ;; The Boolean result of a test says nothing about the layout of a value
+    ;; carried on the next backedge. Unknown salt must retain checked recovery.
+    (let [world (setup '(fn [n salt] (let [score (fn [x] (+ (* x x) salt))]
+                                      (loop [i 0 total 0]
+                                        (if (< i n) (recur (inc i) (+ total (score i))) total)))))
+          exe (cc/compile-def world 'f) f (d/lookup (w/snapshot world) 'f)
+          cache (s/make-cache)
+          loop (first (filter #(= :letrec (:op %)) (ir/nodes (:ir exe))))]
+      (is (empty? (unbox/loop-kinds loop {})))
+      (s/install! cache exe)
+      (doseq [salt [1 1.5 1/2 Long/MAX_VALUE :bad]]
+        (is (= (observation f [4 salt] (s/make-cache)) (observation f [4 salt] cache)))))))
 
 (deftest failed-loop-guard-resumes-current-iteration
   (doseq [changed [1/2 1.5]]

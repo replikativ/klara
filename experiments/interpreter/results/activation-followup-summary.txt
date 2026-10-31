@@ -1,0 +1,10 @@
+{:small-calls
+ {:activation/node-time [1.177705745412774 1.1845329941660303],
+  :engines
+  {:nodes {:ns [3892.59 3972.081], :bytes [3888.112 3888.112]},
+   :activation {:ns [4601.45 4705.061], :bytes [3200.112 3200.112]}}},
+ :recovery
+ {:activation/node-time [1.3425770089240991 1.4196436438434565],
+  :engines
+  {:nodes {:ns [9138.26 12824.81], :bytes [14913.6 14913.6]},
+   :activation {:ns [12825.54 18206.66], :bytes [22104.64 22105.6]}}}}

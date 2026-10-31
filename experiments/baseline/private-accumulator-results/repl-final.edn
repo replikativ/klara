@@ -1,0 +1,283 @@
+{:samples
+ [{:reference 34381854, :baseline 560649, :private 208822}
+  {:baseline 520340, :private 166162, :reference 32921787}
+  {:private 232774, :reference 36219516, :baseline 719285}
+  {:reference 37468623, :baseline 289027, :private 136503}
+  {:baseline 175731, :private 39093, :reference 34580412}
+  {:private 103743, :reference 32604516, :baseline 198473}
+  {:reference 45319070, :baseline 601356, :private 71853}
+  {:baseline 582776, :private 34621, :reference 54550440}
+  {:private 60692, :reference 43877109, :baseline 193317}],
+ :arguments [10000 4 60000000],
+ :source-sha256
+ {"src/klara/compile/inline.clj"
+  "2c06694af339b84e6f501fc035ac17023d55dd5da0babbd74becd849966f8f8a",
+  "examples/compat/klara/private_optimizer.cljc"
+  "cdc3da8fdfba4beef69ded4f3315f06a96a33329af4b9358f31f9d0c0990599c",
+  "src/klara/compile/unbox.clj"
+  "0e449e139a657bc5b4bac26f5f951c9cd606afd1b851e69244700f5cd9438917",
+  "src/klara/compile/speculate.clj"
+  "80d54937c925ed2fc593bd8cb6f216e8ec8298bcab40041be2255ba94cd3173f",
+  "test/klara/compile/private_accumulator_test.clj"
+  "264974e9fdf827d1bf29fc35130acb813f831bc819bedcb7691a82c16d38b758",
+  "src/klara/compile/core.clj"
+  "8c59aa51f636c8e7a38b1d63cd07a4badd775ca23582155ef4deb64800cdd128",
+  "src/klara/compile/affine_erase.clj"
+  "d5cc50d9ee7009e1c0635f5838aebf0f705d2be2312934cc39d851882235e756",
+  "src/klara/fusion/kernel.clj"
+  "edc582a5b412a83e61b465c45a980f3811c770167627188da1ba3ad18e1c9453",
+  "src/klara/compile/private_accumulator.clj"
+  "ef5ad7034467b01a8fd4aab14101c929b4f409cea643c3ab411789243d3ad271",
+  "src/klara/compile/pe.clj"
+  "728a7c15b318edb6ebfb69517e9c4dba245cde8d64e434c83622758ee5bb1b70",
+  "src/klara/deploy.clj"
+  "88e3503486932d88ecdd900ba148637e645d18aa5d2605a9d65d343fb5c30c75",
+  "src/klara/compile/funding.clj"
+  "4272444d0fe0a2c69f6295224868048fac048679bc3039f5b319865963bef95f",
+  "src/klara/compile/view.clj"
+  "7a58c4612ca77720b807eb19cc024968b0ca1c2e8fb8e9fdbab17eb521155c3c",
+  "src/klara/compile/infer_affine.clj"
+  "1ea336ef960114d11d4e7480381a0cedfb373797622353b36c587a9725c4d0de",
+  "src/klara/compile/emit.clj"
+  "55c966534f4e08d84176d5ba73b2f08ec59c5e17473f9ace690b5b153aba4165",
+  "src/klara/world.clj"
+  "29ea09915982d5daa246251c87da3095f0014c0f7680ff017e618e36fd9e9286",
+  "src/klara/core.clj"
+  "4fde378a632e9259d5133c166c118c951e3afb44eb84e0eb896a45e041684e6f",
+  "src/klara/affine.clj"
+  "7bceeeb76fb1f30adb60b0e17c9a879a4e626be6697ff5d2c24b8dc917b4e8af",
+  "src/klara/compile/budget.clj"
+  "a14c2c3a158f950915b6e12e39266ac68b9f07614b386932ca2f5655eade70f2",
+  "src/klara/compile/host.clj"
+  "5ccd09307e7bdbc3794eee27adcce08f2a742e07c54fd79e1d73464e9e35ad20",
+  "src/klara/repl.clj"
+  "13dd5b6feb07238fc1e976d027beb638ec6db9c8e753acfde3778b27c9a3a031",
+  "src/klara/load.clj"
+  "13360862c46395b41c048d5e19fc9d08dfad74e80046b4a1d3e3d685cd4e1968",
+  "src/klara/compile/strategy.clj"
+  "470c68381a5dcb86b8b6398f434c7ec01673a90dacb90f277cf8c15a4451fa17",
+  "experiments/baseline/private_accumulator.clj"
+  "9ec5d27aa618c5fa2b34a7f95e8c93ead9811ca5fb0f5bc4957425189be71eed",
+  "src/klara/compile/edge.clj"
+  "ba95676acfc7130ff6f26d18a345eeca8222d28f912be073abfaa7e45571579f",
+  "src/klara/compile/escape.clj"
+  "0b0cbd23e2a031ddaf1d2a5e66f68209901cf5e6ecd9f4771acdccb5d606d462",
+  "src/klara/code.clj"
+  "9a4663239a849215d83cc21ce24390d6ba3f6c3b80a4951d758285fffe7f80e8",
+  "src/klara/compile/ir.clj"
+  "04da4006359a881b8f5c849632d64714cc0ee43c3717e13b81f70b2ff8557989",
+  "src/klara/defs.clj"
+  "fa2cef5153903f49de13676785c8d0075d87086f6bdd78fb66c61cfbd3d0c436",
+  "src/klara/compile/guest.clj"
+  "53c4aaee0ada0e7284c884d72e39adf0577c388870712b80042475c77ff6f2d1",
+  "src/klara/expand.clj"
+  "3e4dd3ce7fe4a2b197344549ed3966a628ac1399c860ea24d0c69e0687e4f124",
+  "src/klara/compile/subject.clj"
+  "4ff05a76d70ec93f902d9301217755f743c47b3eac121118dce948b709072ae6",
+  "src/klara/compile/baseline.clj"
+  "9d5a4092bcf275412afe6637a121b856be521752e838a64fd5f3c2d44982ad5d",
+  "src/klara/effect_class.clj"
+  "354e1100fe88a79195d8bb5958ce38053ed67657440c59e5e04a1918c87870fe",
+  "src/klara/compile/compose.clj"
+  "0ab8e752e5ef9a76255b247f6858062e526f8b0e9c727e4f57534ea330b39906",
+  "src/klara/compile/loop.clj"
+  "70288d9e58db5ac74f631404da32cb209bb29cba9fc71d56bf67a49d90ed5b47",
+  "src/klara/nrepl.clj"
+  "087b57b1b3d925efe37d72c14f0d9e515591b88dc885e29f67dfad359405b8b1",
+  "src/klara/compile/hof.clj"
+  "b16d14a9c70532ceb5e00c2ef8fdb4167b8b5cc0b3eaca8a3f4c65255661d519",
+  "src/klara/compile/staged.clj"
+  "b0e758b6b3d444b6ab954d9298047363cf337f1568c9d003e69954c50d38e7b3",
+  "src/klara/syntax.clj"
+  "8963b902a00dd3f778ba0fbb5efd2ef15244c904070195fd4a47a48d5825db44",
+  "src/klara/compile/runtime.clj"
+  "f4fcfcf98fc25874f6cb4ad120751b2d66ad4ca16fcc27bb3a51b5000cc16a74",
+  "src/klara/compile/scalar.clj"
+  "352012cdc752465d36452302da1d8cc60cd521fd79081f8f4915da209d273966",
+  "src/klara/stage.clj"
+  "021fef386accd9e9c64d4a66f072b715bcca7401afb2851a4720fb4e74a1c123",
+  "src/klara/compile/analysis.clj"
+  "8c29cd30f8b8814efd55094db8a4310a815c33584e1b8a6ee39dabaf34245ebc",
+  "src/klara/compile/updates.clj"
+  "446b74e76cb10a9f77e7eefebc2ae68401b3adf6bf7a3bd1f567e1873e0cc721",
+  "src/klara/fusion.clj"
+  "8e88dbe66640c4d60be5a1dafc07c86a17bef5b0633c08179256f56a1658a356",
+  "src/klara/authority.clj"
+  "70c91dac1f5beace4e6426913f27a8a4dca3a5517f70bc86516f50f4ac369a9d",
+  "src/klara/compile/service.clj"
+  "f0cad0e231d18b2602ea67e89bda3eb41d728f8fb2e43efca9088e51fe4f9c0b",
+  "src/klara/compile/strict_fold.clj"
+  "bd35e878609a1822e127d90f7b668465386b4c2cc56c36e0c16eb56ce3f4d28d",
+  "src/klara/eval.clj"
+  "f3426a67ec736d5e07c1e1e836a7d242ed6f5efdc1ebb16ab079afcf3d80ad65",
+  "src/klara/compile/local_calls.clj"
+  "4cdba2f2c6cb09752c38cbe1942034e236c65b6e35568b9fe4d066256cd28a0a",
+  "src/klara/compile/prepare.clj"
+  "94c821ded36d31ee9874f0ac619f857a435e604f2b91d64e2abf0637ccb29a96",
+  "src/klara/compile/requirements.clj"
+  "b551f12324b50024fbae1f448e3819736e2004d602ed8cdfde02674c22300969"},
+ :median-ns {:reference 36219516, :baseline 520340, :private 103743},
+ :source
+ (fn
+  [n bias limit]
+  (let
+   [step
+    (fn
+     [acc i]
+     (assoc (assoc acc 0 (+ (nth acc 0) i)) 1 (+ (nth acc 1) bias)))]
+   (let
+    [acc
+     (loop
+      [i 0 acc [0 0]]
+      (if (< i n) (recur (inc i) (step acc i)) acc))]
+    (< (+ (nth acc 0) (nth acc 1)) limit)))),
+ :preparation
+ {:baseline
+  {:usage {:work 7283, :bytes 1020, :emissions 1},
+   :preparation-ns 7539934,
+   :validation-installation-ns 197600,
+   :info
+   {:code-id
+    "e6115d1803d1da7b398dc77482ad83ff35f9f1e4fbafd92029ed5327d796a71c",
+    :rewrite-receipts
+    [{:transitions 5929,
+      :bindings [{:at 1, :calls 1}],
+      :contract :klara/core-values-v1,
+      :rule :local-call-inline-v1,
+      :evidence
+      {:method :hosted-use-checker,
+       :semantic-bridge :tested,
+       :kernel-proof-attached? false},
+      :target-id
+      "b5f770cc6f42f2e181a0bd3cb99681becf6be9bbd7983fd8a856a419931842aa",
+      :compiler-reads
+      #{[:world
+         klara.compiler/local-calls
+         "klara/value/d849a48c-40bc-461f-90a6-32045b9e0084/8326"]
+        [:world
+         klara.compiler/local-uses
+         "klara/value/d849a48c-40bc-461f-90a6-32045b9e0084/8325"]},
+      :source-id
+      "80b10a3da5585d66d7c81ea15d38695c61ed4d12fd33342568b115574ab51b1f",
+      :planner klara.compiler/local-calls}],
+    :rewrite-summary {:rounds 2, :stop :fixed-point, :calls-inlined 1},
+    :strategy-history
+    [{:source-id
+      "80b10a3da5585d66d7c81ea15d38695c61ed4d12fd33342568b115574ab51b1f",
+      :target-id
+      "b5f770cc6f42f2e181a0bd3cb99681becf6be9bbd7983fd8a856a419931842aa",
+      :changed? true}
+     {:source-id
+      "b5f770cc6f42f2e181a0bd3cb99681becf6be9bbd7983fd8a856a419931842aa",
+      :target-id
+      "b5f770cc6f42f2e181a0bd3cb99681becf6be9bbd7983fd8a856a419931842aa",
+      :changed? false}]}},
+  :private
+  {:usage {:work 7619, :bytes 2509, :emissions 1},
+   :preparation-ns 18045388,
+   :validation-installation-ns 1759883,
+   :info
+   {:code-id
+    "e6115d1803d1da7b398dc77482ad83ff35f9f1e4fbafd92029ed5327d796a71c",
+    :rewrite-receipts
+    [{:transitions 5929,
+      :bindings [{:at 1, :calls 1}],
+      :contract :klara/core-values-v1,
+      :rule :local-call-inline-v1,
+      :evidence
+      {:method :hosted-use-checker,
+       :semantic-bridge :tested,
+       :kernel-proof-attached? false},
+      :target-id
+      "61da5f0b8d49177a6955f2ec1424f5c6b88ffc1d83b9e5c53d1da7a5d52e792d",
+      :compiler-reads
+      #{[:world
+         klara.compiler/local-calls
+         "klara/value/d849a48c-40bc-461f-90a6-32045b9e0084/8326"]
+        [:world
+         klara.compiler/local-uses
+         "klara/value/d849a48c-40bc-461f-90a6-32045b9e0084/8325"]},
+      :source-id
+      "6dc5f6b71270df429d0805ce9bdc3d6b21ba1caa9e9ba5d5d929dc84298fc6e1",
+      :planner klara.compiler/local-calls}
+     {:kernel-proof-attached? false,
+      :contract :klara/core-values-v1,
+      :rule :enclosed-private-accumulator-v1,
+      :evidence
+      {:method :hosted-ownership-and-consumer-check,
+       :semantic-bridge :tested,
+       :kernel-proof-attached? false},
+      :target-id
+      "60972973c8fcf14d2160cd8dfc787a1cceae938f1d4e40a49bef3f9c97452246",
+      :boundary :checked-pure-consumer,
+      :temporary-escape :rejected,
+      :result :boolean,
+      :parameter-layouts [:long :long :long],
+      :kind :private-accumulator,
+      :length 2,
+      :source-id
+      "61da5f0b8d49177a6955f2ec1424f5c6b88ffc1d83b9e5c53d1da7a5d52e792d",
+      :facts
+      [{:rule :private-copy,
+        :initial [0 0],
+        :length 2,
+        :accumulator-position 1,
+        :updates [0 1],
+        :escape-policy :terminal-result-only,
+        :argument-order :left-to-right}],
+      :semantic-bridge :tested}],
+    :rewrite-summary {:rounds 2, :stop :finished, :calls-inlined 1},
+    :strategy-history
+    [{:source-id
+      "6dc5f6b71270df429d0805ce9bdc3d6b21ba1caa9e9ba5d5d929dc84298fc6e1",
+      :target-id
+      "61da5f0b8d49177a6955f2ec1424f5c6b88ffc1d83b9e5c53d1da7a5d52e792d",
+      :changed? true,
+      :action :local-call,
+      :strategy-transitions 32}
+     {:source-id
+      "61da5f0b8d49177a6955f2ec1424f5c6b88ffc1d83b9e5c53d1da7a5d52e792d",
+      :target-id
+      "61da5f0b8d49177a6955f2ec1424f5c6b88ffc1d83b9e5c53d1da7a5d52e792d",
+      :changed? false,
+      :action :private-accumulator,
+      :strategy-transitions 23}],
+    :private-region
+    {:kernel-proof-attached? false,
+     :boundary :checked-pure-consumer,
+     :temporary-escape :rejected,
+     :representations
+     {[:body :init :body :body :init] {:rep :long-vector, :length 2}},
+     :result :boolean,
+     :parameter-layouts [:long :long :long],
+     :kind :private-accumulator,
+     :length 2,
+     :facts
+     [{:rule :private-copy,
+       :initial [0 0],
+       :length 2,
+       :accumulator-position 1,
+       :updates [0 1],
+       :escape-policy :terminal-result-only,
+       :argument-order :left-to-right}],
+     :semantic-bridge :tested}}}},
+ :policy-source
+ (fn
+  [r]
+  (if
+   (= (count (get r :history)) 0)
+   {:action :local-call, :planner 'klara.compiler/local-calls}
+   {:action :private-accumulator})),
+ :java "25.0.1+8-LTS-jvmci-b01",
+ :limits
+ [:one-warm-process
+  :one-input
+  :trusted-tested-semantic-bridges
+  :final-freeze-still-allocates
+  :no-performance-assertion
+  :not-publication-evaluation],
+ :stats
+ {:baseline
+  {:hits 1, :misses 0, :fallbacks 0, :revalidations 1, :deopts 0},
+  :private
+  {:hits 29, :misses 0, :fallbacks 0, :revalidations 1, :deopts 0}}}

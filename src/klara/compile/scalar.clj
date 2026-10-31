@@ -4,7 +4,8 @@
    an ordinary tier decline; this tested seed compiler is not a proof."
   (:require [clojure.string :as str]
             [klara.compile.requirements :as requirements]
-            [klara.compile.analysis :as analysis]))
+            [klara.compile.analysis :as analysis]
+            [klara.compile.loop :as loop]))
 
 (defn fail [t why] (throw (ex-info why {:op (:op t) :reason :unsupported-region})))
 (defn require-type [t type]
@@ -54,17 +55,14 @@
                      (assoc t :args args :type (:return summary)))
                    :else (fail t "unknown call")))
           :letrec
-          (let [f (first (:inits t)) entry (:body t) name (first (:names t))]
-            (when-not (and (= 1 (count (:inits t))) (= :fn (:op f))
-                           (not (:rest? f)) (= :app (:op entry))
-                           (= {:op :local :name name} (:fn entry))
-                           (= (:arity f) (count (:args entry))))
-              (fail t "expected directly entered single tail loop"))
-            (let [args (mapv go (:args entry)) types (mapv :type args)
-                  body (analyze (:body f) (merge env (zipmap (:params f) types))
-                                summaries {:name name :types types})]
+          (let [{:keys [function self parameters entry] :as view} (loop/view t)]
+            (when-not view (fail t "expected directly entered single tail loop"))
+            (let [args (mapv #(go (:expression %)) (get-in entry [:transfer :evaluations]))
+                  types (mapv :type args)
+                  body (analyze (:body function) (merge env (zipmap parameters types))
+                                summaries {:name self :types types})]
               (when (= :bottom (:type body)) (fail t "loop has no typed return"))
-              (assoc t :op :loop :params (:params f) :args args :body body
+              (assoc t :op :loop :params parameters :args args :body body
                      :invariant types :type (:type body))))
           (fail t "unsupported region operation"))]
     result))
@@ -119,6 +117,22 @@
               (bind-result statements (str "direct_" sym "(" (str/join "," vs) ")"))))))
       (fail t "non-scalar expression in scalar position"))))
 
+(defn- transfer-code [destinations arguments env functions inline? initialize?]
+  (let [plan (loop/transfer destinations arguments)
+        _ (loop/check-transfer! destinations arguments plan)
+        evaluations (:evaluations plan)
+        temporaries (mapv (fn [_] (fresh)) evaluations)
+        evaluate (fn [{:keys [temporary] rhs :expression}]
+                   (let [[statements value] (expression rhs env functions inline?)]
+                     (str statements (java-type (:type rhs)) " "
+                          (nth temporaries temporary) " = " value ";\n")))]
+    (str (apply str (map evaluate evaluations))
+         (apply str (map (fn [{:keys [destination temporary]}]
+                           (str (when initialize?
+                                  (str (java-type (:type (:expression (nth evaluations temporary)))) " "))
+                                destination " = " (nth temporaries temporary) ";\n"))
+                         (:commits plan))))))
+
 (defn tail-code [t env functions inline? loop-info]
   (let [go #(tail-code % env functions inline? loop-info)]
     (case (:op t)
@@ -126,22 +140,13 @@
              (str s (tail-code (:body t) (assoc env (:name t) v) functions inline? loop-info)))
       :if (let [[s p] (expression (:test t) env functions inline?)]
             (str s "if (" p ") {\n" (go (:then t)) "} else {\n" (go (:else t)) "}\n"))
-      :loop (let [pairs (mapv #(expression % env functions inline?) (:args t))
-                  ps (mapv (fn [_] (fresh)) (:params t)) label (fresh)
-                  setup (apply str (map first pairs))]
-              (str setup
-                   (apply str (map (fn [p a k] (str (java-type k) " " p " = " (second a) ";\n"))
-                                   ps pairs (:invariant t)))
+      :loop (let [ps (mapv (fn [_] (fresh)) (:params t)) label (fresh)]
+              (str (transfer-code ps (:args t) env functions inline? true)
                    label ": while (true) {\n"
                    (tail-code (:body t) (merge env (zipmap (:params t) ps)) functions inline?
                               {:params ps :label label}) "}\n"))
-      :recur (let [pairs (mapv #(expression % env functions inline?) (:args t))
-                   ;; Bind every argument before assigning any loop local.
-                   temps (mapv (fn [_] (fresh)) pairs)]
+      :recur (do
                (when-not loop-info (fail t "recur outside loop"))
-               (str (apply str (map first pairs))
-                    (apply str (map (fn [v p a] (str (java-type (:type a)) " " v " = " (second p) ";\n"))
-                                    temps pairs (:args t)))
-                    (apply str (map #(str %1 " = " %2 ";\n") (:params loop-info) temps))
+               (str (transfer-code (:params loop-info) (:args t) env functions inline? false)
                     "continue " (:label loop-info) ";\n"))
       (let [[s v] (expression t env functions inline?)] (str s "return " v ";\n")))))

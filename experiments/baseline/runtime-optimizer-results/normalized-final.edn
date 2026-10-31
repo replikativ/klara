@@ -1,0 +1,137 @@
+{:entries [0 0 1 1],
+ :source-sha256
+ {"src/klara/compile/inline.clj"
+  "2c06694af339b84e6f501fc035ac17023d55dd5da0babbd74becd849966f8f8a",
+  "src/klara/compile/unbox.clj"
+  "0e449e139a657bc5b4bac26f5f951c9cd606afd1b851e69244700f5cd9438917",
+  "src/klara/compile/speculate.clj"
+  "80d54937c925ed2fc593bd8cb6f216e8ec8298bcab40041be2255ba94cd3173f",
+  "src/klara/compile/core.clj"
+  "8c59aa51f636c8e7a38b1d63cd07a4badd775ca23582155ef4deb64800cdd128",
+  "src/klara/compile/affine_erase.clj"
+  "d5cc50d9ee7009e1c0635f5838aebf0f705d2be2312934cc39d851882235e756",
+  "src/klara/fusion/kernel.clj"
+  "edc582a5b412a83e61b465c45a980f3811c770167627188da1ba3ad18e1c9453",
+  "src/klara/compile/pe.clj"
+  "728a7c15b318edb6ebfb69517e9c4dba245cde8d64e434c83622758ee5bb1b70",
+  "src/klara/deploy.clj"
+  "88e3503486932d88ecdd900ba148637e645d18aa5d2605a9d65d343fb5c30c75",
+  "src/klara/compile/funding.clj"
+  "4272444d0fe0a2c69f6295224868048fac048679bc3039f5b319865963bef95f",
+  "src/klara/compile/view.clj"
+  "7a58c4612ca77720b807eb19cc024968b0ca1c2e8fb8e9fdbab17eb521155c3c",
+  "src/klara/compile/infer_affine.clj"
+  "a5631d2d71cfd5d74a3a8a15c27d146b8db3b957f019209e6bc3e948d61c5ce0",
+  "src/klara/compile/emit.clj"
+  "55c966534f4e08d84176d5ba73b2f08ec59c5e17473f9ace690b5b153aba4165",
+  "src/klara/world.clj"
+  "29ea09915982d5daa246251c87da3095f0014c0f7680ff017e618e36fd9e9286",
+  "src/klara/core.clj"
+  "4fde378a632e9259d5133c166c118c951e3afb44eb84e0eb896a45e041684e6f",
+  "src/klara/affine.clj"
+  "7bceeeb76fb1f30adb60b0e17c9a879a4e626be6697ff5d2c24b8dc917b4e8af",
+  "src/klara/compile/budget.clj"
+  "a14c2c3a158f950915b6e12e39266ac68b9f07614b386932ca2f5655eade70f2",
+  "src/klara/compile/host.clj"
+  "5ccd09307e7bdbc3794eee27adcce08f2a742e07c54fd79e1d73464e9e35ad20",
+  "src/klara/repl.clj"
+  "13dd5b6feb07238fc1e976d027beb638ec6db9c8e753acfde3778b27c9a3a031",
+  "src/klara/load.clj"
+  "13360862c46395b41c048d5e19fc9d08dfad74e80046b4a1d3e3d685cd4e1968",
+  "src/klara/compile/strategy.clj"
+  "857ed59123e74e80cd42f6ea70e6204a4d6feb2acb027b92b81f1238ac022756",
+  "src/klara/compile/edge.clj"
+  "ba95676acfc7130ff6f26d18a345eeca8222d28f912be073abfaa7e45571579f",
+  "examples/compat/klara/local_optimizer.cljc"
+  "e0c45c6f46de42f91ea0a501260a151e5d6eb64eea9daeefcdda6718293ed3d8",
+  "src/klara/compile/escape.clj"
+  "0b0cbd23e2a031ddaf1d2a5e66f68209901cf5e6ecd9f4771acdccb5d606d462",
+  "src/klara/code.clj"
+  "9a4663239a849215d83cc21ce24390d6ba3f6c3b80a4951d758285fffe7f80e8",
+  "src/klara/compile/ir.clj"
+  "04da4006359a881b8f5c849632d64714cc0ee43c3717e13b81f70b2ff8557989",
+  "src/klara/defs.clj"
+  "fa2cef5153903f49de13676785c8d0075d87086f6bdd78fb66c61cfbd3d0c436",
+  "src/klara/compile/guest.clj"
+  "53c4aaee0ada0e7284c884d72e39adf0577c388870712b80042475c77ff6f2d1",
+  "src/klara/expand.clj"
+  "3e4dd3ce7fe4a2b197344549ed3966a628ac1399c860ea24d0c69e0687e4f124",
+  "src/klara/compile/subject.clj"
+  "be7a174cf683a7ce6c816dfee83a7ae717f3be10ffd4798f91cd43e87da7dc6d",
+  "src/klara/compile/baseline.clj"
+  "7499fa5ee586a9347d14dd37f9bf69daa4f2c633556ff3d58f23bb4dd58c8752",
+  "src/klara/effect_class.clj"
+  "354e1100fe88a79195d8bb5958ce38053ed67657440c59e5e04a1918c87870fe",
+  "src/klara/compile/compose.clj"
+  "08e6f1a6d33dc3f9c265119a1750a06ba43d46f294d276876e299b2d13b35c1e",
+  "src/klara/compile/loop.clj"
+  "70288d9e58db5ac74f631404da32cb209bb29cba9fc71d56bf67a49d90ed5b47",
+  "src/klara/nrepl.clj"
+  "087b57b1b3d925efe37d72c14f0d9e515591b88dc885e29f67dfad359405b8b1",
+  "src/klara/compile/hof.clj"
+  "b16d14a9c70532ceb5e00c2ef8fdb4167b8b5cc0b3eaca8a3f4c65255661d519",
+  "src/klara/compile/staged.clj"
+  "372355ebd864ba678330bfc5f8079f93c7ebbba711c4ea9d0fc39572671c898d",
+  "experiments/baseline/runtime_optimizer.clj"
+  "8fd738c8b1a9e03154144149d39c2b4c61f80ff92ed5bef2db3e432b81111c63",
+  "src/klara/syntax.clj"
+  "8963b902a00dd3f778ba0fbb5efd2ef15244c904070195fd4a47a48d5825db44",
+  "src/klara/compile/runtime.clj"
+  "f4fcfcf98fc25874f6cb4ad120751b2d66ad4ca16fcc27bb3a51b5000cc16a74",
+  "src/klara/compile/scalar.clj"
+  "352012cdc752465d36452302da1d8cc60cd521fd79081f8f4915da209d273966",
+  "src/klara/stage.clj"
+  "021fef386accd9e9c64d4a66f072b715bcca7401afb2851a4720fb4e74a1c123",
+  "src/klara/compile/analysis.clj"
+  "8c29cd30f8b8814efd55094db8a4310a815c33584e1b8a6ee39dabaf34245ebc",
+  "src/klara/compile/updates.clj"
+  "446b74e76cb10a9f77e7eefebc2ae68401b3adf6bf7a3bd1f567e1873e0cc721",
+  "src/klara/fusion.clj"
+  "8e88dbe66640c4d60be5a1dafc07c86a17bef5b0633c08179256f56a1658a356",
+  "src/klara/authority.clj"
+  "70c91dac1f5beace4e6426913f27a8a4dca3a5517f70bc86516f50f4ac369a9d",
+  "src/klara/compile/service.clj"
+  "f0cad0e231d18b2602ea67e89bda3eb41d728f8fb2e43efca9088e51fe4f9c0b",
+  "src/klara/compile/strict_fold.clj"
+  "bd35e878609a1822e127d90f7b668465386b4c2cc56c36e0c16eb56ce3f4d28d",
+  "src/klara/eval.clj"
+  "f3426a67ec736d5e07c1e1e836a7d242ed6f5efdc1ebb16ab079afcf3d80ad65",
+  "src/klara/compile/local_calls.clj"
+  "4cdba2f2c6cb09752c38cbe1942034e236c65b6e35568b9fe4d066256cd28a0a",
+  "src/klara/compile/prepare.clj"
+  "94c821ded36d31ee9874f0ac619f857a435e604f2b91d64e2abf0637ccb29a96",
+  "src/klara/compile/requirements.clj"
+  "b551f12324b50024fbae1f448e3819736e2004d602ed8cdfde02674c22300969"},
+ :interpreted
+ {:output "nil\nnil\n#'runtime-demo/source\n#'runtime-demo/kernel\n35",
+  :errors []},
+ :still-interpreted {:output "35", :errors []},
+ :policy-changed
+ {:output "#'klara.local-optimizer/planner\n35", :errors []},
+ :setup
+ "(require '[klara.local-optimizer])\n   (ns runtime-demo)\n   (def source\n     (code (fn [n]\n             (let [score (fn [x] (+ (* x x) 1))]\n               (loop [i 0 total 0]\n                 (if (< i n) (recur (inc i) (+ total (score i))) total))))))\n   (def kernel (run source))\n   (kernel 5)",
+ :declined
+ {:output
+  "#'klara.local-optimizer/planner\n{:status :declined, :reason \"unsupported form :fn\", :usage {:work 5100}}",
+  :errors []},
+ :limits
+ [:existing-local-call-recipe
+  :no-new-interpreter-instructions
+  :no-automatic-hotness-sponsor
+  :normalized-preparation-decline
+  :compiler-policy-is-provenance
+  :not-a-memory-correctness-proof],
+ :scenario :runtime-world-planner-evolution,
+ :installed
+ {:output
+  "#'klara.local-optimizer/planner\n{:status :installed, :code-id \"f2d729f593b500bae162b6a5c8914b3936c01596db6e06a528e978d69b98168f\"}\n35",
+  :errors []},
+ :stats
+ {:hits 2, :misses 34, :fallbacks 0, :revalidations 2, :deopts 0},
+ :scalar-identity-counterexample
+ {:source (fn [x] x),
+  :backend :scalar-java,
+  :same-values true,
+  :same-classes true,
+  :reference-identical-to-input true,
+  :optimized-identical-to-input false}}

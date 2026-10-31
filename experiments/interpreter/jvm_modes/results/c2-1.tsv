@@ -1,0 +1,26 @@
+CompileCommand: dontinline LoopModes.plain bool dontinline = true
+CompileCommand: dontinline LoopModes.checked bool dontinline = true
+# java=25.0.1+8-LTS-jvmci-b01
+# vm=mixed mode, sharing
+# flags=[-XX:ThreadPriorityPolicy=1, -XX:+UnlockExperimentalVMOptions, -XX:+EnableJVMCIProduct, -XX:+EnableJVMCI, -XX:-UnlockExperimentalVMOptions, -Xmx256m, -XX:-UseJVMCICompiler, -XX:-TieredCompilation, -Xbatch, -XX:+UnlockDiagnosticVMOptions, -XX:+LogCompilation, -XX:LogFile=target/jvm-modes/c2-1.xml, -XX:CompileCommand=dontinline,LoopModes::plain, -XX:CompileCommand=dontinline,LoopModes::checked]
+# warmup=20000,samples=9,calls=100
+sample	c2	plain	0	2148.18	49995000
+sample	c2	plain	1	2143.25	49995000
+sample	c2	plain	2	2390.99	49995000
+sample	c2	plain	3	2231.95	49995000
+sample	c2	plain	4	221037.28	49995000
+sample	c2	plain	5	2128.49	49995000
+sample	c2	plain	6	2127.53	49995000
+sample	c2	plain	7	2252.66	49995000
+sample	c2	plain	8	2220.80	49995000
+median	c2	plain	2220.80
+sample	c2	checked	0	3051.44	49995000
+sample	c2	checked	1	2957.80	49995000
+sample	c2	checked	2	3070.54	49995000
+sample	c2	checked	3	2861.17	49995000
+sample	c2	checked	4	2892.84	49995000
+sample	c2	checked	5	2861.13	49995000
+sample	c2	checked	6	2859.57	49995000
+sample	c2	checked	7	2860.67	49995000
+sample	c2	checked	8	2861.42	49995000
+median	c2	checked	2861.42

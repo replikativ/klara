@@ -1,0 +1,45 @@
+compiling s/cpvalid.ss with output to ta6le/s/cpvalid.ta6le
+compiling s/cptypes.ss with output to ta6le/s/cptypes.ta6le
+compiling s/cpcommonize.ss with output to ta6le/s/cpcommonize.ta6le
+compiling s/cpletrec.ss with output to ta6le/s/cpletrec.ta6le
+compiling s/inspect.ss with output to ta6le/s/inspect.ta6le
+compiling s/enum.ss with output to ta6le/s/enum.ta6le
+compiling s/io.ss with output to ta6le/s/io.ta6le
+compiling s/read.ss with output to ta6le/s/read.ta6le
+compiling s/primvars.ss with output to ta6le/s/primvars.ta6le
+compiling s/syntax.ss with output to ta6le/s/syntax.ta6le
+compiling s/costctr.ss with output to ta6le/s/costctr.ta6le
+compiling s/expeditor.ss with output to ta6le/s/expeditor.ta6le
+compiling s/exceptions.ss with output to ta6le/s/exceptions.ta6le
+compiling s/pretty.ss with output to ta6le/s/pretty.ta6le
+compiling s/env.ss with output to ta6le/s/env.ta6le
+compiling s/fasl.ss with output to ta6le/s/fasl.ta6le
+compiling s/vfasl.ss with output to ta6le/s/vfasl.ta6le
+compiling s/pbchunk.ss with output to ta6le/s/pbchunk.ta6le
+compiling s/reloc.ss with output to ta6le/s/reloc.ta6le
+compiling s/pdhtml.ss with output to ta6le/s/pdhtml.ta6le
+compiling s/strip.ss with output to ta6le/s/strip.ta6le
+compiling s/ftype.ss with output to ta6le/s/ftype.ta6le
+compiling s/back.ss with output to ta6le/s/back.ta6le
+compiling s/cpnanopass.ss with output to ta6le/s/cpnanopass.ta6le
+compiling s/cpprim.ss with output to ta6le/s/cpprim.ta6le
+compiling s/compile.ss with output to ta6le/s/compile.ta6le
+compiling s/cback.ss with output to ta6le/s/cback.ta6le
+(time (let () ...))
+    593 collections
+    5.581118874s elapsed cpu time, including 1.734410426s collecting
+    5.583970613s elapsed real time, including 1.736747432s collecting
+    9480346592 bytes allocated, including 9476432528 bytes reclaimed
+    823234560 bytes peak memory use
+running ta6le/bin/ta6le/scheme to build fixpoint check
+done (unchanged after rebuild)
+running ta6le/bin/ta6le/scheme to build ta6le/s/mkheader.so
+compiling s/mkheader.ss with output to ta6le/s/mkheader.so
+running ta6le/bin/ta6le/scheme to build ta6le/boot/ta6le/scheme.h
+running ta6le/bin/ta6le/scheme to build ta6le/boot/ta6le/equates.h
+running ta6le/bin/ta6le/scheme to build ta6le/s/mkgc.so
+compiling s/mkgc.ss with output to ta6le/s/mkgc.so
+running ta6le/bin/ta6le/scheme to build ta6le/boot/ta6le/gc-oce.inc
+running ta6le/bin/ta6le/scheme to build ta6le/boot/ta6le/gc-par.inc
+running ta6le/bin/ta6le/scheme to build ta6le/boot/ta6le/heapcheck.inc
+running ta6le/bin/ta6le/scheme to build ta6le/boot/ta6le/gc-ocd.inc

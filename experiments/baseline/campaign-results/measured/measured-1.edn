@@ -1,0 +1,3120 @@
+{:processors 8,
+ :source-sha256
+ {"src/klara/compile/inline.clj"
+  "2c06694af339b84e6f501fc035ac17023d55dd5da0babbd74becd849966f8f8a",
+  "src/klara/compile/unbox.clj"
+  "0e449e139a657bc5b4bac26f5f951c9cd606afd1b851e69244700f5cd9438917",
+  "src/klara/compile/speculate.clj"
+  "80d54937c925ed2fc593bd8cb6f216e8ec8298bcab40041be2255ba94cd3173f",
+  "src/klara/compile/core.clj"
+  "8c59aa51f636c8e7a38b1d63cd07a4badd775ca23582155ef4deb64800cdd128",
+  "src/klara/compile/affine_erase.clj"
+  "d5cc50d9ee7009e1c0635f5838aebf0f705d2be2312934cc39d851882235e756",
+  "src/klara/fusion/kernel.clj"
+  "edc582a5b412a83e61b465c45a980f3811c770167627188da1ba3ad18e1c9453",
+  "src/klara/compile/private_accumulator.clj"
+  "ef5ad7034467b01a8fd4aab14101c929b4f409cea643c3ab411789243d3ad271",
+  "src/klara/compile/pe.clj"
+  "728a7c15b318edb6ebfb69517e9c4dba245cde8d64e434c83622758ee5bb1b70",
+  "src/klara/compile/relation.clj"
+  "4dfb5bc4ab627bf8996728dd2852a8a20fb3ca2fcd1594fe34337a481638044f",
+  "src/klara/deploy.clj"
+  "88e3503486932d88ecdd900ba148637e645d18aa5d2605a9d65d343fb5c30c75",
+  "src/klara/compile/funding.clj"
+  "4272444d0fe0a2c69f6295224868048fac048679bc3039f5b319865963bef95f",
+  "src/klara/compile/view.clj"
+  "7a58c4612ca77720b807eb19cc024968b0ca1c2e8fb8e9fdbab17eb521155c3c",
+  "src/klara/compile/infer_affine.clj"
+  "1ea336ef960114d11d4e7480381a0cedfb373797622353b36c587a9725c4d0de",
+  "src/klara/compile/emit.clj"
+  "55c966534f4e08d84176d5ba73b2f08ec59c5e17473f9ace690b5b153aba4165",
+  "src/klara/world.clj"
+  "29ea09915982d5daa246251c87da3095f0014c0f7680ff017e618e36fd9e9286",
+  "src/klara/core.clj"
+  "4fde378a632e9259d5133c166c118c951e3afb44eb84e0eb896a45e041684e6f",
+  "src/klara/affine.clj"
+  "7bceeeb76fb1f30adb60b0e17c9a879a4e626be6697ff5d2c24b8dc917b4e8af",
+  "src/klara/compile/budget.clj"
+  "a14c2c3a158f950915b6e12e39266ac68b9f07614b386932ca2f5655eade70f2",
+  "src/klara/compile/host.clj"
+  "5ccd09307e7bdbc3794eee27adcce08f2a742e07c54fd79e1d73464e9e35ad20",
+  "src/klara/repl.clj"
+  "13dd5b6feb07238fc1e976d027beb638ec6db9c8e753acfde3778b27c9a3a031",
+  "src/klara/load.clj"
+  "13360862c46395b41c048d5e19fc9d08dfad74e80046b4a1d3e3d685cd4e1968",
+  "src/klara/compile/strategy.clj"
+  "470c68381a5dcb86b8b6398f434c7ec01673a90dacb90f277cf8c15a4451fa17",
+  "experiments/baseline/private_accumulator.clj"
+  "9ec5d27aa618c5fa2b34a7f95e8c93ead9811ca5fb0f5bc4957425189be71eed",
+  "src/klara/compile/edge.clj"
+  "93f90ed2d3571f89223a60182af01655e239a776333824f0fa4b0edb014a3e9f",
+  "src/klara/compile/escape.clj"
+  "0b0cbd23e2a031ddaf1d2a5e66f68209901cf5e6ecd9f4771acdccb5d606d462",
+  "src/klara/code.clj"
+  "9a4663239a849215d83cc21ce24390d6ba3f6c3b80a4951d758285fffe7f80e8",
+  "src/klara/compile/ir.clj"
+  "04da4006359a881b8f5c849632d64714cc0ee43c3717e13b81f70b2ff8557989",
+  "experiments/baseline/campaign.clj"
+  "da93ee566f0c81da327ec366b698a8d9bed6d232901dfc95f31b95b099bf52be",
+  "src/klara/defs.clj"
+  "fa2cef5153903f49de13676785c8d0075d87086f6bdd78fb66c61cfbd3d0c436",
+  "src/klara/compile/guest.clj"
+  "53c4aaee0ada0e7284c884d72e39adf0577c388870712b80042475c77ff6f2d1",
+  "src/klara/expand.clj"
+  "3e4dd3ce7fe4a2b197344549ed3966a628ac1399c860ea24d0c69e0687e4f124",
+  "src/klara/compile/subject.clj"
+  "4ff05a76d70ec93f902d9301217755f743c47b3eac121118dce948b709072ae6",
+  "src/klara/compile/baseline.clj"
+  "71e5f5fa2f91de8187edb2c12c722213e0a1f649ebca81c7b04d231ffe1a552d",
+  "src/klara/effect_class.clj"
+  "354e1100fe88a79195d8bb5958ce38053ed67657440c59e5e04a1918c87870fe",
+  "src/klara/compile/compose.clj"
+  "0ab8e752e5ef9a76255b247f6858062e526f8b0e9c727e4f57534ea330b39906",
+  "src/klara/compile/loop.clj"
+  "70288d9e58db5ac74f631404da32cb209bb29cba9fc71d56bf67a49d90ed5b47",
+  "src/klara/nrepl.clj"
+  "087b57b1b3d925efe37d72c14f0d9e515591b88dc885e29f67dfad359405b8b1",
+  "src/klara/compile/hof.clj"
+  "b16d14a9c70532ceb5e00c2ef8fdb4167b8b5cc0b3eaca8a3f4c65255661d519",
+  "scripts/run_compiler_campaign.py"
+  "64bddbc98e90a8c8d6ac9f97db498a80b48ad59f9faeebea1935f89cff59558f",
+  "src/klara/compile/staged.clj"
+  "8f9cf3fb732a4412daace06dc92a68638c3620cc1a497c54311b6163bb498fd2",
+  "src/klara/syntax.clj"
+  "8963b902a00dd3f778ba0fbb5efd2ef15244c904070195fd4a47a48d5825db44",
+  "src/klara/compile/runtime.clj"
+  "f4fcfcf98fc25874f6cb4ad120751b2d66ad4ca16fcc27bb3a51b5000cc16a74",
+  "src/klara/compile/scalar.clj"
+  "352012cdc752465d36452302da1d8cc60cd521fd79081f8f4915da209d273966",
+  "src/klara/stage.clj"
+  "23cf44e533653ff64c59557ac10bacb0b36b3d3ba429ae201e4b0c54fff068d9",
+  "src/klara/compile/analysis.clj"
+  "8c29cd30f8b8814efd55094db8a4310a815c33584e1b8a6ee39dabaf34245ebc",
+  "src/klara/compile/updates.clj"
+  "446b74e76cb10a9f77e7eefebc2ae68401b3adf6bf7a3bd1f567e1873e0cc721",
+  "src/klara/fusion.clj"
+  "8e88dbe66640c4d60be5a1dafc07c86a17bef5b0633c08179256f56a1658a356",
+  "src/klara/authority.clj"
+  "70c91dac1f5beace4e6426913f27a8a4dca3a5517f70bc86516f50f4ac369a9d",
+  "src/klara/compile/service.clj"
+  "f0cad0e231d18b2602ea67e89bda3eb41d728f8fb2e43efca9088e51fe4f9c0b",
+  "src/klara/compile/strict_fold.clj"
+  "bd35e878609a1822e127d90f7b668465386b4c2cc56c36e0c16eb56ce3f4d28d",
+  "src/klara/eval.clj"
+  "f3426a67ec736d5e07c1e1e836a7d242ed6f5efdc1ebb16ab079afcf3d80ad65",
+  "src/klara/compile/local_calls.clj"
+  "4cdba2f2c6cb09752c38cbe1942034e236c65b6e35568b9fe4d066256cd28a0a",
+  "src/klara/compile/prepare.clj"
+  "c3cd34b789864d03c508b57b4bcc37dd0a47cb2f5fe9d47f64f16e1f2654a1bc",
+  "src/klara/compile/requirements.clj"
+  "b551f12324b50024fbae1f448e3819736e2004d602ed8cdfde02674c22300969"},
+ :harness-noop
+ {:wall-ns-per-call 127.971,
+  :cpu-ns-per-call 142.274,
+  :bytes-per-call 0.76},
+ :arch "amd64",
+ :java "25.0.1+8-LTS-jvmci-b01",
+ :label "measured-1",
+ :os "Linux",
+ :limits
+ [:first-observed-is-not-cold-JVM
+  :serial-preparation-order
+  :reference-oracle-runs-before-timing
+  :earlier-inputs-warm-the-same-engines
+  :shared-JIT-GC-state
+  :fixed-workloads
+  :seven-rotating-warm-rounds
+  :estimated-horizons-not-measured-traces
+  :load-reported-separately
+  :common-invocation-harness-included
+  :no-time-assertions
+  :training-and-autonomous-investment-not-implemented],
+ :families
+ [{:job-usage {:work 5341, :bytes 2163, :emissions 2},
+   :portfolio-installation
+   {:wall-ns-per-call 184635.0,
+    :cpu-ns-per-call 188851.0,
+    :bytes-per-call 9296.0},
+   :preparation
+   {:baseline
+    {:status :prepared,
+     :reason nil,
+     :preparation
+     {:wall-ns-per-call 9.8779082E7,
+      :cpu-ns-per-call 9.2548935E7,
+      :bytes-per-call 3.9651904E7},
+     :validation
+     {:wall-ns-per-call 2875302.0,
+      :cpu-ns-per-call 2887018.0,
+      :bytes-per-call 2556520.0},
+     :installation
+     {:wall-ns-per-call 622978.0,
+      :cpu-ns-per-call 632634.0,
+      :bytes-per-call 11704.0},
+     :usage {:work 5341, :bytes 2163, :emissions 2}}},
+   :load-ns 76487471,
+   :portfolio-revalidations 0,
+   :id :helpers,
+   :host-preparation
+   {:wall-ns-per-call 1770371.0,
+    :cpu-ns-per-call 1680767.0,
+    :bytes-per-call 508288.0},
+   :engine-order [:reference :portfolio :baseline :clojure],
+   :cases
+   [{:arguments [0],
+     :expected [:value 0],
+     :portfolio-selected :baseline,
+     :batch 8,
+     :first-observed
+     {:reference
+      {:wall-ns-per-call 158944.0,
+       :cpu-ns-per-call 162302.0,
+       :bytes-per-call 10816.0},
+      :portfolio
+      {:wall-ns-per-call 1212029.0,
+       :cpu-ns-per-call 1217765.0,
+       :bytes-per-call 28152.0},
+      :baseline
+      {:wall-ns-per-call 90159.0,
+       :cpu-ns-per-call 91681.0,
+       :bytes-per-call 11272.0},
+      :clojure
+      {:wall-ns-per-call 40543.0,
+       :cpu-ns-per-call 41995.0,
+       :bytes-per-call 216.0}},
+     :samples
+     [{:reference
+       {:wall-ns-per-call 43610.25,
+        :cpu-ns-per-call 43965.625,
+        :bytes-per-call 10753.0},
+       :portfolio
+       {:wall-ns-per-call 11106.625,
+        :cpu-ns-per-call 11262.625,
+        :bytes-per-call 6255.0},
+       :baseline
+       {:wall-ns-per-call 8768.625,
+        :cpu-ns-per-call 8890.125,
+        :bytes-per-call 6249.0},
+       :clojure
+       {:wall-ns-per-call 411.125,
+        :cpu-ns-per-call 486.5,
+        :bytes-per-call 25.0}}
+      {:portfolio
+       {:wall-ns-per-call 7911.0,
+        :cpu-ns-per-call 8043.75,
+        :bytes-per-call 6249.0},
+       :baseline
+       {:wall-ns-per-call 9182.125,
+        :cpu-ns-per-call 9300.125,
+        :bytes-per-call 6249.0},
+       :clojure
+       {:wall-ns-per-call 387.75,
+        :cpu-ns-per-call 465.375,
+        :bytes-per-call 25.0},
+       :reference
+       {:wall-ns-per-call 37173.0,
+        :cpu-ns-per-call 37328.125,
+        :bytes-per-call 10753.0}}
+      {:baseline
+       {:wall-ns-per-call 9222.375,
+        :cpu-ns-per-call 9378.875,
+        :bytes-per-call 6255.0},
+       :clojure
+       {:wall-ns-per-call 374.375,
+        :cpu-ns-per-call 449.25,
+        :bytes-per-call 25.0},
+       :reference
+       {:wall-ns-per-call 39057.375,
+        :cpu-ns-per-call 39218.875,
+        :bytes-per-call 10753.0},
+       :portfolio
+       {:wall-ns-per-call 11269.0,
+        :cpu-ns-per-call 11428.5,
+        :bytes-per-call 6255.0}}
+      {:clojure
+       {:wall-ns-per-call 393.375,
+        :cpu-ns-per-call 477.5,
+        :bytes-per-call 25.0},
+       :reference
+       {:wall-ns-per-call 35464.375,
+        :cpu-ns-per-call 35622.75,
+        :bytes-per-call 10753.0},
+       :portfolio
+       {:wall-ns-per-call 10135.125,
+        :cpu-ns-per-call 10268.75,
+        :bytes-per-call 6255.0},
+       :baseline
+       {:wall-ns-per-call 7656.375,
+        :cpu-ns-per-call 7778.25,
+        :bytes-per-call 6249.0}}
+      {:reference
+       {:wall-ns-per-call 33454.875,
+        :cpu-ns-per-call 33604.0,
+        :bytes-per-call 10753.0},
+       :portfolio
+       {:wall-ns-per-call 7998.125,
+        :cpu-ns-per-call 8124.625,
+        :bytes-per-call 6255.0},
+       :baseline
+       {:wall-ns-per-call 6982.5,
+        :cpu-ns-per-call 7093.5,
+        :bytes-per-call 6249.0},
+       :clojure
+       {:wall-ns-per-call 357.5,
+        :cpu-ns-per-call 425.125,
+        :bytes-per-call 25.0}}
+      {:portfolio
+       {:wall-ns-per-call 7423.875,
+        :cpu-ns-per-call 7541.25,
+        :bytes-per-call 6249.0},
+       :baseline
+       {:wall-ns-per-call 6874.375,
+        :cpu-ns-per-call 6999.25,
+        :bytes-per-call 6249.0},
+       :clojure
+       {:wall-ns-per-call 337.875,
+        :cpu-ns-per-call 406.75,
+        :bytes-per-call 25.0},
+       :reference
+       {:wall-ns-per-call 38510.25,
+        :cpu-ns-per-call 37400.125,
+        :bytes-per-call 10753.0}}
+      {:baseline
+       {:wall-ns-per-call 8619.25,
+        :cpu-ns-per-call 8745.5,
+        :bytes-per-call 6255.0},
+       :clojure
+       {:wall-ns-per-call 362.25,
+        :cpu-ns-per-call 437.75,
+        :bytes-per-call 25.0},
+       :reference
+       {:wall-ns-per-call 35893.5,
+        :cpu-ns-per-call 36047.5,
+        :bytes-per-call 10753.0},
+       :portfolio
+       {:wall-ns-per-call 10119.25,
+        :cpu-ns-per-call 10248.625,
+        :bytes-per-call 6255.0}}],
+     :medians
+     {:reference
+      {:wall-ns-per-call 37173.0,
+       :cpu-ns-per-call 37328.125,
+       :bytes-per-call 10753.0},
+      :portfolio
+      {:wall-ns-per-call 10119.25,
+       :cpu-ns-per-call 10248.625,
+       :bytes-per-call 6255.0},
+      :baseline
+      {:wall-ns-per-call 8619.25,
+       :cpu-ns-per-call 8745.5,
+       :bytes-per-call 6249.0},
+      :clojure
+      {:wall-ns-per-call 374.375,
+       :cpu-ns-per-call 449.25,
+       :bytes-per-call 25.0}},
+     :estimated-total-ns
+     {:reference {1 158944.0, 10 493501.0, 1000 3.7294771E7},
+      :portfolio
+      {1 1.03051048E8, 10 1.0314212125E8, 1000 1.1316017875E8},
+      :baseline
+      {1 1.02367521E8, 10 1.0244509425E8, 1000 1.1097815175E8},
+      :clojure {1 1810914.0, 10 1814283.375, 1000 2184914.625}}}
+    {:arguments [16],
+     :expected [:value 1256],
+     :portfolio-selected :baseline,
+     :batch 8,
+     :first-observed
+     {:reference
+      {:wall-ns-per-call 500781.0,
+       :cpu-ns-per-call 503790.0,
+       :bytes-per-call 111320.0},
+      :portfolio
+      {:wall-ns-per-call 62951.0,
+       :cpu-ns-per-call 64176.0,
+       :bytes-per-call 6384.0},
+      :baseline
+      {:wall-ns-per-call 157118.0,
+       :cpu-ns-per-call 161738.0,
+       :bytes-per-call 6336.0},
+      :clojure
+      {:wall-ns-per-call 66155.0,
+       :cpu-ns-per-call 67901.0,
+       :bytes-per-call 568.0}},
+     :samples
+     [{:reference
+       {:wall-ns-per-call 423758.375,
+        :cpu-ns-per-call 425341.375,
+        :bytes-per-call 111257.0},
+       :portfolio
+       {:wall-ns-per-call 16940.0,
+        :cpu-ns-per-call 17147.625,
+        :bytes-per-call 6279.0},
+       :baseline
+       {:wall-ns-per-call 9767.375,
+        :cpu-ns-per-call 9932.75,
+        :bytes-per-call 6273.0},
+       :clojure
+       {:wall-ns-per-call 40468.0,
+        :cpu-ns-per-call 10205.0,
+        :bytes-per-call 433.0}}
+      {:portfolio
+       {:wall-ns-per-call 14273.25,
+        :cpu-ns-per-call 14548.125,
+        :bytes-per-call 6273.0},
+       :baseline
+       {:wall-ns-per-call 11243.125,
+        :cpu-ns-per-call 11433.375,
+        :bytes-per-call 6273.0},
+       :clojure
+       {:wall-ns-per-call 5613.25,
+        :cpu-ns-per-call 5756.875,
+        :bytes-per-call 433.0},
+       :reference
+       {:wall-ns-per-call 327272.0,
+        :cpu-ns-per-call 325934.875,
+        :bytes-per-call 111257.0}}
+      {:baseline
+       {:wall-ns-per-call 9391.875,
+        :cpu-ns-per-call 9525.0,
+        :bytes-per-call 6279.0},
+       :clojure
+       {:wall-ns-per-call 2612.25,
+        :cpu-ns-per-call 2705.875,
+        :bytes-per-call 433.0},
+       :reference
+       {:wall-ns-per-call 196629.5,
+        :cpu-ns-per-call 196826.875,
+        :bytes-per-call 111257.0},
+       :portfolio
+       {:wall-ns-per-call 8440.375,
+        :cpu-ns-per-call 8734.75,
+        :bytes-per-call 6279.0}}
+      {:clojure
+       {:wall-ns-per-call 2121.5,
+        :cpu-ns-per-call 2218.0,
+        :bytes-per-call 433.0},
+       :reference
+       {:wall-ns-per-call 208122.0,
+        :cpu-ns-per-call 208350.875,
+        :bytes-per-call 111257.0},
+       :portfolio
+       {:wall-ns-per-call 6477.625,
+        :cpu-ns-per-call 6630.5,
+        :bytes-per-call 6279.0},
+       :baseline
+       {:wall-ns-per-call 5778.625,
+        :cpu-ns-per-call 5892.5,
+        :bytes-per-call 6273.0}}
+      {:reference
+       {:wall-ns-per-call 242467.0,
+        :cpu-ns-per-call 242726.25,
+        :bytes-per-call 111257.0},
+       :portfolio
+       {:wall-ns-per-call 9174.25,
+        :cpu-ns-per-call 9345.75,
+        :bytes-per-call 6279.0},
+       :baseline
+       {:wall-ns-per-call 7145.125,
+        :cpu-ns-per-call 7289.25,
+        :bytes-per-call 6273.0},
+       :clojure
+       {:wall-ns-per-call 5039.125,
+        :cpu-ns-per-call 5169.5,
+        :bytes-per-call 433.0}}
+      {:portfolio
+       {:wall-ns-per-call 6845.5,
+        :cpu-ns-per-call 6996.25,
+        :bytes-per-call 6273.0},
+       :baseline
+       {:wall-ns-per-call 6366.25,
+        :cpu-ns-per-call 9968.5,
+        :bytes-per-call 6273.0},
+       :clojure
+       {:wall-ns-per-call 2191.0,
+        :cpu-ns-per-call 2298.125,
+        :bytes-per-call 433.0},
+       :reference
+       {:wall-ns-per-call 244834.375,
+        :cpu-ns-per-call 245052.25,
+        :bytes-per-call 111257.0}}
+      {:baseline
+       {:wall-ns-per-call 6529.5,
+        :cpu-ns-per-call 6665.5,
+        :bytes-per-call 6279.0},
+       :clojure
+       {:wall-ns-per-call 2484.875,
+        :cpu-ns-per-call 2587.5,
+        :bytes-per-call 433.0},
+       :reference
+       {:wall-ns-per-call 255769.375,
+        :cpu-ns-per-call 249600.0,
+        :bytes-per-call 111257.0},
+       :portfolio
+       {:wall-ns-per-call 8795.875,
+        :cpu-ns-per-call 8945.375,
+        :bytes-per-call 6279.0}}],
+     :medians
+     {:reference
+      {:wall-ns-per-call 244834.375,
+       :cpu-ns-per-call 245052.25,
+       :bytes-per-call 111257.0},
+      :portfolio
+      {:wall-ns-per-call 8795.875,
+       :cpu-ns-per-call 8945.375,
+       :bytes-per-call 6279.0},
+      :baseline
+      {:wall-ns-per-call 7145.125,
+       :cpu-ns-per-call 9525.0,
+       :bytes-per-call 6273.0},
+      :clojure
+      {:wall-ns-per-call 2612.25,
+       :cpu-ns-per-call 2705.875,
+       :bytes-per-call 433.0}},
+     :estimated-total-ns
+     {:reference {1 500781.0, 10 2704290.375, 1000 2.45090321625E8},
+      :portfolio
+      {1 1.0190197E8, 10 1.01981132875E8, 1000 1.10689049125E8},
+      :baseline
+      {1 1.0243448E8, 10 1.02498786125E8, 1000 1.09572459875E8},
+      :clojure {1 1836526.0, 10 1860036.25, 1000 4446163.75}}}
+    {:arguments [1000],
+     :expected [:value 332834500],
+     :portfolio-selected :baseline,
+     :batch 1,
+     :first-observed
+     {:reference
+      {:wall-ns-per-call 1.032066E7,
+       :cpu-ns-per-call 1.0281854E7,
+       :bytes-per-call 6359192.0},
+      :portfolio
+      {:wall-ns-per-call 200632.0,
+       :cpu-ns-per-call 203308.0,
+       :bytes-per-call 27336.0},
+      :baseline
+      {:wall-ns-per-call 28276.0,
+       :cpu-ns-per-call 29387.0,
+       :bytes-per-call 27288.0},
+      :clojure
+      {:wall-ns-per-call 111421.0,
+       :cpu-ns-per-call 112385.0,
+       :bytes-per-call 113224.0}},
+     :samples
+     [{:reference
+       {:wall-ns-per-call 6953433.0,
+        :cpu-ns-per-call 6962664.0,
+        :bytes-per-call 6359024.0},
+       :portfolio
+       {:wall-ns-per-call 32376.0,
+        :cpu-ns-per-call 33402.0,
+        :bytes-per-call 27336.0},
+       :baseline
+       {:wall-ns-per-call 16354.0,
+        :cpu-ns-per-call 17165.0,
+        :bytes-per-call 27288.0},
+       :clojure
+       {:wall-ns-per-call 36105.0,
+        :cpu-ns-per-call 36877.0,
+        :bytes-per-call 113224.0}}
+      {:portfolio
+       {:wall-ns-per-call 16608.0,
+        :cpu-ns-per-call 17388.0,
+        :bytes-per-call 27288.0},
+       :baseline
+       {:wall-ns-per-call 15508.0,
+        :cpu-ns-per-call 16223.0,
+        :bytes-per-call 27288.0},
+       :clojure
+       {:wall-ns-per-call 33822.0,
+        :cpu-ns-per-call 34524.0,
+        :bytes-per-call 113224.0},
+       :reference
+       {:wall-ns-per-call 6934671.0,
+        :cpu-ns-per-call 6939302.0,
+        :bytes-per-call 6359024.0}}
+      {:baseline
+       {:wall-ns-per-call 35775.0,
+        :cpu-ns-per-call 36692.0,
+        :bytes-per-call 27336.0},
+       :clojure
+       {:wall-ns-per-call 41174.0,
+        :cpu-ns-per-call 41898.0,
+        :bytes-per-call 113224.0},
+       :reference
+       {:wall-ns-per-call 6642044.0,
+        :cpu-ns-per-call 6607352.0,
+        :bytes-per-call 6359024.0},
+       :portfolio
+       {:wall-ns-per-call 32268.0,
+        :cpu-ns-per-call 33172.0,
+        :bytes-per-call 27336.0}}
+      {:clojure
+       {:wall-ns-per-call 34604.0,
+        :cpu-ns-per-call 35332.0,
+        :bytes-per-call 113224.0},
+       :reference
+       {:wall-ns-per-call 6211396.0,
+        :cpu-ns-per-call 6215705.0,
+        :bytes-per-call 6359024.0},
+       :portfolio
+       {:wall-ns-per-call 38119.0,
+        :cpu-ns-per-call 39105.0,
+        :bytes-per-call 27336.0},
+       :baseline
+       {:wall-ns-per-call 18232.0,
+        :cpu-ns-per-call 19029.0,
+        :bytes-per-call 27288.0}}
+      {:reference
+       {:wall-ns-per-call 6604342.0,
+        :cpu-ns-per-call 6607434.0,
+        :bytes-per-call 6359080.0},
+       :portfolio
+       {:wall-ns-per-call 24351.0,
+        :cpu-ns-per-call 25264.0,
+        :bytes-per-call 27336.0},
+       :baseline
+       {:wall-ns-per-call 13726.0,
+        :cpu-ns-per-call 14557.0,
+        :bytes-per-call 27288.0},
+       :clojure
+       {:wall-ns-per-call 33595.0,
+        :cpu-ns-per-call 34428.0,
+        :bytes-per-call 113224.0}}
+      {:portfolio
+       {:wall-ns-per-call 12861.0,
+        :cpu-ns-per-call 13624.0,
+        :bytes-per-call 27288.0},
+       :baseline
+       {:wall-ns-per-call 12278.0,
+        :cpu-ns-per-call 12981.0,
+        :bytes-per-call 27288.0},
+       :clojure
+       {:wall-ns-per-call 31443.0,
+        :cpu-ns-per-call 32185.0,
+        :bytes-per-call 113224.0},
+       :reference
+       {:wall-ns-per-call 6138709.0,
+        :cpu-ns-per-call 6142773.0,
+        :bytes-per-call 6359024.0}}
+      {:baseline
+       {:wall-ns-per-call 114775.0,
+        :cpu-ns-per-call 115778.0,
+        :bytes-per-call 27336.0},
+       :clojure
+       {:wall-ns-per-call 36688.0,
+        :cpu-ns-per-call 37567.0,
+        :bytes-per-call 113224.0},
+       :reference
+       {:wall-ns-per-call 5873786.0,
+        :cpu-ns-per-call 5876140.0,
+        :bytes-per-call 6359024.0},
+       :portfolio
+       {:wall-ns-per-call 68636.0,
+        :cpu-ns-per-call 69707.0,
+        :bytes-per-call 27336.0}}],
+     :medians
+     {:reference
+      {:wall-ns-per-call 6604342.0,
+       :cpu-ns-per-call 6607352.0,
+       :bytes-per-call 6359024.0},
+      :portfolio
+      {:wall-ns-per-call 32268.0,
+       :cpu-ns-per-call 33172.0,
+       :bytes-per-call 27336.0},
+      :baseline
+      {:wall-ns-per-call 16354.0,
+       :cpu-ns-per-call 17165.0,
+       :bytes-per-call 27288.0},
+      :clojure
+      {:wall-ns-per-call 34604.0,
+       :cpu-ns-per-call 35332.0,
+       :bytes-per-call 113224.0}},
+     :estimated-total-ns
+     {:reference {1 1.032066E7, 10 6.9759738E7, 1000 6.608058318E9},
+      :portfolio {1 1.02039651E8, 10 1.02330063E8, 1000 1.34275383E8},
+      :baseline {1 1.02305638E8, 10 1.02452824E8, 1000 1.18643284E8},
+      :clojure {1 1881792.0, 10 2193228.0, 1000 3.6451188E7}}}],
+   :form
+   (fn
+    [n]
+    (let
+     [score (fn [x] (+ (* x x) 1))]
+     (loop
+      [i 0 sum 0]
+      (if (< i n) (recur (inc i) (+ sum (score i))) sum)))),
+   :cache-stats
+   {:reference
+    {:hits 0,
+     :misses 36410,
+     :fallbacks 0,
+     :revalidations 0,
+     :deopts 0},
+    :portfolio
+    {:hits 4, :misses 0, :fallbacks 0, :revalidations 1, :deopts 0},
+    :baseline
+    {:hits 1, :misses 0, :fallbacks 0, :revalidations 1, :deopts 0}}}
+  {:job-usage {:work 221, :bytes 644, :emissions 1},
+   :portfolio-installation
+   {:wall-ns-per-call 36696.0,
+    :cpu-ns-per-call 38266.0,
+    :bytes-per-call 8640.0},
+   :preparation
+   {:baseline
+    {:status :prepared,
+     :reason nil,
+     :preparation
+     {:wall-ns-per-call 1.3597689E7,
+      :cpu-ns-per-call 1.3612256E7,
+      :bytes-per-call 1.1183192E7},
+     :validation
+     {:wall-ns-per-call 2462346.0,
+      :cpu-ns-per-call 2474614.0,
+      :bytes-per-call 2738168.0},
+     :installation
+     {:wall-ns-per-call 135358.0,
+      :cpu-ns-per-call 137104.0,
+      :bytes-per-call 8544.0},
+     :usage {:work 221, :bytes 644, :emissions 1}}},
+   :load-ns 28381981,
+   :portfolio-revalidations 0,
+   :id :histogram,
+   :host-preparation
+   {:wall-ns-per-call 1381255.0,
+    :cpu-ns-per-call 1396057.0,
+    :bytes-per-call 312256.0},
+   :engine-order [:reference :portfolio :baseline :clojure],
+   :cases
+   [{:arguments [0],
+     :expected [:value {}],
+     :portfolio-selected :baseline,
+     :batch 8,
+     :first-observed
+     {:reference
+      {:wall-ns-per-call 133491.0,
+       :cpu-ns-per-call 139769.0,
+       :bytes-per-call 10120.0},
+      :portfolio
+      {:wall-ns-per-call 234351.0,
+       :cpu-ns-per-call 236833.0,
+       :bytes-per-call 11432.0},
+      :baseline
+      {:wall-ns-per-call 45797.0,
+       :cpu-ns-per-call 47080.0,
+       :bytes-per-call 11296.0},
+      :clojure
+      {:wall-ns-per-call 10957.0,
+       :cpu-ns-per-call 12115.0,
+       :bytes-per-call 160.0}},
+     :samples
+     [{:reference
+       {:wall-ns-per-call 14820.75,
+        :cpu-ns-per-call 15203.625,
+        :bytes-per-call 10057.0},
+       :portfolio
+       {:wall-ns-per-call 4721.875,
+        :cpu-ns-per-call 4893.75,
+        :bytes-per-call 5991.0},
+       :baseline
+       {:wall-ns-per-call 5678.5,
+        :cpu-ns-per-call 5841.75,
+        :bytes-per-call 5985.0},
+       :clojure
+       {:wall-ns-per-call 374.0,
+        :cpu-ns-per-call 494.125,
+        :bytes-per-call 9.0}}
+      {:portfolio
+       {:wall-ns-per-call 5526.5,
+        :cpu-ns-per-call 5722.625,
+        :bytes-per-call 5985.0},
+       :baseline
+       {:wall-ns-per-call 4955.625,
+        :cpu-ns-per-call 5137.875,
+        :bytes-per-call 5985.0},
+       :clojure
+       {:wall-ns-per-call 345.0,
+        :cpu-ns-per-call 483.25,
+        :bytes-per-call 9.0},
+       :reference
+       {:wall-ns-per-call 17356.625,
+        :cpu-ns-per-call 17700.75,
+        :bytes-per-call 10057.0}}
+      {:baseline
+       {:wall-ns-per-call 5405.125,
+        :cpu-ns-per-call 5652.125,
+        :bytes-per-call 5991.0},
+       :clojure
+       {:wall-ns-per-call 359.5,
+        :cpu-ns-per-call 480.25,
+        :bytes-per-call 9.0},
+       :reference
+       {:wall-ns-per-call 16499.875,
+        :cpu-ns-per-call 16756.375,
+        :bytes-per-call 10057.0},
+       :portfolio
+       {:wall-ns-per-call 7910.125,
+        :cpu-ns-per-call 8173.125,
+        :bytes-per-call 5991.0}}
+      {:clojure
+       {:wall-ns-per-call 428.75,
+        :cpu-ns-per-call 552.0,
+        :bytes-per-call 9.0},
+       :reference
+       {:wall-ns-per-call 16380.5,
+        :cpu-ns-per-call 16629.5,
+        :bytes-per-call 10057.0},
+       :portfolio
+       {:wall-ns-per-call 5025.125,
+        :cpu-ns-per-call 5234.75,
+        :bytes-per-call 5991.0},
+       :baseline
+       {:wall-ns-per-call 4384.5,
+        :cpu-ns-per-call 4551.875,
+        :bytes-per-call 5985.0}}
+      {:reference
+       {:wall-ns-per-call 19042.25,
+        :cpu-ns-per-call 19798.375,
+        :bytes-per-call 10057.0},
+       :portfolio
+       {:wall-ns-per-call 5781.25,
+        :cpu-ns-per-call 6011.25,
+        :bytes-per-call 5991.0},
+       :baseline
+       {:wall-ns-per-call 4547.875,
+        :cpu-ns-per-call 4715.875,
+        :bytes-per-call 5985.0},
+       :clojure
+       {:wall-ns-per-call 572.75,
+        :cpu-ns-per-call 690.75,
+        :bytes-per-call 9.0}}
+      {:portfolio
+       {:wall-ns-per-call 4433.0,
+        :cpu-ns-per-call 4686.875,
+        :bytes-per-call 5985.0},
+       :baseline
+       {:wall-ns-per-call 4239.375,
+        :cpu-ns-per-call 4425.0,
+        :bytes-per-call 5985.0},
+       :clojure
+       {:wall-ns-per-call 299.75,
+        :cpu-ns-per-call 425.875,
+        :bytes-per-call 9.0},
+       :reference
+       {:wall-ns-per-call 18238.875,
+        :cpu-ns-per-call 18598.375,
+        :bytes-per-call 10057.0}}
+      {:baseline
+       {:wall-ns-per-call 5034.375,
+        :cpu-ns-per-call 5232.375,
+        :bytes-per-call 5991.0},
+       :clojure
+       {:wall-ns-per-call 373.125,
+        :cpu-ns-per-call 468.375,
+        :bytes-per-call 9.0},
+       :reference
+       {:wall-ns-per-call 15349.375,
+        :cpu-ns-per-call 15621.875,
+        :bytes-per-call 10057.0},
+       :portfolio
+       {:wall-ns-per-call 5301.5,
+        :cpu-ns-per-call 5526.875,
+        :bytes-per-call 5991.0}}],
+     :medians
+     {:reference
+      {:wall-ns-per-call 16499.875,
+       :cpu-ns-per-call 16756.375,
+       :bytes-per-call 10057.0},
+      :portfolio
+      {:wall-ns-per-call 5301.5,
+       :cpu-ns-per-call 5526.875,
+       :bytes-per-call 5991.0},
+      :baseline
+      {:wall-ns-per-call 4955.625,
+       :cpu-ns-per-call 5137.875,
+       :bytes-per-call 5985.0},
+      :clojure
+      {:wall-ns-per-call 373.125,
+       :cpu-ns-per-call 483.25,
+       :bytes-per-call 9.0}},
+     :estimated-total-ns
+     {:reference {1 133491.0, 10 281989.875, 1000 1.6616866125E7},
+      :portfolio {1 1.6331082E7, 10 1.63787955E7, 1000 2.16272805E7},
+      :baseline {1 1.624119E7, 10 1.6285790625E7, 1000 2.1191859375E7},
+      :clojure {1 1392212.0, 10 1395570.125, 1000 1764963.875}}}
+    {:arguments [16],
+     :expected
+     [:value
+      {0 1,
+       7 1,
+       1 1,
+       4 1,
+       15 1,
+       13 1,
+       6 1,
+       3 1,
+       12 1,
+       2 1,
+       11 1,
+       9 1,
+       5 1,
+       14 1,
+       10 1,
+       8 1}],
+     :portfolio-selected :baseline,
+     :batch 8,
+     :first-observed
+     {:reference
+      {:wall-ns-per-call 314749.0,
+       :cpu-ns-per-call 330800.0,
+       :bytes-per-call 122792.0},
+      :portfolio
+      {:wall-ns-per-call 88583.0,
+       :cpu-ns-per-call 90011.0,
+       :bytes-per-call 8888.0},
+      :baseline
+      {:wall-ns-per-call 17727.0,
+       :cpu-ns-per-call 18529.0,
+       :bytes-per-call 8768.0},
+      :clojure
+      {:wall-ns-per-call 23151.0,
+       :cpu-ns-per-call 23925.0,
+       :bytes-per-call 2864.0}},
+     :samples
+     [{:reference
+       {:wall-ns-per-call 270633.375,
+        :cpu-ns-per-call 269703.75,
+        :bytes-per-call 122729.0},
+       :portfolio
+       {:wall-ns-per-call 15485.125,
+        :cpu-ns-per-call 15624.125,
+        :bytes-per-call 8711.0},
+       :baseline
+       {:wall-ns-per-call 15561.75,
+        :cpu-ns-per-call 15700.25,
+        :bytes-per-call 8705.0},
+       :clojure
+       {:wall-ns-per-call 12475.875,
+        :cpu-ns-per-call 11594.125,
+        :bytes-per-call 2729.0}}
+      {:portfolio
+       {:wall-ns-per-call 16774.625,
+        :cpu-ns-per-call 16872.0,
+        :bytes-per-call 8705.0},
+       :baseline
+       {:wall-ns-per-call 7562.375,
+        :cpu-ns-per-call 7620.0,
+        :bytes-per-call 8705.0},
+       :clojure
+       {:wall-ns-per-call 3134.75,
+        :cpu-ns-per-call 3183.875,
+        :bytes-per-call 2729.0},
+       :reference
+       {:wall-ns-per-call 125362.375,
+        :cpu-ns-per-call 125473.375,
+        :bytes-per-call 122729.0}}
+      {:baseline
+       {:wall-ns-per-call 32482.25,
+        :cpu-ns-per-call 10399.125,
+        :bytes-per-call 8711.0},
+       :clojure
+       {:wall-ns-per-call 3054.25,
+        :cpu-ns-per-call 3116.875,
+        :bytes-per-call 2729.0},
+       :reference
+       {:wall-ns-per-call 534135.875,
+        :cpu-ns-per-call 132554.25,
+        :bytes-per-call 122729.0},
+       :portfolio
+       {:wall-ns-per-call 10287.75,
+        :cpu-ns-per-call 10398.125,
+        :bytes-per-call 8711.0}}
+      {:clojure
+       {:wall-ns-per-call 3318.0,
+        :cpu-ns-per-call 3374.25,
+        :bytes-per-call 2729.0},
+       :reference
+       {:wall-ns-per-call 109624.875,
+        :cpu-ns-per-call 109708.625,
+        :bytes-per-call 122729.0},
+       :portfolio
+       {:wall-ns-per-call 7139.375,
+        :cpu-ns-per-call 7201.0,
+        :bytes-per-call 8711.0},
+       :baseline
+       {:wall-ns-per-call 6709.125,
+        :cpu-ns-per-call 6765.0,
+        :bytes-per-call 8705.0}}
+      {:reference
+       {:wall-ns-per-call 115157.0,
+        :cpu-ns-per-call 113210.5,
+        :bytes-per-call 122729.0},
+       :portfolio
+       {:wall-ns-per-call 7808.875,
+        :cpu-ns-per-call 7875.375,
+        :bytes-per-call 8711.0},
+       :baseline
+       {:wall-ns-per-call 6552.75,
+        :cpu-ns-per-call 6619.5,
+        :bytes-per-call 8705.0},
+       :clojure
+       {:wall-ns-per-call 3926.5,
+        :cpu-ns-per-call 3989.75,
+        :bytes-per-call 2729.0}}
+      {:portfolio
+       {:wall-ns-per-call 6678.875,
+        :cpu-ns-per-call 6736.375,
+        :bytes-per-call 8705.0},
+       :baseline
+       {:wall-ns-per-call 6501.875,
+        :cpu-ns-per-call 6552.25,
+        :bytes-per-call 8705.0},
+       :clojure
+       {:wall-ns-per-call 2996.0,
+        :cpu-ns-per-call 3043.125,
+        :bytes-per-call 2729.0},
+       :reference
+       {:wall-ns-per-call 115482.75,
+        :cpu-ns-per-call 115596.125,
+        :bytes-per-call 122729.0}}
+      {:baseline
+       {:wall-ns-per-call 7161.5,
+        :cpu-ns-per-call 7251.25,
+        :bytes-per-call 8711.0},
+       :clojure
+       {:wall-ns-per-call 5759.375,
+        :cpu-ns-per-call 5817.375,
+        :bytes-per-call 2729.0},
+       :reference
+       {:wall-ns-per-call 110680.875,
+        :cpu-ns-per-call 110772.75,
+        :bytes-per-call 122729.0},
+       :portfolio
+       {:wall-ns-per-call 7748.625,
+        :cpu-ns-per-call 7798.5,
+        :bytes-per-call 8711.0}}],
+     :medians
+     {:reference
+      {:wall-ns-per-call 115482.75,
+       :cpu-ns-per-call 115596.125,
+       :bytes-per-call 122729.0},
+      :portfolio
+      {:wall-ns-per-call 7808.875,
+       :cpu-ns-per-call 7875.375,
+       :bytes-per-call 8711.0},
+      :baseline
+      {:wall-ns-per-call 7161.5,
+       :cpu-ns-per-call 7251.25,
+       :bytes-per-call 8705.0},
+      :clojure
+      {:wall-ns-per-call 3318.0,
+       :cpu-ns-per-call 3374.25,
+       :bytes-per-call 2729.0}},
+     :estimated-total-ns
+     {:reference {1 314749.0, 10 1354093.75, 1000 1.1568201625E8},
+      :portfolio
+      {1 1.6185314E7, 10 1.6255593875E7, 1000 2.3986380125E7},
+      :baseline {1 1.621312E7, 10 1.62775735E7, 1000 2.33674585E7},
+      :clojure {1 1404406.0, 10 1434268.0, 1000 4719088.0}}}
+    {:arguments [1000],
+     :expected
+     [:value
+      {0 32,
+       7 32,
+       20 31,
+       27 31,
+       1 32,
+       24 31,
+       4 32,
+       15 31,
+       21 31,
+       31 31,
+       13 31,
+       22 31,
+       29 31,
+       6 32,
+       28 31,
+       25 31,
+       17 31,
+       3 32,
+       12 31,
+       2 32,
+       23 31,
+       19 31,
+       11 31,
+       9 31,
+       5 32,
+       14 31,
+       26 31,
+       16 31,
+       30 31,
+       10 31,
+       18 31,
+       8 31}],
+     :portfolio-selected :baseline,
+     :batch 1,
+     :first-observed
+     {:reference
+      {:wall-ns-per-call 9012495.0,
+       :cpu-ns-per-call 9023796.0,
+       :bytes-per-call 7185720.0},
+      :portfolio
+      {:wall-ns-per-call 279470.0,
+       :cpu-ns-per-call 280720.0,
+       :bytes-per-call 309696.0},
+      :baseline
+      {:wall-ns-per-call 107161.0,
+       :cpu-ns-per-call 108213.0,
+       :bytes-per-call 309648.0},
+      :clojure
+      {:wall-ns-per-call 275367.0,
+       :cpu-ns-per-call 276043.0,
+       :bytes-per-call 282720.0}},
+     :samples
+     [{:reference
+       {:wall-ns-per-call 5274805.0,
+        :cpu-ns-per-call 5278821.0,
+        :bytes-per-call 7185720.0},
+       :portfolio
+       {:wall-ns-per-call 91652.0,
+        :cpu-ns-per-call 92292.0,
+        :bytes-per-call 309696.0},
+       :baseline
+       {:wall-ns-per-call 85784.0,
+        :cpu-ns-per-call 86308.0,
+        :bytes-per-call 309648.0},
+       :clojure
+       {:wall-ns-per-call 75288.0,
+        :cpu-ns-per-call 75849.0,
+        :bytes-per-call 303672.0}}
+      {:portfolio
+       {:wall-ns-per-call 81567.0,
+        :cpu-ns-per-call 82055.0,
+        :bytes-per-call 309648.0},
+       :baseline
+       {:wall-ns-per-call 82500.0,
+        :cpu-ns-per-call 83001.0,
+        :bytes-per-call 309648.0},
+       :clojure
+       {:wall-ns-per-call 80612.0,
+        :cpu-ns-per-call 81154.0,
+        :bytes-per-call 303672.0},
+       :reference
+       {:wall-ns-per-call 5293508.0,
+        :cpu-ns-per-call 5294824.0,
+        :bytes-per-call 7185720.0}}
+      {:baseline
+       {:wall-ns-per-call 88968.0,
+        :cpu-ns-per-call 89495.0,
+        :bytes-per-call 309696.0},
+       :clojure
+       {:wall-ns-per-call 83351.0,
+        :cpu-ns-per-call 83775.0,
+        :bytes-per-call 303672.0},
+       :reference
+       {:wall-ns-per-call 5252403.0,
+        :cpu-ns-per-call 5253777.0,
+        :bytes-per-call 7185720.0},
+       :portfolio
+       {:wall-ns-per-call 102483.0,
+        :cpu-ns-per-call 103344.0,
+        :bytes-per-call 309696.0}}
+      {:clojure
+       {:wall-ns-per-call 87506.0,
+        :cpu-ns-per-call 88174.0,
+        :bytes-per-call 303672.0},
+       :reference
+       {:wall-ns-per-call 1.0045184E7,
+        :cpu-ns-per-call 6524930.0,
+        :bytes-per-call 7185720.0},
+       :portfolio
+       {:wall-ns-per-call 169542.0,
+        :cpu-ns-per-call 171533.0,
+        :bytes-per-call 309696.0},
+       :baseline
+       {:wall-ns-per-call 107895.0,
+        :cpu-ns-per-call 109215.0,
+        :bytes-per-call 309648.0}}
+      {:reference
+       {:wall-ns-per-call 7609275.0,
+        :cpu-ns-per-call 7616040.0,
+        :bytes-per-call 7185720.0},
+       :portfolio
+       {:wall-ns-per-call 146182.0,
+        :cpu-ns-per-call 147137.0,
+        :bytes-per-call 309696.0},
+       :baseline
+       {:wall-ns-per-call 100321.0,
+        :cpu-ns-per-call 101291.0,
+        :bytes-per-call 309648.0},
+       :clojure
+       {:wall-ns-per-call 101988.0,
+        :cpu-ns-per-call 103137.0,
+        :bytes-per-call 303672.0}}
+      {:portfolio
+       {:wall-ns-per-call 105088.0,
+        :cpu-ns-per-call 106135.0,
+        :bytes-per-call 309648.0},
+       :baseline
+       {:wall-ns-per-call 98991.0,
+        :cpu-ns-per-call 99985.0,
+        :bytes-per-call 309648.0},
+       :clojure
+       {:wall-ns-per-call 93118.0,
+        :cpu-ns-per-call 93804.0,
+        :bytes-per-call 303672.0},
+       :reference
+       {:wall-ns-per-call 7368140.0,
+        :cpu-ns-per-call 7374442.0,
+        :bytes-per-call 7185720.0}}
+      {:baseline
+       {:wall-ns-per-call 286927.0,
+        :cpu-ns-per-call 288816.0,
+        :bytes-per-call 302184.0},
+       :clojure
+       {:wall-ns-per-call 95013.0,
+        :cpu-ns-per-call 95617.0,
+        :bytes-per-call 303672.0},
+       :reference
+       {:wall-ns-per-call 8622681.0,
+        :cpu-ns-per-call 8416085.0,
+        :bytes-per-call 7185720.0},
+       :portfolio
+       {:wall-ns-per-call 239104.0,
+        :cpu-ns-per-call 240443.0,
+        :bytes-per-call 309696.0}}],
+     :medians
+     {:reference
+      {:wall-ns-per-call 7368140.0,
+       :cpu-ns-per-call 6524930.0,
+       :bytes-per-call 7185720.0},
+      :portfolio
+      {:wall-ns-per-call 105088.0,
+       :cpu-ns-per-call 106135.0,
+       :bytes-per-call 309696.0},
+      :baseline
+      {:wall-ns-per-call 98991.0,
+       :cpu-ns-per-call 99985.0,
+       :bytes-per-call 309648.0},
+      :clojure
+      {:wall-ns-per-call 87506.0,
+       :cpu-ns-per-call 88174.0,
+       :bytes-per-call 303672.0}},
+     :estimated-total-ns
+     {:reference {1 9012495.0, 10 7.5325755E7, 1000 7.369784355E9},
+      :portfolio {1 1.6376201E7, 10 1.7321993E7, 1000 1.21359113E8},
+      :baseline {1 1.6302554E7, 10 1.7193473E7, 1000 1.15194563E8},
+      :clojure {1 1656622.0, 10 2444176.0, 1000 8.9075116E7}}}],
+   :form
+   (fn
+    [n]
+    (loop
+     [i 0 counts {}]
+     (if
+      (< i n)
+      (let
+       [k (rem i 32)]
+       (recur (inc i) (assoc counts k (inc (get counts k 0)))))
+      counts))),
+   :cache-stats
+   {:reference
+    {:hits 0,
+     :misses 18354,
+     :fallbacks 0,
+     :revalidations 0,
+     :deopts 0},
+    :portfolio
+    {:hits 4, :misses 0, :fallbacks 0, :revalidations 1, :deopts 0},
+    :baseline
+    {:hits 1, :misses 0, :fallbacks 0, :revalidations 1, :deopts 0}}}
+  {:job-usage {:work 468, :bytes 1267, :emissions 1},
+   :portfolio-installation
+   {:wall-ns-per-call 29092.0,
+    :cpu-ns-per-call 29673.0,
+    :bytes-per-call 11488.0},
+   :preparation
+   {:baseline
+    {:status :prepared,
+     :reason nil,
+     :preparation
+     {:wall-ns-per-call 1.3679256E7,
+      :cpu-ns-per-call 1.3630393E7,
+      :bytes-per-call 2.3743296E7},
+     :validation
+     {:wall-ns-per-call 2850576.0,
+      :cpu-ns-per-call 2852820.0,
+      :bytes-per-call 6357272.0},
+     :installation
+     {:wall-ns-per-call 65761.0,
+      :cpu-ns-per-call 66339.0,
+      :bytes-per-call 11392.0},
+     :usage {:work 468, :bytes 1267, :emissions 1}}},
+   :load-ns 25659161,
+   :portfolio-revalidations 0,
+   :id :tree-worklist,
+   :host-preparation
+   {:wall-ns-per-call 1123168.0,
+    :cpu-ns-per-call 1125709.0,
+    :bytes-per-call 612184.0},
+   :engine-order [:reference :portfolio :baseline :clojure],
+   :cases
+   [{:arguments [0],
+     :expected [:value 1],
+     :portfolio-selected :baseline,
+     :batch 8,
+     :first-observed
+     {:reference
+      {:wall-ns-per-call 35521.0,
+       :cpu-ns-per-call 36991.0,
+       :bytes-per-call 26128.0},
+      :portfolio
+      {:wall-ns-per-call 167385.0,
+       :cpu-ns-per-call 168194.0,
+       :bytes-per-call 15736.0},
+      :baseline
+      {:wall-ns-per-call 31856.0,
+       :cpu-ns-per-call 32408.0,
+       :bytes-per-call 15448.0},
+      :clojure
+      {:wall-ns-per-call 49753.0,
+       :cpu-ns-per-call 50237.0,
+       :bytes-per-call 632.0}},
+     :samples
+     [{:reference
+       {:wall-ns-per-call 20457.875,
+        :cpu-ns-per-call 20563.125,
+        :bytes-per-call 26072.0},
+       :portfolio
+       {:wall-ns-per-call 6065.75,
+        :cpu-ns-per-call 6133.375,
+        :bytes-per-call 7199.0},
+       :baseline
+       {:wall-ns-per-call 6012.125,
+        :cpu-ns-per-call 6058.5,
+        :bytes-per-call 7193.0},
+       :clojure
+       {:wall-ns-per-call 488.5,
+        :cpu-ns-per-call 526.75,
+        :bytes-per-call 129.0}}
+      {:portfolio
+       {:wall-ns-per-call 5726.875,
+        :cpu-ns-per-call 5772.25,
+        :bytes-per-call 7193.0},
+       :baseline
+       {:wall-ns-per-call 5774.75,
+        :cpu-ns-per-call 5821.625,
+        :bytes-per-call 7193.0},
+       :clojure
+       {:wall-ns-per-call 917.75,
+        :cpu-ns-per-call 969.375,
+        :bytes-per-call 129.0},
+       :reference
+       {:wall-ns-per-call 18997.5,
+        :cpu-ns-per-call 19073.125,
+        :bytes-per-call 26065.0}}
+      {:baseline
+       {:wall-ns-per-call 6000.625,
+        :cpu-ns-per-call 6070.625,
+        :bytes-per-call 7199.0},
+       :clojure
+       {:wall-ns-per-call 505.5,
+        :cpu-ns-per-call 550.375,
+        :bytes-per-call 129.0},
+       :reference
+       {:wall-ns-per-call 20250.375,
+        :cpu-ns-per-call 20308.0,
+        :bytes-per-call 26065.0},
+       :portfolio
+       {:wall-ns-per-call 5965.625,
+        :cpu-ns-per-call 6018.125,
+        :bytes-per-call 7199.0}}
+      {:clojure
+       {:wall-ns-per-call 512.875,
+        :cpu-ns-per-call 560.125,
+        :bytes-per-call 129.0},
+       :reference
+       {:wall-ns-per-call 18920.25,
+        :cpu-ns-per-call 18973.25,
+        :bytes-per-call 26065.0},
+       :portfolio
+       {:wall-ns-per-call 5804.75,
+        :cpu-ns-per-call 5862.375,
+        :bytes-per-call 7199.0},
+       :baseline
+       {:wall-ns-per-call 5633.25,
+        :cpu-ns-per-call 5682.25,
+        :bytes-per-call 7193.0}}
+      {:reference
+       {:wall-ns-per-call 18584.375,
+        :cpu-ns-per-call 18653.625,
+        :bytes-per-call 26065.0},
+       :portfolio
+       {:wall-ns-per-call 6690.625,
+        :cpu-ns-per-call 7228.625,
+        :bytes-per-call 7199.0},
+       :baseline
+       {:wall-ns-per-call 5681.125,
+        :cpu-ns-per-call 5721.125,
+        :bytes-per-call 7193.0},
+       :clojure
+       {:wall-ns-per-call 486.375,
+        :cpu-ns-per-call 518.25,
+        :bytes-per-call 129.0}}
+      {:portfolio
+       {:wall-ns-per-call 5793.0,
+        :cpu-ns-per-call 5827.5,
+        :bytes-per-call 7193.0},
+       :baseline
+       {:wall-ns-per-call 5633.75,
+        :cpu-ns-per-call 5678.25,
+        :bytes-per-call 7193.0},
+       :clojure
+       {:wall-ns-per-call 413.625,
+        :cpu-ns-per-call 447.625,
+        :bytes-per-call 129.0},
+       :reference
+       {:wall-ns-per-call 19882.625,
+        :cpu-ns-per-call 19937.125,
+        :bytes-per-call 26065.0}}
+      {:baseline
+       {:wall-ns-per-call 6561.375,
+        :cpu-ns-per-call 6599.125,
+        :bytes-per-call 7199.0},
+       :clojure
+       {:wall-ns-per-call 479.75,
+        :cpu-ns-per-call 512.125,
+        :bytes-per-call 129.0},
+       :reference
+       {:wall-ns-per-call 19480.625,
+        :cpu-ns-per-call 19520.25,
+        :bytes-per-call 26065.0},
+       :portfolio
+       {:wall-ns-per-call 6177.5,
+        :cpu-ns-per-call 6215.0,
+        :bytes-per-call 7199.0}}],
+     :medians
+     {:reference
+      {:wall-ns-per-call 19480.625,
+       :cpu-ns-per-call 19520.25,
+       :bytes-per-call 26065.0},
+      :portfolio
+      {:wall-ns-per-call 5965.625,
+       :cpu-ns-per-call 6018.125,
+       :bytes-per-call 7199.0},
+      :baseline
+      {:wall-ns-per-call 5774.75,
+       :cpu-ns-per-call 5821.625,
+       :bytes-per-call 7193.0},
+      :clojure
+      {:wall-ns-per-call 488.5,
+       :cpu-ns-per-call 526.75,
+       :bytes-per-call 129.0}},
+     :estimated-total-ns
+     {:reference {1 35521.0, 10 210846.625, 1000 1.9496665375E7},
+      :portfolio
+      {1 1.6726309E7, 10 1.6779999625E7, 1000 2.2685968375E7},
+      :baseline {1 1.6627449E7, 10 1.667942175E7, 1000 2.239642425E7},
+      :clojure {1 1172921.0, 10 1177317.5, 1000 1660932.5}}}
+    {:arguments [4],
+     :expected [:value 16],
+     :portfolio-selected :baseline,
+     :batch 8,
+     :first-observed
+     {:reference
+      {:wall-ns-per-call 293589.0,
+       :cpu-ns-per-call 294172.0,
+       :bytes-per-call 384136.0},
+      :portfolio
+      {:wall-ns-per-call 28521.0,
+       :cpu-ns-per-call 28999.0,
+       :bytes-per-call 10320.0},
+      :baseline
+      {:wall-ns-per-call 11953.0,
+       :cpu-ns-per-call 12274.0,
+       :bytes-per-call 10272.0},
+      :clojure
+      {:wall-ns-per-call 12866.0,
+       :cpu-ns-per-call 13139.0,
+       :bytes-per-call 3208.0}},
+     :samples
+     [{:reference
+       {:wall-ns-per-call 278141.625,
+        :cpu-ns-per-call 278311.0,
+        :bytes-per-call 384073.0},
+       :portfolio
+       {:wall-ns-per-call 11749.875,
+        :cpu-ns-per-call 11823.5,
+        :bytes-per-call 10215.0},
+       :baseline
+       {:wall-ns-per-call 11811.875,
+        :cpu-ns-per-call 11865.375,
+        :bytes-per-call 10209.0},
+       :clojure
+       {:wall-ns-per-call 5207.0,
+        :cpu-ns-per-call 5243.75,
+        :bytes-per-call 3145.0}}
+      {:portfolio
+       {:wall-ns-per-call 11560.5,
+        :cpu-ns-per-call 11611.75,
+        :bytes-per-call 10209.0},
+       :baseline
+       {:wall-ns-per-call 11140.375,
+        :cpu-ns-per-call 11180.875,
+        :bytes-per-call 10209.0},
+       :clojure
+       {:wall-ns-per-call 5078.0,
+        :cpu-ns-per-call 5122.25,
+        :bytes-per-call 3145.0},
+       :reference
+       {:wall-ns-per-call 271000.875,
+        :cpu-ns-per-call 271084.0,
+        :bytes-per-call 384073.0}}
+      {:baseline
+       {:wall-ns-per-call 11845.625,
+        :cpu-ns-per-call 11888.625,
+        :bytes-per-call 10215.0},
+       :clojure
+       {:wall-ns-per-call 5186.5,
+        :cpu-ns-per-call 5221.125,
+        :bytes-per-call 3145.0},
+       :reference
+       {:wall-ns-per-call 269961.875,
+        :cpu-ns-per-call 270047.0,
+        :bytes-per-call 384073.0},
+       :portfolio
+       {:wall-ns-per-call 11603.875,
+        :cpu-ns-per-call 11658.125,
+        :bytes-per-call 10215.0}}
+      {:clojure
+       {:wall-ns-per-call 5155.125,
+        :cpu-ns-per-call 5203.5,
+        :bytes-per-call 3145.0},
+       :reference
+       {:wall-ns-per-call 270527.375,
+        :cpu-ns-per-call 270648.5,
+        :bytes-per-call 384073.0},
+       :portfolio
+       {:wall-ns-per-call 13740.75,
+        :cpu-ns-per-call 13792.125,
+        :bytes-per-call 10215.0},
+       :baseline
+       {:wall-ns-per-call 7650.125,
+        :cpu-ns-per-call 7697.125,
+        :bytes-per-call 10209.0}}
+      {:reference
+       {:wall-ns-per-call 275186.25,
+        :cpu-ns-per-call 275265.625,
+        :bytes-per-call 384073.0},
+       :portfolio
+       {:wall-ns-per-call 9132.875,
+        :cpu-ns-per-call 9183.0,
+        :bytes-per-call 10215.0},
+       :baseline
+       {:wall-ns-per-call 8261.5,
+        :cpu-ns-per-call 8303.875,
+        :bytes-per-call 10209.0},
+       :clojure
+       {:wall-ns-per-call 5433.75,
+        :cpu-ns-per-call 5481.125,
+        :bytes-per-call 3145.0}}
+      {:portfolio
+       {:wall-ns-per-call 8383.25,
+        :cpu-ns-per-call 8428.75,
+        :bytes-per-call 10209.0},
+       :baseline
+       {:wall-ns-per-call 7971.0,
+        :cpu-ns-per-call 8026.0,
+        :bytes-per-call 10209.0},
+       :clojure
+       {:wall-ns-per-call 5254.25,
+        :cpu-ns-per-call 5287.625,
+        :bytes-per-call 3145.0},
+       :reference
+       {:wall-ns-per-call 274034.875,
+        :cpu-ns-per-call 274124.5,
+        :bytes-per-call 384073.0}}
+      {:baseline
+       {:wall-ns-per-call 9114.375,
+        :cpu-ns-per-call 9168.75,
+        :bytes-per-call 10215.0},
+       :clojure
+       {:wall-ns-per-call 6260.0,
+        :cpu-ns-per-call 6303.125,
+        :bytes-per-call 3145.0},
+       :reference
+       {:wall-ns-per-call 274793.875,
+        :cpu-ns-per-call 274866.75,
+        :bytes-per-call 384073.0},
+       :portfolio
+       {:wall-ns-per-call 10075.375,
+        :cpu-ns-per-call 10131.875,
+        :bytes-per-call 10215.0}}],
+     :medians
+     {:reference
+      {:wall-ns-per-call 274034.875,
+       :cpu-ns-per-call 274124.5,
+       :bytes-per-call 384073.0},
+      :portfolio
+      {:wall-ns-per-call 11560.5,
+       :cpu-ns-per-call 11611.75,
+       :bytes-per-call 10215.0},
+      :baseline
+      {:wall-ns-per-call 9114.375,
+       :cpu-ns-per-call 9168.75,
+       :bytes-per-call 10209.0},
+      :clojure
+      {:wall-ns-per-call 5207.0,
+       :cpu-ns-per-call 5243.75,
+       :bytes-per-call 3145.0}},
+     :estimated-total-ns
+     {:reference {1 293589.0, 10 2759902.875, 1000 2.74054429125E8},
+      :portfolio {1 1.6587445E7, 10 1.66914895E7, 1000 2.81363845E7},
+      :baseline
+      {1 1.6607546E7, 10 1.6689575375E7, 1000 2.5712806625E7},
+      :clojure {1 1136034.0, 10 1182897.0, 1000 6337827.0}}}
+    {:arguments [8],
+     :expected [:value 256],
+     :portfolio-selected :baseline,
+     :batch 8,
+     :first-observed
+     {:reference
+      {:wall-ns-per-call 4080904.0,
+       :cpu-ns-per-call 4082583.0,
+       :bytes-per-call 5859040.0},
+      :portfolio
+      {:wall-ns-per-call 62790.0,
+       :cpu-ns-per-call 63410.0,
+       :bytes-per-call 57832.0},
+      :baseline
+      {:wall-ns-per-call 39345.0,
+       :cpu-ns-per-call 39769.0,
+       :bytes-per-call 57784.0},
+      :clojure
+      {:wall-ns-per-call 86614.0,
+       :cpu-ns-per-call 87065.0,
+       :bytes-per-call 50720.0}},
+     :samples
+     [{:reference
+       {:wall-ns-per-call 4579474.125,
+        :cpu-ns-per-call 4578414.75,
+        :bytes-per-call 6104808.0},
+       :portfolio
+       {:wall-ns-per-call 34647.75,
+        :cpu-ns-per-call 34735.5,
+        :bytes-per-call 57727.0},
+       :baseline
+       {:wall-ns-per-call 28294.375,
+        :cpu-ns-per-call 28341.375,
+        :bytes-per-call 57721.0},
+       :clojure
+       {:wall-ns-per-call 21990.25,
+        :cpu-ns-per-call 22048.75,
+        :bytes-per-call 50657.0}}
+      {:portfolio
+       {:wall-ns-per-call 30811.5,
+        :cpu-ns-per-call 30877.25,
+        :bytes-per-call 57721.0},
+       :baseline
+       {:wall-ns-per-call 29749.5,
+        :cpu-ns-per-call 29792.875,
+        :bytes-per-call 57721.0},
+       :clojure
+       {:wall-ns-per-call 27581.125,
+        :cpu-ns-per-call 27623.375,
+        :bytes-per-call 50657.0},
+       :reference
+       {:wall-ns-per-call 3517097.375,
+        :cpu-ns-per-call 3517507.5,
+        :bytes-per-call 6099155.0}}
+      {:baseline
+       {:wall-ns-per-call 36649.375,
+        :cpu-ns-per-call 36715.5,
+        :bytes-per-call 57727.0},
+       :clojure
+       {:wall-ns-per-call 23968.0,
+        :cpu-ns-per-call 24019.0,
+        :bytes-per-call 50657.0},
+       :reference
+       {:wall-ns-per-call 4149059.0,
+        :cpu-ns-per-call 3511968.5,
+        :bytes-per-call 6012617.0},
+       :portfolio
+       {:wall-ns-per-call 67122.625,
+        :cpu-ns-per-call 67245.0,
+        :bytes-per-call 57727.0}}
+      {:clojure
+       {:wall-ns-per-call 30409.125,
+        :cpu-ns-per-call 30512.25,
+        :bytes-per-call 50657.0},
+       :reference
+       {:wall-ns-per-call 3684617.0,
+        :cpu-ns-per-call 3682657.25,
+        :bytes-per-call 6012617.0},
+       :portfolio
+       {:wall-ns-per-call 44458.5,
+        :cpu-ns-per-call 44521.25,
+        :bytes-per-call 57727.0},
+       :baseline
+       {:wall-ns-per-call 37606.5,
+        :cpu-ns-per-call 37659.25,
+        :bytes-per-call 57721.0}}
+      {:reference
+       {:wall-ns-per-call 3093798.5,
+        :cpu-ns-per-call 3094189.125,
+        :bytes-per-call 6012617.0},
+       :portfolio
+       {:wall-ns-per-call 39210.25,
+        :cpu-ns-per-call 39277.875,
+        :bytes-per-call 57727.0},
+       :baseline
+       {:wall-ns-per-call 34582.375,
+        :cpu-ns-per-call 34640.0,
+        :bytes-per-call 57721.0},
+       :clojure
+       {:wall-ns-per-call 26670.375,
+        :cpu-ns-per-call 26724.625,
+        :bytes-per-call 50657.0}}
+      {:portfolio
+       {:wall-ns-per-call 35046.125,
+        :cpu-ns-per-call 35115.125,
+        :bytes-per-call 57721.0},
+       :baseline
+       {:wall-ns-per-call 34840.875,
+        :cpu-ns-per-call 34895.875,
+        :bytes-per-call 57721.0},
+       :clojure
+       {:wall-ns-per-call 21693.625,
+        :cpu-ns-per-call 21732.5,
+        :bytes-per-call 50657.0},
+       :reference
+       {:wall-ns-per-call 3095633.375,
+        :cpu-ns-per-call 2843235.5,
+        :bytes-per-call 6012617.0}}
+      {:baseline
+       {:wall-ns-per-call 53698.625,
+        :cpu-ns-per-call 53886.375,
+        :bytes-per-call 57727.0},
+       :clojure
+       {:wall-ns-per-call 52604.0,
+        :cpu-ns-per-call 52798.0,
+        :bytes-per-call 50657.0},
+       :reference
+       {:wall-ns-per-call 2697637.25,
+        :cpu-ns-per-call 2698178.625,
+        :bytes-per-call 6012617.0},
+       :portfolio
+       {:wall-ns-per-call 52973.375,
+        :cpu-ns-per-call 53147.75,
+        :bytes-per-call 57727.0}}],
+     :medians
+     {:reference
+      {:wall-ns-per-call 3517097.375,
+       :cpu-ns-per-call 3511968.5,
+       :bytes-per-call 6012617.0},
+      :portfolio
+      {:wall-ns-per-call 39210.25,
+       :cpu-ns-per-call 39277.875,
+       :bytes-per-call 57727.0},
+      :baseline
+      {:wall-ns-per-call 34840.875,
+       :cpu-ns-per-call 34895.875,
+       :bytes-per-call 57721.0},
+      :clojure
+      {:wall-ns-per-call 26670.375,
+       :cpu-ns-per-call 26724.625,
+       :bytes-per-call 50657.0}},
+     :estimated-total-ns
+     {:reference
+      {1 4080904.0, 10 3.5734780375E7, 1000 3.517661181625E9},
+      :portfolio {1 1.6621714E7, 10 1.697460625E7, 1000 5.579275375E7},
+      :baseline
+      {1 1.6634938E7, 10 1.6948505875E7, 1000 5.1440972125E7},
+      :clojure {1 1209782.0, 10 1449815.375, 1000 2.7853486625E7}}}],
+   :form
+   (fn
+    [depth]
+    (let
+     [tree
+      (loop
+       [d depth node [1]]
+       (if (> d 0) (recur (dec d) [node node]) node))]
+     (loop
+      [pending (list tree) total 0]
+      (if
+       (empty? pending)
+       total
+       (let
+        [node (first pending) more (rest pending)]
+        (if
+         (= (count node) 1)
+         (recur more (+ total (nth node 0)))
+         (recur
+          (cons (first node) (cons (second node) more))
+          total))))))),
+   :cache-stats
+   {:reference
+    {:hits 0,
+     :misses 37224,
+     :fallbacks 0,
+     :revalidations 0,
+     :deopts 0},
+    :portfolio
+    {:hits 4, :misses 0, :fallbacks 0, :revalidations 1, :deopts 0},
+    :baseline
+    {:hits 1, :misses 0, :fallbacks 0, :revalidations 1, :deopts 0}}}
+  {:job-usage {:work 14902, :bytes 3357, :emissions 2},
+   :portfolio-installation
+   {:wall-ns-per-call 3584579.0,
+    :cpu-ns-per-call 3588478.0,
+    :bytes-per-call 3810992.0},
+   :preparation
+   {:baseline
+    {:status :prepared,
+     :reason nil,
+     :preparation
+     {:wall-ns-per-call 2.3430283E7,
+      :cpu-ns-per-call 2.3231191E7,
+      :bytes-per-call 2.1701176E7},
+     :validation
+     {:wall-ns-per-call 2454783.0,
+      :cpu-ns-per-call 2035096.0,
+      :bytes-per-call 3802080.0},
+     :installation
+     {:wall-ns-per-call 70883.0,
+      :cpu-ns-per-call 71337.0,
+      :bytes-per-call 8544.0},
+     :usage {:work 7283, :bytes 932, :emissions 1}},
+    :private
+    {:status :prepared,
+     :reason nil,
+     :preparation
+     {:wall-ns-per-call 1.69060695E8,
+      :cpu-ns-per-call 1.49052472E8,
+      :bytes-per-call 1.4589296E8},
+     :validation
+     {:wall-ns-per-call 7878619.0,
+      :cpu-ns-per-call 7885853.0,
+      :bytes-per-call 7009080.0},
+     :installation
+     {:wall-ns-per-call 183051.0,
+      :cpu-ns-per-call 183937.0,
+      :bytes-per-call 18088.0},
+     :usage {:work 7619, :bytes 2425, :emissions 1}}},
+   :load-ns 28710553,
+   :portfolio-revalidations 1,
+   :id :enclosed-accumulator,
+   :host-preparation
+   {:wall-ns-per-call 2027141.0,
+    :cpu-ns-per-call 2032975.0,
+    :bytes-per-call 618856.0},
+   :engine-order [:reference :portfolio :baseline :private :clojure],
+   :cases
+   [{:arguments [0 4 100],
+     :expected [:value true],
+     :portfolio-selected :private,
+     :batch 8,
+     :first-observed
+     {:reference
+      {:wall-ns-per-call 37611.0,
+       :cpu-ns-per-call 40781.0,
+       :bytes-per-call 14192.0},
+      :portfolio
+      {:wall-ns-per-call 1526400.0,
+       :cpu-ns-per-call 1517719.0,
+       :bytes-per-call 26512.0},
+      :baseline
+      {:wall-ns-per-call 309795.0,
+       :cpu-ns-per-call 310344.0,
+       :bytes-per-call 11648.0},
+      :private
+      {:wall-ns-per-call 134655.0,
+       :cpu-ns-per-call 135037.0,
+       :bytes-per-call 15096.0},
+      :clojure
+      {:wall-ns-per-call 66044.0,
+       :cpu-ns-per-call 66383.0,
+       :bytes-per-call 720.0}},
+     :samples
+     [{:reference
+       {:wall-ns-per-call 14350.375,
+        :cpu-ns-per-call 11271.625,
+        :bytes-per-call 14129.0},
+       :portfolio
+       {:wall-ns-per-call 25740.625,
+        :cpu-ns-per-call 23275.125,
+        :bytes-per-call 12113.0},
+       :baseline
+       {:wall-ns-per-call 4194.5,
+        :cpu-ns-per-call 4227.375,
+        :bytes-per-call 6031.0},
+       :private
+       {:wall-ns-per-call 19339.125,
+        :cpu-ns-per-call 19400.5,
+        :bytes-per-call 12113.0},
+       :clojure
+       {:wall-ns-per-call 328.875,
+        :cpu-ns-per-call 361.625,
+        :bytes-per-call 57.0}}
+      {:portfolio
+       {:wall-ns-per-call 17792.25,
+        :cpu-ns-per-call 17848.875,
+        :bytes-per-call 12113.0},
+       :baseline
+       {:wall-ns-per-call 4044.875,
+        :cpu-ns-per-call 4076.0,
+        :bytes-per-call 6031.0},
+       :private
+       {:wall-ns-per-call 18889.625,
+        :cpu-ns-per-call 18939.5,
+        :bytes-per-call 12113.0},
+       :clojure
+       {:wall-ns-per-call 331.5,
+        :cpu-ns-per-call 357.375,
+        :bytes-per-call 57.0},
+       :reference
+       {:wall-ns-per-call 9296.875,
+        :cpu-ns-per-call 9336.25,
+        :bytes-per-call 14129.0}}
+      {:baseline
+       {:wall-ns-per-call 3962.5,
+        :cpu-ns-per-call 3997.125,
+        :bytes-per-call 6031.0},
+       :private
+       {:wall-ns-per-call 17309.25,
+        :cpu-ns-per-call 17354.0,
+        :bytes-per-call 12113.0},
+       :clojure
+       {:wall-ns-per-call 318.875,
+        :cpu-ns-per-call 345.0,
+        :bytes-per-call 57.0},
+       :reference
+       {:wall-ns-per-call 7163.625,
+        :cpu-ns-per-call 7197.25,
+        :bytes-per-call 14129.0},
+       :portfolio
+       {:wall-ns-per-call 17425.75,
+        :cpu-ns-per-call 17462.125,
+        :bytes-per-call 12113.0}}
+      {:private
+       {:wall-ns-per-call 17063.0,
+        :cpu-ns-per-call 17106.25,
+        :bytes-per-call 12113.0},
+       :clojure
+       {:wall-ns-per-call 326.625,
+        :cpu-ns-per-call 357.75,
+        :bytes-per-call 57.0},
+       :reference
+       {:wall-ns-per-call 7654.125,
+        :cpu-ns-per-call 7712.0,
+        :bytes-per-call 14129.0},
+       :portfolio
+       {:wall-ns-per-call 17006.375,
+        :cpu-ns-per-call 17060.75,
+        :bytes-per-call 12113.0},
+       :baseline
+       {:wall-ns-per-call 4027.75,
+        :cpu-ns-per-call 4060.125,
+        :bytes-per-call 6031.0}}
+      {:clojure
+       {:wall-ns-per-call 304.625,
+        :cpu-ns-per-call 331.25,
+        :bytes-per-call 57.0},
+       :reference
+       {:wall-ns-per-call 7315.625,
+        :cpu-ns-per-call 7349.5,
+        :bytes-per-call 14129.0},
+       :portfolio
+       {:wall-ns-per-call 18544.0,
+        :cpu-ns-per-call 18582.5,
+        :bytes-per-call 12113.0},
+       :baseline
+       {:wall-ns-per-call 4352.5,
+        :cpu-ns-per-call 4392.875,
+        :bytes-per-call 6031.0},
+       :private
+       {:wall-ns-per-call 17740.75,
+        :cpu-ns-per-call 17793.125,
+        :bytes-per-call 12113.0}}
+      {:reference
+       {:wall-ns-per-call 7350.75,
+        :cpu-ns-per-call 7391.375,
+        :bytes-per-call 14129.0},
+       :portfolio
+       {:wall-ns-per-call 17836.125,
+        :cpu-ns-per-call 17876.625,
+        :bytes-per-call 12113.0},
+       :baseline
+       {:wall-ns-per-call 4407.875,
+        :cpu-ns-per-call 4446.0,
+        :bytes-per-call 6031.0},
+       :private
+       {:wall-ns-per-call 18764.125,
+        :cpu-ns-per-call 18805.75,
+        :bytes-per-call 12113.0},
+       :clojure
+       {:wall-ns-per-call 365.375,
+        :cpu-ns-per-call 395.0,
+        :bytes-per-call 57.0}}
+      {:portfolio
+       {:wall-ns-per-call 18142.375,
+        :cpu-ns-per-call 18183.25,
+        :bytes-per-call 12113.0},
+       :baseline
+       {:wall-ns-per-call 4453.0,
+        :cpu-ns-per-call 4491.125,
+        :bytes-per-call 6031.0},
+       :private
+       {:wall-ns-per-call 18662.25,
+        :cpu-ns-per-call 18719.875,
+        :bytes-per-call 12113.0},
+       :clojure
+       {:wall-ns-per-call 338.375,
+        :cpu-ns-per-call 369.5,
+        :bytes-per-call 57.0},
+       :reference
+       {:wall-ns-per-call 7840.25,
+        :cpu-ns-per-call 7882.25,
+        :bytes-per-call 14129.0}}],
+     :medians
+     {:reference
+      {:wall-ns-per-call 7654.125,
+       :cpu-ns-per-call 7712.0,
+       :bytes-per-call 14129.0},
+      :portfolio
+      {:wall-ns-per-call 17836.125,
+       :cpu-ns-per-call 17876.625,
+       :bytes-per-call 12113.0},
+      :baseline
+      {:wall-ns-per-call 4194.5,
+       :cpu-ns-per-call 4227.375,
+       :bytes-per-call 6031.0},
+      :private
+      {:wall-ns-per-call 18662.25,
+       :cpu-ns-per-call 18719.875,
+       :bytes-per-call 12113.0},
+      :clojure
+      {:wall-ns-per-call 328.875,
+       :cpu-ns-per-call 357.75,
+       :bytes-per-call 57.0}},
+     :estimated-total-ns
+     {:reference {1 37611.0, 10 106498.125, 1000 7684081.875},
+      :portfolio
+      {1 2.07935359E8, 10 2.08095884125E8, 1000 2.25753647875E8},
+      :baseline {1 2.6265744E7, 10 2.63034945E7, 1000 3.04560495E7},
+      :private {1 1.7725702E8, 10 1.7742498025E8, 1000 1.9590060775E8},
+      :clojure {1 2093185.0, 10 2096144.875, 1000 2421731.125}}}
+    {:arguments [16 4 1000],
+     :expected [:value true],
+     :portfolio-selected :private,
+     :batch 8,
+     :first-observed
+     {:reference
+      {:wall-ns-per-call 135414.0,
+       :cpu-ns-per-call 136420.0,
+       :bytes-per-call 206216.0},
+      :portfolio
+      {:wall-ns-per-call 60729.0,
+       :cpu-ns-per-call 61266.0,
+       :bytes-per-call 12224.0},
+      :baseline
+      {:wall-ns-per-call 24877.0,
+       :cpu-ns-per-call 25166.0,
+       :bytes-per-call 8208.0},
+      :private
+      {:wall-ns-per-call 34717.0,
+       :cpu-ns-per-call 35094.0,
+       :bytes-per-call 12224.0},
+      :clojure
+      {:wall-ns-per-call 19502.0,
+       :cpu-ns-per-call 19779.0,
+       :bytes-per-call 2192.0}},
+     :samples
+     [{:reference
+       {:wall-ns-per-call 94888.5,
+        :cpu-ns-per-call 94977.5,
+        :bytes-per-call 206153.0},
+       :portfolio
+       {:wall-ns-per-call 26337.375,
+        :cpu-ns-per-call 26392.875,
+        :bytes-per-call 12161.0},
+       :baseline
+       {:wall-ns-per-call 7240.125,
+        :cpu-ns-per-call 7287.375,
+        :bytes-per-call 8103.0},
+       :private
+       {:wall-ns-per-call 18977.25,
+        :cpu-ns-per-call 19033.625,
+        :bytes-per-call 12161.0},
+       :clojure
+       {:wall-ns-per-call 3624.875,
+        :cpu-ns-per-call 3662.75,
+        :bytes-per-call 2129.0}}
+      {:portfolio
+       {:wall-ns-per-call 17959.0,
+        :cpu-ns-per-call 18005.875,
+        :bytes-per-call 12161.0},
+       :baseline
+       {:wall-ns-per-call 6685.625,
+        :cpu-ns-per-call 6728.875,
+        :bytes-per-call 8103.0},
+       :private
+       {:wall-ns-per-call 17982.75,
+        :cpu-ns-per-call 18031.25,
+        :bytes-per-call 12161.0},
+       :clojure
+       {:wall-ns-per-call 5510.75,
+        :cpu-ns-per-call 5556.0,
+        :bytes-per-call 2129.0},
+       :reference
+       {:wall-ns-per-call 88629.875,
+        :cpu-ns-per-call 88695.875,
+        :bytes-per-call 206153.0}}
+      {:baseline
+       {:wall-ns-per-call 8287.625,
+        :cpu-ns-per-call 8336.5,
+        :bytes-per-call 8103.0},
+       :private
+       {:wall-ns-per-call 20424.25,
+        :cpu-ns-per-call 20471.375,
+        :bytes-per-call 12161.0},
+       :clojure
+       {:wall-ns-per-call 4023.0,
+        :cpu-ns-per-call 4064.75,
+        :bytes-per-call 2129.0},
+       :reference
+       {:wall-ns-per-call 89124.625,
+        :cpu-ns-per-call 89178.0,
+        :bytes-per-call 206153.0},
+       :portfolio
+       {:wall-ns-per-call 20830.125,
+        :cpu-ns-per-call 20875.5,
+        :bytes-per-call 12161.0}}
+      {:private
+       {:wall-ns-per-call 18818.625,
+        :cpu-ns-per-call 18871.875,
+        :bytes-per-call 12161.0},
+       :clojure
+       {:wall-ns-per-call 2706.75,
+        :cpu-ns-per-call 2746.5,
+        :bytes-per-call 2129.0},
+       :reference
+       {:wall-ns-per-call 86849.5,
+        :cpu-ns-per-call 86910.75,
+        :bytes-per-call 206153.0},
+       :portfolio
+       {:wall-ns-per-call 19050.625,
+        :cpu-ns-per-call 19122.125,
+        :bytes-per-call 12161.0},
+       :baseline
+       {:wall-ns-per-call 7548.375,
+        :cpu-ns-per-call 7594.75,
+        :bytes-per-call 8103.0}}
+      {:clojure
+       {:wall-ns-per-call 3229.375,
+        :cpu-ns-per-call 3271.0,
+        :bytes-per-call 2129.0},
+       :reference
+       {:wall-ns-per-call 98145.5,
+        :cpu-ns-per-call 98206.25,
+        :bytes-per-call 206153.0},
+       :portfolio
+       {:wall-ns-per-call 21649.5,
+        :cpu-ns-per-call 21728.625,
+        :bytes-per-call 12161.0},
+       :baseline
+       {:wall-ns-per-call 7908.0,
+        :cpu-ns-per-call 7962.75,
+        :bytes-per-call 8103.0},
+       :private
+       {:wall-ns-per-call 21160.375,
+        :cpu-ns-per-call 21227.125,
+        :bytes-per-call 12161.0}}
+      {:reference
+       {:wall-ns-per-call 104971.375,
+        :cpu-ns-per-call 105060.5,
+        :bytes-per-call 206153.0},
+       :portfolio
+       {:wall-ns-per-call 21721.75,
+        :cpu-ns-per-call 21786.75,
+        :bytes-per-call 12161.0},
+       :baseline
+       {:wall-ns-per-call 7833.375,
+        :cpu-ns-per-call 7882.25,
+        :bytes-per-call 8103.0},
+       :private
+       {:wall-ns-per-call 23521.375,
+        :cpu-ns-per-call 22608.25,
+        :bytes-per-call 12161.0},
+       :clojure
+       {:wall-ns-per-call 2662.375,
+        :cpu-ns-per-call 2707.625,
+        :bytes-per-call 2129.0}}
+      {:portfolio
+       {:wall-ns-per-call 21336.875,
+        :cpu-ns-per-call 21393.0,
+        :bytes-per-call 12161.0},
+       :baseline
+       {:wall-ns-per-call 8450.375,
+        :cpu-ns-per-call 8497.125,
+        :bytes-per-call 8103.0},
+       :private
+       {:wall-ns-per-call 23442.125,
+        :cpu-ns-per-call 23508.375,
+        :bytes-per-call 12161.0},
+       :clojure
+       {:wall-ns-per-call 2851.25,
+        :cpu-ns-per-call 2888.75,
+        :bytes-per-call 2129.0},
+       :reference
+       {:wall-ns-per-call 96078.75,
+        :cpu-ns-per-call 96139.5,
+        :bytes-per-call 206153.0}}],
+     :medians
+     {:reference
+      {:wall-ns-per-call 94888.5,
+       :cpu-ns-per-call 94977.5,
+       :bytes-per-call 206153.0},
+      :portfolio
+      {:wall-ns-per-call 21336.875,
+       :cpu-ns-per-call 21393.0,
+       :bytes-per-call 12161.0},
+      :baseline
+      {:wall-ns-per-call 7833.375,
+       :cpu-ns-per-call 7882.25,
+       :bytes-per-call 8103.0},
+      :private
+      {:wall-ns-per-call 20424.25,
+       :cpu-ns-per-call 20471.375,
+       :bytes-per-call 12161.0},
+      :clojure
+      {:wall-ns-per-call 3229.375,
+       :cpu-ns-per-call 3271.0,
+       :bytes-per-call 2129.0}},
+     :estimated-total-ns
+     {:reference {1 135414.0, 10 989410.5, 1000 9.49290255E7},
+      :portfolio
+      {1 2.06469688E8, 10 2.06661719875E8, 1000 2.27785226125E8},
+      :baseline
+      {1 2.5980826E7, 10 2.6051326375E7, 1000 3.3806367625E7},
+      :private
+      {1 1.77157082E8, 10 1.7734090025E8, 1000 1.9756090775E8},
+      :clojure {1 2046643.0, 10 2075707.375, 1000 5272788.625}}}
+    {:arguments [1000 4 600000],
+     :expected [:value true],
+     :portfolio-selected :private,
+     :batch 1,
+     :first-observed
+     {:reference
+      {:wall-ns-per-call 5355430.0,
+       :cpu-ns-per-call 5357090.0,
+       :bytes-per-call 1.208204E7},
+      :portfolio
+      {:wall-ns-per-call 291560.0,
+       :cpu-ns-per-call 292342.0,
+       :bytes-per-call 12272.0},
+      :baseline
+      {:wall-ns-per-call 216401.0,
+       :cpu-ns-per-call 216969.0,
+       :bytes-per-call 201960.0},
+      :private
+      {:wall-ns-per-call 76471.0,
+       :cpu-ns-per-call 76897.0,
+       :bytes-per-call 12272.0},
+      :clojure
+      {:wall-ns-per-call 129368.0,
+       :cpu-ns-per-call 129727.0,
+       :bytes-per-call 195944.0}},
+     :samples
+     [{:reference
+       {:wall-ns-per-call 4274854.0,
+        :cpu-ns-per-call 4277833.0,
+        :bytes-per-call 1.208204E7},
+       :portfolio
+       {:wall-ns-per-call 37550.0,
+        :cpu-ns-per-call 37944.0,
+        :bytes-per-call 12272.0},
+       :baseline
+       {:wall-ns-per-call 54464.0,
+        :cpu-ns-per-call 54799.0,
+        :bytes-per-call 222912.0},
+       :private
+       {:wall-ns-per-call 20714.0,
+        :cpu-ns-per-call 21048.0,
+        :bytes-per-call 12272.0},
+       :clojure
+       {:wall-ns-per-call 63130.0,
+        :cpu-ns-per-call 63481.0,
+        :bytes-per-call 216896.0}}
+      {:portfolio
+       {:wall-ns-per-call 18932.0,
+        :cpu-ns-per-call 19275.0,
+        :bytes-per-call 12272.0},
+       :baseline
+       {:wall-ns-per-call 51325.0,
+        :cpu-ns-per-call 51685.0,
+        :bytes-per-call 222912.0},
+       :private
+       {:wall-ns-per-call 18482.0,
+        :cpu-ns-per-call 18793.0,
+        :bytes-per-call 12272.0},
+       :clojure
+       {:wall-ns-per-call 62187.0,
+        :cpu-ns-per-call 62495.0,
+        :bytes-per-call 216896.0},
+       :reference
+       {:wall-ns-per-call 4348715.0,
+        :cpu-ns-per-call 4350200.0,
+        :bytes-per-call 1.208204E7}}
+      {:baseline
+       {:wall-ns-per-call 72212.0,
+        :cpu-ns-per-call 72626.0,
+        :bytes-per-call 222912.0},
+       :private
+       {:wall-ns-per-call 32867.0,
+        :cpu-ns-per-call 33329.0,
+        :bytes-per-call 12272.0},
+       :clojure
+       {:wall-ns-per-call 65909.0,
+        :cpu-ns-per-call 66374.0,
+        :bytes-per-call 216896.0},
+       :reference
+       {:wall-ns-per-call 4231914.0,
+        :cpu-ns-per-call 4232987.0,
+        :bytes-per-call 1.208204E7},
+       :portfolio
+       {:wall-ns-per-call 77095.0,
+        :cpu-ns-per-call 77655.0,
+        :bytes-per-call 12272.0}}
+      {:private
+       {:wall-ns-per-call 30613.0,
+        :cpu-ns-per-call 30939.0,
+        :bytes-per-call 12272.0},
+       :clojure
+       {:wall-ns-per-call 74010.0,
+        :cpu-ns-per-call 74354.0,
+        :bytes-per-call 216896.0},
+       :reference
+       {:wall-ns-per-call 4250638.0,
+        :cpu-ns-per-call 4251684.0,
+        :bytes-per-call 1.208204E7},
+       :portfolio
+       {:wall-ns-per-call 40794.0,
+        :cpu-ns-per-call 41285.0,
+        :bytes-per-call 12272.0},
+       :baseline
+       {:wall-ns-per-call 77977.0,
+        :cpu-ns-per-call 78447.0,
+        :bytes-per-call 222912.0}}
+      {:clojure
+       {:wall-ns-per-call 67860.0,
+        :cpu-ns-per-call 68191.0,
+        :bytes-per-call 216896.0},
+       :reference
+       {:wall-ns-per-call 4247500.0,
+        :cpu-ns-per-call 4248428.0,
+        :bytes-per-call 1.208204E7},
+       :portfolio
+       {:wall-ns-per-call 50948.0,
+        :cpu-ns-per-call 51287.0,
+        :bytes-per-call 12272.0},
+       :baseline
+       {:wall-ns-per-call 75636.0,
+        :cpu-ns-per-call 76018.0,
+        :bytes-per-call 222912.0},
+       :private
+       {:wall-ns-per-call 27276.0,
+        :cpu-ns-per-call 27634.0,
+        :bytes-per-call 12272.0}}
+      {:reference
+       {:wall-ns-per-call 6943945.0,
+        :cpu-ns-per-call 4429270.0,
+        :bytes-per-call 1.208204E7},
+       :portfolio
+       {:wall-ns-per-call 196314.0,
+        :cpu-ns-per-call 197802.0,
+        :bytes-per-call 12272.0},
+       :baseline
+       {:wall-ns-per-call 130890.0,
+        :cpu-ns-per-call 131654.0,
+        :bytes-per-call 222912.0},
+       :private
+       {:wall-ns-per-call 55193.0,
+        :cpu-ns-per-call 56114.0,
+        :bytes-per-call 12272.0},
+       :clojure
+       {:wall-ns-per-call 85758.0,
+        :cpu-ns-per-call 86807.0,
+        :bytes-per-call 216896.0}}
+      {:portfolio
+       {:wall-ns-per-call 141233.0,
+        :cpu-ns-per-call 142609.0,
+        :bytes-per-call 12272.0},
+       :baseline
+       {:wall-ns-per-call 86074.0,
+        :cpu-ns-per-call 87256.0,
+        :bytes-per-call 222912.0},
+       :private
+       {:wall-ns-per-call 58006.0,
+        :cpu-ns-per-call 59111.0,
+        :bytes-per-call 12272.0},
+       :clojure
+       {:wall-ns-per-call 87958.0,
+        :cpu-ns-per-call 88600.0,
+        :bytes-per-call 216896.0},
+       :reference
+       {:wall-ns-per-call 5095555.0,
+        :cpu-ns-per-call 5087426.0,
+        :bytes-per-call 1.208204E7}}],
+     :medians
+     {:reference
+      {:wall-ns-per-call 4274854.0,
+       :cpu-ns-per-call 4277833.0,
+       :bytes-per-call 1.208204E7},
+      :portfolio
+      {:wall-ns-per-call 50948.0,
+       :cpu-ns-per-call 51287.0,
+       :bytes-per-call 12272.0},
+      :baseline
+      {:wall-ns-per-call 75636.0,
+       :cpu-ns-per-call 76018.0,
+       :bytes-per-call 222912.0},
+      :private
+      {:wall-ns-per-call 30613.0,
+       :cpu-ns-per-call 30939.0,
+       :bytes-per-call 12272.0},
+      :clojure
+      {:wall-ns-per-call 67860.0,
+       :cpu-ns-per-call 68191.0,
+       :bytes-per-call 216896.0}},
+     :estimated-total-ns
+     {:reference {1 5355430.0, 10 4.3829116E7, 1000 4.275934576E9},
+      :portfolio {1 2.06700519E8, 10 2.07159051E8, 1000 2.57597571E8},
+      :baseline {1 2.617235E7, 10 2.6853074E7, 1000 1.01732714E8},
+      :private {1 1.77198836E8, 10 1.77474353E8, 1000 2.07781223E8},
+      :clojure {1 2156509.0, 10 2767249.0, 1000 6.9948649E7}}}
+    {:arguments [16.5 4 1000],
+     :expected [:value true],
+     :portfolio-selected :baseline,
+     :batch 1,
+     :first-observed
+     {:reference
+      {:wall-ns-per-call 94786.0,
+       :cpu-ns-per-call 95456.0,
+       :bytes-per-call 218240.0},
+      :portfolio
+      {:wall-ns-per-call 111408.0,
+       :cpu-ns-per-call 111996.0,
+       :bytes-per-call 15088.0},
+      :baseline
+      {:wall-ns-per-call 1442351.0,
+       :cpu-ns-per-call 41011.0,
+       :bytes-per-call 8360.0},
+      :private
+      {:wall-ns-per-call 258167.0,
+       :cpu-ns-per-call 258698.0,
+       :bytes-per-call 221824.0},
+      :clojure
+      {:wall-ns-per-call 9335.0,
+       :cpu-ns-per-call 9594.0,
+       :bytes-per-call 2344.0}},
+     :samples
+     [{:reference
+       {:wall-ns-per-call 72466.0,
+        :cpu-ns-per-call 73674.0,
+        :bytes-per-call 218240.0},
+       :portfolio
+       {:wall-ns-per-call 45057.0,
+        :cpu-ns-per-call 45360.0,
+        :bytes-per-call 14296.0},
+       :baseline
+       {:wall-ns-per-call 6758.0,
+        :cpu-ns-per-call 7023.0,
+        :bytes-per-call 8360.0},
+       :private
+       {:wall-ns-per-call 86854.0,
+        :cpu-ns-per-call 87193.0,
+        :bytes-per-call 221824.0},
+       :clojure
+       {:wall-ns-per-call 2473.0,
+        :cpu-ns-per-call 2697.0,
+        :bytes-per-call 2344.0}}
+      {:portfolio
+       {:wall-ns-per-call 16177.0,
+        :cpu-ns-per-call 16477.0,
+        :bytes-per-call 14296.0},
+       :baseline
+       {:wall-ns-per-call 5777.0,
+        :cpu-ns-per-call 6032.0,
+        :bytes-per-call 8360.0},
+       :private
+       {:wall-ns-per-call 77999.0,
+        :cpu-ns-per-call 78271.0,
+        :bytes-per-call 221824.0},
+       :clojure
+       {:wall-ns-per-call 2147.0,
+        :cpu-ns-per-call 2357.0,
+        :bytes-per-call 2344.0},
+       :reference
+       {:wall-ns-per-call 69082.0,
+        :cpu-ns-per-call 69390.0,
+        :bytes-per-call 218240.0}}
+      {:baseline
+       {:wall-ns-per-call 5043.0,
+        :cpu-ns-per-call 5312.0,
+        :bytes-per-call 8360.0},
+       :private
+       {:wall-ns-per-call 77868.0,
+        :cpu-ns-per-call 78223.0,
+        :bytes-per-call 221824.0},
+       :clojure
+       {:wall-ns-per-call 1895.0,
+        :cpu-ns-per-call 2099.0,
+        :bytes-per-call 2344.0},
+       :reference
+       {:wall-ns-per-call 70864.0,
+        :cpu-ns-per-call 71145.0,
+        :bytes-per-call 218240.0},
+       :portfolio
+       {:wall-ns-per-call 20472.0,
+        :cpu-ns-per-call 20761.0,
+        :bytes-per-call 14296.0}}
+      {:private
+       {:wall-ns-per-call 79948.0,
+        :cpu-ns-per-call 80304.0,
+        :bytes-per-call 221824.0},
+       :clojure
+       {:wall-ns-per-call 1869.0,
+        :cpu-ns-per-call 2076.0,
+        :bytes-per-call 2344.0},
+       :reference
+       {:wall-ns-per-call 69652.0,
+        :cpu-ns-per-call 69985.0,
+        :bytes-per-call 218240.0},
+       :portfolio
+       {:wall-ns-per-call 15162.0,
+        :cpu-ns-per-call 15431.0,
+        :bytes-per-call 14296.0},
+       :baseline
+       {:wall-ns-per-call 5363.0,
+        :cpu-ns-per-call 5651.0,
+        :bytes-per-call 8360.0}}
+      {:clojure
+       {:wall-ns-per-call 1710.0,
+        :cpu-ns-per-call 1921.0,
+        :bytes-per-call 2344.0},
+       :reference
+       {:wall-ns-per-call 68912.0,
+        :cpu-ns-per-call 69190.0,
+        :bytes-per-call 218240.0},
+       :portfolio
+       {:wall-ns-per-call 14341.0,
+        :cpu-ns-per-call 14608.0,
+        :bytes-per-call 14296.0},
+       :baseline
+       {:wall-ns-per-call 5048.0,
+        :cpu-ns-per-call 5297.0,
+        :bytes-per-call 8360.0},
+       :private
+       {:wall-ns-per-call 78551.0,
+        :cpu-ns-per-call 78919.0,
+        :bytes-per-call 221824.0}}
+      {:reference
+       {:wall-ns-per-call 71301.0,
+        :cpu-ns-per-call 71664.0,
+        :bytes-per-call 218240.0},
+       :portfolio
+       {:wall-ns-per-call 14276.0,
+        :cpu-ns-per-call 14541.0,
+        :bytes-per-call 14296.0},
+       :baseline
+       {:wall-ns-per-call 5369.0,
+        :cpu-ns-per-call 5615.0,
+        :bytes-per-call 8360.0},
+       :private
+       {:wall-ns-per-call 83107.0,
+        :cpu-ns-per-call 83372.0,
+        :bytes-per-call 221824.0},
+       :clojure
+       {:wall-ns-per-call 2085.0,
+        :cpu-ns-per-call 2302.0,
+        :bytes-per-call 2344.0}}
+      {:portfolio
+       {:wall-ns-per-call 14166.0,
+        :cpu-ns-per-call 14434.0,
+        :bytes-per-call 14296.0},
+       :baseline
+       {:wall-ns-per-call 5004.0,
+        :cpu-ns-per-call 5264.0,
+        :bytes-per-call 8360.0},
+       :private
+       {:wall-ns-per-call 81199.0,
+        :cpu-ns-per-call 81555.0,
+        :bytes-per-call 221824.0},
+       :clojure
+       {:wall-ns-per-call 2033.0,
+        :cpu-ns-per-call 2245.0,
+        :bytes-per-call 2344.0},
+       :reference
+       {:wall-ns-per-call 73536.0,
+        :cpu-ns-per-call 73803.0,
+        :bytes-per-call 218240.0}}],
+     :medians
+     {:reference
+      {:wall-ns-per-call 70864.0,
+       :cpu-ns-per-call 71145.0,
+       :bytes-per-call 218240.0},
+      :portfolio
+      {:wall-ns-per-call 15162.0,
+       :cpu-ns-per-call 15431.0,
+       :bytes-per-call 14296.0},
+      :baseline
+      {:wall-ns-per-call 5363.0,
+       :cpu-ns-per-call 5615.0,
+       :bytes-per-call 8360.0},
+      :private
+      {:wall-ns-per-call 79948.0,
+       :cpu-ns-per-call 80304.0,
+       :bytes-per-call 221824.0},
+      :clojure
+      {:wall-ns-per-call 2033.0,
+       :cpu-ns-per-call 2245.0,
+       :bytes-per-call 2344.0}},
+     :estimated-total-ns
+     {:reference {1 94786.0, 10 732562.0, 1000 7.0887922E7},
+      :portfolio {1 2.06520367E8, 10 2.06656825E8, 1000 2.21667205E8},
+      :baseline {1 2.73983E7, 10 2.7446567E7, 1000 3.2755937E7},
+      :private {1 1.77380532E8, 10 1.78100064E8, 1000 2.57248584E8},
+      :clojure {1 2036476.0, 10 2054773.0, 1000 4067443.0}}}],
+   :form
+   (fn
+    [n bias limit]
+    (let
+     [step
+      (fn
+       [acc i]
+       (assoc (assoc acc 0 (+ (nth acc 0) i)) 1 (+ (nth acc 1) bias)))]
+     (let
+      [acc
+       (loop
+        [i 0 acc [0 0]]
+        (if (< i n) (recur (inc i) (step acc i)) acc))]
+      (< (+ (nth acc 0) (nth acc 1)) limit)))),
+   :cache-stats
+   {:reference
+    {:hits 0,
+     :misses 37022,
+     :fallbacks 0,
+     :revalidations 0,
+     :deopts 0},
+    :portfolio
+    {:hits 166, :misses 0, :fallbacks 0, :revalidations 2, :deopts 0},
+    :baseline
+    {:hits 1, :misses 0, :fallbacks 0, :revalidations 1, :deopts 0},
+    :private
+    {:hits 146,
+     :misses 560,
+     :fallbacks 16,
+     :revalidations 1,
+     :deopts 0}}}
+  {:job-usage {:work 21},
+   :portfolio-installation
+   {:wall-ns-per-call 2340.0,
+    :cpu-ns-per-call 2649.0,
+    :bytes-per-call 136.0},
+   :preparation
+   {:baseline
+    {:status :declined,
+     :reason "unsupported form :fn",
+     :preparation
+     {:wall-ns-per-call 646153.0,
+      :cpu-ns-per-call 647986.0,
+      :bytes-per-call 341360.0},
+     :validation nil,
+     :installation nil,
+     :usage {:work 21}}},
+   :load-ns 14067337,
+   :portfolio-revalidations 0,
+   :id :escaping-closure,
+   :host-preparation
+   {:wall-ns-per-call 606358.0,
+    :cpu-ns-per-call 607629.0,
+    :bytes-per-call 178664.0},
+   :engine-order [:reference :portfolio :baseline :clojure],
+   :cases
+   [{:arguments [0],
+     :expected [:function-values [0 1]],
+     :portfolio-selected nil,
+     :batch 8,
+     :first-observed
+     {:reference
+      {:wall-ns-per-call 6304.0,
+       :cpu-ns-per-call 6924.0,
+       :bytes-per-call 5840.0},
+      :portfolio
+      {:wall-ns-per-call 5024.0,
+       :cpu-ns-per-call 5308.0,
+       :bytes-per-call 6304.0},
+      :baseline
+      {:wall-ns-per-call 3208.0,
+       :cpu-ns-per-call 3491.0,
+       :bytes-per-call 6304.0},
+      :clojure
+      {:wall-ns-per-call 18611.0,
+       :cpu-ns-per-call 18931.0,
+       :bytes-per-call 96.0}},
+     :samples
+     [{:reference
+       {:wall-ns-per-call 2391.25,
+        :cpu-ns-per-call 2444.25,
+        :bytes-per-call 5777.0},
+       :portfolio
+       {:wall-ns-per-call 2270.875,
+        :cpu-ns-per-call 2308.625,
+        :bytes-per-call 5777.0},
+       :baseline
+       {:wall-ns-per-call 2279.875,
+        :cpu-ns-per-call 2316.0,
+        :bytes-per-call 5777.0},
+       :clojure
+       {:wall-ns-per-call 130.875,
+        :cpu-ns-per-call 161.375,
+        :bytes-per-call 33.0}}
+      {:portfolio
+       {:wall-ns-per-call 2276.25,
+        :cpu-ns-per-call 2325.0,
+        :bytes-per-call 5777.0},
+       :baseline
+       {:wall-ns-per-call 3038.875,
+        :cpu-ns-per-call 3082.625,
+        :bytes-per-call 5777.0},
+       :clojure
+       {:wall-ns-per-call 129.875,
+        :cpu-ns-per-call 163.75,
+        :bytes-per-call 33.0},
+       :reference
+       {:wall-ns-per-call 2239.5,
+        :cpu-ns-per-call 2278.0,
+        :bytes-per-call 5777.0}}
+      {:baseline
+       {:wall-ns-per-call 2054.625,
+        :cpu-ns-per-call 2088.875,
+        :bytes-per-call 5777.0},
+       :clojure
+       {:wall-ns-per-call 115.75,
+        :cpu-ns-per-call 144.375,
+        :bytes-per-call 33.0},
+       :reference
+       {:wall-ns-per-call 2031.5,
+        :cpu-ns-per-call 2067.75,
+        :bytes-per-call 5777.0},
+       :portfolio
+       {:wall-ns-per-call 28991.125,
+        :cpu-ns-per-call 16576.625,
+        :bytes-per-call 5777.0}}
+      {:clojure
+       {:wall-ns-per-call 524.625,
+        :cpu-ns-per-call 611.5,
+        :bytes-per-call 33.0},
+       :reference
+       {:wall-ns-per-call 3117.875,
+        :cpu-ns-per-call 3175.625,
+        :bytes-per-call 5777.0},
+       :portfolio
+       {:wall-ns-per-call 2924.5,
+        :cpu-ns-per-call 2972.625,
+        :bytes-per-call 5777.0},
+       :baseline
+       {:wall-ns-per-call 2548.0,
+        :cpu-ns-per-call 2612.0,
+        :bytes-per-call 5777.0}}
+      {:reference
+       {:wall-ns-per-call 2564.25,
+        :cpu-ns-per-call 2634.125,
+        :bytes-per-call 5777.0},
+       :portfolio
+       {:wall-ns-per-call 4045.625,
+        :cpu-ns-per-call 4134.625,
+        :bytes-per-call 5777.0},
+       :baseline
+       {:wall-ns-per-call 2481.5,
+        :cpu-ns-per-call 2543.125,
+        :bytes-per-call 5777.0},
+       :clojure
+       {:wall-ns-per-call 227.375,
+        :cpu-ns-per-call 273.875,
+        :bytes-per-call 33.0}}
+      {:portfolio
+       {:wall-ns-per-call 3312.5,
+        :cpu-ns-per-call 3733.25,
+        :bytes-per-call 5777.0},
+       :baseline
+       {:wall-ns-per-call 2617.375,
+        :cpu-ns-per-call 2681.25,
+        :bytes-per-call 5777.0},
+       :clojure
+       {:wall-ns-per-call 193.25,
+        :cpu-ns-per-call 253.75,
+        :bytes-per-call 33.0},
+       :reference
+       {:wall-ns-per-call 2512.625,
+        :cpu-ns-per-call 2577.5,
+        :bytes-per-call 5777.0}}
+      {:baseline
+       {:wall-ns-per-call 2500.5,
+        :cpu-ns-per-call 2557.0,
+        :bytes-per-call 5777.0},
+       :clojure
+       {:wall-ns-per-call 153.875,
+        :cpu-ns-per-call 194.875,
+        :bytes-per-call 33.0},
+       :reference
+       {:wall-ns-per-call 2593.125,
+        :cpu-ns-per-call 2638.75,
+        :bytes-per-call 5777.0},
+       :portfolio
+       {:wall-ns-per-call 2528.0,
+        :cpu-ns-per-call 2575.0,
+        :bytes-per-call 5777.0}}],
+     :medians
+     {:reference
+      {:wall-ns-per-call 2512.625,
+       :cpu-ns-per-call 2577.5,
+       :bytes-per-call 5777.0},
+      :portfolio
+      {:wall-ns-per-call 2924.5,
+       :cpu-ns-per-call 2972.625,
+       :bytes-per-call 5777.0},
+      :baseline
+      {:wall-ns-per-call 2500.5,
+       :cpu-ns-per-call 2557.0,
+       :bytes-per-call 5777.0},
+      :clojure
+      {:wall-ns-per-call 153.875,
+       :cpu-ns-per-call 194.875,
+       :bytes-per-call 33.0}},
+     :estimated-total-ns
+     {:reference {1 6304.0, 10 28917.625, 1000 2516416.375},
+      :portfolio {1 653517.0, 10 679837.5, 1000 3575092.5},
+      :baseline {1 649361.0, 10 671865.5, 1000 3147360.5},
+      :clojure {1 624969.0, 10 626353.875, 1000 778690.125}}}
+    {:arguments [16],
+     :expected [:function-values [16 17]],
+     :portfolio-selected nil,
+     :batch 8,
+     :first-observed
+     {:reference
+      {:wall-ns-per-call 9967.0,
+       :cpu-ns-per-call 13712.0,
+       :bytes-per-call 5840.0},
+      :portfolio
+      {:wall-ns-per-call 4374.0,
+       :cpu-ns-per-call 4772.0,
+       :bytes-per-call 5840.0},
+      :baseline
+      {:wall-ns-per-call 3163.0,
+       :cpu-ns-per-call 3590.0,
+       :bytes-per-call 5840.0},
+      :clojure
+      {:wall-ns-per-call 819.0,
+       :cpu-ns-per-call 1145.0,
+       :bytes-per-call 96.0}},
+     :samples
+     [{:reference
+       {:wall-ns-per-call 2733.625,
+        :cpu-ns-per-call 2852.375,
+        :bytes-per-call 5777.0},
+       :portfolio
+       {:wall-ns-per-call 2840.625,
+        :cpu-ns-per-call 2886.625,
+        :bytes-per-call 5777.0},
+       :baseline
+       {:wall-ns-per-call 2664.75,
+        :cpu-ns-per-call 2726.5,
+        :bytes-per-call 5777.0},
+       :clojure
+       {:wall-ns-per-call 185.0,
+        :cpu-ns-per-call 224.75,
+        :bytes-per-call 33.0}}
+      {:portfolio
+       {:wall-ns-per-call 3618.25,
+        :cpu-ns-per-call 3713.5,
+        :bytes-per-call 5777.0},
+       :baseline
+       {:wall-ns-per-call 3006.75,
+        :cpu-ns-per-call 3083.125,
+        :bytes-per-call 5777.0},
+       :clojure
+       {:wall-ns-per-call 175.25,
+        :cpu-ns-per-call 240.125,
+        :bytes-per-call 33.0},
+       :reference
+       {:wall-ns-per-call 3142.875,
+        :cpu-ns-per-call 3226.25,
+        :bytes-per-call 5777.0}}
+      {:baseline
+       {:wall-ns-per-call 2629.75,
+        :cpu-ns-per-call 2692.625,
+        :bytes-per-call 5777.0},
+       :clojure
+       {:wall-ns-per-call 186.125,
+        :cpu-ns-per-call 244.875,
+        :bytes-per-call 33.0},
+       :reference
+       {:wall-ns-per-call 2858.125,
+        :cpu-ns-per-call 2901.375,
+        :bytes-per-call 5777.0},
+       :portfolio
+       {:wall-ns-per-call 2951.375,
+        :cpu-ns-per-call 3014.125,
+        :bytes-per-call 5777.0}}
+      {:clojure
+       {:wall-ns-per-call 181.0,
+        :cpu-ns-per-call 240.75,
+        :bytes-per-call 33.0},
+       :reference
+       {:wall-ns-per-call 3116.0,
+        :cpu-ns-per-call 3160.25,
+        :bytes-per-call 5777.0},
+       :portfolio
+       {:wall-ns-per-call 2552.75,
+        :cpu-ns-per-call 2626.5,
+        :bytes-per-call 5777.0},
+       :baseline
+       {:wall-ns-per-call 2621.0,
+        :cpu-ns-per-call 2667.25,
+        :bytes-per-call 5777.0}}
+      {:reference
+       {:wall-ns-per-call 2715.75,
+        :cpu-ns-per-call 2777.5,
+        :bytes-per-call 5777.0},
+       :portfolio
+       {:wall-ns-per-call 3668.25,
+        :cpu-ns-per-call 3743.5,
+        :bytes-per-call 5777.0},
+       :baseline
+       {:wall-ns-per-call 3367.625,
+        :cpu-ns-per-call 3460.5,
+        :bytes-per-call 5777.0},
+       :clojure
+       {:wall-ns-per-call 218.875,
+        :cpu-ns-per-call 258.625,
+        :bytes-per-call 33.0}}
+      {:portfolio
+       {:wall-ns-per-call 2869.25,
+        :cpu-ns-per-call 2941.625,
+        :bytes-per-call 5777.0},
+       :baseline
+       {:wall-ns-per-call 2543.875,
+        :cpu-ns-per-call 2590.5,
+        :bytes-per-call 5777.0},
+       :clojure
+       {:wall-ns-per-call 174.625,
+        :cpu-ns-per-call 218.25,
+        :bytes-per-call 33.0},
+       :reference
+       {:wall-ns-per-call 2800.75,
+        :cpu-ns-per-call 2848.5,
+        :bytes-per-call 5777.0}}
+      {:baseline
+       {:wall-ns-per-call 2938.0,
+        :cpu-ns-per-call 3030.75,
+        :bytes-per-call 5777.0},
+       :clojure
+       {:wall-ns-per-call 554.0,
+        :cpu-ns-per-call 596.75,
+        :bytes-per-call 33.0},
+       :reference
+       {:wall-ns-per-call 2958.625,
+        :cpu-ns-per-call 3013.625,
+        :bytes-per-call 5777.0},
+       :portfolio
+       {:wall-ns-per-call 3116.125,
+        :cpu-ns-per-call 3200.25,
+        :bytes-per-call 5777.0}}],
+     :medians
+     {:reference
+      {:wall-ns-per-call 2858.125,
+       :cpu-ns-per-call 2901.375,
+       :bytes-per-call 5777.0},
+      :portfolio
+      {:wall-ns-per-call 2951.375,
+       :cpu-ns-per-call 3014.125,
+       :bytes-per-call 5777.0},
+      :baseline
+      {:wall-ns-per-call 2664.75,
+       :cpu-ns-per-call 2726.5,
+       :bytes-per-call 5777.0},
+      :clojure
+      {:wall-ns-per-call 185.0,
+       :cpu-ns-per-call 240.75,
+       :bytes-per-call 33.0}},
+     :estimated-total-ns
+     {:reference {1 9967.0, 10 35690.125, 1000 2865233.875},
+      :portfolio {1 652867.0, 10 679429.375, 1000 3601290.625},
+      :baseline {1 649316.0, 10 673298.75, 1000 3311401.25},
+      :clojure {1 607177.0, 10 608842.0, 1000 791992.0}}}
+    {:arguments [1000],
+     :expected [:function-values [1000 1001]],
+     :portfolio-selected nil,
+     :batch 1,
+     :first-observed
+     {:reference
+      {:wall-ns-per-call 5098.0,
+       :cpu-ns-per-call 6146.0,
+       :bytes-per-call 5840.0},
+      :portfolio
+      {:wall-ns-per-call 3933.0,
+       :cpu-ns-per-call 4313.0,
+       :bytes-per-call 5840.0},
+      :baseline
+      {:wall-ns-per-call 3162.0,
+       :cpu-ns-per-call 3546.0,
+       :bytes-per-call 5840.0},
+      :clojure
+      {:wall-ns-per-call 806.0,
+       :cpu-ns-per-call 1131.0,
+       :bytes-per-call 96.0}},
+     :samples
+     [{:reference
+       {:wall-ns-per-call 5100.0,
+        :cpu-ns-per-call 5707.0,
+        :bytes-per-call 5840.0},
+       :portfolio
+       {:wall-ns-per-call 3909.0,
+        :cpu-ns-per-call 4300.0,
+        :bytes-per-call 5840.0},
+       :baseline
+       {:wall-ns-per-call 3032.0,
+        :cpu-ns-per-call 3567.0,
+        :bytes-per-call 5840.0},
+       :clojure
+       {:wall-ns-per-call 324.0,
+        :cpu-ns-per-call 637.0,
+        :bytes-per-call 96.0}}
+      {:portfolio
+       {:wall-ns-per-call 3274.0,
+        :cpu-ns-per-call 3640.0,
+        :bytes-per-call 5840.0},
+       :baseline
+       {:wall-ns-per-call 3088.0,
+        :cpu-ns-per-call 3447.0,
+        :bytes-per-call 5840.0},
+       :clojure
+       {:wall-ns-per-call 356.0,
+        :cpu-ns-per-call 660.0,
+        :bytes-per-call 96.0},
+       :reference
+       {:wall-ns-per-call 3196.0,
+        :cpu-ns-per-call 3685.0,
+        :bytes-per-call 5840.0}}
+      {:baseline
+       {:wall-ns-per-call 3078.0,
+        :cpu-ns-per-call 3441.0,
+        :bytes-per-call 5840.0},
+       :clojure
+       {:wall-ns-per-call 385.0,
+        :cpu-ns-per-call 720.0,
+        :bytes-per-call 96.0},
+       :reference
+       {:wall-ns-per-call 2975.0,
+        :cpu-ns-per-call 3318.0,
+        :bytes-per-call 5840.0},
+       :portfolio
+       {:wall-ns-per-call 3060.0,
+        :cpu-ns-per-call 3449.0,
+        :bytes-per-call 5840.0}}
+      {:clojure
+       {:wall-ns-per-call 303.0,
+        :cpu-ns-per-call 697.0,
+        :bytes-per-call 96.0},
+       :reference
+       {:wall-ns-per-call 3750.0,
+        :cpu-ns-per-call 4233.0,
+        :bytes-per-call 5840.0},
+       :portfolio
+       {:wall-ns-per-call 3403.0,
+        :cpu-ns-per-call 3786.0,
+        :bytes-per-call 5840.0},
+       :baseline
+       {:wall-ns-per-call 3001.0,
+        :cpu-ns-per-call 3381.0,
+        :bytes-per-call 5840.0}}
+      {:reference
+       {:wall-ns-per-call 3544.0,
+        :cpu-ns-per-call 3906.0,
+        :bytes-per-call 5840.0},
+       :portfolio
+       {:wall-ns-per-call 4163.0,
+        :cpu-ns-per-call 4533.0,
+        :bytes-per-call 5840.0},
+       :baseline
+       {:wall-ns-per-call 3156.0,
+        :cpu-ns-per-call 3532.0,
+        :bytes-per-call 5840.0},
+       :clojure
+       {:wall-ns-per-call 476.0,
+        :cpu-ns-per-call 803.0,
+        :bytes-per-call 96.0}}
+      {:portfolio
+       {:wall-ns-per-call 3121.0,
+        :cpu-ns-per-call 3476.0,
+        :bytes-per-call 5840.0},
+       :baseline
+       {:wall-ns-per-call 3199.0,
+        :cpu-ns-per-call 3594.0,
+        :bytes-per-call 5840.0},
+       :clojure
+       {:wall-ns-per-call 1413.0,
+        :cpu-ns-per-call 1734.0,
+        :bytes-per-call 96.0},
+       :reference
+       {:wall-ns-per-call 3235.0,
+        :cpu-ns-per-call 3571.0,
+        :bytes-per-call 5840.0}}
+      {:baseline
+       {:wall-ns-per-call 3267.0,
+        :cpu-ns-per-call 3629.0,
+        :bytes-per-call 5840.0},
+       :clojure
+       {:wall-ns-per-call 370.0,
+        :cpu-ns-per-call 693.0,
+        :bytes-per-call 96.0},
+       :reference
+       {:wall-ns-per-call 3163.0,
+        :cpu-ns-per-call 3515.0,
+        :bytes-per-call 5840.0},
+       :portfolio
+       {:wall-ns-per-call 3183.0,
+        :cpu-ns-per-call 3574.0,
+        :bytes-per-call 5840.0}}],
+     :medians
+     {:reference
+      {:wall-ns-per-call 3235.0,
+       :cpu-ns-per-call 3685.0,
+       :bytes-per-call 5840.0},
+      :portfolio
+      {:wall-ns-per-call 3274.0,
+       :cpu-ns-per-call 3640.0,
+       :bytes-per-call 5840.0},
+      :baseline
+      {:wall-ns-per-call 3088.0,
+       :cpu-ns-per-call 3532.0,
+       :bytes-per-call 5840.0},
+      :clojure
+      {:wall-ns-per-call 370.0,
+       :cpu-ns-per-call 697.0,
+       :bytes-per-call 96.0}},
+     :estimated-total-ns
+     {:reference {1 5098.0, 10 34213.0, 1000 3236863.0},
+      :portfolio {1 652426.0, 10 681892.0, 1000 3923152.0},
+      :baseline {1 649315.0, 10 677107.0, 1000 3734227.0},
+      :clojure {1 607164.0, 10 610494.0, 1000 976794.0}}}],
+   :form (fn [n] (fn [x] (+ n x))),
+   :cache-stats
+   {:reference
+    {:hits 0, :misses 149, :fallbacks 0, :revalidations 0, :deopts 0},
+    :portfolio
+    {:hits 0, :misses 149, :fallbacks 0, :revalidations 0, :deopts 0},
+    :baseline
+    {:hits 0,
+     :misses 146,
+     :fallbacks 0,
+     :revalidations 0,
+     :deopts 0}}}]}

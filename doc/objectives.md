@@ -124,6 +124,20 @@ Persistent worlds supply stable alternatives; contracts and authority govern
 what changes are permitted; accounting and learning guide which alternatives
 are worth exploring. A complete shared protocol for this remains to be built.
 
+## Bounded allocation and reusable storage
+
+Ownership, effect and capacity analysis should let staged optimizers eliminate
+temporary objects, reuse private workspace and reserve bounded storage before
+steady-state execution. Startup preparation and later JIT preparation should use
+the same machinery. Resource contracts must distinguish logical allocation,
+physical storage and authority; forks must not duplicate exclusive workspace or
+capacity permits. A strict allocation-free region needs explicit admission and
+exhaustion behavior, including at host boundaries.
+
+Current private-array lowering and preparation budgets do not provide a runtime
+heap budget or a system-wide zero-allocation guarantee. This objective does not
+require completing a general allocator framework in the current campaign.
+
 ## Agent-assisted program evolution
 
 This boundary should also support coding agents: an agent can propose changes

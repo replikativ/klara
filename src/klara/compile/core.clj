@@ -5,6 +5,9 @@
   claim that compilation tests arbitrary user code."
   (:require [klara.compile.ir :as ir] [klara.compile.inline :as inline]
             [klara.compile.hof :as hof]
+            [klara.compile.baseline :as baseline]
+            [klara.compile.subject :as subject]
+            [klara.compile.affine-erase :as affine-erase]
             [klara.compile.pe :as pe] [klara.compile.escape :as escape]
             [klara.compile.speculate :as speculate]
             [klara.compile.emit :as emit] [klara.compile.unbox :as unbox]
@@ -33,16 +36,14 @@
                    true))
                (ir/nodes term))))
 
-(defn compile-def
-  ([world sym] (compile-def world sym {}))
-  ([world sym {:keys [fuel inline-fuel] :or {fuel 10 inline-fuel 4}}]
+(declare compile-def)
+
+(defn- compile-ordinary
+  [basis sym {:keys [fuel inline-fuel] :or {fuel 10 inline-fuel 4}}]
    (when (*compiling* sym) (emit/unsupported nil "recursive world call requires a trampoline"))
    (binding [*compiling* (conj *compiling* sym)]
-   (let [start (System/nanoTime) basis (if (instance? klara.world.World world) (w/snapshot world) world)
-         e (w/entry* basis sym) f (:value e)]
-     (when-not (and (= :def (:kind e)) (ev/closure? f) (empty? (ev/closure-locals f))
-                    (not (w/pending? basis e))
-                    (or (nil? (ev/closure-basis f)) (identical? basis (ev/closure-basis f))))
+   (let [start (System/nanoTime) e (w/entry* basis sym) f (:value e)]
+     (when-not (subject/current-function basis e)
        (emit/unsupported (:term e) "definition must be a current, closed function"))
      (let [source (ev/closure-term f) cid (c/code-id source)
            s (speculate/run (ir/named source) cid)
@@ -88,6 +89,15 @@
                               {:pass :pe :rounds (:rounds p) :fuel-exhausted? (:fuel-exhausted? p)}
                               {:pass :escape :allocations-removed (:allocations-removed a)}
                               {:pass :pe :rounds (:rounds q) :fuel-exhausted? (:fuel-exhausted? q)}
-                              {:pass :emit :backend :clojure}]}))))))
+                              {:pass :emit :backend :clojure}]})))))
 
-(alter-var-root #'compile-def (requiring-resolve 'klara.compile.affine-erase/wrap-compiler)) ; S10: isolated affine erasure hook
+(defn compile-def
+  "Explicit baseline or optimizing dispatch. The owned adapter may decline;
+   baseline never performs the owned-region scan."
+  ([world sym] (compile-def world sym {}))
+  ([world sym options]
+   (let [basis (if (instance? klara.world.World world) (w/snapshot world) world)]
+     (if (= :baseline (:mode options))
+       (baseline/compile-definition basis sym options)
+       (or (affine-erase/compile-owned basis sym)
+           (compile-ordinary basis sym options))))))

@@ -1,0 +1,1257 @@
+{:label "policy-2",
+ :java "25.0.1+8-LTS-jvmci-b01",
+ :rows
+ [{:trace-cpu-ns 1.19693005E8,
+   :trace-allocated-bytes 5.311236E7,
+   :investment-ns 118015538,
+   :mode :threshold,
+   :source
+   (fn
+    [n]
+    (let
+     [step (fn [x] (+ x 3))]
+     (loop
+      [i 0 total 0]
+      (if (< i n) (recur (inc i) (+ total (step i))) total)))),
+   :segments [[12 [0]]],
+   :usage {:work 5411, :bytes 2137, :emissions 2},
+   :investments
+   [{:status :installed,
+     :reason nil,
+     :spent-ns 118015538,
+     :usage {:work 5411, :bytes 2137, :emissions 2},
+     :at 8,
+     :arguments [0]}],
+   :execution-ns 6329245,
+   :trace-wall-ns 124993126,
+   :calls 12,
+   :setup-ns 86053775,
+   :workload :short-helper,
+   :stats
+   {:hits 1, :misses 16, :fallbacks 0, :revalidations 1, :deopts 0},
+   :oracle-ns 2945041}
+  {:trace-cpu-ns 1.0771577E7,
+   :trace-allocated-bytes 1862480.0,
+   :investment-ns 7862078,
+   :mode :bounded,
+   :source
+   (fn
+    [n]
+    (let
+     [step (fn [x] (+ x 3))]
+     (loop
+      [i 0 total 0]
+      (if (< i n) (recur (inc i) (+ total (step i))) total)))),
+   :segments [[12 [0]]],
+   :usage {:work 556},
+   :investments
+   [{:spent-ns 5719171,
+     :remaining-calls 4,
+     :arguments [0],
+     :events
+     [{:phase :policy, :elapsed-ns 1495540}
+      {:phase :decision,
+       :action :probe,
+       :request
+       {:remaining-calls 4,
+        :allowance-ns 200000000,
+        :publication-estimate-ns 100000,
+        :phase :unseen,
+        :spent-ns 0,
+        :predicted-gross-ns 0,
+        :future-cost-ns 20200000,
+        :measured-gross-ns 0}}
+      {:phase :eligibility, :elapsed-ns 668316}
+      {:phase :probe, :elapsed-ns 2498813}
+      {:phase :policy, :elapsed-ns 1056502}
+      {:phase :decision,
+       :action :stop,
+       :request
+       {:remaining-calls 4,
+        :allowance-ns 200000000,
+        :publication-estimate-ns 100000,
+        :phase :reference,
+        :spent-ns 4662669,
+        :predicted-gross-ns 288038,
+        :future-cost-ns 20200000,
+        :measured-gross-ns 0}}],
+     :forecast
+     {:preparation-estimate-ns 8000000,
+      :comparison-estimate-ns 2000000,
+      :publication-estimate-ns 100000,
+      :candidate-fraction 0.5,
+      :safety-factor 2.0},
+     :phase :reference,
+     :reason :policy,
+     :reference
+     {:samples
+      [{:reference {:ns 266382}}
+       {:reference {:ns 144019}}
+       {:reference {:ns 96911}}],
+      :reference-ns 144019,
+      :candidate-ns nil},
+     :usage {:work 556},
+     :status :stopped,
+     :at 8,
+     :limits
+     [:explicit-checkpoint
+      :pure-inert-replay-subset
+      :shared-host-jit-gc-clock
+      :timing-not-semantic-evidence
+      :soft-time-cap
+      :no-native-preemption
+      :finite-horizon-forecast
+      :no-automatic-retirement],
+     :reference-cache-stats
+     {:hits 0, :misses 6, :fallbacks 0, :revalidations 0, :deopts 0},
+     :attempt-wall-ns 7862078,
+     :probe-cache-stats
+     {:hits 0, :misses 0, :fallbacks 0, :revalidations 0, :deopts 0}}],
+   :execution-ns 2386107,
+   :trace-wall-ns 10870585,
+   :calls 12,
+   :setup-ns 28825773,
+   :workload :short-helper,
+   :stats
+   {:hits 0, :misses 24, :fallbacks 0, :revalidations 0, :deopts 0},
+   :oracle-ns 1763038}
+  {:trace-cpu-ns 2297557.0,
+   :trace-allocated-bytes 882120.0,
+   :investment-ns 0,
+   :mode :never,
+   :source
+   (fn
+    [n]
+    (let
+     [step (fn [x] (+ x 3))]
+     (loop
+      [i 0 total 0]
+      (if (< i n) (recur (inc i) (+ total (step i))) total)))),
+   :segments [[12 [0]]],
+   :usage {},
+   :investments [],
+   :execution-ns 2128833,
+   :trace-wall-ns 2344984,
+   :calls 12,
+   :setup-ns 36193536,
+   :workload :short-helper,
+   :stats
+   {:hits 0, :misses 24, :fallbacks 0, :revalidations 0, :deopts 0},
+   :oracle-ns 1814299}
+  {:trace-cpu-ns 3.8681021E7,
+   :trace-allocated-bytes 2.6220376E7,
+   :investment-ns 42151413,
+   :mode :always,
+   :source
+   (fn
+    [n]
+    (let
+     [step (fn [x] (+ x 3))]
+     (loop
+      [i 0 total 0]
+      (if (< i n) (recur (inc i) (+ total (step i))) total)))),
+   :segments [[12 [0]]],
+   :usage {:work 5356, :bytes 582, :emissions 1},
+   :investments
+   [{:status :installed,
+     :reason nil,
+     :spent-ns 42151413,
+     :usage {:work 5356, :bytes 582, :emissions 1},
+     :at 0,
+     :arguments [0]}],
+   :execution-ns 563026,
+   :trace-wall-ns 42985670,
+   :calls 12,
+   :setup-ns 30551438,
+   :workload :short-helper,
+   :stats
+   {:hits 1, :misses 0, :fallbacks 0, :revalidations 1, :deopts 0},
+   :oracle-ns 1741615}
+  {:trace-cpu-ns 8.7512945E7,
+   :trace-allocated-bytes 4.0160632E7,
+   :investment-ns 60298509,
+   :mode :bounded,
+   :source
+   (fn
+    [n]
+    (let
+     [step (fn [x] (+ x 3))]
+     (loop
+      [i 0 total 0]
+      (if (< i n) (recur (inc i) (+ total (step i))) total)))),
+   :segments [[1024 [32]]],
+   :usage {:work 17749, :bytes 582, :emissions 1},
+   :investments
+   [{:spent-ns 58407941,
+     :comparison
+     {:samples
+      [{:reference {:ns 1051585}, :candidate {:ns 264932}}
+       {:candidate {:ns 77580}, :reference {:ns 952851}}
+       {:reference {:ns 782113}, :candidate {:ns 76193}}],
+      :reference-ns 952851,
+      :candidate-ns 77580},
+     :remaining-calls 1016,
+     :arguments [32],
+     :events
+     [{:phase :policy, :elapsed-ns 1089291}
+      {:phase :decision,
+       :action :probe,
+       :request
+       {:remaining-calls 1016,
+        :allowance-ns 200000000,
+        :publication-estimate-ns 100000,
+        :phase :unseen,
+        :spent-ns 0,
+        :predicted-gross-ns 0,
+        :future-cost-ns 20200000,
+        :measured-gross-ns 0}}
+      {:phase :eligibility, :elapsed-ns 2330297}
+      {:phase :probe, :elapsed-ns 4929044}
+      {:phase :policy, :elapsed-ns 983506}
+      {:phase :decision,
+       :action :prepare,
+       :request
+       {:remaining-calls 1016,
+        :allowance-ns 200000000,
+        :publication-estimate-ns 100000,
+        :phase :reference,
+        :spent-ns 8348632,
+        :predicted-gross-ns 432523900,
+        :future-cost-ns 20200000,
+        :measured-gross-ns 0}}
+      {:phase :preparation, :elapsed-ns 31226677}
+      {:phase :validation, :elapsed-ns 7185383}
+      {:phase :probe-installation, :elapsed-ns 195563}
+      {:phase :candidate-admission, :elapsed-ns 322423}
+      {:phase :policy, :elapsed-ns 1076193}
+      {:phase :decision,
+       :action :probe,
+       :request
+       {:remaining-calls 1016,
+        :allowance-ns 200000000,
+        :publication-estimate-ns 100000,
+        :phase :prepared,
+        :spent-ns 48262184,
+        :predicted-gross-ns 432523900,
+        :future-cost-ns 20200000,
+        :measured-gross-ns 0}}
+      {:phase :probe, :elapsed-ns 7646144}
+      {:phase :policy, :elapsed-ns 1232097}
+      {:phase :decision,
+       :action :install,
+       :request
+       {:remaining-calls 1016,
+        :allowance-ns 200000000,
+        :publication-estimate-ns 100000,
+        :phase :compared,
+        :spent-ns 56984521,
+        :predicted-gross-ns 432523900,
+        :future-cost-ns 20200000,
+        :measured-gross-ns 889275336}}
+      {:phase :publication, :elapsed-ns 191323}],
+     :forecast
+     {:preparation-estimate-ns 8000000,
+      :comparison-estimate-ns 2000000,
+      :publication-estimate-ns 100000,
+      :candidate-fraction 0.5,
+      :safety-factor 2.0},
+     :phase :finished,
+     :reason nil,
+     :reference
+     {:samples
+      [{:reference {:ns 851425}}
+       {:reference {:ns 1177700}}
+       {:reference {:ns 756230}}],
+      :reference-ns 851425,
+      :candidate-ns nil},
+     :usage {:work 17749, :bytes 582, :emissions 1},
+     :status :installed,
+     :at 8,
+     :limits
+     [:explicit-checkpoint
+      :pure-inert-replay-subset
+      :shared-host-jit-gc-clock
+      :timing-not-semantic-evidence
+      :soft-time-cap
+      :no-native-preemption
+      :finite-horizon-forecast
+      :no-automatic-retirement],
+     :candidate-admitted? true,
+     :reference-cache-stats
+     {:hits 0, :misses 396, :fallbacks 0, :revalidations 0, :deopts 0},
+     :attempt-wall-ns 60298509,
+     :probe-cache-stats
+     {:hits 2, :misses 0, :fallbacks 0, :revalidations 1, :deopts 0}}],
+   :execution-ns 28384284,
+   :trace-wall-ns 98247780,
+   :calls 1024,
+   :setup-ns 29378950,
+   :workload :hot-helper,
+   :stats
+   {:hits 1, :misses 528, :fallbacks 0, :revalidations 1, :deopts 0},
+   :oracle-ns 1762876}
+  {:trace-cpu-ns 2.88575388E8,
+   :trace-allocated-bytes 2.05124248E8,
+   :investment-ns 0,
+   :mode :never,
+   :source
+   (fn
+    [n]
+    (let
+     [step (fn [x] (+ x 3))]
+     (loop
+      [i 0 total 0]
+      (if (< i n) (recur (inc i) (+ total (step i))) total)))),
+   :segments [[1024 [32]]],
+   :usage {},
+   :investments [],
+   :execution-ns 286061189,
+   :trace-wall-ns 291343343,
+   :calls 1024,
+   :setup-ns 27609967,
+   :workload :hot-helper,
+   :stats
+   {:hits 0, :misses 67584, :fallbacks 0, :revalidations 0, :deopts 0},
+   :oracle-ns 1985605}
+  {:trace-cpu-ns 2.2984275E7,
+   :trace-allocated-bytes 3.3297464E7,
+   :investment-ns 21957488,
+   :mode :always,
+   :source
+   (fn
+    [n]
+    (let
+     [step (fn [x] (+ x 3))]
+     (loop
+      [i 0 total 0]
+      (if (< i n) (recur (inc i) (+ total (step i))) total)))),
+   :segments [[1024 [32]]],
+   :usage {:work 5356, :bytes 582, :emissions 1},
+   :investments
+   [{:status :installed,
+     :reason nil,
+     :spent-ns 21957488,
+     :usage {:work 5356, :bytes 582, :emissions 1},
+     :at 0,
+     :arguments [32]}],
+   :execution-ns 4912437,
+   :trace-wall-ns 28957283,
+   :calls 1024,
+   :setup-ns 18285194,
+   :workload :hot-helper,
+   :stats
+   {:hits 1, :misses 0, :fallbacks 0, :revalidations 1, :deopts 0},
+   :oracle-ns 1029021}
+  {:trace-cpu-ns 2.4990015E7,
+   :trace-allocated-bytes 3.5707168E7,
+   :investment-ns 15107644,
+   :mode :threshold,
+   :source
+   (fn
+    [n]
+    (let
+     [step (fn [x] (+ x 3))]
+     (loop
+      [i 0 total 0]
+      (if (< i n) (recur (inc i) (+ total (step i))) total)))),
+   :segments [[1024 [32]]],
+   :usage {:work 5356, :bytes 582, :emissions 1},
+   :investments
+   [{:status :installed,
+     :reason nil,
+     :spent-ns 15107644,
+     :usage {:work 5356, :bytes 582, :emissions 1},
+     :at 8,
+     :arguments [32]}],
+   :execution-ns 7790535,
+   :trace-wall-ns 25050571,
+   :calls 1024,
+   :setup-ns 17615494,
+   :workload :hot-helper,
+   :stats
+   {:hits 1, :misses 528, :fallbacks 0, :revalidations 1, :deopts 0},
+   :oracle-ns 949360}
+  {:trace-cpu-ns 2.1236595E8,
+   :trace-allocated-bytes 2.17306184E8,
+   :investment-ns 0,
+   :mode :never,
+   :source
+   (fn
+    [n]
+    (let
+     [step (fn [x] (if (< x 8) (+ x 3) (- x 2)))]
+     (loop
+      [i 0 total 1]
+      (if (< i n) (recur (inc i) (+ total (step i))) total)))),
+   :segments [[1024 [32]]],
+   :usage {},
+   :investments [],
+   :execution-ns 213892875,
+   :trace-wall-ns 218801457,
+   :calls 1024,
+   :setup-ns 17208539,
+   :workload :held-out-branch,
+   :stats
+   {:hits 0, :misses 67584, :fallbacks 0, :revalidations 0, :deopts 0},
+   :oracle-ns 1004208}
+  {:trace-cpu-ns 3.9515406E7,
+   :trace-allocated-bytes 4.1791216E7,
+   :investment-ns 28703249,
+   :mode :always,
+   :source
+   (fn
+    [n]
+    (let
+     [step (fn [x] (if (< x 8) (+ x 3) (- x 2)))]
+     (loop
+      [i 0 total 1]
+      (if (< i n) (recur (inc i) (+ total (step i))) total)))),
+   :segments [[1024 [32]]],
+   :usage {:work 5541, :bytes 659, :emissions 1},
+   :investments
+   [{:status :installed,
+     :reason nil,
+     :spent-ns 28703249,
+     :usage {:work 5541, :bytes 659, :emissions 1},
+     :at 0,
+     :arguments [32]}],
+   :execution-ns 7194880,
+   :trace-wall-ns 39514551,
+   :calls 1024,
+   :setup-ns 25747669,
+   :workload :held-out-branch,
+   :stats
+   {:hits 1, :misses 0, :fallbacks 0, :revalidations 1, :deopts 0},
+   :oracle-ns 2175847}
+  {:trace-cpu-ns 4.2509757E7,
+   :trace-allocated-bytes 4.4094792E7,
+   :investment-ns 30559878,
+   :mode :threshold,
+   :source
+   (fn
+    [n]
+    (let
+     [step (fn [x] (if (< x 8) (+ x 3) (- x 2)))]
+     (loop
+      [i 0 total 1]
+      (if (< i n) (recur (inc i) (+ total (step i))) total)))),
+   :segments [[1024 [32]]],
+   :usage {:work 5541, :bytes 659, :emissions 1},
+   :investments
+   [{:status :installed,
+     :reason nil,
+     :spent-ns 30559878,
+     :usage {:work 5541, :bytes 659, :emissions 1},
+     :at 8,
+     :arguments [32]}],
+   :execution-ns 10665696,
+   :trace-wall-ns 45395467,
+   :calls 1024,
+   :setup-ns 23143806,
+   :workload :held-out-branch,
+   :stats
+   {:hits 1, :misses 528, :fallbacks 0, :revalidations 1, :deopts 0},
+   :oracle-ns 1688936}
+  {:trace-cpu-ns 3.2687494E7,
+   :trace-allocated-bytes 4.8049808E7,
+   :investment-ns 32399315,
+   :mode :bounded,
+   :source
+   (fn
+    [n]
+    (let
+     [step (fn [x] (if (< x 8) (+ x 3) (- x 2)))]
+     (loop
+      [i 0 total 1]
+      (if (< i n) (recur (inc i) (+ total (step i))) total)))),
+   :segments [[1024 [32]]],
+   :usage {:work 20503, :bytes 659, :emissions 1},
+   :investments
+   [{:spent-ns 31938577,
+     :comparison
+     {:samples
+      [{:reference {:ns 178232}, :candidate {:ns 78368}}
+       {:candidate {:ns 25336}, :reference {:ns 118649}}
+       {:reference {:ns 104535}, :candidate {:ns 14188}}],
+      :reference-ns 118649,
+      :candidate-ns 25336},
+     :remaining-calls 1016,
+     :arguments [32],
+     :events
+     [{:phase :policy, :elapsed-ns 311256}
+      {:phase :decision,
+       :action :probe,
+       :request
+       {:remaining-calls 1016,
+        :allowance-ns 200000000,
+        :publication-estimate-ns 100000,
+        :phase :unseen,
+        :spent-ns 0,
+        :predicted-gross-ns 0,
+        :future-cost-ns 20200000,
+        :measured-gross-ns 0}}
+      {:phase :eligibility, :elapsed-ns 913027}
+      {:phase :probe, :elapsed-ns 899354}
+      {:phase :policy, :elapsed-ns 273017}
+      {:phase :decision,
+       :action :prepare,
+       :request
+       {:remaining-calls 1016,
+        :allowance-ns 200000000,
+        :publication-estimate-ns 100000,
+        :phase :reference,
+        :spent-ns 2123637,
+        :predicted-gross-ns 63419736,
+        :future-cost-ns 20200000,
+        :measured-gross-ns 0}}
+      {:phase :preparation, :elapsed-ns 23043948}
+      {:phase :validation, :elapsed-ns 4261205}
+      {:phase :probe-installation, :elapsed-ns 93836}
+      {:phase :candidate-admission, :elapsed-ns 119612}
+      {:phase :policy, :elapsed-ns 372689}
+      {:phase :decision,
+       :action :probe,
+       :request
+       {:remaining-calls 1016,
+        :allowance-ns 200000000,
+        :publication-estimate-ns 100000,
+        :phase :prepared,
+        :spent-ns 29915255,
+        :predicted-gross-ns 63419736,
+        :future-cost-ns 20200000,
+        :measured-gross-ns 0}}
+      {:phase :probe, :elapsed-ns 1333234}
+      {:phase :policy, :elapsed-ns 254992}
+      {:phase :decision,
+       :action :install,
+       :request
+       {:remaining-calls 1016,
+        :allowance-ns 200000000,
+        :publication-estimate-ns 100000,
+        :phase :compared,
+        :spent-ns 31621178,
+        :predicted-gross-ns 63419736,
+        :future-cost-ns 20200000,
+        :measured-gross-ns 94806008}}
+      {:phase :publication, :elapsed-ns 62407}],
+     :forecast
+     {:preparation-estimate-ns 8000000,
+      :comparison-estimate-ns 2000000,
+      :publication-estimate-ns 100000,
+      :candidate-fraction 0.5,
+      :safety-factor 2.0},
+     :phase :finished,
+     :reason nil,
+     :reference
+     {:samples
+      [{:reference {:ns 205587}}
+       {:reference {:ns 124842}}
+       {:reference {:ns 108228}}],
+      :reference-ns 124842,
+      :candidate-ns nil},
+     :usage {:work 20503, :bytes 659, :emissions 1},
+     :status :installed,
+     :at 8,
+     :limits
+     [:explicit-checkpoint
+      :pure-inert-replay-subset
+      :shared-host-jit-gc-clock
+      :timing-not-semantic-evidence
+      :soft-time-cap
+      :no-native-preemption
+      :finite-horizon-forecast
+      :no-automatic-retirement],
+     :candidate-admitted? true,
+     :reference-cache-stats
+     {:hits 0, :misses 396, :fallbacks 0, :revalidations 0, :deopts 0},
+     :attempt-wall-ns 32399315,
+     :probe-cache-stats
+     {:hits 2, :misses 0, :fallbacks 0, :revalidations 1, :deopts 0}}],
+   :execution-ns 6799008,
+   :trace-wall-ns 41624612,
+   :calls 1024,
+   :setup-ns 21403591,
+   :workload :held-out-branch,
+   :stats
+   {:hits 1, :misses 528, :fallbacks 0, :revalidations 1, :deopts 0},
+   :oracle-ns 994601}
+  {:trace-cpu-ns 1.28992736E8,
+   :trace-allocated-bytes 1.15020536E8,
+   :investment-ns 101312893,
+   :mode :always,
+   :source
+   (fn
+    [n bias limit]
+    (let
+     [step
+      (fn
+       [acc i]
+       (assoc (assoc acc 0 (+ (nth acc 0) i)) 1 (+ (nth acc 1) bias)))]
+     (let
+      [acc
+       (loop
+        [i 0 acc [0 0]]
+        (if (< i n) (recur (inc i) (step acc i)) acc))]
+      (< (+ (nth acc 0) (nth acc 1)) limit)))),
+   :segments [[1024 [32 4 10000]]],
+   :usage {:work 7771, :bytes 2425, :emissions 1},
+   :investments
+   [{:status :installed,
+     :reason nil,
+     :spent-ns 101312893,
+     :usage {:work 7771, :bytes 2425, :emissions 1},
+     :at 0,
+     :arguments [32 4 10000]}],
+   :execution-ns 27221015,
+   :trace-wall-ns 133243090,
+   :calls 1024,
+   :setup-ns 19300473,
+   :workload :hot-private,
+   :stats
+   {:hits 1024, :misses 0, :fallbacks 0, :revalidations 1, :deopts 0},
+   :oracle-ns 1328125}
+  {:trace-cpu-ns 7.3146874E7,
+   :trace-allocated-bytes 8.9373336E7,
+   :investment-ns 58253207,
+   :mode :threshold,
+   :source
+   (fn
+    [n bias limit]
+    (let
+     [step
+      (fn
+       [acc i]
+       (assoc (assoc acc 0 (+ (nth acc 0) i)) 1 (+ (nth acc 1) bias)))]
+     (let
+      [acc
+       (loop
+        [i 0 acc [0 0]]
+        (if (< i n) (recur (inc i) (step acc i)) acc))]
+      (< (+ (nth acc 0) (nth acc 1)) limit)))),
+   :segments [[1024 [32 4 10000]]],
+   :usage {:work 7771, :bytes 2425, :emissions 1},
+   :investments
+   [{:status :installed,
+     :reason nil,
+     :spent-ns 58253207,
+     :usage {:work 7771, :bytes 2425, :emissions 1},
+     :at 8,
+     :arguments [32 4 10000]}],
+   :execution-ns 15129037,
+   :trace-wall-ns 76149627,
+   :calls 1024,
+   :setup-ns 26805143,
+   :workload :hot-private,
+   :stats
+   {:hits 1016,
+    :misses 528,
+    :fallbacks 0,
+    :revalidations 1,
+    :deopts 0},
+   :oracle-ns 2957860}
+  {:trace-cpu-ns 7.9132229E7,
+   :trace-allocated-bytes 9.4801864E7,
+   :investment-ns 58820689,
+   :mode :bounded,
+   :source
+   (fn
+    [n bias limit]
+    (let
+     [step
+      (fn
+       [acc i]
+       (assoc (assoc acc 0 (+ (nth acc 0) i)) 1 (+ (nth acc 1) bias)))]
+     (let
+      [acc
+       (loop
+        [i 0 acc [0 0]]
+        (if (< i n) (recur (inc i) (step acc i)) acc))]
+      (< (+ (nth acc 0) (nth acc 1)) limit)))),
+   :segments [[1024 [32 4 10000]]],
+   :usage {:work 28784, :bytes 2425, :emissions 1},
+   :investments
+   [{:spent-ns 58248765,
+     :comparison
+     {:samples
+      [{:reference {:ns 375505}, :candidate {:ns 351329}}
+       {:candidate {:ns 119054}, :reference {:ns 334950}}
+       {:reference {:ns 399653}, :candidate {:ns 134184}}],
+      :reference-ns 375505,
+      :candidate-ns 134184},
+     :remaining-calls 1016,
+     :arguments [32 4 10000],
+     :events
+     [{:phase :policy, :elapsed-ns 226847}
+      {:phase :decision,
+       :action :probe,
+       :request
+       {:remaining-calls 1016,
+        :allowance-ns 200000000,
+        :publication-estimate-ns 100000,
+        :phase :unseen,
+        :spent-ns 0,
+        :predicted-gross-ns 0,
+        :future-cost-ns 64200000,
+        :measured-gross-ns 0}}
+      {:phase :eligibility, :elapsed-ns 1094270}
+      {:phase :probe, :elapsed-ns 1062324}
+      {:phase :policy, :elapsed-ns 221679}
+      {:phase :decision,
+       :action :prepare,
+       :request
+       {:remaining-calls 1016,
+        :allowance-ns 200000000,
+        :publication-estimate-ns 100000,
+        :phase :reference,
+        :spent-ns 2383441,
+        :predicted-gross-ns 114860832,
+        :future-cost-ns 64200000,
+        :measured-gross-ns 0}}
+      {:phase :preparation, :elapsed-ns 39983703}
+      {:phase :validation, :elapsed-ns 10919650}
+      {:phase :probe-installation, :elapsed-ns 220531}
+      {:phase :candidate-admission, :elapsed-ns 123872}
+      {:phase :policy, :elapsed-ns 491898}
+      {:phase :decision,
+       :action :probe,
+       :request
+       {:remaining-calls 1016,
+        :allowance-ns 200000000,
+        :publication-estimate-ns 100000,
+        :phase :prepared,
+        :spent-ns 53852876,
+        :predicted-gross-ns 114860832,
+        :future-cost-ns 64200000,
+        :measured-gross-ns 0}}
+      {:phase :probe, :elapsed-ns 3239913}
+      {:phase :policy, :elapsed-ns 494190}
+      {:phase :decision,
+       :action :install,
+       :request
+       {:remaining-calls 1016,
+        :allowance-ns 200000000,
+        :publication-estimate-ns 100000,
+        :phase :compared,
+        :spent-ns 57584687,
+        :predicted-gross-ns 114860832,
+        :future-cost-ns 64200000,
+        :measured-gross-ns 245182136}}
+      {:phase :publication, :elapsed-ns 169888}],
+     :forecast
+     {:preparation-estimate-ns 30000000,
+      :comparison-estimate-ns 2000000,
+      :publication-estimate-ns 100000,
+      :candidate-fraction 0.5,
+      :safety-factor 2.0},
+     :phase :finished,
+     :reason nil,
+     :reference
+     {:samples
+      [{:reference {:ns 236969}}
+       {:reference {:ns 226104}}
+       {:reference {:ns 214557}}],
+      :reference-ns 226104,
+      :candidate-ns nil},
+     :usage {:work 28784, :bytes 2425, :emissions 1},
+     :status :installed,
+     :at 8,
+     :limits
+     [:explicit-checkpoint
+      :pure-inert-replay-subset
+      :shared-host-jit-gc-clock
+      :timing-not-semantic-evidence
+      :soft-time-cap
+      :no-native-preemption
+      :finite-horizon-forecast
+      :no-automatic-retirement],
+     :candidate-admitted? true,
+     :reference-cache-stats
+     {:hits 0, :misses 396, :fallbacks 0, :revalidations 0, :deopts 0},
+     :attempt-wall-ns 58820689,
+     :probe-cache-stats
+     {:hits 4, :misses 0, :fallbacks 0, :revalidations 1, :deopts 0}}],
+   :execution-ns 18568796,
+   :trace-wall-ns 82041922,
+   :calls 1024,
+   :setup-ns 17453958,
+   :workload :hot-private,
+   :stats
+   {:hits 1016,
+    :misses 528,
+    :fallbacks 0,
+    :revalidations 1,
+    :deopts 0},
+   :oracle-ns 1257508}
+  {:trace-cpu-ns 2.27122541E8,
+   :trace-allocated-bytes 4.63046488E8,
+   :investment-ns 0,
+   :mode :never,
+   :source
+   (fn
+    [n bias limit]
+    (let
+     [step
+      (fn
+       [acc i]
+       (assoc (assoc acc 0 (+ (nth acc 0) i)) 1 (+ (nth acc 1) bias)))]
+     (let
+      [acc
+       (loop
+        [i 0 acc [0 0]]
+        (if (< i n) (recur (inc i) (step acc i)) acc))]
+      (< (+ (nth acc 0) (nth acc 1)) limit)))),
+   :segments [[1024 [32 4 10000]]],
+   :usage {},
+   :investments [],
+   :execution-ns 228846415,
+   :trace-wall-ns 235294255,
+   :calls 1024,
+   :setup-ns 23102175,
+   :workload :hot-private,
+   :stats
+   {:hits 0, :misses 67584, :fallbacks 0, :revalidations 0, :deopts 0},
+   :oracle-ns 2380779}
+  {:trace-cpu-ns 2.5922945E8,
+   :trace-allocated-bytes 5.24646232E8,
+   :investment-ns 50963398,
+   :mode :threshold,
+   :source
+   (fn
+    [n bias limit]
+    (let
+     [step
+      (fn
+       [acc i]
+       (assoc (assoc acc 0 (+ (nth acc 0) i)) 1 (+ (nth acc 1) bias)))]
+     (let
+      [acc
+       (loop
+        [i 0 acc [0 0]]
+        (if (< i n) (recur (inc i) (step acc i)) acc))]
+      (< (+ (nth acc 0) (nth acc 1)) limit)))),
+   :segments [[64 [32 4 10000]] [960 [32.5 4 10000]]],
+   :usage {:work 7771, :bytes 2425, :emissions 1},
+   :investments
+   [{:status :installed,
+     :reason nil,
+     :spent-ns 50963398,
+     :usage {:work 7771, :bytes 2425, :emissions 1},
+     :at 8,
+     :arguments [32 4 10000]}],
+   :execution-ns 224470524,
+   :trace-wall-ns 283281119,
+   :calls 1024,
+   :setup-ns 17230179,
+   :workload :layout-shift,
+   :stats
+   {:hits 56,
+    :misses 64848,
+    :fallbacks 960,
+    :revalidations 1,
+    :deopts 0},
+   :oracle-ns 1377070}
+  {:trace-cpu-ns 2.76707859E8,
+   :trace-allocated-bytes 6.0578096E8,
+   :investment-ns 89360844,
+   :mode :bounded,
+   :source
+   (fn
+    [n bias limit]
+    (let
+     [step
+      (fn
+       [acc i]
+       (assoc (assoc acc 0 (+ (nth acc 0) i)) 1 (+ (nth acc 1) bias)))]
+     (let
+      [acc
+       (loop
+        [i 0 acc [0 0]]
+        (if (< i n) (recur (inc i) (step acc i)) acc))]
+      (< (+ (nth acc 0) (nth acc 1)) limit)))),
+   :segments [[64 [32 4 10000]] [960 [32.5 4 10000]]],
+   :usage {:work 45302, :bytes 4850, :emissions 2},
+   :investments
+   [{:spent-ns 50564987,
+     :comparison
+     {:samples
+      [{:reference {:ns 180682}, :candidate {:ns 148768}}
+       {:candidate {:ns 25423}, :reference {:ns 141565}}
+       {:reference {:ns 131062}, :candidate {:ns 16988}}],
+      :reference-ns 141565,
+      :candidate-ns 25423},
+     :remaining-calls 1016,
+     :arguments [32 4 10000],
+     :events
+     [{:phase :policy, :elapsed-ns 489004}
+      {:phase :decision,
+       :action :probe,
+       :request
+       {:remaining-calls 1016,
+        :allowance-ns 200000000,
+        :publication-estimate-ns 100000,
+        :phase :unseen,
+        :spent-ns 0,
+        :predicted-gross-ns 0,
+        :future-cost-ns 64200000,
+        :measured-gross-ns 0}}
+      {:phase :eligibility, :elapsed-ns 1137784}
+      {:phase :probe, :elapsed-ns 1468285}
+      {:phase :policy, :elapsed-ns 460208}
+      {:phase :decision,
+       :action :prepare,
+       :request
+       {:remaining-calls 1016,
+        :allowance-ns 200000000,
+        :publication-estimate-ns 100000,
+        :phase :reference,
+        :spent-ns 3095073,
+        :predicted-gross-ns 119420640,
+        :future-cost-ns 64200000,
+        :measured-gross-ns 0}}
+      {:phase :preparation, :elapsed-ns 36085265}
+      {:phase :validation, :elapsed-ns 9123850}
+      {:phase :probe-installation, :elapsed-ns 146017}
+      {:phase :candidate-admission, :elapsed-ns 35806}
+      {:phase :policy, :elapsed-ns 262912}
+      {:phase :decision,
+       :action :probe,
+       :request
+       {:remaining-calls 1016,
+        :allowance-ns 200000000,
+        :publication-estimate-ns 100000,
+        :phase :prepared,
+        :spent-ns 48946219,
+        :predicted-gross-ns 119420640,
+        :future-cost-ns 64200000,
+        :measured-gross-ns 0}}
+      {:phase :probe, :elapsed-ns 1060292}
+      {:phase :policy, :elapsed-ns 170256}
+      {:phase :decision,
+       :action :install,
+       :request
+       {:remaining-calls 1016,
+        :allowance-ns 200000000,
+        :publication-estimate-ns 100000,
+        :phase :compared,
+        :spent-ns 50269423,
+        :predicted-gross-ns 119420640,
+        :future-cost-ns 64200000,
+        :measured-gross-ns 118000272}}
+      {:phase :publication, :elapsed-ns 125308}],
+     :forecast
+     {:preparation-estimate-ns 30000000,
+      :comparison-estimate-ns 2000000,
+      :publication-estimate-ns 100000,
+      :candidate-fraction 0.5,
+      :safety-factor 2.0},
+     :phase :finished,
+     :reason nil,
+     :reference
+     {:samples
+      [{:reference {:ns 294865}}
+       {:reference {:ns 235080}}
+       {:reference {:ns 232578}}],
+      :reference-ns 235080,
+      :candidate-ns nil},
+     :usage {:work 28784, :bytes 2425, :emissions 1},
+     :status :installed,
+     :at 8,
+     :limits
+     [:explicit-checkpoint
+      :pure-inert-replay-subset
+      :shared-host-jit-gc-clock
+      :timing-not-semantic-evidence
+      :soft-time-cap
+      :no-native-preemption
+      :finite-horizon-forecast
+      :no-automatic-retirement],
+     :candidate-admitted? true,
+     :reference-cache-stats
+     {:hits 0, :misses 396, :fallbacks 0, :revalidations 0, :deopts 0},
+     :attempt-wall-ns 51190677,
+     :probe-cache-stats
+     {:hits 4, :misses 0, :fallbacks 0, :revalidations 1, :deopts 0}}
+    {:spent-ns 37894891,
+     :remaining-calls 960,
+     :arguments [32.5 4 10000],
+     :events
+     [{:phase :policy, :elapsed-ns 143906}
+      {:phase :decision,
+       :action :probe,
+       :request
+       {:remaining-calls 960,
+        :allowance-ns 200000000,
+        :publication-estimate-ns 100000,
+        :phase :unseen,
+        :spent-ns 0,
+        :predicted-gross-ns 0,
+        :future-cost-ns 64200000,
+        :measured-gross-ns 0}}
+      {:phase :eligibility, :elapsed-ns 808910}
+      {:phase :probe, :elapsed-ns 791502}
+      {:phase :policy, :elapsed-ns 156042}
+      {:phase :decision,
+       :action :prepare,
+       :request
+       {:remaining-calls 960,
+        :allowance-ns 200000000,
+        :publication-estimate-ns 100000,
+        :phase :reference,
+        :spent-ns 1744318,
+        :predicted-gross-ns 83742240,
+        :future-cost-ns 64200000,
+        :measured-gross-ns 0}}
+      {:phase :preparation, :elapsed-ns 24949450}
+      {:phase :validation, :elapsed-ns 10898110}
+      {:phase :probe-installation, :elapsed-ns 107343}
+      {:phase :candidate-admission, :elapsed-ns 39628}],
+     :forecast
+     {:preparation-estimate-ns 30000000,
+      :comparison-estimate-ns 2000000,
+      :publication-estimate-ns 100000,
+      :candidate-fraction 0.5,
+      :safety-factor 2.0},
+     :phase :reference,
+     :reason :guard-miss-or-shadowed,
+     :reference
+     {:samples
+      [{:reference {:ns 175091}}
+       {:reference {:ns 174463}}
+       {:reference {:ns 158655}}],
+      :reference-ns 174463,
+      :candidate-ns nil},
+     :usage {:work 45302, :bytes 4850, :emissions 2},
+     :status :declined,
+     :at 64,
+     :limits
+     [:explicit-checkpoint
+      :pure-inert-replay-subset
+      :shared-host-jit-gc-clock
+      :timing-not-semantic-evidence
+      :soft-time-cap
+      :no-native-preemption
+      :finite-horizon-forecast
+      :no-automatic-retirement],
+     :candidate-admitted? false,
+     :reference-cache-stats
+     {:hits 0, :misses 201, :fallbacks 3, :revalidations 0, :deopts 0},
+     :attempt-wall-ns 38170167,
+     :probe-cache-stats
+     {:hits 0, :misses 0, :fallbacks 1, :revalidations 1, :deopts 0}}],
+   :execution-ns 189859445,
+   :trace-wall-ns 282854925,
+   :calls 1024,
+   :setup-ns 29051557,
+   :workload :layout-shift,
+   :stats
+   {:hits 56,
+    :misses 64848,
+    :fallbacks 960,
+    :revalidations 1,
+    :deopts 0},
+   :oracle-ns 2741501}
+  {:trace-cpu-ns 2.07970269E8,
+   :trace-allocated-bytes 4.7586668E8,
+   :investment-ns 0,
+   :mode :never,
+   :source
+   (fn
+    [n bias limit]
+    (let
+     [step
+      (fn
+       [acc i]
+       (assoc (assoc acc 0 (+ (nth acc 0) i)) 1 (+ (nth acc 1) bias)))]
+     (let
+      [acc
+       (loop
+        [i 0 acc [0 0]]
+        (if (< i n) (recur (inc i) (step acc i)) acc))]
+      (< (+ (nth acc 0) (nth acc 1)) limit)))),
+   :segments [[64 [32 4 10000]] [960 [32.5 4 10000]]],
+   :usage {},
+   :investments [],
+   :execution-ns 207278624,
+   :trace-wall-ns 215193213,
+   :calls 1024,
+   :setup-ns 17101984,
+   :workload :layout-shift,
+   :stats
+   {:hits 0, :misses 69504, :fallbacks 0, :revalidations 0, :deopts 0},
+   :oracle-ns 1330926}
+  {:trace-cpu-ns 2.17800376E8,
+   :trace-allocated-bytes 5.20643472E8,
+   :investment-ns 32941607,
+   :mode :always,
+   :source
+   (fn
+    [n bias limit]
+    (let
+     [step
+      (fn
+       [acc i]
+       (assoc (assoc acc 0 (+ (nth acc 0) i)) 1 (+ (nth acc 1) bias)))]
+     (let
+      [acc
+       (loop
+        [i 0 acc [0 0]]
+        (if (< i n) (recur (inc i) (step acc i)) acc))]
+      (< (+ (nth acc 0) (nth acc 1)) limit)))),
+   :segments [[64 [32 4 10000]] [960 [32.5 4 10000]]],
+   :usage {:work 7771, :bytes 2425, :emissions 1},
+   :investments
+   [{:status :installed,
+     :reason nil,
+     :spent-ns 32941607,
+     :usage {:work 7771, :bytes 2425, :emissions 1},
+     :at 0,
+     :arguments [32 4 10000]}],
+   :execution-ns 186203606,
+   :trace-wall-ns 222402656,
+   :calls 1024,
+   :setup-ns 19229995,
+   :workload :layout-shift,
+   :stats
+   {:hits 64,
+    :misses 64320,
+    :fallbacks 960,
+    :revalidations 1,
+    :deopts 0},
+   :oracle-ns 1288637}],
+ :forecasts
+ {:baseline-preparation-ns 8000000,
+  :private-preparation-ns 30000000,
+  :provenance :fixed-advisory-estimates-not-fitted-to-these-traces,
+  :candidate-fraction 0.5,
+  :safety-factor 2.0,
+  :threshold-calls 8},
+ :limits
+ [:bounded-five-scenarios
+  :one-sequential-process-per-report
+  :mode-order-rotates
+  :preparation-probes-validation-publication-in-trace
+  :extra-probes-do-not-consume-application-inputs
+  :source-and-oracle-setup-separate
+  :process-startup-separate
+  :shared-host-jit-gc-clock
+  :no-autonomous-profiler-or-retirement
+  :short-noisy-probes
+  :horizon-is-a-forecast
+  :no-profitability-assertions],
+ :source-sha256
+ {"src/klara/compile/inline.clj"
+  "2c06694af339b84e6f501fc035ac17023d55dd5da0babbd74becd849966f8f8a",
+  "src/klara/compile/unbox.clj"
+  "0e449e139a657bc5b4bac26f5f951c9cd606afd1b851e69244700f5cd9438917",
+  "src/klara/compile/speculate.clj"
+  "80d54937c925ed2fc593bd8cb6f216e8ec8298bcab40041be2255ba94cd3173f",
+  "src/klara/compile/core.clj"
+  "8c59aa51f636c8e7a38b1d63cd07a4badd775ca23582155ef4deb64800cdd128",
+  "src/klara/compile/affine_erase.clj"
+  "d5cc50d9ee7009e1c0635f5838aebf0f705d2be2312934cc39d851882235e756",
+  "src/klara/fusion/kernel.clj"
+  "edc582a5b412a83e61b465c45a980f3811c770167627188da1ba3ad18e1c9453",
+  "src/klara/compile/private_accumulator.clj"
+  "1b96f35740df42f5a2e77c3f75abb18b4f360041ac556ae43c6cbcd616ed3416",
+  "src/klara/compile/pe.clj"
+  "728a7c15b318edb6ebfb69517e9c4dba245cde8d64e434c83622758ee5bb1b70",
+  "src/klara/compile/relation.clj"
+  "e9e6bf13c1d6931cfcfb4c25a52b5432c5b09b294d8deca7746615fadb901139",
+  "src/klara/deploy.clj"
+  "88e3503486932d88ecdd900ba148637e645d18aa5d2605a9d65d343fb5c30c75",
+  "src/klara/compile/funding.clj"
+  "4272444d0fe0a2c69f6295224868048fac048679bc3039f5b319865963bef95f",
+  "src/klara/compile/view.clj"
+  "7a58c4612ca77720b807eb19cc024968b0ca1c2e8fb8e9fdbab17eb521155c3c",
+  "src/klara/compile/infer_affine.clj"
+  "1ea336ef960114d11d4e7480381a0cedfb373797622353b36c587a9725c4d0de",
+  "src/klara/compile/emit.clj"
+  "55c966534f4e08d84176d5ba73b2f08ec59c5e17473f9ace690b5b153aba4165",
+  "experiments/consolidation/indexed_binding.clj"
+  "fd9541ce5db6a742ce6c4ea1515ee2b6eef4a23249204b1c130651101abfae1a",
+  "src/klara/compile/investment.clj"
+  "bae05d891ebcf8553ed16ff35fa1a893aceb334fc35561c5029202283c7c82b3",
+  "src/klara/world.clj"
+  "29ea09915982d5daa246251c87da3095f0014c0f7680ff017e618e36fd9e9286",
+  "src/klara/core.clj"
+  "4fde378a632e9259d5133c166c118c951e3afb44eb84e0eb896a45e041684e6f",
+  "src/klara/affine.clj"
+  "7bceeeb76fb1f30adb60b0e17c9a879a4e626be6697ff5d2c24b8dc917b4e8af",
+  "src/klara/compile/budget.clj"
+  "a14c2c3a158f950915b6e12e39266ac68b9f07614b386932ca2f5655eade70f2",
+  "src/klara/compile/host.clj"
+  "5ccd09307e7bdbc3794eee27adcce08f2a742e07c54fd79e1d73464e9e35ad20",
+  "src/klara/repl.clj"
+  "13dd5b6feb07238fc1e976d027beb638ec6db9c8e753acfde3778b27c9a3a031",
+  "test/klara/compile/investment_test.clj"
+  "6cf8e61ee53665542786c4a215ba0349aa0c92735886756ea66fa9679f4eabd5",
+  "src/klara/load.clj"
+  "13360862c46395b41c048d5e19fc9d08dfad74e80046b4a1d3e3d685cd4e1968",
+  "src/klara/compile/strategy.clj"
+  "e11d64865f0647f8025361b3de0b9e47349e5674543b9ffacc83da1e9bfefbc5",
+  "src/klara/compile/edge.clj"
+  "93f90ed2d3571f89223a60182af01655e239a776333824f0fa4b0edb014a3e9f",
+  "src/klara/compile/escape.clj"
+  "0b0cbd23e2a031ddaf1d2a5e66f68209901cf5e6ecd9f4771acdccb5d606d462",
+  "src/klara/code.clj"
+  "9a4663239a849215d83cc21ce24390d6ba3f6c3b80a4951d758285fffe7f80e8",
+  "src/klara/compile/ir.clj"
+  "04da4006359a881b8f5c849632d64714cc0ee43c3717e13b81f70b2ff8557989",
+  "src/klara/defs.clj"
+  "fa2cef5153903f49de13676785c8d0075d87086f6bdd78fb66c61cfbd3d0c436",
+  "src/klara/compile/guest.clj"
+  "53c4aaee0ada0e7284c884d72e39adf0577c388870712b80042475c77ff6f2d1",
+  "src/klara/compile/inline_check.clj"
+  "ddb58eb90ac27f5d7ddeee5931703be6923f007b2d7c2e94e0cc6d74d8705187",
+  "src/klara/expand.clj"
+  "3e4dd3ce7fe4a2b197344549ed3966a628ac1399c860ea24d0c69e0687e4f124",
+  "src/klara/compile/subject.clj"
+  "4ff05a76d70ec93f902d9301217755f743c47b3eac121118dce948b709072ae6",
+  "src/klara/compile/baseline.clj"
+  "be1fda2ebf41a1aeaf4cd4b5da4e029af6766e65992ed2fcf610508d9345385c",
+  "src/klara/effect_class.clj"
+  "354e1100fe88a79195d8bb5958ce38053ed67657440c59e5e04a1918c87870fe",
+  "test/klara/compile/inline_check_test.clj"
+  "5e4eea62870b2d2da3d4ff269962a9670be48da85e922ed2ce1909e85c584acb",
+  "src/klara/compile/compose.clj"
+  "0ab8e752e5ef9a76255b247f6858062e526f8b0e9c727e4f57534ea330b39906",
+  "src/klara/compile/loop.clj"
+  "70288d9e58db5ac74f631404da32cb209bb29cba9fc71d56bf67a49d90ed5b47",
+  "src/klara/nrepl.clj"
+  "087b57b1b3d925efe37d72c14f0d9e515591b88dc885e29f67dfad359405b8b1",
+  "src/klara/compile/hof.clj"
+  "b16d14a9c70532ceb5e00c2ef8fdb4167b8b5cc0b3eaca8a3f4c65255661d519",
+  "experiments/baseline/investment_policy.clj"
+  "76bb8cf5b2074c0ba299c0c557da31661f4759d7418b5412391f1239c60b92b5",
+  "src/klara/compile/staged.clj"
+  "7d0861ab553b1484c31632e7dfe347161745cb478c089802949becb6201b585d",
+  "src/klara/syntax.clj"
+  "8963b902a00dd3f778ba0fbb5efd2ef15244c904070195fd4a47a48d5825db44",
+  "src/klara/compile/runtime.clj"
+  "f4fcfcf98fc25874f6cb4ad120751b2d66ad4ca16fcc27bb3a51b5000cc16a74",
+  "src/klara/compile/scalar.clj"
+  "352012cdc752465d36452302da1d8cc60cd521fd79081f8f4915da209d273966",
+  "src/klara/stage.clj"
+  "9cf3c97d2cdc8181810e5262951f924383b5acfc051c947139de75d503c44856",
+  "src/klara/compile/analysis.clj"
+  "8c29cd30f8b8814efd55094db8a4310a815c33584e1b8a6ee39dabaf34245ebc",
+  "src/klara/compile/updates.clj"
+  "446b74e76cb10a9f77e7eefebc2ae68401b3adf6bf7a3bd1f567e1873e0cc721",
+  "src/klara/fusion.clj"
+  "8e88dbe66640c4d60be5a1dafc07c86a17bef5b0633c08179256f56a1658a356",
+  "src/klara/compile/diagnostics.clj"
+  "f7b7d848edcfa22ff05d4dd81b154444e4ba68c1794d9a42177f40eece1ea089",
+  "src/klara/authority.clj"
+  "70c91dac1f5beace4e6426913f27a8a4dca3a5517f70bc86516f50f4ac369a9d",
+  "src/klara/compile/service.clj"
+  "f0cad0e231d18b2602ea67e89bda3eb41d728f8fb2e43efca9088e51fe4f9c0b",
+  "src/klara/compile/strict_fold.clj"
+  "bd35e878609a1822e127d90f7b668465386b4c2cc56c36e0c16eb56ce3f4d28d",
+  "src/klara/eval.clj"
+  "f3426a67ec736d5e07c1e1e836a7d242ed6f5efdc1ebb16ab079afcf3d80ad65",
+  "src/klara/compile/local_calls.clj"
+  "aa88567411e0f6efd92813c2d0b0e7469392f91d71d8b9fd559e594cfb28d470",
+  "src/klara/compile/prepare.clj"
+  "2de9e4921590cfdb4abf96acd40b412af2aad002dd1b3a30836c7523e9eb9f0d",
+  "src/klara/compile/requirements.clj"
+  "b551f12324b50024fbae1f448e3819736e2004d602ed8cdfde02674c22300969"}}

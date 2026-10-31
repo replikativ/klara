@@ -10,7 +10,7 @@
   ;; Public Var values, never implementation sources. Rebinding these Vars
   ;; invalidates entry before a rewritten operator can retain a callback.
   (into {} (for [n (into operators (keys c/prims))
-                 :let [s (symbol "clojure.core" (name n))]]
+                 :let [s (c/primitive-symbol n)]]
              [s @(requiring-resolve s)])))
 
 (defn run [term]

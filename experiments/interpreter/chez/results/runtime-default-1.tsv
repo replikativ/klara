@@ -1,0 +1,80 @@
+1	default	sum	compile-first	0	261435	ok
+1	default	sum	first-call	0	5565	49995000
+1	default	sum	warm-call	0	5074.18	49995000
+1	default	sum	warm-call	1	5715.5	49995000
+1	default	sum	warm-call	2	5412.44	49995000
+1	default	sum	warm-call	3	6072.1	49995000
+1	default	sum	warm-call	4	5400.86	49995000
+1	default	sum	warm-call	5	6191.48	49995000
+1	default	sum	warm-call	6	5446.84	49995000
+1	default	sum	warm-call	7	5980.48	49995000
+1	default	sum	warm-call	8	5658.76	49995000
+1	default	sum	compile-repeat	0	271999	#t
+1	default	sum	compile-repeat	1	502507	#t
+1	default	sum	compile-repeat	2	184491	#t
+1	default	sum	compile-repeat	3	160118	#t
+1	default	sum	compile-repeat	4	142724	#t
+1	default	sum	compile-repeat	5	140507	#t
+1	default	sum	compile-repeat	6	182792	#t
+1	default	sum	compile-repeat	7	170568	#t
+1	default	sum	compile-repeat	8	139847	#t
+1	default	calls	compile-first	0	164034	ok
+1	default	calls	first-call	0	7640	50005000
+1	default	calls	warm-call	0	7439.58	50005000
+1	default	calls	warm-call	1	7935.8	50005000
+1	default	calls	warm-call	2	7756.06	50005000
+1	default	calls	warm-call	3	7396.78	50005000
+1	default	calls	warm-call	4	7787.5	50005000
+1	default	calls	warm-call	5	7462.24	50005000
+1	default	calls	warm-call	6	7441.32	50005000
+1	default	calls	warm-call	7	7401.82	50005000
+1	default	calls	warm-call	8	7732.82	50005000
+1	default	calls	compile-repeat	0	169120	#t
+1	default	calls	compile-repeat	1	160549	#t
+1	default	calls	compile-repeat	2	157663	#t
+1	default	calls	compile-repeat	3	166663	#t
+1	default	calls	compile-repeat	4	165087	#t
+1	default	calls	compile-repeat	5	154191	#t
+1	default	calls	compile-repeat	6	148880	#t
+1	default	calls	compile-repeat	7	147371	#t
+1	default	calls	compile-repeat	8	147098	#t
+1	default	copy-vector	compile-first	0	230359	ok
+1	default	copy-vector	first-call	0	33890	#(49995000 10000)
+1	default	copy-vector	warm-call	0	13820.04	#(49995000 10000)
+1	default	copy-vector	warm-call	1	13648.16	#(49995000 10000)
+1	default	copy-vector	warm-call	2	14382.34	#(49995000 10000)
+1	default	copy-vector	warm-call	3	13816.06	#(49995000 10000)
+1	default	copy-vector	warm-call	4	15434.62	#(49995000 10000)
+1	default	copy-vector	warm-call	5	13746.78	#(49995000 10000)
+1	default	copy-vector	warm-call	6	13772.54	#(49995000 10000)
+1	default	copy-vector	warm-call	7	13885.0	#(49995000 10000)
+1	default	copy-vector	warm-call	8	14441.5	#(49995000 10000)
+1	default	copy-vector	compile-repeat	0	378587	#t
+1	default	copy-vector	compile-repeat	1	252486	#t
+1	default	copy-vector	compile-repeat	2	218670	#t
+1	default	copy-vector	compile-repeat	3	203015	#t
+1	default	copy-vector	compile-repeat	4	209517	#t
+1	default	copy-vector	compile-repeat	5	236224	#t
+1	default	copy-vector	compile-repeat	6	203404	#t
+1	default	copy-vector	compile-repeat	7	199253	#t
+1	default	copy-vector	compile-repeat	8	192393	#t
+1	default	ledger	compile-first	0	580630	ok
+1	default	ledger	first-call	0	42964	(499500 1000 124750)
+1	default	ledger	warm-call	0	35123.26	(499500 1000 124750)
+1	default	ledger	warm-call	1	34931.6	(499500 1000 124750)
+1	default	ledger	warm-call	2	35273.86	(499500 1000 124750)
+1	default	ledger	warm-call	3	34875.32	(499500 1000 124750)
+1	default	ledger	warm-call	4	34818.32	(499500 1000 124750)
+1	default	ledger	warm-call	5	35426.58	(499500 1000 124750)
+1	default	ledger	warm-call	6	34722.18	(499500 1000 124750)
+1	default	ledger	warm-call	7	38351.28	(499500 1000 124750)
+1	default	ledger	warm-call	8	35847.6	(499500 1000 124750)
+1	default	ledger	compile-repeat	0	951678	#t
+1	default	ledger	compile-repeat	1	588342	#t
+1	default	ledger	compile-repeat	2	528641	#t
+1	default	ledger	compile-repeat	3	553833	#t
+1	default	ledger	compile-repeat	4	648554	#t
+1	default	ledger	compile-repeat	5	573149	#t
+1	default	ledger	compile-repeat	6	544007	#t
+1	default	ledger	compile-repeat	7	564212	#t
+1	default	ledger	compile-repeat	8	697845	#t

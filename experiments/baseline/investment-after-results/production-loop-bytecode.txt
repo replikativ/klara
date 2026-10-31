@@ -1,0 +1,50 @@
+Compiled from "NO_SOURCE_FILE"
+public final class user$eval13395$body13394__13396 extends clojure.lang.AFunction {
+  public user$eval13395$body13394__13396();
+    Code:
+         0: aload_0
+         1: invokespecial #9                  // Method clojure/lang/AFunction."<init>":()V
+         4: return
+
+  public java.lang.Object invoke(java.lang.Object, java.lang.Object);
+    Code:
+         0: lconst_0
+         1: lstore_3
+         2: lconst_0
+         3: lstore        5
+         5: lload_3
+         6: lstore        7
+         8: lload         5
+        10: lstore        9
+        12: lload         7
+        14: lstore        11
+        16: lload         9
+        18: lstore        13
+        20: lload         11
+        22: aload_2
+        23: invokestatic  #17                 // Method clojure/lang/Numbers.lt:(JLjava/lang/Object;)Z
+        26: ifeq          60
+        29: lload         11
+        31: invokestatic  #21                 // Method clojure/lang/Numbers.inc:(J)J
+        34: lstore        15
+        36: lload         13
+        38: lload         11
+        40: invokestatic  #25                 // Method clojure/lang/Numbers.add:(JJ)J
+        43: lstore        17
+        45: lload         15
+        47: lload         17
+        49: lstore        13
+        51: lstore        11
+        53: goto          20
+        56: nop
+        57: nop
+        58: athrow
+        59: athrow
+        60: lload         13
+        62: invokestatic  #32                 // Method clojure/lang/Numbers.num:(J)Ljava/lang/Number;
+        65: areturn
+
+  public static {};
+    Code:
+         0: return
+}

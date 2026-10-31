@@ -1,0 +1,94 @@
+{
+  "scope": "samples with a captured klara.eval frame; includes startup/preparation; limited stack depth",
+  "sample_events": 1768,
+  "eval_sample_events": 299,
+  "sample_weight_bytes": 1818384720,
+  "classes": [
+    [
+      "clojure/lang/PersistentVector",
+      1004293960
+    ],
+    [
+      "[Ljava/lang/Object;",
+      619276616
+    ],
+    [
+      "clojure/lang/PersistentList",
+      65985408
+    ],
+    [
+      "clojure/lang/ArraySeq",
+      43466424
+    ],
+    [
+      "clojure/lang/Var$Frame",
+      20947920
+    ],
+    [
+      "clojure/lang/PersistentArrayMap",
+      16234536
+    ],
+    [
+      "clojure/lang/Box",
+      13616152
+    ],
+    [
+      "clojure/lang/PersistentVector$ChunkedSeq",
+      13092288
+    ],
+    [
+      "clojure/lang/MapEntry",
+      11521064
+    ],
+    [
+      "java/util/concurrent/atomic/AtomicReference",
+      4189640
+    ],
+    [
+      "clojure/lang/PersistentVector$Node",
+      4189632
+    ],
+    [
+      "klara/eval$host_apply$fn__8699",
+      1571080
+    ]
+  ],
+  "sites": [
+    [
+      "klara.eval$eval_list.invokeStatic",
+      971825000
+    ],
+    [
+      "klara.eval$step_eval.invokeStatic",
+      530250920
+    ],
+    [
+      "klara.eval$step_ret.invokeStatic",
+      105786240
+    ],
+    [
+      "klara.eval$host_apply.invokeStatic",
+      86933176
+    ],
+    [
+      "klara.eval$enter_closure.invokeStatic",
+      51843984
+    ],
+    [
+      "klara.eval$host_apply$fn__8699.invoke",
+      43466352
+    ],
+    [
+      "klara.eval$list_terms.invokeStatic",
+      23042072
+    ],
+    [
+      "klara.eval$closure_locals.invokeStatic",
+      3665848
+    ],
+    [
+      "klara.eval$call_value.invokeStatic",
+      1571128
+    ]
+  ]
+}

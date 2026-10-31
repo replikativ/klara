@@ -1,21 +1,33 @@
-# Engineering evidence
+# Engineering guide
 
-These are maintained accounts of the implementation and its limits. Start with
-[project status](../../STATUS.md), the [language guide](../guide/README.md) and
-[checked specialization](../checked-specialization.md).
+Choose a route:
 
-| Document | Purpose |
+- **Use Klara:** [project status](../../STATUS.md), [language guide](../guide/README.md),
+  [examples](../../examples/README.md), then [funded preparation](preparation-strategies.md).
+- **Change implementation:** [architecture](../architecture.md), [codebase map](codebase-map.md),
+  [compiler](compiler.md) or [runtime](runtime.md), then the relevant source/test.
+- **Assess a claim:** [correctness ledger](correctness.md) or [performance](performance.md),
+  followed by its attributed raw cohort. [Artifact commands](../artifact.md) are
+  the release/reproduction authority.
+
+| Contract | Maintained account |
 |---|---|
-| [Runtime contracts](runtime.md) | Worlds, authority, syntax, staging and recovery boundaries |
-| [Correctness](correctness.md) | Model statements, implementation bridges, counterexamples and open obligations |
-| [Performance](performance.md) | Measurement provenance, costs, losing cases and reproduction entry points |
-| [Interpreters](../interpreters.md) | Formal step semantics, T0 CEK and differential tests |
+| Bindings, worlds and stages | [Bindings/modules](bindings-and-modules.md), [Code views](code-views.md) |
+| Preparation and checked composition | [Strategies](preparation-strategies.md), [guest local calls](guest-local-calls.md), [recipe composition](recipe-composition.md) |
+| Ownership and consumer boundary | [Private accumulators](private-accumulator.md), including model theorems and tested bridges |
+| Lowering and recovery | [Ordered transfers](transfers.md), [interpreters](../interpreters.md) |
+| Validation and runtime entry | [Candidate selection](candidate-selection.md), [preparation costs](preparation-costs.md) |
+| Explicit investment and scheduling | [Investment policy and scheduling](investment-policy.md) |
+| Current costs | [JVM campaign](../../experiments/baseline/campaign-results/README.md), [entry](../../experiments/baseline/entry-results/README.md), [investment](../../experiments/baseline/investment-policy-results/README.md) |
 
-Proof sources, regression cases and raw measurements remain tracked alongside
-the implementation. Historical results describe their recorded source and
-runtime cohorts; they are not new measurements of the current checkout.
-Current verification reports are generated under `target/verification`.
+[Maintained verification](../../verification/README.md) is separate from
+[active diagnostics and dated evidence](../../experiments/README.md). Historical
+results describe their exact cohorts, not the latest checkout. Generated reports
+live in `target/verification/`. Public docs describe maintained contracts;
+private research, development transcripts and superseded plans live in the
+ignored `.internal/` directory and are not build dependencies.
 
-Private manuscript work, raw review prompts and development discussions belong
-in the gitignored `.internal/` directory. Public documentation and source
-packages must stand on their own without reading that directory.
+Longer-term directions are described in [objectives](../objectives.md) and the
+[RFCs](../../rfc/README.md). Runtime alternatives and the
+[Chez study](../../experiments/interpreter/CHEZ-EMPIRICAL.md) remain attributed
+experimental evidence; they add no runtime dependency.

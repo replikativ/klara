@@ -1,0 +1,116 @@
+(ns klara.compile.investment-test
+  (:require [clojure.test :refer [deftest is]] [klara.compile.investment :as investment]
+            [klara.compile.service :as service] [klara.compile.funding :as funding]
+            [klara.compile.private-accumulator-test :as fixture]
+            [klara.compile.staged :as staged] [klara.core :as core]
+            [klara.defs :as defs] [klara.stage :as stage] [klara.world :as world]))
+
+(defn setup [] (investment/bootstrap! (fixture/setup fixture/source)))
+(defn actions [r] (mapv :action (filter #(= :decision (:phase %)) (:events r))))
+(def forced-policy
+  '(fn [r] (if (= (get r :phase) :unseen) {:action :probe}
+             (if (= (get r :phase) :reference) {:action :prepare}
+               (if (= (get r :phase) :prepared) {:action :probe} {:action :install})))))
+
+(deftest guest-policy-makes-deterministic-investment-decisions
+  (let [w (setup) root (world/snapshot w)
+        base {:remaining-calls 100 :spent-ns 10 :allowance-ns 1000
+              :predicted-gross-ns 500 :future-cost-ns 100 :measured-gross-ns 500
+              :publication-estimate-ns 20}]
+    (doseq [[change expected] [[{:phase :unseen} :probe]
+                              [{:phase :reference} :prepare]
+                              [{:phase :reference :predicted-gross-ns 100} :stop]
+                              [{:phase :prepared} :probe]
+                              [{:phase :compared} :install]
+                              [{:phase :compared :measured-gross-ns 0} :stop]
+                              [{:phase :unseen :remaining-calls 0} :stop]
+                              [{:phase :reference :spent-ns 1001} :stop]]]
+      (is (= {:action expected}
+             (:value (service/invoke nil root investment/policy-symbol [(merge base change)] 4096)))))))
+
+(deftest funded-preparation-probing-and-publication-retain-source-and-parent-world
+  (let [w (setup) _ (defs/define! w (list 'def investment/policy-symbol forced-policy))
+        root (world/snapshot w) cache (stage/make-cache) job (funding/create {})
+        r (investment/attempt! cache root 'f [2 4 100] job
+                              {:remaining-calls 10000 :allowance-ns 1000000000000 :probe-pairs 1
+                               :preparation-options {:strategy 'strategy :selection {:variant :private :priority 10}}})]
+    ;; Force decisions to test lifecycle correctness; no assertion about timing.
+    (is (= :installed (:status r)))
+    (is (= [:probe :prepare :probe :install] (actions r)))
+    (is (identical? root (world/snapshot w)))
+    (is (= 1 (:emissions (:usage r))))
+    (is (pos? (:spent-ns r)))
+    (is (= (:spent-ns r) (reduce + (keep :elapsed-ns (:events r)))))
+    (is (= (core/code-id (:generic (first (stage/executables cache))))
+           (core/code-id (.-term ^klara.eval.Closure (defs/lookup root 'f)))))))
+
+(deftest exhausted-or-rejected-attempts-retain-charges-and-do-not-publish
+  (let [w (setup) _ (defs/define! w (list 'def investment/policy-symbol forced-policy)) root (world/snapshot w)]
+    (doseq [limits [{:emissions 0} {:work 0}]]
+      (let [job (funding/create limits) cache (stage/make-cache)
+            r (investment/attempt! cache root 'f [2 4 100] job
+                                  {:remaining-calls 10000 :allowance-ns 1000000000000 :probe-pairs 1
+                                   :preparation-options {:strategy 'strategy}})]
+        (is (= :exhausted (:status r)))
+        (is (empty? (stage/executables cache)))
+        (is (seq (:events r)))
+        (is (= (:spent-ns r) (reduce + (keep :elapsed-ns (:events r))))))))
+  (doseq [policy ['(fn [r] {:action :install}) '(fn [r] {:action :probe :checker :anything})]]
+    (let [w (setup) _ (defs/define! w (list 'def investment/policy-symbol policy)) cache (stage/make-cache)
+          r (investment/attempt! cache (world/snapshot w) 'f [2 4 100] (funding/create {})
+                                {:remaining-calls 100 :allowance-ns 1000000000000})]
+      (is (= :rejected (:status r)))
+      (is (= :invalid-investment-action (:reason r)))
+      (is (empty? (stage/executables cache))))))
+
+(def touched (atom 0))
+(defn touch [x] (swap! touched inc) x)
+(deftest replay-admission-rejects-effects-before-executing-source
+  (let [w (setup) _ (defs/define! w '(def unsafe (fn [x] (klara.compile.investment-test/touch x))))
+        cache (stage/make-cache)
+        r (investment/attempt! cache (world/snapshot w) 'unsafe [1] (funding/create {})
+                              {:remaining-calls 100 :allowance-ns 1000000000000})]
+    (is (= :rejected (:status r)))
+    (is (= :compiler-service (:reason r)))
+    (is (zero? @touched))
+    (is (empty? (stage/executables cache)))))
+
+(deftest inactive-candidates-and-zero-time-allowance-do-not-publish
+  (let [w (setup) _ (defs/define! w (list 'def investment/policy-symbol forced-policy))
+        root (world/snapshot w) cache (stage/make-cache)
+        r (investment/attempt! cache root 'f [1.5 4 100] (funding/create {})
+                              {:remaining-calls 10000 :allowance-ns 1000000000000 :probe-pairs 1
+                               :preparation-options {:strategy 'strategy}})]
+    (is (= :declined (:status r)))
+    (is (= :guard-miss-or-shadowed (:reason r)))
+    (is (false? (:candidate-admitted? r)))
+    (is (empty? (stage/executables cache))))
+  (let [w (setup) cache (stage/make-cache)
+        r (investment/attempt! cache (world/snapshot w) 'f [2 4 100] (funding/create {})
+                              {:remaining-calls 10000 :allowance-ns 0})]
+    (is (= :stopped (:status r)))
+    (is (nil? (get-in r [:usage :emissions])))
+    (is (empty? (stage/executables cache)))))
+
+(deftest pure-source-does-not-authorize-arbitrary-host-cache-replay
+  (let [w (setup) root (world/snapshot w) f (defs/lookup root 'f)
+        cache (stage/make-cache) touched (atom 0)
+        exe (stage/executable f [] (fn [& _] (swap! touched inc) true) {:test :not-replayable})]
+    (stage/install! cache exe)
+    (let [r (investment/attempt! cache root 'f [2 4 100] (funding/create {})
+                                {:remaining-calls 100 :allowance-ns 1000000000000})]
+      (is (= :rejected (:status r)))
+      (is (= :investment-replay-cache (:reason r)))
+      (is (zero? @touched)))))
+
+(deftest failing-reference-keeps-an-accounted-outcome
+  (let [w (setup) _ (defs/define! w '(def fails (fn [x] (inc x))))
+        cache (stage/make-cache)
+        r (investment/attempt! cache (world/snapshot w) 'fails [Long/MAX_VALUE] (funding/create {})
+                              {:remaining-calls 100 :allowance-ns 1000000000000})]
+    (is (= :failed (:status r)))
+    (is (= :investment-exception (:reason r)))
+    (is (= "java.lang.ArithmeticException" (:error-class r)))
+    (is (pos? (:work (:usage r))))
+    (is (= (:spent-ns r) (reduce + (keep :elapsed-ns (:events r)))))
+    (is (empty? (stage/executables cache)))))

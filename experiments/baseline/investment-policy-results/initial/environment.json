@@ -1,0 +1,9 @@
+{
+  "platform": "Linux-7.0.0-38-generic-x86_64-with-glibc2.43",
+  "cpu": {
+    "model name": "Intel(R) Core(TM) Ultra 7 258V",
+    "siblings": "8",
+    "cpu cores": "8"
+  },
+  "isolation": "sequential JVMs, no concurrent tests, no frequency control or CPU pinning"
+}

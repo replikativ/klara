@@ -32,6 +32,7 @@
             [klara.expand :as x]
             [klara.eval :as ev]
             [klara.defs :as d]
+            [klara.load :as loader]
             [klara.stage :as stage]
             [klara.compile.core :as compiler])
   (:import [clojure.lang LineNumberingPushbackReader]
@@ -40,13 +41,23 @@
 (defn session
   "A fresh REPL session: one empty world named main, and its own
   authority store (klara.authority)."
-  []
+  ([] (session {}))
+  ([options]
   {:worlds (atom {"main" {:world (w/make-world) :parent nil}})
    :current (atom "main")
+   :namespace (atom nil) :source-roots (:source-roots options [])
+   :prepare (:prepare options :off)
+   :preparation-job (when (= :baseline (:prepare options))
+                      ((requiring-resolve 'klara.compile.prepare/job) options))
    :cache (stage/make-cache)
-   :store (a/new-store)})
+   :store (a/new-store)}))
 
-(defn- current-world [s] (:world (get @(:worlds s) @(:current s))))
+(defn current-world [s] (:world (get @(:worlds s) @(:current s))))
+(defn load-options
+  "One session allowance shared by REPL and nREPL file preparation."
+  [s]
+  {:source-roots (:source-roots s) :prepare (:prepare s)
+   :preparation-job (:preparation-job s) :cache (:cache s)})
 (defn- current-root [s] (w/snapshot (current-world s)))
 
 ;; ---------------------------------------------------------------------------
@@ -90,13 +101,17 @@
 (defn- def-form? [form]
   (and (seq? form) (contains? '#{def defmacro defsyntax defsyntax-class} (first form))))
 
-(defn- define [s form]
+(defn- define
+  ([s form] (define s form nil nil))
+  ([s form root expanded]
   (let [wo (current-world s)
-        {:keys [name]} (binding [ev/*fiber* (w/fiber wo)] (d/define! wo form))
+        {:keys [name]} (binding [ev/*fiber* (w/fiber wo)]
+                        (if expanded (d/define-expanded! wo form root expanded)
+                          (d/define! wo form)))
         rep (d/invalidate! wo name)
         line (fn [k] (when-let [xs (seq (get rep k))]
                        (str ";; " (clojure.core/name k) ": " (str/join " " xs))))]
-    (str/join "\n" (remove nil? [(str "#'" name) (line :stale) (line :cutoff)]))))
+    (str/join "\n" (remove nil? [(str "#'" name) (line :stale) (line :cutoff)])))))
 
 (defn- eval-form
   "Evaluate form against the current world's newest root, in a fiber
@@ -111,13 +126,35 @@
   is expanded ONCE, and published if it expanded to a definition (defn
   and other def-producing macros), else evaluated in a fiber."
   [s form]
-  (if (def-form? form)
+  (cond
+   (and (seq? form) (= 'ns (first form)))
+    (let [result (loader/load-string! (current-world s) (pr-str form)
+                                     (load-options s))]
+      (reset! (:namespace s) (:namespace result))
+      "nil")
+   (and (seq? form) (= 'load-file (first form)))
+   (let [result (loader/load-file! (current-world s) (second form)
+                                  (load-options s))]
+     (reset! (:namespace s) (:namespace result))
+     (print-value (:value result)))
+   (and (seq? form) (= 'require (first form)))
+   (let [module (or @(:namespace s) 'user)
+         old (loader/descriptor (current-root s) module)
+         old-specs (for [dep (:requires old)]
+                     (if-let [a (first (keep (fn [[a target]] (when (= dep target) a)) (:aliases old)))]
+                       [dep :as a] [dep]))
+         specs (map #(if (and (seq? %) (= 'quote (first %))) (second %) %) (rest form))]
+     (let [before @(:namespace s)
+           result (eval-top-form s (list 'ns module (cons :require (concat old-specs specs))))]
+       (when (nil? before) (reset! (:namespace s) nil))
+       result))
+   (def-form? form)
     (define s form)
-    (let [fib (w/fiber (current-world s))
+   :else (let [fib (w/fiber (current-world s))
           root (w/basis fib)
           res (x/expand-recorded form root)]
       (if (contains? #{:def :macro} (:kind res))
-        (define s form)
+        (define s form root res)
         (print-value (ev/run (:term res) {:basis root :fiber fib}))))))
 
 (defn- pretty [form]
@@ -207,17 +244,22 @@
                               {:klara/error :repl}))))
     (throw (ex-info (str "unknown command " cmd " (try :repl/help)") {:klara/error :repl}))))
 
+(def ^:dynamic *evaluation-errors* nil)
+(defn- noted-error [t]
+  (when *evaluation-errors* (swap! *evaluation-errors* conj (error-kind t)))
+  (format-error t))
+
 (defn- eval-top
   "Evaluate one top-level form (or command); returns the printed output."
   [s form arg]
   (let [out (java.io.StringWriter.)
-        res (binding [*out* out a/*store* (:store s)]
+        res (binding [*out* out a/*store* (:store s) x/*module* @(:namespace s)]
               (try
                 (stage/with-cache (:cache s)
                  (cond
                   (command? form) (run-command s form arg)
                   :else (eval-top-form s form)))
-                (catch Throwable t (format-error t))))
+                (catch Throwable t (noted-error t))))
         printed (str out)]
     (str/join "\n" (remove str/blank? [(str/trimr printed) res]))))
 
@@ -234,31 +276,35 @@
   while Klara is hosted on the JVM."
   #{:klara})
 
-(defn- read-form [rdr]
+(defn- read-form
+ ([rdr] (read-form nil rdr))
+ ([s rdr]
   (try
-    (binding [*read-eval* false
+    (if-let [module (some-> s :namespace deref)]
+      (loader/read-form rdr module (:aliases (loader/descriptor (current-root s) module)) eof)
+     (binding [*read-eval* false
               *ns* (create-ns 'klara.user)]
-      (read {:eof eof :read-cond :allow :features reader-features} rdr))
+      (read {:eof eof :read-cond :allow :features reader-features} rdr)))
     (catch Throwable t
-      (throw (ex-info (or (ex-message (or (.getCause t) t)) (str t)) {:klara/read true})))))
+      (throw (ex-info (or (ex-message (or (.getCause t) t)) (str t)) {:klara/read true}))))))
 
 (defn eval-reader
   "Read and evaluate every form from rdr; calls emit with each output."
   [s rdr emit]
   (loop []
-    (let [form (try (read-form rdr) (catch Throwable t t))]
+    (let [form (try (read-form s rdr) (catch Throwable t t))]
       (cond
         (identical? eof form) nil
-        (instance? Throwable form) (emit (format-error form))
+        (instance? Throwable form) (emit (noted-error form))
         :else
         (let [arg (when (contains? commands-with-arg form)
-                    (let [a (try (read-form rdr) (catch Throwable t t))]
+                    (let [a (try (read-form s rdr) (catch Throwable t t))]
                       (cond (identical? eof a) ::missing
                             (instance? Throwable a) a
                             :else a)))]
           (cond
             (= ::missing arg) (emit (str "!! repl: " form " needs an argument"))
-            (instance? Throwable arg) (emit (format-error arg))
+            (instance? Throwable arg) (emit (noted-error arg))
             :else (do (emit (eval-top s form arg)) (recur))))))))
 
 (defn eval-string
@@ -269,6 +315,11 @@
     (eval-reader s (LineNumberingPushbackReader. (StringReader. text))
                  #(swap! outs conj %))
     (str/join "\n" (remove str/blank? @outs))))
+
+(defn eval-response [s text]
+  (let [errors (atom [])]
+    (binding [*evaluation-errors* errors]
+      {:output (eval-string s text) :errors @errors})))
 
 ;; ---------------------------------------------------------------------------
 ;; interactive loop
@@ -285,7 +336,7 @@
     (println "Klara REPL over T0. :repl/help lists commands; Ctrl-D exits.")
     (loop []
       (print "k=> ") (flush)
-      (let [form (try (read-form rdr) (catch Throwable t t))]
+      (let [form (try (read-form s rdr) (catch Throwable t t))]
         (cond
           (identical? eof form) (println)
           (instance? Throwable form) (do (println (format-error form)) (skip-line rdr) (recur))

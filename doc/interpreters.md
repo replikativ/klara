@@ -139,9 +139,56 @@ continuation. Stepping an arbitrary state is not a sandbox or a preemptive
 time budget: a transition can call host code, and abandoning live frames can
 require authority cleanup. The tiny example above has no such effects.
 
+## Ordinary execution and explicit transitions
+
+The default `drive` uses a fused Clojure dispatch loop. Quotes, local lookups
+and closure creation in operand position do not each allocate a machine state
+and a list frame. Driver registers live in loop locals. Suspended work still
+uses immutable frames in the existing format; capture, resumption and deopt do
+not retain a reused mutable driver object.
+
+Selected arithmetic primitives with zero to two exact `Long`/`Double` operands
+also use fixed-arity invocation. Their actual function identities must match
+the anchored primitives. These operations cannot call back into guest code,
+so they do not need a fresh `*outer-k*` binding. Other values, host overrides
+and primitives use the original host path. Checked arithmetic and exception
+dispatch remain in place; this is not inferred primitive-loop compilation.
+
+`step-state` and `drive-reference` retain explicit transitions. In a host REPL,
+bind `ev/*reference-driver*` to `true` to select the original driver, including
+for nested host callbacks. Bounded planning still uses `step-state`; its step
+accounting is not replaced by fused-driver iteration counts.
+
+`test/klara/driver_test.clj` compares values, errors, output and effect traces,
+including multi-shot capture, host callbacks, staging and authority forks. It
+also checks generated arithmetic expressions against Clojure and exercises
+fallback for custom numbers and overridden primitive functions. Full T0 and
+specialization tests exercise the default driver. These are empirical
+correspondence checks, not a proof that the fused driver implements the full
+CEK transition system. Measurements live in the
+[interpreter experiment](../experiments/interpreter/README.md).
+
+## Loops in the interpreter and compiler
+
+Surface `loop`/`recur` expands into a local recursive function and applications.
+T0 therefore evaluates a loop with ordinary CEK rules: evaluate the function
+and arguments left to right, enter its body with captured locals plus the new
+arguments, and continue with the pending continuation. In a self-tail call,
+the caller has no further work, so another caller continuation is unnecessary.
+This does not by itself remove argument, environment or call-dispatch costs.
+
+The admitted compiled path can represent that same transfer as loop locals and
+a jump. For `(recur (inc i) b (+ a b))`, all three next values are computed
+from the old `i`, `a`, `b` before any loop local is overwritten. The shared
+[`compile/loop.clj`](../src/klara/compile/loop.clj) structural view now feeds the
+scalar analyzer and numeric layout inference; scalar emission consumes its
+ordered transfer plan. Types, ownership and effect restrictions are separate
+admission conditions. This is compiler consolidation; T0's transition rules
+and interpreter implementations are unchanged.
+
 ## The additional restricted CEK proofs
 
-`experiments/consolidation/scalar_cek.clj` and `scalar_finite.clj` formalize a
+`verification/consolidation/scalar_cek.clj` and `scalar_finite.clj` formalize a
 smaller scalar CEK machine and scoped finite environments in ansatz. They prove
 preservation, a transition budget, termination and results for their admitted
 syntax. Their tests compare handwritten observers with actual T0 execution.

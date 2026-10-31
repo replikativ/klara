@@ -1,0 +1,938 @@
+{:cohorts ["campaign-0" "campaign-1" "campaign-2"],
+ :files
+ ["target/compiler-campaign/campaign-0.edn"
+  "target/compiler-campaign/campaign-1.edn"
+  "target/compiler-campaign/campaign-2.edn"],
+ :processes 3,
+ :aggregation :min-median-max-of-process-warm-medians,
+ :source-sha256
+ {"src/klara/compile/inline.clj"
+  "2c06694af339b84e6f501fc035ac17023d55dd5da0babbd74becd849966f8f8a",
+  "src/klara/compile/unbox.clj"
+  "0e449e139a657bc5b4bac26f5f951c9cd606afd1b851e69244700f5cd9438917",
+  "src/klara/compile/speculate.clj"
+  "80d54937c925ed2fc593bd8cb6f216e8ec8298bcab40041be2255ba94cd3173f",
+  "src/klara/compile/core.clj"
+  "8c59aa51f636c8e7a38b1d63cd07a4badd775ca23582155ef4deb64800cdd128",
+  "src/klara/compile/affine_erase.clj"
+  "d5cc50d9ee7009e1c0635f5838aebf0f705d2be2312934cc39d851882235e756",
+  "src/klara/fusion/kernel.clj"
+  "edc582a5b412a83e61b465c45a980f3811c770167627188da1ba3ad18e1c9453",
+  "src/klara/compile/private_accumulator.clj"
+  "1b96f35740df42f5a2e77c3f75abb18b4f360041ac556ae43c6cbcd616ed3416",
+  "src/klara/compile/pe.clj"
+  "728a7c15b318edb6ebfb69517e9c4dba245cde8d64e434c83622758ee5bb1b70",
+  "src/klara/compile/relation.clj"
+  "e9e6bf13c1d6931cfcfb4c25a52b5432c5b09b294d8deca7746615fadb901139",
+  "src/klara/deploy.clj"
+  "88e3503486932d88ecdd900ba148637e645d18aa5d2605a9d65d343fb5c30c75",
+  "src/klara/compile/funding.clj"
+  "4272444d0fe0a2c69f6295224868048fac048679bc3039f5b319865963bef95f",
+  "src/klara/compile/view.clj"
+  "7a58c4612ca77720b807eb19cc024968b0ca1c2e8fb8e9fdbab17eb521155c3c",
+  "src/klara/compile/infer_affine.clj"
+  "1ea336ef960114d11d4e7480381a0cedfb373797622353b36c587a9725c4d0de",
+  "src/klara/compile/emit.clj"
+  "55c966534f4e08d84176d5ba73b2f08ec59c5e17473f9ace690b5b153aba4165",
+  "src/klara/compile/investment.clj"
+  "bae05d891ebcf8553ed16ff35fa1a893aceb334fc35561c5029202283c7c82b3",
+  "src/klara/world.clj"
+  "29ea09915982d5daa246251c87da3095f0014c0f7680ff017e618e36fd9e9286",
+  "src/klara/core.clj"
+  "4fde378a632e9259d5133c166c118c951e3afb44eb84e0eb896a45e041684e6f",
+  "src/klara/affine.clj"
+  "7bceeeb76fb1f30adb60b0e17c9a879a4e626be6697ff5d2c24b8dc917b4e8af",
+  "src/klara/compile/budget.clj"
+  "a14c2c3a158f950915b6e12e39266ac68b9f07614b386932ca2f5655eade70f2",
+  "src/klara/compile/host.clj"
+  "5ccd09307e7bdbc3794eee27adcce08f2a742e07c54fd79e1d73464e9e35ad20",
+  "src/klara/repl.clj"
+  "13dd5b6feb07238fc1e976d027beb638ec6db9c8e753acfde3778b27c9a3a031",
+  "src/klara/load.clj"
+  "13360862c46395b41c048d5e19fc9d08dfad74e80046b4a1d3e3d685cd4e1968",
+  "src/klara/compile/strategy.clj"
+  "e11d64865f0647f8025361b3de0b9e47349e5674543b9ffacc83da1e9bfefbc5",
+  "experiments/baseline/private_accumulator.clj"
+  "9ec5d27aa618c5fa2b34a7f95e8c93ead9811ca5fb0f5bc4957425189be71eed",
+  "src/klara/compile/edge.clj"
+  "93f90ed2d3571f89223a60182af01655e239a776333824f0fa4b0edb014a3e9f",
+  "src/klara/compile/escape.clj"
+  "0b0cbd23e2a031ddaf1d2a5e66f68209901cf5e6ecd9f4771acdccb5d606d462",
+  "src/klara/code.clj"
+  "9a4663239a849215d83cc21ce24390d6ba3f6c3b80a4951d758285fffe7f80e8",
+  "src/klara/compile/ir.clj"
+  "04da4006359a881b8f5c849632d64714cc0ee43c3717e13b81f70b2ff8557989",
+  "experiments/baseline/campaign.clj"
+  "da93ee566f0c81da327ec366b698a8d9bed6d232901dfc95f31b95b099bf52be",
+  "src/klara/defs.clj"
+  "fa2cef5153903f49de13676785c8d0075d87086f6bdd78fb66c61cfbd3d0c436",
+  "src/klara/compile/guest.clj"
+  "53c4aaee0ada0e7284c884d72e39adf0577c388870712b80042475c77ff6f2d1",
+  "src/klara/compile/inline_check.clj"
+  "ddb58eb90ac27f5d7ddeee5931703be6923f007b2d7c2e94e0cc6d74d8705187",
+  "src/klara/expand.clj"
+  "3e4dd3ce7fe4a2b197344549ed3966a628ac1399c860ea24d0c69e0687e4f124",
+  "src/klara/compile/subject.clj"
+  "4ff05a76d70ec93f902d9301217755f743c47b3eac121118dce948b709072ae6",
+  "src/klara/compile/baseline.clj"
+  "be1fda2ebf41a1aeaf4cd4b5da4e029af6766e65992ed2fcf610508d9345385c",
+  "src/klara/effect_class.clj"
+  "354e1100fe88a79195d8bb5958ce38053ed67657440c59e5e04a1918c87870fe",
+  "src/klara/compile/compose.clj"
+  "0ab8e752e5ef9a76255b247f6858062e526f8b0e9c727e4f57534ea330b39906",
+  "src/klara/compile/loop.clj"
+  "70288d9e58db5ac74f631404da32cb209bb29cba9fc71d56bf67a49d90ed5b47",
+  "src/klara/nrepl.clj"
+  "087b57b1b3d925efe37d72c14f0d9e515591b88dc885e29f67dfad359405b8b1",
+  "src/klara/compile/hof.clj"
+  "b16d14a9c70532ceb5e00c2ef8fdb4167b8b5cc0b3eaca8a3f4c65255661d519",
+  "scripts/run_compiler_campaign.py"
+  "64bddbc98e90a8c8d6ac9f97db498a80b48ad59f9faeebea1935f89cff59558f",
+  "src/klara/compile/staged.clj"
+  "7d0861ab553b1484c31632e7dfe347161745cb478c089802949becb6201b585d",
+  "src/klara/syntax.clj"
+  "8963b902a00dd3f778ba0fbb5efd2ef15244c904070195fd4a47a48d5825db44",
+  "src/klara/compile/runtime.clj"
+  "f4fcfcf98fc25874f6cb4ad120751b2d66ad4ca16fcc27bb3a51b5000cc16a74",
+  "src/klara/compile/scalar.clj"
+  "352012cdc752465d36452302da1d8cc60cd521fd79081f8f4915da209d273966",
+  "src/klara/stage.clj"
+  "9cf3c97d2cdc8181810e5262951f924383b5acfc051c947139de75d503c44856",
+  "src/klara/compile/analysis.clj"
+  "8c29cd30f8b8814efd55094db8a4310a815c33584e1b8a6ee39dabaf34245ebc",
+  "src/klara/compile/updates.clj"
+  "446b74e76cb10a9f77e7eefebc2ae68401b3adf6bf7a3bd1f567e1873e0cc721",
+  "src/klara/fusion.clj"
+  "8e88dbe66640c4d60be5a1dafc07c86a17bef5b0633c08179256f56a1658a356",
+  "src/klara/compile/diagnostics.clj"
+  "f7b7d848edcfa22ff05d4dd81b154444e4ba68c1794d9a42177f40eece1ea089",
+  "src/klara/authority.clj"
+  "70c91dac1f5beace4e6426913f27a8a4dca3a5517f70bc86516f50f4ac369a9d",
+  "src/klara/compile/service.clj"
+  "f0cad0e231d18b2602ea67e89bda3eb41d728f8fb2e43efca9088e51fe4f9c0b",
+  "src/klara/compile/strict_fold.clj"
+  "bd35e878609a1822e127d90f7b668465386b4c2cc56c36e0c16eb56ce3f4d28d",
+  "src/klara/eval.clj"
+  "f3426a67ec736d5e07c1e1e836a7d242ed6f5efdc1ebb16ab079afcf3d80ad65",
+  "src/klara/compile/local_calls.clj"
+  "aa88567411e0f6efd92813c2d0b0e7469392f91d71d8b9fd559e594cfb28d470",
+  "src/klara/compile/prepare.clj"
+  "2de9e4921590cfdb4abf96acd40b412af2aad002dd1b3a30836c7523e9eb9f0d",
+  "src/klara/compile/requirements.clj"
+  "b551f12324b50024fbae1f448e3819736e2004d602ed8cdfde02674c22300969"},
+ :preparation
+ [{:family :helpers,
+   :variant :baseline,
+   :statuses [:prepared :prepared :prepared],
+   :preparation-ms
+   {:min 99.321908, :median 101.795804, :max 120.899289},
+   :validation-ms {:min 6.753755, :median 10.321611, :max 10.783222},
+   :installation-ms {:min 0.546434, :median 0.90196, :max 0.971239}}
+  {:family :histogram,
+   :variant :baseline,
+   :statuses [:prepared :prepared :prepared],
+   :preparation-ms {:min 8.367551, :median 13.286262, :max 13.480268},
+   :validation-ms {:min 1.644148, :median 1.835538, :max 2.44165},
+   :installation-ms {:min 0.09186, :median 0.102614, :max 0.161944}}
+  {:family :tree-worklist,
+   :variant :baseline,
+   :statuses [:prepared :prepared :prepared],
+   :preparation-ms {:min 16.643352, :median 23.295244, :max 24.324961},
+   :validation-ms {:min 4.007526, :median 4.377518, :max 4.618401},
+   :installation-ms {:min 0.104909, :median 0.177895, :max 0.204921}}
+  {:family :enclosed-accumulator,
+   :variant :baseline,
+   :statuses [:prepared :prepared :prepared],
+   :preparation-ms {:min 33.463848, :median 34.460809, :max 40.036137},
+   :validation-ms {:min 6.312826, :median 9.59034, :max 11.966877},
+   :installation-ms {:min 0.093372, :median 0.175596, :max 0.186517}}
+  {:family :enclosed-accumulator,
+   :variant :private,
+   :statuses [:prepared :prepared :prepared],
+   :preparation-ms
+   {:min 266.341351, :median 276.573989, :max 279.372978},
+   :validation-ms {:min 11.776687, :median 17.103652, :max 17.144305},
+   :installation-ms {:min 0.150391, :median 0.165014, :max 0.263288}}
+  {:family :escaping-closure,
+   :variant :baseline,
+   :statuses [:declined :declined :declined],
+   :preparation-ms {:min 0.753873, :median 1.334047, :max 1.955481},
+   :validation-ms nil,
+   :installation-ms nil}],
+ :rows
+ [{:family :helpers,
+   :arguments [0],
+   :engine :reference,
+   :portfolio-selected [:baseline :baseline :baseline],
+   :wall-us {:min 39.4015, :median 47.77775, :max 78.37475},
+   :cpu-us {:min 38.98525, :median 43.595375, :max 78.20025},
+   :allocated-bytes {:min 10801.0, :median 11009.0, :max 11009.0},
+   :estimated-total-ms
+   {1 {:min 0.076298, :median 0.266792, :max 0.294105},
+    10 {:min 0.50629775, :median 0.6214055, :max 0.99947775},
+    1000 {:min 39.6288905, :median 47.80627025, :max 78.59048025}}}
+  {:family :helpers,
+   :arguments [0],
+   :engine :portfolio,
+   :portfolio-selected [:baseline :baseline :baseline],
+   :wall-us {:min 11.781375, :median 12.171125, :max 24.615375},
+   :cpu-us {:min 11.89075, :median 12.331, :max 25.042125},
+   :allocated-bytes {:min 6196.0, :median 6404.0, :max 6404.0},
+   :estimated-total-ms
+   {1 {:min 109.658822, :median 112.010405, :max 134.076096},
+    10 {:min 109.764854375, :median 112.119945125, :max 134.297634375},
+    1000
+    {:min 121.428415625, :median 124.169358875, :max 158.666855625}}}
+  {:family :helpers,
+   :arguments [0],
+   :engine :baseline,
+   :portfolio-selected [:baseline :baseline :baseline],
+   :wall-us {:min 10.666625, :median 11.70025, :max 16.524},
+   :cpu-us {:min 10.80325, :median 11.850375, :max 16.943375},
+   :allocated-bytes {:min 6193.0, :median 6401.0, :max 6401.0},
+   :estimated-total-ms
+   {1 {:min 109.162698, :median 110.774619, :max 132.838975},
+    10 {:min 109.26800025, :median 110.870618625, :max 132.987691},
+    1000 {:min 120.85124775, :median 121.430577375, :max 149.346451}}}
+  {:family :helpers,
+   :arguments [0],
+   :engine :clojure,
+   :portfolio-selected [:baseline :baseline :baseline],
+   :wall-us {:min 0.406625, :median 0.45575, :max 1.16025},
+   :cpu-us {:min 0.48075, :median 0.54825, :max 1.343375},
+   :allocated-bytes {:min 25.0, :median 25.0, :max 25.0},
+   :estimated-total-ms
+   {1 {:min 1.279013, :median 2.221711, :max 2.333749},
+    10 {:min 1.28311475, :median 2.225370625, :max 2.34419125},
+    1000 {:min 1.73430725, :median 2.627929375, :max 3.49283875}}}
+  {:family :helpers,
+   :arguments [16],
+   :engine :reference,
+   :portfolio-selected [:baseline :baseline :baseline],
+   :wall-us {:min 253.80975, :median 291.639, :max 310.097875},
+   :cpu-us {:min 254.096, :median 288.381125, :max 294.1555},
+   :allocated-bytes {:min 112329.0, :median 112537.0, :max 112537.0},
+   :estimated-total-ms
+   {1 {:min 0.588999, :median 0.975168, :max 1.105403},
+    10 {:min 3.21375, :median 3.25945575, :max 3.896283875},
+    1000 {:min 254.53110825, :median 291.93636, :max 310.893180125}}}
+  {:family :helpers,
+   :arguments [16],
+   :engine :portfolio,
+   :portfolio-selected [:baseline :baseline :baseline],
+   :wall-us {:min 8.472875, :median 9.677625, :max 12.521625},
+   :cpu-us {:min 8.636375, :median 9.830625, :max 12.675875},
+   :allocated-bytes {:min 6220.0, :median 6428.0, :max 6428.0},
+   :estimated-total-ms
+   {1 {:min 108.72656, :median 110.065453, :max 132.040204},
+    10 {:min 108.813658625, :median 110.178147625, :max 132.116459875},
+    1000
+    {:min 118.394507375, :median 122.574556375, :max 140.504606125}}}
+  {:family :helpers,
+   :arguments [16],
+   :engine :baseline,
+   :portfolio-selected [:baseline :baseline :baseline],
+   :wall-us {:min 6.106875, :median 7.740375, :max 8.120125},
+   :cpu-us {:min 7.21175, :median 8.252875, :max 9.201875},
+   :allocated-bytes {:min 6217.0, :median 6425.0, :max 6425.0},
+   :estimated-total-ms
+   {1 {:min 109.107676, :median 110.634331, :max 132.605003},
+    10 {:min 109.180757125, :median 110.703994375, :max 132.659964875},
+    1000
+    {:min 117.219680875, :median 118.366965625, :max 138.705771125}}}
+  {:family :helpers,
+   :arguments [16],
+   :engine :clojure,
+   :portfolio-selected [:baseline :baseline :baseline],
+   :wall-us {:min 2.558375, :median 3.15825, :max 5.16975},
+   :cpu-us {:min 2.64025, :median 3.282, :max 5.281375},
+   :allocated-bytes {:min 433.0, :median 433.0, :max 433.0},
+   :estimated-total-ms
+   {1 {:min 1.28008, :median 2.265644, :max 2.311381},
+    10 {:min 1.32660775, :median 2.29406825, :max 2.334406375},
+    1000 {:min 4.867197625, :median 5.42073575, :max 6.44466025}}}
+  {:family :helpers,
+   :arguments [1000],
+   :engine :reference,
+   :portfolio-selected [:baseline :baseline :baseline],
+   :wall-us {:min 9339.414, :median 9345.085, :max 9705.042},
+   :cpu-us {:min 8984.338, :median 9318.724, :max 9717.065},
+   :allocated-bytes
+   {:min 6423128.0, :median 6423280.0, :max 6423280.0},
+   :estimated-total-ms
+   {1 {:min 11.37608, :median 12.600123, :max 17.621418},
+    10 {:min 95.430806, :median 99.945501, :max 101.727183},
+    1000 {:min 9341.450666, :median 9353.361333, :max 9707.937081}}}
+  {:family :helpers,
+   :arguments [1000],
+   :engine :portfolio,
+   :portfolio-selected [:baseline :baseline :baseline],
+   :wall-us {:min 32.111, :median 33.941, :max 61.153},
+   :cpu-us {:min 34.825, :median 35.39, :max 63.041},
+   :allocated-bytes {:min 27256.0, :median 27464.0, :max 27464.0},
+   :estimated-total-ms
+   {1 {:min 108.930922, :median 110.239416, :max 132.246193},
+    10 {:min 109.219921, :median 110.544885, :max 132.79657},
+    1000 {:min 141.009811, :median 144.146475, :max 193.33804}}}
+  {:family :helpers,
+   :arguments [1000],
+   :engine :baseline,
+   :portfolio-selected [:baseline :baseline :baseline],
+   :wall-us {:min 19.219, :median 22.666, :max 24.498},
+   :cpu-us {:min 20.196, :median 23.991, :max 25.81},
+   :allocated-bytes {:min 27232.0, :median 27440.0, :max 27440.0},
+   :estimated-total-ms
+   {1 {:min 109.12572, :median 110.644973, :max 132.618915},
+    10 {:min 109.298691, :median 110.865455, :max 132.822909},
+    1000 {:min 128.325501, :median 135.118475, :max 155.262249}}}
+  {:family :helpers,
+   :arguments [1000],
+   :engine :clojure,
+   :portfolio-selected [:baseline :baseline :baseline],
+   :wall-us {:min 37.522, :median 43.366, :max 44.124},
+   :cpu-us {:min 38.415, :median 44.218, :max 45.49},
+   :allocated-bytes {:min 113224.0, :median 113224.0, :max 113224.0},
+   :estimated-total-ms
+   {1 {:min 1.371887, :median 2.324236, :max 2.427399},
+    10 {:min 1.709585, :median 2.71453, :max 2.824515},
+    1000 {:min 38.856365, :median 45.64687, :max 46.507275}}}
+  {:family :histogram,
+   :arguments [0],
+   :engine :reference,
+   :portfolio-selected [:baseline :baseline :baseline],
+   :wall-us {:min 8.98675, :median 9.964625, :max 18.434125},
+   :cpu-us {:min 9.356125, :median 10.147125, :max 18.6925},
+   :allocated-bytes {:min 10505.0, :median 10713.0, :max 10713.0},
+   :estimated-total-ms
+   {1 {:min 0.03809, :median 0.054606, :max 0.123144},
+    10 {:min 0.127771625, :median 0.13548675, :max 0.289051125},
+    1000 {:min 9.03236925, :median 9.992750375, :max 18.538834875}}}
+  {:family :histogram,
+   :arguments [0],
+   :engine :portfolio,
+   :portfolio-selected [:baseline :baseline :baseline],
+   :wall-us {:min 4.2995, :median 4.424625, :max 5.903},
+   :cpu-us {:min 4.398625, :median 4.511625, :max 6.069125},
+   :allocated-bytes {:min 6268.0, :median 6476.0, :max 6476.0},
+   :estimated-total-ms
+   {1 {:min 10.189366, :median 15.301437, :max 16.201303},
+    10 {:min 10.2280615, :median 15.341258625, :max 16.25443},
+    1000 {:min 14.4845665, :median 19.721637375, :max 22.0984}}}
+  {:family :histogram,
+   :arguments [0],
+   :engine :baseline,
+   :portfolio-selected [:baseline :baseline :baseline],
+   :wall-us {:min 4.111125, :median 4.328125, :max 5.3095},
+   :cpu-us {:min 4.20225, :median 4.554625, :max 5.50525},
+   :allocated-bytes {:min 6265.0, :median 6473.0, :max 6473.0},
+   :estimated-total-ms
+   {1 {:min 10.147196, :median 15.256335, :max 16.130487},
+    10 {:min 10.184196125, :median 15.295288125, :max 16.1782725},
+    1000 {:min 14.254209875, :median 19.580131875, :max 21.4346775}}}
+  {:family :histogram,
+   :arguments [0],
+   :engine :clojure,
+   :portfolio-selected [:baseline :baseline :baseline],
+   :wall-us {:min 0.21225, :median 0.225875, :max 0.35975},
+   :cpu-us {:min 0.28125, :median 0.296625, :max 0.476},
+   :allocated-bytes {:min 9.0, :median 9.0, :max 9.0},
+   :estimated-total-ms
+   {1 {:min 0.77996, :median 0.984723, :max 1.552619},
+    10 {:min 0.78187025, :median 0.986755875, :max 1.55585675},
+    1000 {:min 0.99199775, :median 1.210372125, :max 1.91200925}}}
+  {:family :histogram,
+   :arguments [16],
+   :engine :reference,
+   :portfolio-selected [:baseline :baseline :baseline],
+   :wall-us {:min 117.134375, :median 138.257875, :max 199.35225},
+   :cpu-us {:min 117.241, :median 138.34475, :max 200.033},
+   :allocated-bytes {:min 124009.0, :median 127017.0, :max 127737.0},
+   :estimated-total-ms
+   {1 {:min 0.145322, :median 0.163375, :max 0.33249},
+    10 {:min 1.199531375, :median 1.407695875, :max 2.12666025},
+    1000
+    {:min 117.162562625, :median 138.282992125, :max 199.48538775}}}
+  {:family :histogram,
+   :arguments [16],
+   :engine :portfolio,
+   :portfolio-selected [:baseline :baseline :baseline],
+   :wall-us {:min 8.005, :median 9.960875, :max 15.655},
+   :cpu-us {:min 8.068875, :median 10.022125, :max 14.761625},
+   :allocated-bytes {:min 8796.0, :median 8988.0, :max 9196.0},
+   :estimated-total-ms
+   {1 {:min 10.071825, :median 15.195466, :max 16.064612},
+    10 {:min 10.14387, :median 15.285113875, :max 16.205507},
+    1000 {:min 18.06882, :median 25.146380125, :max 31.703957}}}
+  {:family :histogram,
+   :arguments [16],
+   :engine :baseline,
+   :portfolio-selected [:baseline :baseline :baseline],
+   :wall-us {:min 7.713, :median 9.520375, :max 12.944},
+   :cpu-us {:min 7.786, :median 9.592125, :max 13.064875},
+   :allocated-bytes {:min 8793.0, :median 8985.0, :max 9193.0},
+   :estimated-total-ms
+   {1 {:min 10.124347, :median 15.223444, :max 16.09996},
+    10 {:min 10.193764, :median 15.309127375, :max 16.216456},
+    1000 {:min 17.829634, :median 24.734298625, :max 29.031016}}}
+  {:family :histogram,
+   :arguments [16],
+   :engine :clojure,
+   :portfolio-selected [:baseline :baseline :baseline],
+   :wall-us {:min 3.288, :median 4.310375, :max 6.4615},
+   :cpu-us {:min 3.338625, :median 4.3895, :max 6.56475},
+   :allocated-bytes {:min 2729.0, :median 2729.0, :max 2729.0},
+   :estimated-total-ms
+   {1 {:min 0.786353, :median 0.994035, :max 1.563869},
+    10 {:min 0.815945, :median 1.032828375, :max 1.6220225},
+    1000 {:min 4.071065, :median 5.300099625, :max 8.0189075}}}
+  {:family :histogram,
+   :arguments [1000],
+   :engine :reference,
+   :portfolio-selected [:baseline :baseline :baseline],
+   :wall-us {:min 6394.675, :median 7790.15, :max 8070.761},
+   :cpu-us {:min 6379.097, :median 7796.261, :max 8077.908},
+   :allocated-bytes
+   {:min 7249976.0, :median 7346088.0, :max 7458376.0},
+   :estimated-total-ms
+   {1 {:min 6.490276, :median 8.922091, :max 10.2274},
+    10 {:min 66.474166, :median 76.601626, :max 82.864249},
+    1000 {:min 6397.202416, :median 7788.850126, :max 8072.917639}}}
+  {:family :histogram,
+   :arguments [1000],
+   :engine :portfolio,
+   :portfolio-selected [:baseline :baseline :baseline],
+   :wall-us {:min 121.284, :median 142.078, :max 144.539},
+   :cpu-us {:min 122.282, :median 142.977, :max 145.248},
+   :allocated-bytes {:min 309760.0, :median 309872.0, :max 310160.0},
+   :estimated-total-ms
+   {1 {:min 10.176782, :median 15.362257, :max 16.197377},
+    10 {:min 11.455484, :median 16.453813, :max 17.498228},
+    1000 {:min 136.524973, :median 152.112704, :max 160.591838}}}
+  {:family :histogram,
+   :arguments [1000],
+   :engine :baseline,
+   :portfolio-selected [:baseline :baseline :baseline],
+   :wall-us {:min 94.974, :median 104.101, :max 108.136},
+   :cpu-us {:min 95.924, :median 104.932, :max 108.768},
+   :allocated-bytes {:min 309736.0, :median 309848.0, :max 310136.0},
+   :estimated-total-ms
+   {1 {:min 10.204478, :median 15.329804, :max 16.199609},
+    10 {:min 11.059244, :median 16.303028, :max 17.136518},
+    1000 {:min 105.083504, :median 120.196508, :max 123.357668}}}
+  {:family :histogram,
+   :arguments [1000],
+   :engine :clojure,
+   :portfolio-selected [:baseline :baseline :baseline],
+   :wall-us {:min 89.623, :median 91.633, :max 92.129},
+   :cpu-us {:min 90.515, :median 92.37, :max 92.62},
+   :allocated-bytes {:min 303672.0, :median 303672.0, :max 303672.0},
+   :estimated-total-ms
+   {1 {:min 0.908001, :median 1.163748, :max 1.799425},
+    10 {:min 1.714608, :median 1.992909, :max 2.624122},
+    1000 {:min 90.441378, :median 93.200619, :max 93.340792}}}
+  {:family :tree-worklist,
+   :arguments [0],
+   :engine :reference,
+   :portfolio-selected [:baseline :baseline :baseline],
+   :wall-us {:min 24.9665, :median 46.046, :max 48.2305},
+   :cpu-us {:min 25.063, :median 46.3065, :max 48.5785},
+   :allocated-bytes {:min 26513.0, :median 27009.0, :max 27745.0},
+   :estimated-total-ms
+   {1 {:min 0.041182, :median 0.097587, :max 0.113789},
+    10 {:min 0.2658805, :median 0.512001, :max 0.5478635},
+    1000 {:min 24.9827155, :median 46.097541, :max 48.2960585}}}
+  {:family :tree-worklist,
+   :arguments [0],
+   :engine :portfolio,
+   :portfolio-selected [:baseline :baseline :baseline],
+   :wall-us {:min 7.971625, :median 9.79275, :max 12.113375},
+   :cpu-us {:min 8.03, :median 9.9315, :max 12.246875},
+   :allocated-bytes {:min 6772.0, :median 6884.0, :max 7172.0},
+   :estimated-total-ms
+   {1 {:min 20.824566, :median 28.064225, :max 29.330844},
+    10 {:min 20.896310625, :median 28.173245375, :max 29.41897875},
+    1000 {:min 28.788219375, :median 39.11380125, :max 40.165486625}}}
+  {:family :tree-worklist,
+   :arguments [0],
+   :engine :baseline,
+   :portfolio-selected [:baseline :baseline :baseline],
+   :wall-us {:min 7.522875, :median 9.75325, :max 10.413875},
+   :cpu-us {:min 7.592125, :median 9.818125, :max 10.524},
+   :allocated-bytes {:min 6769.0, :median 6881.0, :max 7169.0},
+   :estimated-total-ms
+   {1 {:min 20.792819, :median 27.966466, :max 29.190559},
+    10 {:min 20.860524875, :median 28.060190875, :max 29.27833825},
+    1000 {:min 28.308171125, :median 38.369927125, :max 38.93405575}}}
+  {:family :tree-worklist,
+   :arguments [0],
+   :engine :clojure,
+   :portfolio-selected [:baseline :baseline :baseline],
+   :wall-us {:min 0.62825, :median 1.101375, :max 1.177875},
+   :cpu-us {:min 0.674375, :median 1.171125, :max 1.25325},
+   :allocated-bytes {:min 129.0, :median 129.0, :max 129.0},
+   :estimated-total-ms
+   {1 {:min 1.056966, :median 2.378021, :max 2.691756},
+    10 {:min 1.06262025, :median 2.387933375, :max 2.702356875},
+    1000 {:min 1.68458775, :median 3.478294625, :max 3.868453125}}}
+  {:family :tree-worklist,
+   :arguments [4],
+   :engine :reference,
+   :portfolio-selected [:baseline :baseline :baseline],
+   :wall-us {:min 336.519875, :median 411.986125, :max 582.6245},
+   :cpu-us {:min 331.23375, :median 412.26325, :max 582.026},
+   :allocated-bytes {:min 389273.0, :median 400761.0, :max 414321.0},
+   :estimated-total-ms
+   {1 {:min 0.358256, :median 0.484414, :max 0.497888},
+    10 {:min 3.386934875, :median 4.192289125, :max 5.7415085},
+    1000
+    {:min 336.541611125, :median 412.058552875, :max 582.5397635}}}
+  {:family :tree-worklist,
+   :arguments [4],
+   :engine :portfolio,
+   :portfolio-selected [:baseline :baseline :baseline],
+   :wall-us {:min 13.471875, :median 18.353875, :max 21.082375},
+   :cpu-us {:min 13.51775, :median 18.397125, :max 21.204625},
+   :allocated-bytes {:min 9788.0, :median 9900.0, :max 10188.0},
+   :estimated-total-ms
+   {1 {:min 20.72093, :median 27.8072, :max 29.088838},
+    10 {:min 20.842176875, :median 27.996941375, :max 29.254022875},
+    1000 {:min 34.179333125, :median 47.424359125, :max 48.868492625}}}
+  {:family :tree-worklist,
+   :arguments [4],
+   :engine :baseline,
+   :portfolio-selected [:baseline :baseline :baseline],
+   :wall-us {:min 10.428375, :median 13.43875, :max 15.6655},
+   :cpu-us {:min 10.484625, :median 13.5135, :max 15.740375},
+   :allocated-bytes {:min 9785.0, :median 9897.0, :max 10185.0},
+   :estimated-total-ms
+   {1 {:min 20.770099, :median 27.902237, :max 29.145044},
+    10 {:min 20.863954375, :median 28.0432265, :max 29.26599275},
+    1000 {:min 31.188045625, :median 42.57035525, :max 43.5520715}}}
+  {:family :tree-worklist,
+   :arguments [4],
+   :engine :clojure,
+   :portfolio-selected [:baseline :baseline :baseline],
+   :wall-us {:min 6.12025, :median 10.59525, :max 11.879375},
+   :cpu-us {:min 6.17, :median 10.659125, :max 12.020875},
+   :allocated-bytes {:min 3145.0, :median 3145.0, :max 3145.0},
+   :estimated-total-ms
+   {1 {:min 1.018462, :median 2.324924, :max 2.634063},
+    10 {:min 1.07354425, :median 2.42028125, :max 2.740977375},
+    1000 {:min 7.13259175, :median 12.90957875, :max 14.501558625}}}
+  {:family :tree-worklist,
+   :arguments [8],
+   :engine :reference,
+   :portfolio-selected [:baseline :baseline :baseline],
+   :wall-us {:min 3302.896875, :median 3911.196875, :max 5392.934375},
+   :cpu-us {:min 2860.787625, :median 3650.00525, :max 5121.344375},
+   :allocated-bytes
+   {:min 5845145.0, :median 6029305.0, :max 6233657.0},
+   :estimated-total-ms
+   {1 {:min 6.012349, :median 7.383083, :max 11.934167},
+    10 {:min 41.213120875, :median 41.660238875, :max 55.919492375},
+    1000
+    {:min 3311.528145125,
+     :median 3913.298027125,
+     :max 5394.924523625}}}
+  {:family :tree-worklist,
+   :arguments [8],
+   :engine :portfolio,
+   :portfolio-selected [:baseline :baseline :baseline],
+   :wall-us {:min 36.019, :median 48.323875, :max 50.00575},
+   :cpu-us {:min 36.078625, :median 48.518625, :max 50.097125},
+   :allocated-bytes {:min 57092.0, :median 57300.0, :max 57700.0},
+   :estimated-total-ms
+   {1 {:min 20.83666, :median 27.844569, :max 29.137978},
+    10 {:min 21.271574875, :median 28.29462075, :max 29.462149},
+    1000 {:min 65.120959, :median 69.112211125, :max 77.80031325}}}
+  {:family :tree-worklist,
+   :arguments [8],
+   :engine :baseline,
+   :portfolio-selected [:baseline :baseline :baseline],
+   :wall-us {:min 33.307, :median 44.877375, :max 45.525625},
+   :cpu-us {:min 33.35875, :median 45.09825, :max 45.59275},
+   :allocated-bytes {:min 57089.0, :median 57297.0, :max 57697.0},
+   :estimated-total-ms
+   {1 {:min 20.807512, :median 27.922611, :max 29.161988},
+    10 {:min 21.211408375, :median 28.332341625, :max 29.461751},
+    1000 {:min 62.435681, :median 65.640009625, :max 73.402710375}}}
+  {:family :tree-worklist,
+   :arguments [8],
+   :engine :clojure,
+   :portfolio-selected [:baseline :baseline :baseline],
+   :wall-us {:min 22.321625, :median 26.76325, :max 30.79075},
+   :cpu-us {:min 22.375375, :median 26.87375, :max 30.91225},
+   :allocated-bytes {:min 50657.0, :median 50657.0, :max 50657.0},
+   :estimated-total-ms
+   {1 {:min 1.09527, :median 2.391215, :max 2.726846},
+    10 {:min 1.37238675, :median 2.592109625, :max 2.96771525},
+    1000 {:min 24.690518375, :median 29.46333275, :max 31.85522925}}}
+  {:family :enclosed-accumulator,
+   :arguments [0 4 100],
+   :engine :reference,
+   :portfolio-selected [:private :private :private],
+   :wall-us {:min 8.038625, :median 10.509875, :max 19.021125},
+   :cpu-us {:min 8.085375, :median 10.549625, :max 19.21825},
+   :allocated-bytes {:min 14113.0, :median 14225.0, :max 14833.0},
+   :estimated-total-ms
+   {1 {:min 0.025731, :median 0.069326, :max 0.122486},
+    10 {:min 0.098078625, :median 0.217074875, :max 0.240516125},
+    1000 {:min 8.056317375, :median 10.621851125, :max 19.071429875}}}
+  {:family :enclosed-accumulator,
+   :arguments [0 4 100],
+   :engine :portfolio,
+   :portfolio-selected [:private :private :private],
+   :wall-us {:min 22.198875, :median 42.647625, :max 47.823875},
+   :cpu-us {:min 22.247375, :median 33.64375, :max 42.81825},
+   :allocated-bytes {:min 8977.0, :median 9193.0, :max 9761.0},
+   :estimated-total-ms
+   {1 {:min 333.826275, :median 353.678148, :max 356.873399},
+    10 {:min 334.210103625, :median 354.108562875, :max 357.073188875},
+    1000
+    {:min 376.431252375, :median 379.050075125, :max 401.454199125}}}
+  {:family :enclosed-accumulator,
+   :arguments [0 4 100],
+   :engine :baseline,
+   :portfolio-selected [:private :private :private],
+   :wall-us {:min 3.96725, :median 4.796375, :max 8.5635},
+   :cpu-us {:min 4.00325, :median 4.83775, :max 8.707375},
+   :allocated-bytes {:min 5908.0, :median 6116.0, :max 6516.0},
+   :estimated-total-ms
+   {1 {:min 41.24416, :median 43.409856, :max 52.349983},
+    10 {:min 41.3212315, :median 43.44556125, :max 52.393150375},
+    1000 {:min 47.37313875, :median 49.7990965, :max 57.141561625}}}
+  {:family :enclosed-accumulator,
+   :arguments [0 4 100],
+   :engine :private,
+   :portfolio-selected [:private :private :private],
+   :wall-us {:min 17.956875, :median 21.04425, :max 40.256625},
+   :cpu-us {:min 17.996375, :median 21.092125, :max 40.428},
+   :allocated-bytes {:min 8977.0, :median 9193.0, :max 9761.0},
+   :estimated-total-ms
+   {1 {:min 278.508545, :median 293.933659, :max 296.960393},
+    10 {:min 278.870854625, :median 294.12305725, :max 297.122004875},
+    1000
+    {:min 314.899311125, :median 314.95686475, :max 318.724913375}}}
+  {:family :enclosed-accumulator,
+   :arguments [0 4 100],
+   :engine :clojure,
+   :portfolio-selected [:private :private :private],
+   :wall-us {:min 0.347375, :median 0.37125, :max 0.731125},
+   :cpu-us {:min 0.374625, :median 0.406875, :max 0.775875},
+   :allocated-bytes {:min 57.0, :median 57.0, :max 57.0},
+   :estimated-total-ms
+   {1 {:min 1.42863, :median 2.396546, :max 2.551978},
+    10 {:min 1.43197125, :median 2.399672375, :max 2.558558125},
+    1000 {:min 1.79950875, :median 2.743573625, :max 3.282371875}}}
+  {:family :enclosed-accumulator,
+   :arguments [16 4 1000],
+   :engine :reference,
+   :portfolio-selected [:private :private :private],
+   :wall-us {:min 80.3255, :median 96.592, :max 139.621625},
+   :cpu-us {:min 76.56675, :median 96.652875, :max 139.899125},
+   :allocated-bytes {:min 203177.0, :median 206137.0, :max 210441.0},
+   :estimated-total-ms
+   {1 {:min 0.084029, :median 0.116305, :max 0.174872},
+    10 {:min 0.8069585, :median 0.985633, :max 1.431466625},
+    1000 {:min 80.3292035, :median 96.611713, :max 139.656875375}}}
+  {:family :enclosed-accumulator,
+   :arguments [16 4 1000],
+   :engine :portfolio,
+   :portfolio-selected [:private :private :private],
+   :wall-us {:min 14.46975, :median 19.700125, :max 31.9685},
+   :cpu-us {:min 14.516, :median 19.74975, :max 32.1425},
+   :allocated-bytes {:min 9025.0, :median 9241.0, :max 9809.0},
+   :estimated-total-ms
+   {1 {:min 332.434535, :median 352.699012, :max 356.020996},
+    10 {:min 332.7222515, :median 352.82923975, :max 356.198297125},
+    1000 {:min 364.3710665, :median 367.15429225, :max 375.701420875}}}
+  {:family :enclosed-accumulator,
+   :arguments [16 4 1000],
+   :engine :baseline,
+   :portfolio-selected [:private :private :private],
+   :wall-us {:min 8.6695, :median 9.786875, :max 14.623625},
+   :cpu-us {:min 8.71425, :median 9.8395, :max 14.713875},
+   :allocated-bytes {:min 7980.0, :median 8188.0, :max 8588.0},
+   :estimated-total-ms
+   {1 {:min 40.926058, :median 43.253996, :max 52.217393},
+    10 {:min 41.057670625, :median 43.342077875, :max 52.2954185},
+    1000 {:min 53.031084125, :median 55.535059375, :max 60.8782235}}}
+  {:family :enclosed-accumulator,
+   :arguments [16 4 1000],
+   :engine :private,
+   :portfolio-selected [:private :private :private],
+   :wall-us {:min 17.554125, :median 20.408875, :max 26.884375},
+   :cpu-us {:min 17.600875, :median 20.47025, :max 26.996125},
+   :allocated-bytes {:min 9025.0, :median 9241.0, :max 9809.0},
+   :estimated-total-ms
+   {1 {:min 278.305788, :median 293.87598, :max 296.804937},
+    10 {:min 278.547747375, :median 294.033967125, :max 296.988616875},
+    1000
+    {:min 305.163278625, :median 311.412550875, :max 317.193403125}}}
+  {:family :enclosed-accumulator,
+   :arguments [16 4 1000],
+   :engine :clojure,
+   :portfolio-selected [:private :private :private],
+   :wall-us {:min 3.031625, :median 3.47275, :max 4.780875},
+   :cpu-us {:min 3.07825, :median 3.51725, :max 4.900625},
+   :allocated-bytes {:min 2129.0, :median 2129.0, :max 2129.0},
+   :estimated-total-ms
+   {1 {:min 1.38773, :median 2.142995, :max 2.485371},
+    10 {:min 1.415014625, :median 2.17424975, :max 2.528398875},
+    1000 {:min 4.416323375, :median 5.61227225, :max 7.261465125}}}
+  {:family :enclosed-accumulator,
+   :arguments [1000 4 600000],
+   :engine :reference,
+   :portfolio-selected [:private :private :private],
+   :wall-us {:min 4681.531, :median 5235.738, :max 5401.695},
+   :cpu-us {:min 4682.471, :median 5232.55, :max 5366.012},
+   :allocated-bytes
+   {:min 1.1890136E7, :median 1.2082024E7, :max 1.2306744E7},
+   :estimated-total-ms
+   {1 {:min 4.482905, :median 5.554961, :max 6.654895},
+    10 {:min 47.68874, :median 53.09816, :max 53.776537},
+    1000 {:min 4682.40443, :median 5237.157157, :max 5400.77621}}}
+  {:family :enclosed-accumulator,
+   :arguments [1000 4 600000],
+   :engine :portfolio,
+   :portfolio-selected [:private :private :private],
+   :wall-us {:min 82.133, :median 111.46, :max 113.345},
+   :cpu-us {:min 82.61, :median 112.623, :max 114.013},
+   :allocated-bytes {:min 9136.0, :median 9352.0, :max 9920.0},
+   :estimated-total-ms
+   {1 {:min 332.592327, :median 352.762135, :max 356.085606},
+    10 {:min 333.612432, :median 353.765275, :max 356.824803},
+    1000 {:min 438.136473, :median 445.823982, :max 464.110675}}}
+  {:family :enclosed-accumulator,
+   :arguments [1000 4 600000],
+   :engine :baseline,
+   :portfolio-selected [:private :private :private],
+   :wall-us {:min 78.047, :median 92.816, :max 94.79},
+   :cpu-us {:min 78.38, :median 93.563, :max 95.487},
+   :allocated-bytes {:min 222768.0, :median 222976.0, :max 223376.0},
+   :estimated-total-ms
+   {1 {:min 41.265018, :median 43.39762, :max 52.363788},
+    10 {:min 42.118128, :median 44.232964, :max 53.066211},
+    1000 {:min 130.332741, :median 135.960228, :max 136.120804}}}
+  {:family :enclosed-accumulator,
+   :arguments [1000 4 600000],
+   :engine :private,
+   :portfolio-selected [:private :private :private],
+   :wall-us {:min 26.259, :median 26.296, :max 29.151},
+   :cpu-us {:min 26.635, :median 26.644, :max 29.633},
+   :allocated-bytes {:min 9136.0, :median 9352.0, :max 9920.0},
+   :estimated-total-ms
+   {1 {:min 278.356563, :median 293.879499, :max 296.812068},
+    10 {:min 278.593227, :median 294.11583, :max 297.074427},
+    1000 {:min 304.626267, :median 320.11224, :max 325.933917}}}
+  {:family :enclosed-accumulator,
+   :arguments [1000 4 600000],
+   :engine :clojure,
+   :portfolio-selected [:private :private :private],
+   :wall-us {:min 82.296, :median 88.014, :max 94.884},
+   :cpu-us {:min 82.685, :median 88.499, :max 95.769},
+   :allocated-bytes {:min 216896.0, :median 216896.0, :max 216896.0},
+   :estimated-total-ms
+   {1 {:min 1.481653, :median 2.242855, :max 2.632637},
+    10 {:min 2.222317, :median 3.096811, :max 3.424763},
+    1000 {:min 83.695357, :median 90.558623, :max 97.031971}}}
+  {:family :enclosed-accumulator,
+   :arguments [16.5 4 1000],
+   :engine :reference,
+   :portfolio-selected [:baseline :baseline :baseline],
+   :wall-us {:min 98.913, :median 132.108, :max 132.42},
+   :cpu-us {:min 99.414, :median 132.948, :max 133.388},
+   :allocated-bytes {:min 215072.0, :median 218224.0, :max 222752.0},
+   :estimated-total-ms
+   {1 {:min 0.119006, :median 0.234908, :max 0.314721},
+    10 {:min 1.009223, :median 1.426688, :max 1.503693},
+    1000 {:min 98.933093, :median 132.290613, :max 132.522488}}}
+  {:family :enclosed-accumulator,
+   :arguments [16.5 4 1000],
+   :engine :portfolio,
+   :portfolio-selected [:baseline :baseline :baseline],
+   :wall-us {:min 17.624, :median 44.005, :max 51.877},
+   :cpu-us {:min 17.969, :median 44.73, :max 53.027},
+   :allocated-bytes {:min 11256.0, :median 11472.0, :max 11944.0},
+   :estimated-total-ms
+   {1 {:min 332.393037, :median 352.716098, :max 355.958746},
+    10 {:min 332.789082, :median 353.182991, :max 356.117362},
+    1000 {:min 373.565122, :median 376.354032, :max 404.541221}}}
+  {:family :enclosed-accumulator,
+   :arguments [16.5 4 1000],
+   :engine :baseline,
+   :portfolio-selected [:baseline :baseline :baseline],
+   :wall-us {:min 7.161, :median 16.964, :max 20.872},
+   :cpu-us {:min 7.482, :median 17.416, :max 21.622},
+   :allocated-bytes {:min 8216.0, :median 8424.0, :max 8824.0},
+   :estimated-total-ms
+   {1 {:min 40.930426, :median 43.264283, :max 52.207612},
+    10 {:min 41.083102, :median 43.452131, :max 52.272061},
+    1000 {:min 57.877462, :median 59.361451, :max 64.115411}}}
+  {:family :enclosed-accumulator,
+   :arguments [16.5 4 1000],
+   :engine :private,
+   :portfolio-selected [:baseline :baseline :baseline],
+   :wall-us {:min 107.1, :median 148.341, :max 158.978},
+   :cpu-us {:min 107.506, :median 149.221, :max 160.302},
+   :allocated-bytes {:min 216448.0, :median 219600.0, :max 224032.0},
+   :estimated-total-ms
+   {1 {:min 278.576531, :median 294.041539, :max 297.1088},
+    10 {:min 279.9116, :median 295.005439, :max 298.539602},
+    1000 {:min 401.034439, :median 426.76919, :max 455.927822}}}
+  {:family :enclosed-accumulator,
+   :arguments [16.5 4 1000],
+   :engine :clojure,
+   :portfolio-selected [:baseline :baseline :baseline],
+   :wall-us {:min 2.5, :median 5.71, :max 6.877},
+   :cpu-us {:min 2.834, :median 6.05, :max 7.597},
+   :allocated-bytes {:min 2344.0, :median 2344.0, :max 2344.0},
+   :estimated-total-ms
+   {1 {:min 1.370485, :median 2.139904, :max 2.455618},
+    10 {:min 1.392985, :median 2.201797, :max 2.507008},
+    1000 {:min 3.867985, :median 8.159908, :max 9.010027}}}
+  {:family :escaping-closure,
+   :arguments [0],
+   :engine :reference,
+   :portfolio-selected [nil nil nil],
+   :wall-us {:min 2.321, :median 2.9315, :max 3.155625},
+   :cpu-us {:min 2.356125, :median 2.989375, :max 3.21625},
+   :allocated-bytes {:min 5761.0, :median 5969.0, :max 6369.0},
+   :estimated-total-ms
+   {1 {:min 0.008521, :median 0.0142, :max 0.040343},
+    10 {:min 0.02941, :median 0.0405835, :max 0.068743625},
+    1000 {:min 2.3272, :median 2.9427685, :max 3.192812375}}}
+  {:family :escaping-closure,
+   :arguments [0],
+   :engine :portfolio,
+   :portfolio-selected [nil nil nil],
+   :wall-us {:min 2.28625, :median 3.116375, :max 3.161625},
+   :cpu-us {:min 2.321125, :median 3.18275, :max 3.237625},
+   :allocated-bytes {:min 5761.0, :median 5969.0, :max 6369.0},
+   :estimated-total-ms
+   {1 {:min 0.767468, :median 1.363254, :max 2.000443},
+    10 {:min 0.78804425, :median 1.391708625, :max 2.028490375},
+    1000 {:min 3.05143175, :median 4.521717375, :max 5.113701625}}}
+  {:family :escaping-closure,
+   :arguments [0],
+   :engine :baseline,
+   :portfolio-selected [nil nil nil],
+   :wall-us {:min 2.2745, :median 2.904625, :max 3.114875},
+   :cpu-us {:min 2.30925, :median 2.983875, :max 3.190625},
+   :allocated-bytes {:min 5761.0, :median 5969.0, :max 6369.0},
+   :estimated-total-ms
+   {1 {:min 0.76043, :median 1.340955, :max 1.989211},
+    10 {:min 0.7809005, :median 1.368988875, :max 2.015352625},
+    1000 {:min 3.0326555, :median 4.452715125, :max 4.890931375}}}
+  {:family :escaping-closure,
+   :arguments [0],
+   :engine :clojure,
+   :portfolio-selected [nil nil nil],
+   :wall-us {:min 0.11175, :median 0.183875, :max 0.20325},
+   :cpu-us {:min 0.144875, :median 0.230125, :max 0.24525},
+   :allocated-bytes {:min 33.0, :median 33.0, :max 33.0},
+   :estimated-total-ms
+   {1 {:min 0.670593, :median 1.077966, :max 1.421769},
+    10 {:min 0.67159875, :median 1.07979525, :max 1.423423875},
+    1000 {:min 0.78223125, :median 1.28101275, :max 1.605460125}}}
+  {:family :escaping-closure,
+   :arguments [16],
+   :engine :reference,
+   :portfolio-selected [nil nil nil],
+   :wall-us {:min 2.28, :median 3.17475, :max 3.499375},
+   :cpu-us {:min 2.32025, :median 3.25875, :max 3.557},
+   :allocated-bytes {:min 5761.0, :median 5969.0, :max 6369.0},
+   :estimated-total-ms
+   {1 {:min 0.002709, :median 0.006409, :max 0.008954},
+    10 {:min 0.023229, :median 0.03498175, :max 0.040448375},
+    1000 {:min 2.280429, :median 3.17798425, :max 3.504829625}}}
+  {:family :escaping-closure,
+   :arguments [16],
+   :engine :portfolio,
+   :portfolio-selected [nil nil nil],
+   :wall-us {:min 2.275375, :median 3.1135, :max 3.12825},
+   :cpu-us {:min 2.3115, :median 3.200375, :max 3.202625},
+   :allocated-bytes {:min 5761.0, :median 5969.0, :max 6369.0},
+   :estimated-total-ms
+   {1 {:min 0.758744, :median 1.346341, :max 1.967861},
+    10 {:min 0.779222375, :median 1.37449525, :max 1.9958825},
+    1000 {:min 3.031843625, :median 4.47146275, :max 5.0782475}}}
+  {:family :escaping-closure,
+   :arguments [16],
+   :engine :baseline,
+   :portfolio-selected [nil nil nil],
+   :wall-us {:min 2.26475, :median 2.9215, :max 3.173125},
+   :cpu-us {:min 2.30075, :median 2.996125, :max 3.267375},
+   :allocated-bytes {:min 5761.0, :median 5969.0, :max 6369.0},
+   :estimated-total-ms
+   {1 {:min 0.756544, :median 1.338317, :max 1.959512},
+    10 {:min 0.77692675, :median 1.3646105, :max 1.988070125},
+    1000 {:min 3.01902925, :median 4.2568955, :max 5.129463875}}}
+  {:family :escaping-closure,
+   :arguments [16],
+   :engine :clojure,
+   :portfolio-selected [nil nil nil],
+   :wall-us {:min 0.117625, :median 0.20375, :max 0.206375},
+   :cpu-us {:min 0.149375, :median 0.244375, :max 0.2585},
+   :allocated-bytes {:min 33.0, :median 33.0, :max 33.0},
+   :estimated-total-ms
+   {1 {:min 0.646688, :median 1.040724, :max 1.335018},
+    10 {:min 0.647746625, :median 1.04255775, :max 1.336875375},
+    1000 {:min 0.764195375, :median 1.24427025, :max 1.541186625}}}
+  {:family :escaping-closure,
+   :arguments [1000],
+   :engine :reference,
+   :portfolio-selected [nil nil nil],
+   :wall-us {:min 2.527, :median 3.629, :max 3.643},
+   :cpu-us {:min 2.817, :median 3.969, :max 4.025},
+   :allocated-bytes {:min 5824.0, :median 6032.0, :max 6432.0},
+   :estimated-total-ms
+   {1 {:min 0.00287, :median 0.005428, :max 0.005846},
+    10 {:min 0.025613, :median 0.038215, :max 0.038507},
+    1000 {:min 2.527343, :median 3.631217, :max 3.644785}}}
+  {:family :escaping-closure,
+   :arguments [1000],
+   :engine :portfolio,
+   :portfolio-selected [nil nil nil],
+   :wall-us {:min 2.521, :median 3.497, :max 3.895},
+   :cpu-us {:min 2.788, :median 3.851, :max 4.403},
+   :allocated-bytes {:min 5824.0, :median 6032.0, :max 6432.0},
+   :estimated-total-ms
+   {1 {:min 0.758794, :median 1.34465, :max 1.966865},
+    10 {:min 0.781483, :median 1.379705, :max 1.998338},
+    1000 {:min 3.277273, :median 5.235755, :max 5.460368}}}
+  {:family :escaping-closure,
+   :arguments [1000],
+   :engine :baseline,
+   :portfolio-selected [nil nil nil],
+   :wall-us {:min 2.479, :median 3.314, :max 3.607},
+   :cpu-us {:min 2.762, :median 3.751, :max 3.979},
+   :allocated-bytes {:min 5824.0, :median 6032.0, :max 6432.0},
+   :estimated-total-ms
+   {1 {:min 0.756394, :median 1.33773, :max 1.958917},
+    10 {:min 0.778705, :median 1.370193, :max 1.988743},
+    1000 {:min 3.232915, :median 4.941123, :max 5.269603}}}
+  {:family :escaping-closure,
+   :arguments [1000],
+   :engine :clojure,
+   :portfolio-selected [nil nil nil],
+   :wall-us {:min 0.192, :median 0.434, :max 0.52},
+   :cpu-us {:min 0.432, :median 0.745, :max 0.844},
+   :allocated-bytes {:min 96.0, :median 96.0, :max 96.0},
+   :estimated-total-ms
+   {1 {:min 0.646769, :median 1.039922, :max 1.334506},
+    10 {:min 0.648497, :median 1.044602, :max 1.338412},
+    1000 {:min 0.838577, :median 1.559402, :max 1.768072}}}],
+ :limits
+ [:first-observed-is-not-cold-JVM
+  :serial-preparation-order
+  :reference-oracle-runs-before-timing
+  :earlier-inputs-warm-the-same-engines
+  :shared-JIT-GC-state
+  :fixed-workloads
+  :seven-rotating-warm-rounds
+  :estimated-horizons-not-measured-traces
+  :load-reported-separately
+  :common-invocation-harness-included
+  :no-time-assertions
+  :training-and-autonomous-investment-not-implemented]}

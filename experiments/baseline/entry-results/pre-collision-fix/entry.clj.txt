@@ -1,0 +1,109 @@
+(ns baseline.entry
+  "Matched ordinary-entry resolution controls, full calls and all entry APIs.
+   Counts are separate from timing; no timing assertions or predicate memo."
+  (:require [clojure.java.io :as io] [clojure.pprint :as pp]
+            [baseline.campaign :as metrics] [baseline.private-accumulator :as fixture]
+            [klara.compile.private-accumulator] [klara.compile.infer-affine :as affine]
+            [klara.compile.funding :as funding] [klara.compile.local-calls :as local]
+            [klara.compile.staged :as staged] [klara.core :as core]
+            [klara.defs :as defs] [klara.eval :as ev] [klara.stage :as stage] [klara.world :as world]))
+
+(defn- median [xs] (nth (vec (sort xs)) (quot (count xs) 2)))
+(defn- result-tag [exe] (get-in exe [:selection :variant]))
+
+(defn- diagnostics [cache f root args mode]
+  (let [counts (atom {}) v (ns-resolve 'klara.stage 'host-binding-holds?)
+        planned @v resolve clojure.core/requiring-resolve]
+    (with-redefs-fn {v (fn [& as] (swap! counts update :binding-checks (fnil inc 0)) (apply planned as))
+                    #'clojure.core/requiring-resolve
+                    (fn [sym] (swap! counts update :requiring-resolve (fnil inc 0)) (resolve sym))}
+      #(binding [stage/*entry-mode* mode]
+         {:selected (result-tag (stage/enter cache f [] args root [])) :counts @counts}))))
+
+(defn- compare-modes
+  ([thunks batch expected]
+   (compare-modes thunks batch expected (fn [mode f] (binding [stage/*entry-mode* mode] (f)))))
+  ([thunks batch expected scope]
+  (let [modes [:reference :planned]
+        _ (dotimes [_ 8192] (doseq [mode modes] (scope mode #(assert (= expected ((thunks mode)))))))
+        samples (mapv (fn [i]
+                        (into {} (for [mode (if (even? i) modes (reverse modes))]
+                                   (let [r (scope mode #(metrics/measure batch (thunks mode)))]
+                                     (assert (= expected (:value r))) [mode (dissoc r :value)])))) (range 9))]
+    {:batch batch :samples samples
+     :medians (into {} (for [mode modes]
+                        [mode (into {} (for [k [:wall-ns-per-call :cpu-ns-per-call :bytes-per-call]]
+                                        [k (let [xs (keep #(get-in % [mode k]) samples)] (when (seq xs) (median xs)))]))]))})))
+
+(defn run-study! [label]
+  (let [w (world/make-world) _ (local/bootstrap! w)
+        _ (defs/define! w (list 'def 'policy fixture/policy-source))
+        _ (defs/define! w (list 'def 'f fixture/source)) root (world/snapshot w)
+        code (defs/eval-form root (list 'code fixture/source)) f (defs/lookup root 'f)
+        job (funding/create {})
+        prepare (fn [opts] (let [r (staged/request root code (assoc opts :job job))]
+                             (assert (= :prepared (:status r))) (:candidate r)))
+        baseline (prepare {:local-call-planner local/planner-symbol :selection {:variant :baseline :priority 0}})
+        private (prepare {:strategy 'policy :selection {:variant :private :priority 10}})
+        caches (into {} (for [[k candidates] [[:empty []] [:baseline [baseline]] [:private [private]]
+                                              [:portfolio [baseline private]]]]
+                          (let [cache (stage/make-cache)]
+                            (doseq [p candidates] (staged/install! cache root (staged/prevalidate p))) [k cache])))
+        selector
+        (vec (for [[cache-name cache] caches args [[0 4 1] [0.5 4 1]]]
+               (let [expected (binding [stage/*entry-mode* :reference] (result-tag (stage/enter cache f [] args root [])))
+                     thunks (into {} (for [mode [:reference :planned]]
+                                       [mode #(result-tag (stage/enter cache f [] args root []))]))]
+                 (merge {:cache cache-name :arguments args :expected expected
+                         :diagnostics (into {} (for [mode [:reference :planned]] [mode (diagnostics cache f root args mode)]))}
+                        (compare-modes thunks 512 expected)))))
+        full-calls
+        (vec (for [[cache-name cache] caches args [[0 4 1] [0.5 4 1]]]
+               (let [scope (fn [mode run]
+                            (binding [ev/*basis* root ev/*mint* root]
+                              (stage/with-cache cache
+                                (binding [stage/*entry-mode* mode ev/*direct-hook* nil]
+                                  (run)))))
+                     call #(ev/call-value f args)
+                     expected (scope :reference call)
+                     thunks (into {} (for [mode [:reference :planned]] [mode call]))]
+                 (merge {:cache cache-name :arguments args :expected expected :direct-hook :disabled-for-both}
+                        (compare-modes thunks 128 expected scope)))))
+        direct-site (:direct-entry @(:baseline caches))
+        direct-fn #(result-tag (direct-site f [0 4 1] root))
+        _ (dotimes [_ 8192] (assert (= :baseline (direct-fn))))
+        direct (mapv (fn [_] (dissoc (metrics/measure 512 direct-fn) :value)) (range 9))
+        evidence-code (defs/eval-form root '(code (fn [xs]
+                                                  (loop [i 0 acc [0]]
+                                                    (if (< i (count xs))
+                                                      (recur (inc i) (assoc acc 0 (+ (nth acc 0) (nth xs i)))) acc)))))
+        evidence-exe (.-executable ^klara.compile.staged.Prepared (affine/prepare root evidence-code {:parameter-layouts [:long-vector]}))
+        evidence-f (defs/eval-form root (list 'run (list 'quote evidence-code))) evidence-cache (stage/make-cache)
+        _ (stage/install! evidence-cache (assoc evidence-exe :selection {:variant :evidence :priority 0}))
+        site (stage/make-evidence-site evidence-cache evidence-f) input (stage/refine-argument :long-vector [1 2 3])
+        evidence-fn #(result-tag (site input root []))
+        _ (dotimes [_ 8192] (assert (= :evidence (evidence-fn))))
+        evidence (mapv (fn [_] (dissoc (metrics/measure 512 evidence-fn) :value)) (range 9))
+        report {:label label :java (System/getProperty "java.runtime.version")
+                :source fixture/source :selector selector :full-calls full-calls
+                :direct-site direct :evidence-site evidence :preparation-usage (funding/usage job)
+                :limits [:one-source-two-inputs :fixed-bounded-traces :warmup-8192-per-mode :nine-alternating-rounds
+                         :context-bindings-once-per-batch-outside-timing
+                         :ordinary-entry-reference-retains-original-guard-loop
+                         :new-direct-selection-is-a-correctness-change-not-a-reference-control
+                         :direct-and-evidence-sites-have-no-before-control
+                         :counter-instrumentation-separate-from-timing :no-time-assertions
+                         :no-cache-of-live-host-root-or-argument-predicate-verdicts
+                         :full-call-comparison-disables-direct-hook-in-both-modes
+                         :preparation-and-startup-excluded-from-entry-timing]
+                :source-sha256 (into {} (for [path (concat ["experiments/baseline/entry.clj"
+                                                          "experiments/baseline/campaign.clj"
+                                                          "experiments/baseline/private_accumulator.clj"
+                                                          "test/klara/entry_test.clj"]
+                                                         (map str (filter #(.isFile %) (file-seq (io/file "src")))))]
+                                         [path (core/sha256 (slurp path))]))}
+        path (str "target/entry/" label ".edn")]
+    (io/make-parents path) (spit path (with-out-str (pp/pprint report)))
+    {:label label :selectors (mapv #(select-keys % [:cache :arguments :medians]) selector)}))
+
+(defn -main [& [label]] (prn (run-study! (or label "fresh"))) (shutdown-agents))

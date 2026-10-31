@@ -16,9 +16,9 @@ import tarfile
 
 ROOT = Path(__file__).resolve().parents[1]
 TOP = {"README.md", "STATUS.md", "CONTRIBUTING.md", "LICENSE", "deps.edn", ".gitignore"}
-DIRECTORIES = {"src", "test", "test-integration", "test-spec", "spec", "examples", "rfc", "doc", "scripts", "notebooks"}
-EXPERIMENTS = {"consolidation", "proof_staging", "adaptive_affine", "pldi", "staged_regions", "typed_jit", "handlers", "kmap", "affine"}
-EXTENSIONS = {".clj", ".cljc", ".edn", ".md", ".klr", ".lean", ".java", ".py", ".sh", ".json", ".csv", ".tsv", ".txt", ".tex", ".bib"}
+DIRECTORIES = {"src", "verification", "test", "test-nrepl", "test-integration", "test-spec", "spec", "examples", "rfc", "doc", "scripts", "notebooks"}
+EXPERIMENTS = {"history","interpreter", "baseline", "consolidation", "proof_staging", "adaptive_affine", "pldi", "staged_regions", "typed_jit", "handlers", "kmap", "affine"}
+EXTENSIONS = {".clj", ".cljc", ".edn", ".md", ".klr", ".lean", ".java", ".py", ".sh", ".ss", ".json", ".csv", ".tsv", ".txt", ".tex", ".bib"}
 IGNORED = {".git", ".internal", ".cpcache", "target", "classes", "__pycache__", "tmp", "node_modules"}
 
 
@@ -33,7 +33,8 @@ def intended(path):
     if len(rel.parts) == 1:
         return rel.name in TOP
     if rel.parts[0] == "experiments":
-        return len(rel.parts) > 2 and rel.parts[1] in EXPERIMENTS and rel.suffix in EXTENSIONS
+        return (rel == Path("experiments/README.md") or
+                (len(rel.parts) > 2 and rel.parts[1] in EXPERIMENTS and rel.suffix in EXTENSIONS))
     return rel.parts[0] in DIRECTORIES and rel.suffix in EXTENSIONS
 
 
@@ -57,7 +58,7 @@ def main():
         "working_tree_included": True,
         "files": {path: {"sha256": hashlib.sha256(data).hexdigest(), "bytes": len(data)} for path, data in blobs.items()},
         "verification": ["clojure -M:test", "clojure -M:verify"],
-        "optional_checks": ["clojure -M:test-integration", "clojure -X:spec-diff"],
+        "optional_checks": ["clojure -M:memory-probe --check", "clojure -M:runtime-refinement", "clojure -M:test-nrepl", "clojure -M:test-integration", "clojure -X:spec-diff"],
         "limits": ["source snapshot, not an offline dependency cache", "external spec/oracle dependencies described in doc/artifact.md",
                    "historical measurements retain their original source provenance", "no live JVM or authority checkpoint"],
     }

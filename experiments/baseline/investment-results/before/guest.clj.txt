@@ -1,0 +1,79 @@
+(ns klara.compile.guest
+  "Pinned bounded Klara transfer producer. This trusted service has a fixed
+   reviewed work contract; arbitrary edited guest policies remain stepped."
+  (:require [klara.compile.budget :as budget] [klara.compile.loop :as transfer]
+            [klara.core :as core] [klara.expand :as expand] [klara.stage :as stage]
+            [klara.world :as world]))
+
+(def transfer-source
+  '(fn [destinations arguments]
+     (loop [i 0 evaluations [] commits []]
+       (if (< i (count arguments))
+         (recur (inc i)
+                (conj evaluations {:temporary i :expression (nth arguments i)})
+                (conj commits {:destination (nth destinations i) :temporary i}))
+         {:evaluations evaluations :commits commits}))))
+
+(defonce ^:private source-term (delay (expand/expand-expr transfer-source world/empty-root)))
+
+(defonce ^:private seeds (atom {}))
+
+(defn- room? [b]
+  (or (nil? b)
+      (and (>= (- (get (:limits b) :work Long/MAX_VALUE)
+                  (get (budget/usage b) :work 0)) 2048)
+           (>= (- (get (:limits b) :bytes Long/MAX_VALUE)
+                  (get (budget/usage b) :bytes 0)) 16384)
+           (>= (- (get (:limits b) :emissions Long/MAX_VALUE)
+                  (get (budget/usage b) :emissions 0)) 2)
+           (room? (:parent b)))))
+
+(defn- inert-input!
+  "Bound exact data before running count/nth/conj in the service. Named Core
+   expressions are copied opaquely by guest code but checked by the adapter."
+  [b destinations arguments]
+  (when-not (and (= clojure.lang.PersistentVector (class destinations))
+                 (= clojure.lang.PersistentVector (class arguments))
+                 (= (count destinations) (count arguments))
+                 (<= (count arguments) 20) (every? symbol? destinations)
+                 (= (count destinations) (count (distinct destinations))))
+    (throw (ex-info "invalid transfer service input" {:reason :unsupported-region})))
+  (loop [todo [[arguments 0]] n 0]
+    (when-let [[x depth] (peek todo)]
+      (budget/charge! b :work 1)
+      (when (or (>= n 4096) (> depth 64)) (budget/exhausted! :guest-input))
+      (let [container? (contains? #{clojure.lang.PersistentVector
+                                    clojure.lang.PersistentArrayMap clojure.lang.PersistentHashMap} (class x))
+            children (when container? (if (map? x) (mapcat identity x) x))]
+        (when-not (or container? (nil? x) (instance? Long x) (instance? Double x)
+                      (boolean? x) (keyword? x) (symbol? x) (string? x))
+          (throw (ex-info "non-inert transfer service input" {:reason :unsupported-region})))
+        (when (or (and container? (> (count x) 4096))
+                  (and (or (string? x) (symbol? x) (keyword? x)) (> (count (str x)) 4096)))
+          (budget/exhausted! :guest-input))
+        (recur (into (pop todo) (map #(vector % (inc depth))) children) (inc n))))))
+
+(defn producer
+  "Return the actual compiled guest producer when funded, otherwise the
+   existing hosted producer. Both outputs pass the independent plan checker.
+   Compilation uses the same baseline pipeline with bootstrap recursion off."
+  [b]
+  (fn [destinations arguments]
+    (inert-input! b destinations arguments)
+    (budget/charge! b :work (+ 1 (* 8 (count arguments))))
+    (let [source @source-term
+          key [:baseline-1 (core/code-id source)]
+          exe (or (get @seeds key)
+                  (when (room? b)
+                    (locking seeds
+                      (or (get @seeds key)
+                          (let [exe ((requiring-resolve 'klara.compile.baseline/compile-source)
+                                     world/empty-root source {:guest-transfer? false :budget b})]
+                            (stage/validate-executable exe)
+                            (swap! seeds assoc key exe) exe)))))]
+      (when (and exe (not-every? #(stage/guard-holds? % {})
+                                (filter #(= :host-root (first %)) (:guards exe))))
+        (throw (ex-info "transfer service primitive root changed" {:reason :stale-host-root})))
+      (with-meta (if exe ((:run exe) destinations arguments) (transfer/transfer destinations arguments))
+        (cond-> {:producer (if exe :klara-baseline :hosted)}
+          exe (assoc :producer-code-id (:code-id exe)))))))

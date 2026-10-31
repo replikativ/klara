@@ -15,6 +15,11 @@ clojure -M:test
 clojure -M:verify
 ```
 
+The two commands are complementary: `:test` owns core regressions and `:verify`
+owns maintained proof/model/scenario checks in `verification/`. Verification no
+longer reruns the 12 overlapping core namespaces. Historical experiments have a
+separate `:history` classpath. Frozen sources keep their original provenance.
+
 Verification writes current reports under `target/verification`. Reports name
 actual source hashes, theorem/proof receipts, test outcomes and remaining
 implementation bridges. The examples include accepted and rejected candidates,
@@ -71,11 +76,26 @@ branches without relying on their tactic order; its statement is unchanged.
 |---|---|---|
 | Language/world/authority behavior and executable guide | `clojure -M:test` | Implementation tests, not a full authority theorem |
 | Staging and specialization examples/rejections | `clojure -M:verify` | Admitted fragments only |
+| Guest source loading and nREPL | `clojure -M:test`, `clojure -M:test-nrepl` | Bounded namespace subset; optional protocol check opens a loopback socket |
+| Private mutable interpreter state | `clojure -M:memory-probe --check` | Experimental pure fragment and independent in-memory snapshots; no general effects or guest-cell support |
 | ansatz theorem receipts | Verification report and named proof modules | Imported foundation and runtime correspondence assumptions stated |
 | Guest planning and policy evolution | `examples/staging/15-planned-jit.klr`, planning tests | Small bounded action graph; cost fixtures are not calibrated forecasts |
+| Funded guest preparation strategy | `klara.compile.strategy-test`, `examples/compat/klara/strategy.cljc` | Fixed checked local-call recipe, experimental observation projection, separate reference/policy roots |
+| Enclosed inline-to-owned composition | `klara.compile.private-accumulator-test`, `examples/compat/klara/private_optimizer.cljc` | Long-only loop with private accumulator and pure boolean consumer; tested ownership/erasure bridge |
+| Deterministic alternatives and source binding | `klara.selection-test`, `klara.compile.relation-test` | Explicit priority/variant slots, guarded entry interfaces, checked indexed source reconstruction |
+| Enclosed consumer simulation | `consolidation.enclosed-consumer-test` in verification | Four model theorems; Core/owned/JVM correspondence tested on finite cases |
+| Actual inline correspondence | `klara.compile.inline-check-test`, `consolidation.indexed-binding-test` | Independent indexed residual check, two lexical model theorems, tested ownership/backend bridges |
+| Bounded investment checkpoint | `klara.compile.investment-test`, [finite traces](../experiments/baseline/investment-policy-results/README.md) | Pure replay subset, funded actions, guard/phase rejection, full costs including losing work |
+| Live entry plans and selection | `klara.entry-test`, [entry study](../experiments/baseline/entry-results/README.md) | Namespace/dynamic-binding checks, deferred resolution, guard order and direct priority recovery; tested dispatch |
+| Single private analysis and checked artifact | `klara.compile.preparation-test`, [phase study](../experiments/baseline/preparation-results/README.md) | Source/consumer/layout/derivation checks, retained erasure and registry validation; diagnostic costs only |
+| Fork timing admission/rejections | `baseline.fork-benchmark-test` in verification; [recorded experiment](engineering/preparation-strategies.md#measuring-a-candidate-in-a-fork) | Pure admitted dependency closure and inert inputs; shared JVM timing state; no automatic promotion |
 | Restricted CEK termination/result | Scalar CEK proof/test modules | Formal restricted machine plus tested T0/encoding boundary |
 | Durable deployment | `klara.deploy-test` in the standalone suite | Supported source/Core/data; no continuation or authority cloning |
 | Performance measurements | Individual experiment README and frozen raw reports | Use their original sources, workloads and JVM processes; no relabeling old results |
+
+The optional [T0/SCI/Clojure diagnostic](../experiments/baseline/README.md)
+uses `clojure -M:baseline PROCESS-ID`. SCI is an optional benchmark dependency,
+not Klara's runtime interpreter. The guest nREPL dependency is optional too.
 
 ## Release gates
 

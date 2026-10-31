@@ -46,5 +46,5 @@ are bounded per batch, not globally across repeated `operate` calls.
 The precise admission, isolation and publication contract, limitations and
 extension points are in [runtime contracts](../../doc/engineering/runtime.md). Run the targeted
 tests with `clojure -M:test -n klara.staged-compile-test`. For diagnostic timing,
-load `experiments/staged_regions/bench.clj` into a persistent REPL and call
+load `experiments/history/staged_regions/bench.clj` into a persistent REPL and call
 `(staged-regions.bench/run!)`.

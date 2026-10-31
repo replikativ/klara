@@ -1,9 +1,10 @@
 # Klara
 
-Klara is an independent programming language for **self-organizing and
-self-optimizing systems**. It is the unifying language project for replikativ's
-work on persistent data, versioned state, inference, staged compilation and
-proof-guided transformation.
+Klara is an independent programming language project for **AGI and recursive
+self-improvement**. Its goal is to let intelligent systems inspect and evolve
+their own code, models and optimizers. It unifies replikativ's work on persistent
+data, versioned state, inference, staged compilation and proof-guided
+transformation.
 
 Code lives in versioned worlds. A computation can retain its old world while
 another branch changes definitions or an optimizer. Staged programs construct
@@ -31,6 +32,7 @@ JDK 25. Dependencies are pinned and fetched on the first run.
 
 ```sh
 clojure -M:repl       # interactive Klara REPL; :repl/help lists commands
+clojure -M:nrepl      # guest nREPL, with world-managed source loading
 clojure -M:test       # standalone tests and executable documentation
 clojure -M:verify     # specialization examples, rejection cases and proof receipts
 ```
@@ -51,6 +53,8 @@ In the Klara REPL:
 Continue with the [language guide](doc/guide/README.md) or
 [checked specialization](doc/checked-specialization.md), which follows source
 code through preparation, validation, publication and runtime admission.
+The [tooling guide](doc/tooling.md) covers guest nREPL sessions, `.clj`/`.cljc`
+loading and the supported `ns`/`require` subset.
 
 ## What to explore
 
@@ -86,6 +90,10 @@ Useful entry points:
 | [Artifact guide](doc/artifact.md) | Reproduce results and prepare a frozen artifact |
 | [RFCs](rfc/README.md) | Design proposals and their implemented subsets |
 | [Compiler notebook](notebooks/compiler_walkthrough.clj) | Optional Clay walkthrough of the hosted compiler passes |
+| [Codebase and programming model](doc/engineering/codebase-map.md) | Current and proposed diagrams, lifecycle algebra, staged guest code and remaining binding questions |
+| [Compiler architecture](doc/engineering/compiler.md) | Hosted lowering, staged guest services, worlds, checks and bootstrap |
+| [Experiment index](experiments/README.md) | Current measurements, verification dependencies and historical evidence |
+| [Code views](doc/engineering/code-views.md) | Guest structural generators, binding labels, scope checks and proof agenda |
 | [Engineering evidence](doc/engineering/README.md) | Runtime contracts, proof boundaries, measurements and limitations |
 
 The public discussion should help sharpen the programming model and its

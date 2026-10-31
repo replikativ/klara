@@ -31,6 +31,12 @@
         (concat (map-indexed (fn [i layout] [:arg i layout]) layouts)
                 (for [[sym h] summaries] [:world sym (:value-id h)]))))
 
+(defn parameter-guards
+  "Admission for a closed region without world summaries. These are premises,
+   not permission to convert an arbitrary functional program to owned code."
+  [layouts]
+  (entry-guards layouts {}))
+
 (defn- fail [message]
   (throw (ex-info message {:reason :unsupported-region})))
 (defn- local [s] {:op :local :name s})

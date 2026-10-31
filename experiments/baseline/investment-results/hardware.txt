@@ -1,0 +1,5 @@
+Intel Core Ultra 7 258V; x86_64; Linux; 8 visible logical CPUs.
+Oracle GraalVM Java 25.0.1+8-LTS-jvmci-b01; Clojure 1.12.4; SCI 0.15.59.
+1 GiB maximum heap for timing runs. Fresh JVMs, run sequentially.
+No CPU pinning, fixed frequency, retained-heap or compiler-thread allocation measurement.
+Runtime arguments and per-source hashes are in the raw EDN reports.

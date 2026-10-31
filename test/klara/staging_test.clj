@@ -2,7 +2,8 @@
   "Staged code values (S4): code/esc/run/lift, hygiene, the dynamic
   scope-extrusion check, let-insertion (genlet, genletrec)."
   (:require [clojure.test :refer [deftest is testing]]
-            [klara.code :as code]
+            [klara.code :as code] [klara.defs :as defs]
+            [klara.eval :as runtime] [klara.world :as world]
             [klara.repl :as repl]))
 
 (defn- session-of [& defs]
@@ -148,3 +149,25 @@
     (is (= "(let [a_1 1 b_2 2] (+ a_1 b_2))" (ev s ":repl/expand (let [a 1 b 2] (+ a b))")))
     (is (= "true" (ev s "(closed? (code (fn [x] x)))")))
     (is (code/code? (code/->code {:op :quote :datum 1})))))
+
+(deftest lifting-preserves-supported-binding-meaning
+  (let [w (world/make-world)
+        _ (doseq [f ['(def setting 10) '(def reader (fn [] setting))
+                      '(def pure (fn [x] (+ x 1)))
+                      '(def hidden (let [f reader] (fn [] f)))]]
+            (defs/define! w f))
+        old (world/snapshot w) reader (defs/lookup old 'reader)
+        pure (defs/lookup old 'pure) hidden (defs/lookup old 'hidden)
+        late (defs/eval-form old '(code (+ setting 1)))
+        early (defs/eval-form old '(let [v setting] (code (+ v 1))))
+        run-code (fn [root c] (runtime/run (code/s->core (code/code-term c)) {:basis root}))]
+    (doseq [value [reader hidden [reader nil] {:reader reader} (runtime/->Pap reader [])]]
+      (is (thrown-with-msg? clojure.lang.ExceptionInfo #"world-dependent pinned closure"
+                           (runtime/lift-term value))))
+    (defs/define! w '(def setting 20))
+    (let [now (world/snapshot w)]
+      (is (= 10 (runtime/call-value reader [])))
+      (is (= 21 (run-code now late)))
+      (is (= 11 (run-code now early)))
+      (is (= 4 (runtime/call-value (run-code now (code/->code (runtime/lift-term pure))) [3])))
+      (is (= [1 {:ok true}] (run-code now (code/->code (runtime/lift-term [1 {:ok true}]))))))))

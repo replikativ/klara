@@ -48,7 +48,7 @@ and compilation rows. `tables.md` provides the same estimates for review.
 
 ## Workloads and semantic boundaries
 
-RQ1 reuses all seven `experiments/compiler/bench.clj` kernels, at 200 and
+RQ1 reuses all seven `experiments/history/compiler/bench.clj` kernels, at 200 and
 2,000 iterations. Each configuration runs in its own JVM. Kernels use
 100 T0 warmups or 10,000 optimized/host warmups, then seven batches of five
 T0 calls or 500 other calls. This asymmetry makes the T0 cost affordable;

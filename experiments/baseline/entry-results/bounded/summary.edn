@@ -1,0 +1,665 @@
+{:selector
+ [{:cache :empty,
+   :arguments [0 4 1],
+   :expected nil,
+   :diagnostics
+   {:reference {:selected nil, :counts {}},
+    :planned {:selected nil, :counts {}}},
+   :metrics
+   {:wall-ns-per-call
+    {:reference
+     {:process-medians [308.125 532.3046875 489.125],
+      :median 489.125,
+      :range [308.125 532.3046875]},
+     :planned
+     {:process-medians [347.515625 658.96875 528.3359375],
+      :median 528.3359375,
+      :range [347.515625 658.96875]}},
+    :cpu-ns-per-call
+    {:reference
+     {:process-medians [319.53125 537.5390625 429.1875],
+      :median 429.1875,
+      :range [319.53125 537.5390625]},
+     :planned
+     {:process-medians [361.15625 664.5546875 460.859375],
+      :median 460.859375,
+      :range [361.15625 664.5546875]}},
+    :bytes-per-call
+    {:reference
+     {:process-medians [64.5625 64.5625 64.5625],
+      :median 64.5625,
+      :range [64.5625 64.5625]},
+     :planned
+     {:process-medians [64.5625 64.5625 64.5625],
+      :median 64.5625,
+      :range [64.5625 64.5625]}}}}
+  {:cache :empty,
+   :arguments [0.5 4 1],
+   :expected nil,
+   :diagnostics
+   {:reference {:selected nil, :counts {}},
+    :planned {:selected nil, :counts {}}},
+   :metrics
+   {:wall-ns-per-call
+    {:reference
+     {:process-medians [223.203125 356.484375 325.2578125],
+      :median 325.2578125,
+      :range [223.203125 356.484375]},
+     :planned
+     {:process-medians [223.8359375 357.3984375 344.4296875],
+      :median 344.4296875,
+      :range [223.8359375 357.3984375]}},
+    :cpu-ns-per-call
+    {:reference
+     {:process-medians [227.9609375 360.84375 330.3515625],
+      :median 330.3515625,
+      :range [227.9609375 360.84375]},
+     :planned
+     {:process-medians [227.8984375 361.65625 349.625],
+      :median 349.625,
+      :range [227.8984375 361.65625]}},
+    :bytes-per-call
+    {:reference
+     {:process-medians [64.5625 64.5625 64.5625],
+      :median 64.5625,
+      :range [64.5625 64.5625]},
+     :planned
+     {:process-medians [64.5625 64.5625 64.5625],
+      :median 64.5625,
+      :range [64.5625 64.5625]}}}}
+  {:cache :baseline,
+   :arguments [0 4 1],
+   :expected :baseline,
+   :diagnostics
+   {:reference {:selected :baseline, :counts {:requiring-resolve 5}},
+    :planned {:selected :baseline, :counts {:binding-checks 5}}},
+   :metrics
+   {:wall-ns-per-call
+    {:reference
+     {:process-medians [3295.3828125 3211.421875 3194.375],
+      :median 3211.421875,
+      :range [3194.375 3295.3828125]},
+     :planned
+     {:process-medians [3077.078125 3157.1953125 3433.6484375],
+      :median 3157.1953125,
+      :range [3077.078125 3433.6484375]}},
+    :cpu-ns-per-call
+    {:reference
+     {:process-medians [3302.7890625 3218.703125 3202.6640625],
+      :median 3218.703125,
+      :range [3202.6640625 3302.7890625]},
+     :planned
+     {:process-medians [3087.546875 3163.40625 3441.828125],
+      :median 3163.40625,
+      :range [3087.546875 3441.828125]}},
+    :bytes-per-call
+    {:reference
+     {:process-medians [1656.5625 1656.5625 1656.5625],
+      :median 1656.5625,
+      :range [1656.5625 1656.5625]},
+     :planned
+     {:process-medians [832.5625 832.5625 832.5625],
+      :median 832.5625,
+      :range [832.5625 832.5625]}}}}
+  {:cache :baseline,
+   :arguments [0.5 4 1],
+   :expected :baseline,
+   :diagnostics
+   {:reference {:selected :baseline, :counts {:requiring-resolve 5}},
+    :planned {:selected :baseline, :counts {:binding-checks 5}}},
+   :metrics
+   {:wall-ns-per-call
+    {:reference
+     {:process-medians [3143.3046875 3241.921875 3265.28125],
+      :median 3241.921875,
+      :range [3143.3046875 3265.28125]},
+     :planned
+     {:process-medians [2948.609375 2979.328125 3038.9609375],
+      :median 2979.328125,
+      :range [2948.609375 3038.9609375]}},
+    :cpu-ns-per-call
+    {:reference
+     {:process-medians [3150.296875 3253.5390625 3272.96875],
+      :median 3253.5390625,
+      :range [3150.296875 3272.96875]},
+     :planned
+     {:process-medians [2954.1171875 3113.234375 3045.265625],
+      :median 3045.265625,
+      :range [2954.1171875 3113.234375]}},
+    :bytes-per-call
+    {:reference
+     {:process-medians [1656.5625 1656.5625 1656.5625],
+      :median 1656.5625,
+      :range [1656.5625 1656.5625]},
+     :planned
+     {:process-medians [832.5625 832.5625 832.5625],
+      :median 832.5625,
+      :range [832.5625 832.5625]}}}}
+  {:cache :private,
+   :arguments [0 4 1],
+   :expected :private,
+   :diagnostics
+   {:reference {:selected :private, :counts {:requiring-resolve 26}},
+    :planned {:selected :private, :counts {:binding-checks 26}}},
+   :metrics
+   {:wall-ns-per-call
+    {:reference
+     {:process-medians [9841.5 9555.1796875 9619.90625],
+      :median 9619.90625,
+      :range [9555.1796875 9841.5]},
+     :planned
+     {:process-medians [8024.765625 7753.21875 7784.40625],
+      :median 7784.40625,
+      :range [7753.21875 8024.765625]}},
+    :cpu-ns-per-call
+    {:reference
+     {:process-medians [9851.4765625 9570.7109375 9629.6796875],
+      :median 9629.6796875,
+      :range [9570.7109375 9851.4765625]},
+     :planned
+     {:process-medians [8033.625 7760.8359375 7792.28125],
+      :median 7792.28125,
+      :range [7760.8359375 8033.625]}},
+    :bytes-per-call
+    {:reference
+     {:process-medians [4632.5625 4632.5625 4632.5625],
+      :median 4632.5625,
+      :range [4632.5625 4632.5625]},
+     :planned
+     {:process-medians [1504.5625 1504.5625 1504.5625],
+      :median 1504.5625,
+      :range [1504.5625 1504.5625]}}}}
+  {:cache :private,
+   :arguments [0.5 4 1],
+   :expected nil,
+   :diagnostics
+   {:reference {:selected nil, :counts {:requiring-resolve 21}},
+    :planned {:selected nil, :counts {:binding-checks 21}}},
+   :metrics
+   {:wall-ns-per-call
+    {:reference
+     {:process-medians [8434.921875 6328.484375 8867.28125],
+      :median 8434.921875,
+      :range [6328.484375 8867.28125]},
+     :planned
+     {:process-medians [6367.078125 6806.8671875 6803.921875],
+      :median 6803.921875,
+      :range [6367.078125 6806.8671875]}},
+    :cpu-ns-per-call
+    {:reference
+     {:process-medians [8444.640625 6274.90625 8874.765625],
+      :median 8444.640625,
+      :range [6274.90625 8874.765625]},
+     :planned
+     {:process-medians [6373.6484375 6812.0859375 6812.1796875],
+      :median 6812.0859375,
+      :range [6373.6484375 6812.1796875]}},
+    :bytes-per-call
+    {:reference
+     {:process-medians [3952.5625 4496.5625 4496.5625],
+      :median 4496.5625,
+      :range [3952.5625 4496.5625]},
+     :planned
+     {:process-medians [1344.5625 1472.5625 1472.5625],
+      :median 1472.5625,
+      :range [1344.5625 1472.5625]}}}}
+  {:cache :portfolio,
+   :arguments [0 4 1],
+   :expected :private,
+   :diagnostics
+   {:reference {:selected :private, :counts {:requiring-resolve 26}},
+    :planned {:selected :private, :counts {:binding-checks 26}}},
+   :metrics
+   {:wall-ns-per-call
+    {:reference
+     {:process-medians [5407.421875 5856.5546875 5844.1796875],
+      :median 5844.1796875,
+      :range [5407.421875 5856.5546875]},
+     :planned
+     {:process-medians [5909.5 5294.203125 5743.7734375],
+      :median 5743.7734375,
+      :range [5294.203125 5909.5]}},
+    :cpu-ns-per-call
+    {:reference
+     {:process-medians [5415.953125 5861.9453125 5852.0625],
+      :median 5852.0625,
+      :range [5415.953125 5861.9453125]},
+     :planned
+     {:process-medians [5917.3515625 5302.3984375 5750.4375],
+      :median 5750.4375,
+      :range [5302.3984375 5917.3515625]}},
+    :bytes-per-call
+    {:reference
+     {:process-medians [4632.5625 4632.5625 4632.5625],
+      :median 4632.5625,
+      :range [4632.5625 4632.5625]},
+     :planned
+     {:process-medians [1504.5625 1504.5625 1504.5625],
+      :median 1504.5625,
+      :range [1504.5625 1504.5625]}}}}
+  {:cache :portfolio,
+   :arguments [0.5 4 1],
+   :expected :baseline,
+   :diagnostics
+   {:reference {:selected :baseline, :counts {:requiring-resolve 26}},
+    :planned {:selected :baseline, :counts {:binding-checks 26}}},
+   :metrics
+   {:wall-ns-per-call
+    {:reference
+     {:process-medians [5323.03125 5978.7421875 6375.296875],
+      :median 5978.7421875,
+      :range [5323.03125 6375.296875]},
+     :planned
+     {:process-medians [6106.8046875 6283.515625 6249.9140625],
+      :median 6249.9140625,
+      :range [6106.8046875 6283.515625]}},
+    :cpu-ns-per-call
+    {:reference
+     {:process-medians [5308.4453125 5980.84375 6379.046875],
+      :median 5980.84375,
+      :range [5308.4453125 6379.046875]},
+     :planned
+     {:process-medians [6111.0390625 6285.6875 6252.6015625],
+      :median 6252.6015625,
+      :range [6111.0390625 6285.6875]}},
+    :bytes-per-call
+    {:reference
+     {:process-medians [5000.5625 5544.5625 5544.5625],
+      :median 5544.5625,
+      :range [5000.5625 5544.5625]},
+     :planned
+     {:process-medians [1568.5625 1696.5625 1696.5625],
+      :median 1696.5625,
+      :range [1568.5625 1696.5625]}}}}],
+ :full-calls
+ [{:cache :empty,
+   :arguments [0 4 1],
+   :expected true,
+   :metrics
+   {:wall-ns-per-call
+    {:reference
+     {:process-medians [16664.46875 16209.5625 15300.75],
+      :median 16209.5625,
+      :range [15300.75 16664.46875]},
+     :planned
+     {:process-medians [16360.9375 16601.375 14759.71875],
+      :median 16360.9375,
+      :range [14759.71875 16601.375]}},
+    :cpu-ns-per-call
+    {:reference
+     {:process-medians [16675.78125 16222.65625 15314.15625],
+      :median 16222.65625,
+      :range [15314.15625 16675.78125]},
+     :planned
+     {:process-medians [16376.71875 16385.125 14680.1875],
+      :median 16376.71875,
+      :range [14680.1875 16385.125]}},
+    :bytes-per-call
+    {:reference
+     {:process-medians [10394.25 10506.25 10506.25],
+      :median 10506.25,
+      :range [10394.25 10506.25]},
+     :planned
+     {:process-medians [10394.25 10506.25 10506.25],
+      :median 10506.25,
+      :range [10394.25 10506.25]}}}}
+  {:cache :empty,
+   :arguments [0.5 4 1],
+   :expected false,
+   :metrics
+   {:wall-ns-per-call
+    {:reference
+     {:process-medians [22613.59375 22167.375 22461.625],
+      :median 22461.625,
+      :range [22167.375 22613.59375]},
+     :planned
+     {:process-medians [22521.65625 22217.15625 22335.625],
+      :median 22335.625,
+      :range [22217.15625 22521.65625]}},
+    :cpu-ns-per-call
+    {:reference
+     {:process-medians [22627.5 22183.125 22473.6875],
+      :median 22473.6875,
+      :range [22183.125 22627.5]},
+     :planned
+     {:process-medians [22533.8125 22234.25 22353.21875],
+      :median 22353.21875,
+      :range [22234.25 22533.8125]}},
+    :bytes-per-call
+    {:reference
+     {:process-medians [22426.25 22570.25 22570.25],
+      :median 22570.25,
+      :range [22426.25 22570.25]},
+     :planned
+     {:process-medians [22426.25 22570.25 22570.25],
+      :median 22570.25,
+      :range [22426.25 22570.25]}}}}
+  {:cache :baseline,
+   :arguments [0 4 1],
+   :expected true,
+   :metrics
+   {:wall-ns-per-call
+    {:reference
+     {:process-medians [4933.34375 4408.875 4188.3125],
+      :median 4408.875,
+      :range [4188.3125 4933.34375]},
+     :planned
+     {:process-medians [4527.09375 3855.0625 4371.25],
+      :median 4371.25,
+      :range [3855.0625 4527.09375]}},
+    :cpu-ns-per-call
+    {:reference
+     {:process-medians [4944.1875 4420.375 4197.0625],
+      :median 4420.375,
+      :range [4197.0625 4944.1875]},
+     :planned
+     {:process-medians [4537.96875 3863.75 4380.25],
+      :median 4380.25,
+      :range [3863.75 4537.96875]}},
+    :bytes-per-call
+    {:reference
+     {:process-medians [5554.25 5554.25 5554.25],
+      :median 5554.25,
+      :range [5554.25 5554.25]},
+     :planned
+     {:process-medians [4730.25 4730.25 4730.25],
+      :median 4730.25,
+      :range [4730.25 4730.25]}}}}
+  {:cache :baseline,
+   :arguments [0.5 4 1],
+   :expected false,
+   :metrics
+   {:wall-ns-per-call
+    {:reference
+     {:process-medians [4068.25 3916.84375 3942.78125],
+      :median 3942.78125,
+      :range [3916.84375 4068.25]},
+     :planned
+     {:process-medians [3719.03125 3640.53125 3987.9375],
+      :median 3719.03125,
+      :range [3640.53125 3987.9375]}},
+    :cpu-ns-per-call
+    {:reference
+     {:process-medians [4080.59375 3926.40625 3956.5],
+      :median 3956.5,
+      :range [3926.40625 4080.59375]},
+     :planned
+     {:process-medians [3727.625 3651.0625 3997.40625],
+      :median 3727.625,
+      :range [3651.0625 3997.40625]}},
+    :bytes-per-call
+    {:reference
+     {:process-medians [5682.25 5682.25 5682.25],
+      :median 5682.25,
+      :range [5682.25 5682.25]},
+     :planned
+     {:process-medians [4858.25 4858.25 4858.25],
+      :median 4858.25,
+      :range [4858.25 4858.25]}}}}
+  {:cache :private,
+   :arguments [0 4 1],
+   :expected true,
+   :metrics
+   {:wall-ns-per-call
+    {:reference
+     {:process-medians [6871.1875 7585.0625 7397.5],
+      :median 7397.5,
+      :range [6871.1875 7585.0625]},
+     :planned
+     {:process-medians [5810.03125 5467.125 6095.875],
+      :median 5810.03125,
+      :range [5467.125 6095.875]}},
+    :cpu-ns-per-call
+    {:reference
+     {:process-medians [6880.5625 7594.84375 7407.5],
+      :median 7407.5,
+      :range [6880.5625 7594.84375]},
+     :planned
+     {:process-medians [5820.03125 5479.5625 6109.96875],
+      :median 5820.03125,
+      :range [5479.5625 6109.96875]}},
+    :bytes-per-call
+    {:reference
+     {:process-medians [8730.25 8730.25 8730.25],
+      :median 8730.25,
+      :range [8730.25 8730.25]},
+     :planned
+     {:process-medians [5602.25 5602.25 5602.25],
+      :median 5602.25,
+      :range [5602.25 5602.25]}}}}
+  {:cache :private,
+   :arguments [0.5 4 1],
+   :expected false,
+   :metrics
+   {:wall-ns-per-call
+    {:reference
+     {:process-medians [31259.0625 30656.34375 29031.96875],
+      :median 30656.34375,
+      :range [29031.96875 31259.0625]},
+     :planned
+     {:process-medians [27751.15625 28622.21875 27637.25],
+      :median 27751.15625,
+      :range [27637.25 28622.21875]}},
+    :cpu-ns-per-call
+    {:reference
+     {:process-medians [30492.4375 30679.03125 29052.78125],
+      :median 30492.4375,
+      :range [29052.78125 30679.03125]},
+     :planned
+     {:process-medians [27769.71875 28635.125 27662.40625],
+      :median 27769.71875,
+      :range [27662.40625 28635.125]}},
+    :bytes-per-call
+    {:reference
+     {:process-medians [26314.25 27002.25 27002.25],
+      :median 27002.25,
+      :range [26314.25 27002.25]},
+     :planned
+     {:process-medians [23034.25 23178.25 23978.25],
+      :median 23178.25,
+      :range [23034.25 23978.25]}}}}
+  {:cache :portfolio,
+   :arguments [0 4 1],
+   :expected true,
+   :metrics
+   {:wall-ns-per-call
+    {:reference
+     {:process-medians [6491.3125 6303.1875 6408.3125],
+      :median 6408.3125,
+      :range [6303.1875 6491.3125]},
+     :planned
+     {:process-medians [5090.21875 4544.78125 5161.875],
+      :median 5090.21875,
+      :range [4544.78125 5161.875]}},
+    :cpu-ns-per-call
+    {:reference
+     {:process-medians [6510.65625 6328.96875 6417.59375],
+      :median 6417.59375,
+      :range [6328.96875 6510.65625]},
+     :planned
+     {:process-medians [5159.71875 4557.53125 5171.03125],
+      :median 5159.71875,
+      :range [4557.53125 5171.03125]}},
+    :bytes-per-call
+    {:reference
+     {:process-medians [8730.25 8730.25 8730.25],
+      :median 8730.25,
+      :range [8730.25 8730.25]},
+     :planned
+     {:process-medians [4770.25 4770.25 5602.25],
+      :median 4770.25,
+      :range [4770.25 5602.25]}}}}
+  {:cache :portfolio,
+   :arguments [0.5 4 1],
+   :expected false,
+   :metrics
+   {:wall-ns-per-call
+    {:reference
+     {:process-medians [7190.90625 6956.34375 6929.625],
+      :median 6956.34375,
+      :range [6929.625 7190.90625]},
+     :planned
+     {:process-medians [4868.71875 4901.59375 5405.0],
+      :median 4901.59375,
+      :range [4868.71875 5405.0]}},
+    :cpu-ns-per-call
+    {:reference
+     {:process-medians [7204.3125 6965.40625 6933.125],
+      :median 6965.40625,
+      :range [6933.125 7204.3125]},
+     :planned
+     {:process-medians [4879.90625 4917.03125 5382.5],
+      :median 4917.03125,
+      :range [4879.90625 5382.5]}},
+    :bytes-per-call
+    {:reference
+     {:process-medians [9026.25 9570.25 9570.25],
+      :median 9570.25,
+      :range [9026.25 9570.25]},
+     :planned
+     {:process-medians [4762.25 4762.25 5722.25],
+      :median 4762.25,
+      :range [4762.25 5722.25]}}}}],
+ :direct-site
+ {:wall-ns-per-call
+  {:process-medians [1733.2109375 1687.0625 1608.1015625],
+   :median 1687.0625,
+   :range [1608.1015625 1733.2109375]},
+  :cpu-ns-per-call
+  {:process-medians [1636.3984375 1690.7265625 1610.453125],
+   :median 1636.3984375,
+   :range [1610.453125 1690.7265625]},
+  :bytes-per-call
+  {:process-medians [784.5625 784.5625 784.5625],
+   :median 784.5625,
+   :range [784.5625 784.5625]}},
+ :evidence-site
+ {:wall-ns-per-call
+  {:process-medians [3257.1875 4073.2734375 3430.6484375],
+   :median 3430.6484375,
+   :range [3257.1875 4073.2734375]},
+  :cpu-ns-per-call
+  {:process-medians [3260.375 3952.5625 3435.7421875],
+   :median 3435.7421875,
+   :range [3260.375 3952.5625]},
+  :bytes-per-call
+  {:process-medians [2584.5625 2584.5625 2584.5625],
+   :median 2584.5625,
+   :range [2584.5625 2584.5625]}},
+ :java
+ ["25.0.1+8-LTS-jvmci-b01"
+  "25.0.1+8-LTS-jvmci-b01"
+  "25.0.1+8-LTS-jvmci-b01"],
+ :source-sha256
+ {"src/klara/compile/inline.clj"
+  "2c06694af339b84e6f501fc035ac17023d55dd5da0babbd74becd849966f8f8a",
+  "src/klara/compile/unbox.clj"
+  "0e449e139a657bc5b4bac26f5f951c9cd606afd1b851e69244700f5cd9438917",
+  "src/klara/compile/speculate.clj"
+  "80d54937c925ed2fc593bd8cb6f216e8ec8298bcab40041be2255ba94cd3173f",
+  "src/klara/compile/core.clj"
+  "8c59aa51f636c8e7a38b1d63cd07a4badd775ca23582155ef4deb64800cdd128",
+  "src/klara/compile/affine_erase.clj"
+  "d5cc50d9ee7009e1c0635f5838aebf0f705d2be2312934cc39d851882235e756",
+  "src/klara/fusion/kernel.clj"
+  "edc582a5b412a83e61b465c45a980f3811c770167627188da1ba3ad18e1c9453",
+  "src/klara/compile/private_accumulator.clj"
+  "1b96f35740df42f5a2e77c3f75abb18b4f360041ac556ae43c6cbcd616ed3416",
+  "src/klara/compile/pe.clj"
+  "728a7c15b318edb6ebfb69517e9c4dba245cde8d64e434c83622758ee5bb1b70",
+  "src/klara/compile/relation.clj"
+  "9198c4fa963235e9e3babf5ebc9845f0eaac2ffdf66bd7acc455ebb02cd58ae1",
+  "src/klara/deploy.clj"
+  "88e3503486932d88ecdd900ba148637e645d18aa5d2605a9d65d343fb5c30c75",
+  "src/klara/compile/funding.clj"
+  "4272444d0fe0a2c69f6295224868048fac048679bc3039f5b319865963bef95f",
+  "src/klara/compile/view.clj"
+  "7a58c4612ca77720b807eb19cc024968b0ca1c2e8fb8e9fdbab17eb521155c3c",
+  "src/klara/compile/infer_affine.clj"
+  "1ea336ef960114d11d4e7480381a0cedfb373797622353b36c587a9725c4d0de",
+  "src/klara/compile/emit.clj"
+  "55c966534f4e08d84176d5ba73b2f08ec59c5e17473f9ace690b5b153aba4165",
+  "src/klara/world.clj"
+  "29ea09915982d5daa246251c87da3095f0014c0f7680ff017e618e36fd9e9286",
+  "src/klara/core.clj"
+  "4fde378a632e9259d5133c166c118c951e3afb44eb84e0eb896a45e041684e6f",
+  "src/klara/affine.clj"
+  "7bceeeb76fb1f30adb60b0e17c9a879a4e626be6697ff5d2c24b8dc917b4e8af",
+  "src/klara/compile/budget.clj"
+  "a14c2c3a158f950915b6e12e39266ac68b9f07614b386932ca2f5655eade70f2",
+  "src/klara/compile/host.clj"
+  "5ccd09307e7bdbc3794eee27adcce08f2a742e07c54fd79e1d73464e9e35ad20",
+  "src/klara/repl.clj"
+  "13dd5b6feb07238fc1e976d027beb638ec6db9c8e753acfde3778b27c9a3a031",
+  "src/klara/load.clj"
+  "13360862c46395b41c048d5e19fc9d08dfad74e80046b4a1d3e3d685cd4e1968",
+  "src/klara/compile/strategy.clj"
+  "e11d64865f0647f8025361b3de0b9e47349e5674543b9ffacc83da1e9bfefbc5",
+  "experiments/baseline/private_accumulator.clj"
+  "9ec5d27aa618c5fa2b34a7f95e8c93ead9811ca5fb0f5bc4957425189be71eed",
+  "src/klara/compile/edge.clj"
+  "93f90ed2d3571f89223a60182af01655e239a776333824f0fa4b0edb014a3e9f",
+  "src/klara/compile/escape.clj"
+  "0b0cbd23e2a031ddaf1d2a5e66f68209901cf5e6ecd9f4771acdccb5d606d462",
+  "src/klara/code.clj"
+  "9a4663239a849215d83cc21ce24390d6ba3f6c3b80a4951d758285fffe7f80e8",
+  "src/klara/compile/ir.clj"
+  "04da4006359a881b8f5c849632d64714cc0ee43c3717e13b81f70b2ff8557989",
+  "experiments/baseline/campaign.clj"
+  "da93ee566f0c81da327ec366b698a8d9bed6d232901dfc95f31b95b099bf52be",
+  "src/klara/defs.clj"
+  "fa2cef5153903f49de13676785c8d0075d87086f6bdd78fb66c61cfbd3d0c436",
+  "src/klara/compile/guest.clj"
+  "53c4aaee0ada0e7284c884d72e39adf0577c388870712b80042475c77ff6f2d1",
+  "src/klara/expand.clj"
+  "3e4dd3ce7fe4a2b197344549ed3966a628ac1399c860ea24d0c69e0687e4f124",
+  "experiments/baseline/entry.clj"
+  "47e5ded9544dc520379b27b74f976573e672be0009b4a28abc58c7f6c71cda31",
+  "src/klara/compile/subject.clj"
+  "4ff05a76d70ec93f902d9301217755f743c47b3eac121118dce948b709072ae6",
+  "src/klara/compile/baseline.clj"
+  "be1fda2ebf41a1aeaf4cd4b5da4e029af6766e65992ed2fcf610508d9345385c",
+  "src/klara/effect_class.clj"
+  "354e1100fe88a79195d8bb5958ce38053ed67657440c59e5e04a1918c87870fe",
+  "src/klara/compile/compose.clj"
+  "0ab8e752e5ef9a76255b247f6858062e526f8b0e9c727e4f57534ea330b39906",
+  "src/klara/compile/loop.clj"
+  "70288d9e58db5ac74f631404da32cb209bb29cba9fc71d56bf67a49d90ed5b47",
+  "src/klara/nrepl.clj"
+  "087b57b1b3d925efe37d72c14f0d9e515591b88dc885e29f67dfad359405b8b1",
+  "src/klara/compile/hof.clj"
+  "b16d14a9c70532ceb5e00c2ef8fdb4167b8b5cc0b3eaca8a3f4c65255661d519",
+  "test/klara/entry_test.clj"
+  "3e31bd2db991bc88a8b53045033b3181c888ebb82d142873ea048b22cd355d98",
+  "src/klara/compile/staged.clj"
+  "7d0861ab553b1484c31632e7dfe347161745cb478c089802949becb6201b585d",
+  "src/klara/syntax.clj"
+  "8963b902a00dd3f778ba0fbb5efd2ef15244c904070195fd4a47a48d5825db44",
+  "src/klara/compile/runtime.clj"
+  "f4fcfcf98fc25874f6cb4ad120751b2d66ad4ca16fcc27bb3a51b5000cc16a74",
+  "src/klara/compile/scalar.clj"
+  "352012cdc752465d36452302da1d8cc60cd521fd79081f8f4915da209d273966",
+  "src/klara/stage.clj"
+  "f7ff3ecdd08a4d287fcef7b2b6b2eff06a046cbc73a84b64b97bb551b1b197ec",
+  "src/klara/compile/analysis.clj"
+  "8c29cd30f8b8814efd55094db8a4310a815c33584e1b8a6ee39dabaf34245ebc",
+  "src/klara/compile/updates.clj"
+  "446b74e76cb10a9f77e7eefebc2ae68401b3adf6bf7a3bd1f567e1873e0cc721",
+  "src/klara/fusion.clj"
+  "8e88dbe66640c4d60be5a1dafc07c86a17bef5b0633c08179256f56a1658a356",
+  "src/klara/compile/diagnostics.clj"
+  "f7b7d848edcfa22ff05d4dd81b154444e4ba68c1794d9a42177f40eece1ea089",
+  "src/klara/authority.clj"
+  "70c91dac1f5beace4e6426913f27a8a4dca3a5517f70bc86516f50f4ac369a9d",
+  "src/klara/compile/service.clj"
+  "f0cad0e231d18b2602ea67e89bda3eb41d728f8fb2e43efca9088e51fe4f9c0b",
+  "src/klara/compile/strict_fold.clj"
+  "bd35e878609a1822e127d90f7b668465386b4c2cc56c36e0c16eb56ce3f4d28d",
+  "src/klara/eval.clj"
+  "f3426a67ec736d5e07c1e1e836a7d242ed6f5efdc1ebb16ab079afcf3d80ad65",
+  "src/klara/compile/local_calls.clj"
+  "4cdba2f2c6cb09752c38cbe1942034e236c65b6e35568b9fe4d066256cd28a0a",
+  "src/klara/compile/prepare.clj"
+  "2de9e4921590cfdb4abf96acd40b412af2aad002dd1b3a30836c7523e9eb9f0d",
+  "src/klara/compile/requirements.clj"
+  "b551f12324b50024fbae1f448e3819736e2004d602ed8cdfde02674c22300969"}}

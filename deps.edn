@@ -4,7 +4,8 @@
  :deps {org.clojure/clojure {:mvn/version "1.12.4"}
         org.replikativ/ansatz {:mvn/version "0.2.115"}}
  :aliases
- {:test {:extra-paths ["test"]
+ {:history {:extra-paths ["experiments/history" "experiments" "verification" "verification/proof_staging"]}
+  :test {:extra-paths ["test"]
          :extra-deps {org.clojure/test.check {:mvn/version "1.1.1"}
                       io.github.cognitect-labs/test-runner
                       {:git/tag "v0.5.1" :git/sha "dfb30dd"}}
@@ -19,7 +20,7 @@
                      :main-opts ["-m" "cognitect.test-runner" "-d" "test-integration"]
                      :exec-fn cognitect.test-runner.api/test
                      :exec-args {:dirs ["test-integration"]}}
-  :verify {:extra-paths ["test" "experiments" "experiments/proof_staging"]
+  :verify {:extra-paths ["test" "verification" "verification/proof_staging"]
            :jvm-opts ["-Xmx1g" "-Xss16m"]
            :main-opts ["-m" "consolidation.run"]}
   ;; S5 differential spec/T0 run currently uses the local ansatz checkout.
@@ -35,7 +36,26 @@
   :nrepl {:extra-paths ["test"]
           :extra-deps {nrepl/nrepl {:mvn/version "1.3.0"}}
           :jvm-opts ["--enable-native-access=ALL-UNNAMED" "-Xss16m"]
-          :main-opts ["-m" "nrepl.cmdline"]}
+          :main-opts ["-m" "klara.nrepl"]}
+  :host-nrepl {:extra-deps {nrepl/nrepl {:mvn/version "1.3.0"}}
+               :main-opts ["-m" "nrepl.cmdline"]}
+  :baseline {:extra-paths ["experiments" "verification" "verification/proof_staging"]
+             :extra-deps {org.babashka/sci {:mvn/version "0.15.59"}}
+             :jvm-opts ["-Xmx1g"]
+             :main-opts ["-m" "baseline.run"]}
+  :interpreter-bench {:extra-paths ["experiments" "verification" "verification/proof_staging"]
+                      :jvm-opts ["-Xmx1g"]
+                      :main-opts ["-m" "interpreter.run"]}
+  :memory-probe {:extra-paths ["experiments" "verification" "verification/proof_staging"]
+                 :jvm-opts ["-Xmx1g"]
+                 :main-opts ["-m" "interpreter.mutable-bench"]}
+  :runtime-refinement {:extra-paths ["test" "experiments" "verification"]
+                       :jvm-opts ["-Xmx1g" "-Xss16m"]
+                       :main-opts ["-m" "interpreter.refinement-checks"]}
+  :test-nrepl {:extra-paths ["test" "test-nrepl"]
+                :extra-deps {nrepl/nrepl {:mvn/version "1.3.0"}
+                             io.github.cognitect-labs/test-runner {:git/tag "v0.5.1" :git/sha "dfb30dd"}}
+                :main-opts ["-m" "cognitect.test-runner" "-d" "test-nrepl"]}
   ;; Clay notebooks in notebooks/ (render with scicloj.clay.v2.api/make!)
   :notebook {:extra-paths ["notebooks"]
              :extra-deps {org.scicloj/clay {:mvn/version "2.0.13"}

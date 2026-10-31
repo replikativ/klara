@@ -1,0 +1,75 @@
+(ns baseline.runtime-optimizer
+  "Current guest runtime extension lifecycle; no proposed registration API."
+  (:require [clojure.java.io :as io] [clojure.pprint :as pp]
+            [klara.core :as core] [klara.repl :as repl] [klara.stage :as stage]
+            [klara.code :as code] [klara.defs :as defs] [klara.eval :as ev]
+            [klara.compile.staged :as staged] [klara.world :as world]))
+
+(def setup-source
+  "(require '[klara.local-optimizer])
+   (ns runtime-demo)
+   (def source
+     (code (fn [n]
+             (let [score (fn [x] (+ (* x x) 1))]
+               (loop [i 0 total 0]
+                 (if (< i n) (recur (inc i) (+ total (score i))) total))))))
+   (def kernel (run source))
+   (kernel 5)")
+
+(defn scalar-identity-example []
+  (let [source (defs/eval-form world/empty-root '(code (fn [x] x)))
+        f (ev/run (code/s->core (code/code-term source)))
+        p (staged/prepare world/empty-root source) cache (stage/make-cache)
+        input (Long. 1000)
+        _ (staged/install! cache world/empty-root p)
+        reference (ev/call-value f [input])
+        optimized (stage/with-cache cache (ev/call-value f [input]))]
+    {:source '(fn [x] x) :backend :scalar-java
+     :same-values (= input reference optimized)
+     :same-classes (= (class input) (class reference) (class optimized))
+     :reference-identical-to-input (identical? input reference)
+     :optimized-identical-to-input (identical? input optimized)}))
+
+(defn run-example []
+  (let [s (repl/session {:source-roots ["examples/compat"]})
+        evaluate #(repl/eval-response s %)
+        entries #(count (stage/executables (:cache s)))
+        interpreted (evaluate setup-source) before (entries)
+        declined (evaluate "(def klara.local-optimizer/planner (run (klara.local-optimizer/planner-code 2)))
+                             (klara.local-optimizer/prepare-code source)")
+        after-decline (entries)
+        still-interpreted (evaluate "(kernel 5)")
+        installed (evaluate "(def klara.local-optimizer/planner (run (klara.local-optimizer/planner-code 1)))
+                              (klara.local-optimizer/prepare-code source) (kernel 5)")
+        after-install (entries)
+        policy-changed (evaluate "(def klara.local-optimizer/planner (run (klara.local-optimizer/planner-code 99)))
+                                   (kernel 5)")
+        after-policy-change (entries)]
+    (assert (empty? (:errors interpreted)))
+    (assert (seq (:errors declined)))
+    (assert (= "35" (:output still-interpreted)))
+    (assert (empty? (:errors installed)))
+    (assert (.endsWith ^String (:output installed) "35"))
+    (assert (empty? (:errors policy-changed)))
+    (assert (.endsWith ^String (:output policy-changed) "35"))
+    (assert (= [0 0 1 1] [before after-decline after-install after-policy-change]))
+    {:scenario :runtime-world-planner-evolution :setup setup-source
+     :entries [before after-decline after-install after-policy-change]
+     :interpreted interpreted :declined declined :still-interpreted still-interpreted
+     :installed installed :policy-changed policy-changed :stats (stage/stats (:cache s))
+     :scalar-identity-counterexample (scalar-identity-example)
+     :limits [:existing-local-call-recipe :no-new-interpreter-instructions
+              :no-automatic-hotness-sponsor :preparation-decline-currently-surfaces-as-error
+              :compiler-policy-is-provenance :not-a-memory-correctness-proof]}))
+
+(defn run-study! [label]
+  (let [report (assoc (run-example) :source-sha256
+                      (into {} (for [path (concat ["experiments/baseline/runtime_optimizer.clj"
+                                                  "examples/compat/klara/local_optimizer.cljc"]
+                                                 (map str (filter #(.isFile %) (file-seq (io/file "src")))))]
+                                 [path (core/sha256 (slurp path))])))
+        path (str "target/runtime-optimizer/" label ".edn")]
+    (io/make-parents path) (spit path (with-out-str (pp/pprint report)))
+    (select-keys report [:scenario :entries :declined :installed :policy-changed :scalar-identity-counterexample])))
+
+(defn -main [& [label]] (prn (run-study! (or label "fresh"))))

@@ -1,0 +1,105 @@
+(ns klara.compile.service
+  "Source-backed pure compiler services. Fuel counts T0 transitions, not host
+   primitive latency. No native hooks, effects, staging or authority frames."
+  (:require [klara.compile.budget :as budget] [klara.compile.subject :as subject] [klara.core :as core]
+            [klara.eval :as ev] [klara.world :as world]
+            [klara.authority :as authority] [klara.defs :as defs]))
+
+(def primitives
+  '#{inc dec + - < > <= >= = not identity vector hash-map literal-map
+     count nth get assoc dissoc conj})
+(def ^:private primitive-roots core/prims)
+
+(defn- reject! [check]
+  (throw (ex-info "compiler service rejected" {:reason :compiler-service :check check})))
+
+(defn data!
+  "Bound exact inert data before stepping or checking output. No arbitrary
+   host collection protocols. Shared subgraphs count at each occurrence."
+  [b value]
+  (loop [todo [[value 0]] nodes 0]
+    (when-let [[v depth] (peek todo)]
+      (budget/charge! b :work 1)
+      (when (or (>= nodes 4096) (> depth 64)) (budget/exhausted! :service-data))
+      (let [container? (contains? #{clojure.lang.PersistentVector
+                                    clojure.lang.PersistentArrayMap clojure.lang.PersistentHashMap} (class v))
+            ;; Named IR can contain boxed Integer arities. This exact immutable
+            ;; class is inert too; preserve it rather than coercing quoted data.
+            scalar? (or (nil? v) (instance? Long v) (instance? Integer v) (instance? Double v)
+                        (boolean? v) (keyword? v) (symbol? v) (string? v))]
+        (when-not (or container? scalar?) (reject! :inert-data))
+        (when (or (and container? (> (count v) 4096))
+                  (and (or (string? v) (symbol? v) (keyword? v)) (> (count (str v)) 4096)))
+          (budget/exhausted! :service-data))
+        (let [children (when container? (if (map? v) (mapcat identity v) v))]
+          (when (> (count children) (- 4096 (inc nodes) (count (pop todo))))
+            (budget/exhausted! :service-data))
+          (recur (into (pop todo) (map #(vector % (inc depth))) children) (inc nodes)))))))
+
+(defn validate!
+  "Admit a bounded dependency closure in one pinned root. Recursion is allowed
+   here because calls remain stepped. No verdict or authority crosses roots."
+  [b root symbol]
+  (loop [todo [symbol] reads #{} checked #{} nodes 0]
+    (if-let [sym (peek todo)]
+      (if (checked sym) (recur (pop todo) reads checked nodes)
+        (let [entry (world/entry* root sym) f (:value entry)
+              source (when (ev/closure? f) (ev/closure-term f))]
+          (budget/charge! b :work 1)
+          (when-not (and (= :fn (:op source)) (subject/current-function root entry))
+            (reject! :current-closed-function))
+          (let [references (atom #{})
+                next-nodes
+                (loop [pending [[source 0]] n nodes]
+                  (if-let [[t depth] (peek pending)]
+                    (do
+                      (budget/charge! b :work 1)
+                      (when (or (>= n 512) (> depth 64)) (budget/exhausted! :service-source))
+                      (case (:op t)
+                        (:fn :app :local :let :if :letrec) nil
+                        :quote (data! b (:datum t))
+                        :prim (when-not (primitives (:name t)) (reject! :primitive))
+                        :resolve (swap! references conj (:id t))
+                        (reject! :control-or-effect))
+                      (let [children (core/children t)]
+                        (when (> (count children) 512) (budget/exhausted! :service-source))
+                        (recur (into (pop pending) (map #(vector % (inc depth))) children) (inc n)))) n))]
+            (recur (into (pop todo) (remove checked @references))
+                   (conj reads [:world sym (:value-id entry)]) (conj checked sym) next-nodes))))
+      reads)))
+
+(defn invoke
+  "Return a pure result with its compiler dependencies, or decline on fuel.
+   Source and data validation happen before evaluation. An abandoned state has
+   no effect/authority frames. Fuel does not preempt work inside a primitive."
+  [b root symbol args fuel]
+  (when-not (and (vector? args) (integer? fuel) (<= 0 fuel 16384)) (reject! :invocation))
+  (when-not (identical? primitive-roots core/prims) (reject! :primitive-roots))
+  (data! b args)
+  (let [reads (validate! b root symbol)
+        term (core/app* (core/resolve* symbol) (mapv core/quote* args))]
+    (binding [ev/*entry-hook* nil ev/*direct-hook* nil ev/*context-hook* nil
+              ev/*outer-k* [] ev/*fiber* nil ev/*basis* root world/*reads* nil
+              authority/*store* (authority/new-store)]
+      (loop [state [:eval term {:locals [] :basis root :mint root} '()] remaining fuel]
+        (if (and (= :ret (first state)) (empty? (nth state 3)))
+          (let [value (second state)]
+            (data! b value)
+            {:value value :compiler-reads reads :transitions (- fuel remaining)})
+          (if (zero? remaining)
+            (budget/exhausted! :service-transitions)
+            (do (budget/charge! b :work 1)
+                (recur (ev/step-state state) (dec remaining)))))))))
+
+(defn publish-missing!
+  "Install missing guest definitions in order, preserving edits in one CAS.
+   This does not grant policy code authority to change trusted host checkers."
+  [w definitions]
+  (let [base (world/snapshot w) child (world/make-world base)
+        installed (reduce (fn [names [sym source]]
+                            (if (world/entry* (world/snapshot child) sym) names
+                              (do (defs/define! child (list 'def sym source)) (conj names sym))))
+                          [] definitions)]
+    (when-not (compare-and-set! (:root w) base (world/snapshot child))
+      (throw (ex-info "compiler bootstrap publication conflict" {:reason :publication-conflict})))
+    {:status :bootstrapped :definitions installed}))

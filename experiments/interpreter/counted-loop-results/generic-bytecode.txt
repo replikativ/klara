@@ -1,0 +1,174 @@
+Compiled from "NO_SOURCE_FILE"
+public final class consolidation.counted_loop$eval21653$fn__21654$fn__21655 extends clojure.lang.AFunction {
+  java.lang.Object add;
+
+  java.lang.Object less;
+
+  public static final clojure.lang.Var const__4;
+
+  public static final clojure.lang.Keyword const__7;
+
+  public static final clojure.lang.Keyword const__8;
+
+  public consolidation.counted_loop$eval21653$fn__21654$fn__21655(java.lang.Object, java.lang.Object);
+    Code:
+         0: aload_0
+         1: invokespecial #13                 // Method clojure/lang/AFunction."<init>":()V
+         4: aload_0
+         5: aload_1
+         6: putfield      #15                 // Field add:Ljava/lang/Object;
+         9: aload_0
+        10: aload_2
+        11: putfield      #17                 // Field less:Ljava/lang/Object;
+        14: return
+
+  public java.lang.Object invoke(java.lang.Object, java.lang.Object, java.lang.Object, java.lang.Object);
+    Code:
+         0: aload_1
+         1: aconst_null
+         2: astore_1
+         3: invokestatic  #25                 // Method clojure/lang/RT.longCast:(Ljava/lang/Object;)J
+         6: lstore        5
+         8: aload_2
+         9: invokestatic  #25                 // Method clojure/lang/RT.longCast:(Ljava/lang/Object;)J
+        12: lstore        7
+        14: lload         7
+        16: aload         4
+        18: aconst_null
+        19: astore        4
+        21: invokestatic  #25                 // Method clojure/lang/RT.longCast:(Ljava/lang/Object;)J
+        24: lload         5
+        26: lload         7
+        28: invokestatic  #31                 // Method clojure/lang/Numbers.minus:(JJ)J
+        31: invokestatic  #34                 // Method clojure/lang/Numbers.min:(JJ)J
+        34: invokestatic  #36                 // Method clojure/lang/Numbers.add:(JJ)J
+        37: lstore        9
+        39: getstatic     #40                 // Field const__4:Lclojure/lang/Var;
+        42: invokevirtual #46                 // Method clojure/lang/Var.getRawRoot:()Ljava/lang/Object;
+        45: checkcast     #48                 // class clojure/lang/IFn
+        48: lload         9
+        50: invokestatic  #52                 // Method clojure/lang/Numbers.num:(J)Ljava/lang/Number;
+        53: invokeinterface #55,  2           // InterfaceMethod clojure/lang/IFn.invoke:(Ljava/lang/Object;)Ljava/lang/Object;
+        58: astore        11
+        60: aload_2
+        61: aconst_null
+        62: astore_2
+        63: astore        12
+        65: aload_3
+        66: aconst_null
+        67: astore_3
+        68: astore        13
+        70: aload_0
+        71: getfield      #17                 // Field less:Ljava/lang/Object;
+        74: checkcast     #48                 // class clojure/lang/IFn
+        77: aload         12
+        79: aload         11
+        81: invokeinterface #58,  3           // InterfaceMethod clojure/lang/IFn.invoke:(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
+        86: dup
+        87: ifnull        223
+        90: getstatic     #64                 // Field java/lang/Boolean.FALSE:Ljava/lang/Boolean;
+        93: if_acmpeq     224
+        96: aload         13
+        98: pop
+        99: aload         12
+       101: astore        14
+       103: aload         14
+       105: aconst_null
+       106: astore        14
+       108: astore        15
+       110: lconst_1
+       111: lstore        16
+       113: aload_0
+       114: getfield      #15                 // Field add:Ljava/lang/Object;
+       117: checkcast     #48                 // class clojure/lang/IFn
+       120: aload         15
+       122: aconst_null
+       123: astore        15
+       125: lload         16
+       127: invokestatic  #52                 // Method clojure/lang/Numbers.num:(J)Ljava/lang/Number;
+       130: invokeinterface #58,  3           // InterfaceMethod clojure/lang/IFn.invoke:(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
+       135: astore        18
+       137: aload         18
+       139: aconst_null
+       140: astore        18
+       142: astore        19
+       144: aload         13
+       146: aconst_null
+       147: astore        13
+       149: astore        14
+       151: aload         12
+       153: aconst_null
+       154: astore        12
+       156: astore        15
+       158: aload         14
+       160: aconst_null
+       161: astore        14
+       163: astore        20
+       165: aload         15
+       167: aconst_null
+       168: astore        15
+       170: astore        18
+       172: aload_0
+       173: getfield      #15                 // Field add:Ljava/lang/Object;
+       176: checkcast     #48                 // class clojure/lang/IFn
+       179: aload         20
+       181: aconst_null
+       182: astore        20
+       184: aload         18
+       186: aconst_null
+       187: astore        18
+       189: invokeinterface #58,  3           // InterfaceMethod clojure/lang/IFn.invoke:(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
+       194: astore        21
+       196: aload         21
+       198: aconst_null
+       199: astore        21
+       201: astore        14
+       203: aload         19
+       205: aconst_null
+       206: astore        19
+       208: aload         14
+       210: aconst_null
+       211: astore        14
+       213: astore        13
+       215: astore        12
+       217: goto          70
+       220: nop
+       221: nop
+       222: athrow
+       223: pop
+       224: aload         12
+       226: lload         5
+       228: invokestatic  #78                 // Method clojure/lang/Util.equiv:(Ljava/lang/Object;J)Z
+       231: ifeq          241
+       234: getstatic     #82                 // Field const__7:Lclojure/lang/Keyword;
+       237: goto          244
+       240: athrow
+       241: getstatic     #85                 // Field const__8:Lclojure/lang/Keyword;
+       244: aload         12
+       246: aconst_null
+       247: astore        12
+       249: aload         13
+       251: aconst_null
+       252: astore        13
+       254: invokestatic  #91                 // Method clojure/lang/Tuple.create:(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)Lclojure/lang/IPersistentVector;
+       257: areturn
+
+  public static {};
+    Code:
+         0: ldc           #113                // String clojure.core
+         2: ldc           #115                // String identity
+         4: invokestatic  #119                // Method clojure/lang/RT.var:(Ljava/lang/String;Ljava/lang/String;)Lclojure/lang/Var;
+         7: checkcast     #42                 // class clojure/lang/Var
+        10: putstatic     #40                 // Field const__4:Lclojure/lang/Var;
+        13: aconst_null
+        14: ldc           #121                // String done
+        16: invokestatic  #125                // Method clojure/lang/RT.keyword:(Ljava/lang/String;Ljava/lang/String;)Lclojure/lang/Keyword;
+        19: checkcast     #108                // class clojure/lang/Keyword
+        22: putstatic     #82                 // Field const__7:Lclojure/lang/Keyword;
+        25: aconst_null
+        26: ldc           #127                // String paused
+        28: invokestatic  #125                // Method clojure/lang/RT.keyword:(Ljava/lang/String;Ljava/lang/String;)Lclojure/lang/Keyword;
+        31: checkcast     #108                // class clojure/lang/Keyword
+        34: putstatic     #85                 // Field const__8:Lclojure/lang/Keyword;
+        37: return
+}

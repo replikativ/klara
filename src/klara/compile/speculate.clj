@@ -20,7 +20,7 @@
                                 (= :fn (:op init)) [:closure p]
                                 fields [:vector (mapv (fn [[s _]] (slot {:op :local :name s})) fields)]
                                 (= :local (:op init)) (when-let [i (get names (:name init))] [:local i]))]
-                  (if (and (= :prim (:op init)) (contains? '#{hash-map list hash-set} (:name init)))
+                  (if (and (= :prim (:op init)) (contains? '#{hash-map literal-map list hash-set} (:name init)))
                     t
                     (let [desc (or virtual (slot {:op :local :name s}))
                           body (go (:body t) (conj path :body) (conj slots desc)

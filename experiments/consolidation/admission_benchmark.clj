@@ -72,8 +72,8 @@
                                                               :median-bytes-per-operation (bench/median (map :bytes ss))
                                                               :samples ss}))})) cases)
         paths ["src/klara/stage.clj" "src/klara/compile/staged.clj" "src/klara/compile/infer_affine.clj"
-               "src/klara/compile/strict_fold.clj" "experiments/consolidation/checked_pipeline.clj"
-               "experiments/consolidation/producer_model.clj" "experiments/consolidation/producer_consumer.clj"]
+               "src/klara/compile/strict_fold.clj" "verification/consolidation/checked_pipeline.clj"
+               "verification/consolidation/producer_model.clj" "verification/consolidation/producer_consumer.clj"]
         report {:process id :java (System/getProperty "java.runtime.version")
                 :setup (select-keys ctx [:preparation-ms :publication-ms :legacy-checked-installation-ms :validation-ms])
                 :rows rows :guard-profile (profile-guards ctx)

@@ -1,0 +1,107 @@
+[
+  {
+    "label": "policy-0",
+    "command": [
+      "clojure",
+      "-J-Xmx1g",
+      "-J-Xss16m",
+      "-J-Djava.io.tmpdir=/home/christian-weilbach/Development/klara/target/correctness-investment/tmp",
+      "-Sdeps",
+      "{:paths [\"src\" \"experiments\"]}",
+      "-M",
+      "-m",
+      "baseline.investment-policy",
+      "policy-0",
+      "0"
+    ],
+    "exit": 0,
+    "process_wall_seconds": 5.218174865003675
+  },
+  {
+    "label": "policy-1",
+    "command": [
+      "clojure",
+      "-J-Xmx1g",
+      "-J-Xss16m",
+      "-J-Djava.io.tmpdir=/home/christian-weilbach/Development/klara/target/correctness-investment/tmp",
+      "-Sdeps",
+      "{:paths [\"src\" \"experiments\"]}",
+      "-M",
+      "-m",
+      "baseline.investment-policy",
+      "policy-1",
+      "1"
+    ],
+    "exit": 0,
+    "process_wall_seconds": 5.796527151018381
+  },
+  {
+    "label": "policy-2",
+    "command": [
+      "clojure",
+      "-J-Xmx1g",
+      "-J-Xss16m",
+      "-J-Djava.io.tmpdir=/home/christian-weilbach/Development/klara/target/correctness-investment/tmp",
+      "-Sdeps",
+      "{:paths [\"src\" \"experiments\"]}",
+      "-M",
+      "-m",
+      "baseline.investment-policy",
+      "policy-2",
+      "2"
+    ],
+    "exit": 0,
+    "process_wall_seconds": 6.272199301980436
+  },
+  {
+    "label": "campaign-0",
+    "command": [
+      "clojure",
+      "-J-Xmx1g",
+      "-J-Xss16m",
+      "-J-Djava.io.tmpdir=/home/christian-weilbach/Development/klara/target/correctness-investment/tmp",
+      "-Sdeps",
+      "{:paths [\"src\" \"experiments\"]}",
+      "-M",
+      "-m",
+      "baseline.campaign",
+      "campaign-0"
+    ],
+    "exit": 0,
+    "process_wall_seconds": 4.6427902939904016
+  },
+  {
+    "label": "campaign-1",
+    "command": [
+      "clojure",
+      "-J-Xmx1g",
+      "-J-Xss16m",
+      "-J-Djava.io.tmpdir=/home/christian-weilbach/Development/klara/target/correctness-investment/tmp",
+      "-Sdeps",
+      "{:paths [\"src\" \"experiments\"]}",
+      "-M",
+      "-m",
+      "baseline.campaign",
+      "campaign-1"
+    ],
+    "exit": 0,
+    "process_wall_seconds": 4.848376048001228
+  },
+  {
+    "label": "campaign-2",
+    "command": [
+      "clojure",
+      "-J-Xmx1g",
+      "-J-Xss16m",
+      "-J-Djava.io.tmpdir=/home/christian-weilbach/Development/klara/target/correctness-investment/tmp",
+      "-Sdeps",
+      "{:paths [\"src\" \"experiments\"]}",
+      "-M",
+      "-m",
+      "baseline.campaign",
+      "campaign-2"
+    ],
+    "exit": 0,
+    "process_wall_seconds": 4.71133396300138
+  }
+]

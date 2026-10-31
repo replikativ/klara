@@ -6,7 +6,7 @@
   type evidence are deliberately refused (overflow, NaN, signed zero)."
   (:require [klara.compile.ir :as ir] [klara.core :as c]))
 
-(def foldable '#{+ - * / quot rem mod inc dec < > <= >= = not= not zero? pos? neg? even? odd? identity vector hash-map list first second nth get count})
+(def foldable '#{+ - * / quot rem mod inc dec < > <= >= = not= not zero? pos? neg? even? odd? identity vector hash-map literal-map list first second nth get count})
 (defn literal-data? [x]
   (or (nil? x) (boolean? x) (number? x) (string? x) (keyword? x) (symbol? x) (char? x)
       (and (or (vector? x) (list? x) (map? x) (set? x))

@@ -1,0 +1,26 @@
+CompileCommand: dontinline LoopModes.plain bool dontinline = true
+CompileCommand: dontinline LoopModes.checked bool dontinline = true
+# java=25.0.1+8-LTS-jvmci-b01
+# vm=interpreted mode, sharing
+# flags=[-XX:ThreadPriorityPolicy=1, -XX:+UnlockExperimentalVMOptions, -XX:+EnableJVMCIProduct, -XX:+EnableJVMCI, -XX:-UnlockExperimentalVMOptions, -Xmx256m, -Xint, -XX:CompileCommand=dontinline,LoopModes::plain, -XX:CompileCommand=dontinline,LoopModes::checked]
+# warmup=20,samples=9,calls=100
+sample	int	plain	0	39866.33	49995000
+sample	int	plain	1	40891.19	49995000
+sample	int	plain	2	41551.77	49995000
+sample	int	plain	3	40914.29	49995000
+sample	int	plain	4	40523.38	49995000
+sample	int	plain	5	40454.38	49995000
+sample	int	plain	6	39821.61	49995000
+sample	int	plain	7	40450.62	49995000
+sample	int	plain	8	40441.27	49995000
+median	int	plain	40454.38
+sample	int	checked	0	305784.63	49995000
+sample	int	checked	1	305164.18	49995000
+sample	int	checked	2	308414.53	49995000
+sample	int	checked	3	307984.89	49995000
+sample	int	checked	4	305633.30	49995000
+sample	int	checked	5	309905.79	49995000
+sample	int	checked	6	308657.86	49995000
+sample	int	checked	7	306517.52	49995000
+sample	int	checked	8	307781.99	49995000
+median	int	checked	307781.99

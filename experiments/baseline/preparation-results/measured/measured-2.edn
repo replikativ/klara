@@ -1,0 +1,498 @@
+{:implementation-snapshot-pilot
+ {:samples
+  [{:elapsed-ns 3234569, :namespaces 39, :vars 1480}
+   {:elapsed-ns 1847980, :namespaces 39, :vars 1480}
+   {:elapsed-ns 1630797, :namespaces 39, :vars 1480}],
+  :scope :cost-pilot-only-not-a-complete-dependency-proof},
+ :source-sha256
+ {"src/klara/compile/inline.clj"
+  "2c06694af339b84e6f501fc035ac17023d55dd5da0babbd74becd849966f8f8a",
+  "src/klara/compile/unbox.clj"
+  "0e449e139a657bc5b4bac26f5f951c9cd606afd1b851e69244700f5cd9438917",
+  "src/klara/compile/speculate.clj"
+  "80d54937c925ed2fc593bd8cb6f216e8ec8298bcab40041be2255ba94cd3173f",
+  "src/klara/compile/core.clj"
+  "8c59aa51f636c8e7a38b1d63cd07a4badd775ca23582155ef4deb64800cdd128",
+  "src/klara/compile/affine_erase.clj"
+  "d5cc50d9ee7009e1c0635f5838aebf0f705d2be2312934cc39d851882235e756",
+  "src/klara/fusion/kernel.clj"
+  "edc582a5b412a83e61b465c45a980f3811c770167627188da1ba3ad18e1c9453",
+  "experiments/baseline/preparation.clj"
+  "c91f7653320dfbb762849b6c8ac0bf52a9b83fbad729bed87b27278fae30b8c0",
+  "src/klara/compile/private_accumulator.clj"
+  "1b96f35740df42f5a2e77c3f75abb18b4f360041ac556ae43c6cbcd616ed3416",
+  "src/klara/compile/pe.clj"
+  "728a7c15b318edb6ebfb69517e9c4dba245cde8d64e434c83622758ee5bb1b70",
+  "src/klara/compile/relation.clj"
+  "9198c4fa963235e9e3babf5ebc9845f0eaac2ffdf66bd7acc455ebb02cd58ae1",
+  "src/klara/deploy.clj"
+  "88e3503486932d88ecdd900ba148637e645d18aa5d2605a9d65d343fb5c30c75",
+  "src/klara/compile/funding.clj"
+  "4272444d0fe0a2c69f6295224868048fac048679bc3039f5b319865963bef95f",
+  "src/klara/compile/view.clj"
+  "7a58c4612ca77720b807eb19cc024968b0ca1c2e8fb8e9fdbab17eb521155c3c",
+  "src/klara/compile/infer_affine.clj"
+  "1ea336ef960114d11d4e7480381a0cedfb373797622353b36c587a9725c4d0de",
+  "src/klara/compile/emit.clj"
+  "55c966534f4e08d84176d5ba73b2f08ec59c5e17473f9ace690b5b153aba4165",
+  "src/klara/world.clj"
+  "29ea09915982d5daa246251c87da3095f0014c0f7680ff017e618e36fd9e9286",
+  "src/klara/core.clj"
+  "4fde378a632e9259d5133c166c118c951e3afb44eb84e0eb896a45e041684e6f",
+  "src/klara/affine.clj"
+  "7bceeeb76fb1f30adb60b0e17c9a879a4e626be6697ff5d2c24b8dc917b4e8af",
+  "src/klara/compile/budget.clj"
+  "a14c2c3a158f950915b6e12e39266ac68b9f07614b386932ca2f5655eade70f2",
+  "src/klara/compile/host.clj"
+  "5ccd09307e7bdbc3794eee27adcce08f2a742e07c54fd79e1d73464e9e35ad20",
+  "src/klara/repl.clj"
+  "13dd5b6feb07238fc1e976d027beb638ec6db9c8e753acfde3778b27c9a3a031",
+  "src/klara/load.clj"
+  "13360862c46395b41c048d5e19fc9d08dfad74e80046b4a1d3e3d685cd4e1968",
+  "src/klara/compile/strategy.clj"
+  "e11d64865f0647f8025361b3de0b9e47349e5674543b9ffacc83da1e9bfefbc5",
+  "experiments/baseline/private_accumulator.clj"
+  "9ec5d27aa618c5fa2b34a7f95e8c93ead9811ca5fb0f5bc4957425189be71eed",
+  "src/klara/compile/edge.clj"
+  "93f90ed2d3571f89223a60182af01655e239a776333824f0fa4b0edb014a3e9f",
+  "src/klara/compile/escape.clj"
+  "0b0cbd23e2a031ddaf1d2a5e66f68209901cf5e6ecd9f4771acdccb5d606d462",
+  "test/klara/compile/preparation_test.clj"
+  "634c7b4b211d3bcb259548dc25bb654999e8f78d00b94f4db6868747a498d62c",
+  "src/klara/code.clj"
+  "9a4663239a849215d83cc21ce24390d6ba3f6c3b80a4951d758285fffe7f80e8",
+  "src/klara/compile/ir.clj"
+  "04da4006359a881b8f5c849632d64714cc0ee43c3717e13b81f70b2ff8557989",
+  "src/klara/defs.clj"
+  "fa2cef5153903f49de13676785c8d0075d87086f6bdd78fb66c61cfbd3d0c436",
+  "src/klara/compile/guest.clj"
+  "53c4aaee0ada0e7284c884d72e39adf0577c388870712b80042475c77ff6f2d1",
+  "src/klara/expand.clj"
+  "3e4dd3ce7fe4a2b197344549ed3966a628ac1399c860ea24d0c69e0687e4f124",
+  "src/klara/compile/subject.clj"
+  "4ff05a76d70ec93f902d9301217755f743c47b3eac121118dce948b709072ae6",
+  "src/klara/compile/baseline.clj"
+  "be1fda2ebf41a1aeaf4cd4b5da4e029af6766e65992ed2fcf610508d9345385c",
+  "src/klara/effect_class.clj"
+  "354e1100fe88a79195d8bb5958ce38053ed67657440c59e5e04a1918c87870fe",
+  "src/klara/compile/compose.clj"
+  "0ab8e752e5ef9a76255b247f6858062e526f8b0e9c727e4f57534ea330b39906",
+  "src/klara/compile/loop.clj"
+  "70288d9e58db5ac74f631404da32cb209bb29cba9fc71d56bf67a49d90ed5b47",
+  "src/klara/nrepl.clj"
+  "087b57b1b3d925efe37d72c14f0d9e515591b88dc885e29f67dfad359405b8b1",
+  "src/klara/compile/hof.clj"
+  "b16d14a9c70532ceb5e00c2ef8fdb4167b8b5cc0b3eaca8a3f4c65255661d519",
+  "src/klara/compile/staged.clj"
+  "7d0861ab553b1484c31632e7dfe347161745cb478c089802949becb6201b585d",
+  "src/klara/syntax.clj"
+  "8963b902a00dd3f778ba0fbb5efd2ef15244c904070195fd4a47a48d5825db44",
+  "src/klara/compile/runtime.clj"
+  "f4fcfcf98fc25874f6cb4ad120751b2d66ad4ca16fcc27bb3a51b5000cc16a74",
+  "src/klara/compile/scalar.clj"
+  "352012cdc752465d36452302da1d8cc60cd521fd79081f8f4915da209d273966",
+  "src/klara/stage.clj"
+  "23cf44e533653ff64c59557ac10bacb0b36b3d3ba429ae201e4b0c54fff068d9",
+  "src/klara/compile/analysis.clj"
+  "8c29cd30f8b8814efd55094db8a4310a815c33584e1b8a6ee39dabaf34245ebc",
+  "src/klara/compile/updates.clj"
+  "446b74e76cb10a9f77e7eefebc2ae68401b3adf6bf7a3bd1f567e1873e0cc721",
+  "src/klara/fusion.clj"
+  "8e88dbe66640c4d60be5a1dafc07c86a17bef5b0633c08179256f56a1658a356",
+  "src/klara/compile/diagnostics.clj"
+  "f7b7d848edcfa22ff05d4dd81b154444e4ba68c1794d9a42177f40eece1ea089",
+  "src/klara/authority.clj"
+  "70c91dac1f5beace4e6426913f27a8a4dca3a5517f70bc86516f50f4ac369a9d",
+  "src/klara/compile/service.clj"
+  "f0cad0e231d18b2602ea67e89bda3eb41d728f8fb2e43efca9088e51fe4f9c0b",
+  "src/klara/compile/strict_fold.clj"
+  "bd35e878609a1822e127d90f7b668465386b4c2cc56c36e0c16eb56ce3f4d28d",
+  "src/klara/eval.clj"
+  "f3426a67ec736d5e07c1e1e836a7d242ed6f5efdc1ebb16ab079afcf3d80ad65",
+  "src/klara/compile/local_calls.clj"
+  "4cdba2f2c6cb09752c38cbe1942034e236c65b6e35568b9fe4d066256cd28a0a",
+  "src/klara/compile/prepare.clj"
+  "2de9e4921590cfdb4abf96acd40b412af2aad002dd1b3a30836c7523e9eb9f0d",
+  "src/klara/compile/requirements.clj"
+  "b551f12324b50024fbae1f448e3819736e2004d602ed8cdfde02674c22300969"},
+ :source
+ (fn
+  [n bias limit]
+  (let
+   [step
+    (fn
+     [acc i]
+     (assoc (assoc acc 0 (+ (nth acc 0) i)) 1 (+ (nth acc 1) bias)))]
+   (let
+    [acc
+     (loop
+      [i 0 acc [0 0]]
+      (if (< i n) (recur (inc i) (step acc i)) acc))]
+    (< (+ (nth acc 0) (nth acc 1)) limit)))),
+ :policy
+ (fn
+  [r]
+  (if
+   (= (count (get r :history)) 0)
+   {:action :local-call, :planner 'klara.compiler/local-calls}
+   {:action :private-accumulator})),
+ :summary
+ {:checked
+  {:preparation-ns {:min 21055347, :median 26302601, :max 41531848},
+   :validation-ns {:min 3879070, :median 4431158, :max 5521079},
+   :installation-ns {:min 55963, :median 76352, :max 100688}},
+  :repeat
+  {:preparation-ns {:min 26963669, :median 40766863, :max 46138972},
+   :validation-ns {:min 3772967, :median 4692508, :max 5305024},
+   :installation-ns {:min 55871, :median 81535, :max 116837}}},
+ :java "25.0.1+8-LTS-jvmci-b01",
+ :pairs
+ [{:order [:checked :repeat],
+   :trials
+   [{:diagnostics {:enabled? false},
+     :validation-ns 5521079,
+     :owned-nodes 56,
+     :preparation-ns 41531848,
+     :mode :checked,
+     :source-nodes 51,
+     :usage {:work 7571, :bytes 2425, :emissions 1},
+     :result true,
+     :installation-ns 100688,
+     :cache-stats
+     {:hits 1, :misses 0, :fallbacks 0, :revalidations 1, :deopts 0}}
+    {:diagnostics {:enabled? false},
+     :validation-ns 4969890,
+     :owned-nodes 56,
+     :preparation-ns 46138972,
+     :mode :repeat,
+     :source-nodes 51,
+     :usage {:work 7681, :bytes 2425, :emissions 1},
+     :result true,
+     :installation-ns 83849,
+     :cache-stats
+     {:hits 1, :misses 0, :fallbacks 0, :revalidations 1, :deopts 0}}]}
+  {:order [:repeat :checked],
+   :trials
+   [{:diagnostics {:enabled? false},
+     :validation-ns 4692508,
+     :owned-nodes 56,
+     :preparation-ns 34239144,
+     :mode :repeat,
+     :source-nodes 51,
+     :usage {:work 7681, :bytes 2425, :emissions 1},
+     :result true,
+     :installation-ns 66624,
+     :cache-stats
+     {:hits 1, :misses 0, :fallbacks 0, :revalidations 1, :deopts 0}}
+    {:diagnostics {:enabled? false},
+     :validation-ns 4885708,
+     :owned-nodes 56,
+     :preparation-ns 26302601,
+     :mode :checked,
+     :source-nodes 51,
+     :usage {:work 7571, :bytes 2425, :emissions 1},
+     :result true,
+     :installation-ns 61653,
+     :cache-stats
+     {:hits 1, :misses 0, :fallbacks 0, :revalidations 1, :deopts 0}}]}
+  {:order [:checked :repeat],
+   :trials
+   [{:diagnostics {:enabled? false},
+     :validation-ns 4431158,
+     :owned-nodes 56,
+     :preparation-ns 26167203,
+     :mode :checked,
+     :source-nodes 51,
+     :usage {:work 7571, :bytes 2425, :emissions 1},
+     :result true,
+     :installation-ns 77495,
+     :cache-stats
+     {:hits 1, :misses 0, :fallbacks 0, :revalidations 1, :deopts 0}}
+    {:diagnostics {:enabled? false},
+     :validation-ns 4102365,
+     :owned-nodes 56,
+     :preparation-ns 29163893,
+     :mode :repeat,
+     :source-nodes 51,
+     :usage {:work 7681, :bytes 2425, :emissions 1},
+     :result true,
+     :installation-ns 81535,
+     :cache-stats
+     {:hits 1, :misses 0, :fallbacks 0, :revalidations 1, :deopts 0}}]}
+  {:order [:repeat :checked],
+   :trials
+   [{:diagnostics {:enabled? false},
+     :validation-ns 5305024,
+     :owned-nodes 56,
+     :preparation-ns 44752899,
+     :mode :repeat,
+     :source-nodes 51,
+     :usage {:work 7681, :bytes 2425, :emissions 1},
+     :result true,
+     :installation-ns 116837,
+     :cache-stats
+     {:hits 1, :misses 0, :fallbacks 0, :revalidations 1, :deopts 0}}
+    {:diagnostics {:enabled? false},
+     :validation-ns 3954485,
+     :owned-nodes 56,
+     :preparation-ns 26303241,
+     :mode :checked,
+     :source-nodes 51,
+     :usage {:work 7571, :bytes 2425, :emissions 1},
+     :result true,
+     :installation-ns 55963,
+     :cache-stats
+     {:hits 1, :misses 0, :fallbacks 0, :revalidations 1, :deopts 0}}]}
+  {:order [:checked :repeat],
+   :trials
+   [{:diagnostics {:enabled? false},
+     :validation-ns 3961955,
+     :owned-nodes 56,
+     :preparation-ns 21522782,
+     :mode :checked,
+     :source-nodes 51,
+     :usage {:work 7571, :bytes 2425, :emissions 1},
+     :result true,
+     :installation-ns 76352,
+     :cache-stats
+     {:hits 1, :misses 0, :fallbacks 0, :revalidations 1, :deopts 0}}
+    {:diagnostics {:enabled? false},
+     :validation-ns 4025056,
+     :owned-nodes 56,
+     :preparation-ns 40766863,
+     :mode :repeat,
+     :source-nodes 51,
+     :usage {:work 7681, :bytes 2425, :emissions 1},
+     :result true,
+     :installation-ns 65341,
+     :cache-stats
+     {:hits 1, :misses 0, :fallbacks 0, :revalidations 1, :deopts 0}}]}
+  {:order [:repeat :checked],
+   :trials
+   [{:diagnostics {:enabled? false},
+     :validation-ns 3772967,
+     :owned-nodes 56,
+     :preparation-ns 26963669,
+     :mode :repeat,
+     :source-nodes 51,
+     :usage {:work 7681, :bytes 2425, :emissions 1},
+     :result true,
+     :installation-ns 55871,
+     :cache-stats
+     {:hits 1, :misses 0, :fallbacks 0, :revalidations 1, :deopts 0}}
+    {:diagnostics {:enabled? false},
+     :validation-ns 3879070,
+     :owned-nodes 56,
+     :preparation-ns 21055347,
+     :mode :checked,
+     :source-nodes 51,
+     :usage {:work 7571, :bytes 2425, :emissions 1},
+     :result true,
+     :installation-ns 61108,
+     :cache-stats
+     {:hits 1,
+      :misses 0,
+      :fallbacks 0,
+      :revalidations 1,
+      :deopts 0}}]}],
+ :label "measured-2",
+ :attribution
+ [{:diagnostics
+   {:events
+    [{:phase :backend-initialization,
+      :details {:backend :private-accumulator},
+      :status :completed,
+      :elapsed-ns 15372}
+     {:phase :ownership-inference,
+      :details {:arity 3},
+      :status :completed,
+      :elapsed-ns 7827612}
+     {:phase :consumer-admission,
+      :details {:length 2},
+      :status :completed,
+      :elapsed-ns 78970}
+     {:phase :ownership-check,
+      :details {},
+      :status :completed,
+      :elapsed-ns 3225721}
+     {:phase :private-analysis,
+      :details {:pass :producer},
+      :status :completed,
+      :elapsed-ns 12642851}
+     {:phase :ownership-verify,
+      :details {},
+      :status :completed,
+      :elapsed-ns 457195}
+     {:phase :private-analysis-check,
+      :details {},
+      :status :completed,
+      :elapsed-ns 959972}
+     {:phase :owned-erasure,
+      :details {:use :emission},
+      :status :completed,
+      :elapsed-ns 678804}
+     {:phase :host-compilation,
+      :details {:backend :private-clojure},
+      :status :completed,
+      :elapsed-ns 2115502}
+     {:phase :owned-erasure,
+      :details {:use :validation},
+      :status :completed,
+      :elapsed-ns 1166000}
+     {:phase :source-relation,
+      :details {},
+      :status :completed,
+      :elapsed-ns 4904577}],
+    :dropped 0},
+   :validation-ns 9572066,
+   :owned-nodes 56,
+   :preparation-ns 53443523,
+   :mode :checked,
+   :source-nodes 51,
+   :usage {:work 7571, :bytes 2425, :emissions 1},
+   :result true,
+   :installation-ns 175154,
+   :cache-stats
+   {:hits 1, :misses 0, :fallbacks 0, :revalidations 1, :deopts 0}}
+  {:diagnostics
+   {:events
+    [{:phase :backend-initialization,
+      :details {:backend :private-accumulator},
+      :status :completed,
+      :elapsed-ns 16181}
+     {:phase :ownership-inference,
+      :details {:arity 3},
+      :status :completed,
+      :elapsed-ns 7095590}
+     {:phase :consumer-admission,
+      :details {:length 2},
+      :status :completed,
+      :elapsed-ns 71249}
+     {:phase :ownership-check,
+      :details {},
+      :status :completed,
+      :elapsed-ns 3244232}
+     {:phase :private-analysis,
+      :details {:pass :producer},
+      :status :completed,
+      :elapsed-ns 11015560}
+     {:phase :ownership-inference,
+      :details {:arity 3},
+      :status :completed,
+      :elapsed-ns 7011116}
+     {:phase :consumer-admission,
+      :details {:length 2},
+      :status :completed,
+      :elapsed-ns 75048}
+     {:phase :ownership-check,
+      :details {},
+      :status :completed,
+      :elapsed-ns 3225141}
+     {:phase :private-analysis,
+      :details {:pass :repeat},
+      :status :completed,
+      :elapsed-ns 10955058}
+     {:phase :ownership-verify,
+      :details {},
+      :status :completed,
+      :elapsed-ns 476679}
+     {:phase :private-analysis-check,
+      :details {},
+      :status :completed,
+      :elapsed-ns 990959}
+     {:phase :owned-erasure,
+      :details {:use :emission},
+      :status :completed,
+      :elapsed-ns 869584}
+     {:phase :host-compilation,
+      :details {:backend :private-clojure},
+      :status :completed,
+      :elapsed-ns 3821511}
+     {:phase :owned-erasure,
+      :details {:use :validation},
+      :status :completed,
+      :elapsed-ns 952956}
+     {:phase :source-relation,
+      :details {},
+      :status :completed,
+      :elapsed-ns 2249286}],
+    :dropped 0},
+   :validation-ns 7760542,
+   :owned-nodes 56,
+   :preparation-ns 64964355,
+   :mode :repeat,
+   :source-nodes 51,
+   :usage {:work 7681, :bytes 2425, :emissions 1},
+   :result true,
+   :installation-ns 180472,
+   :cache-stats
+   {:hits 1, :misses 0, :fallbacks 0, :revalidations 1, :deopts 0}}],
+ :first-use
+ {:diagnostics
+  {:events
+   [{:phase :backend-initialization,
+     :details {:backend :private-accumulator},
+     :status :completed,
+     :elapsed-ns 102106231}
+    {:phase :ownership-inference,
+     :details {:arity 3},
+     :status :completed,
+     :elapsed-ns 12441483}
+    {:phase :consumer-admission,
+     :details {:length 2},
+     :status :completed,
+     :elapsed-ns 115049}
+    {:phase :ownership-check,
+     :details {},
+     :status :completed,
+     :elapsed-ns 3057884}
+    {:phase :private-analysis,
+     :details {:pass :producer},
+     :status :completed,
+     :elapsed-ns 16638452}
+    {:phase :ownership-verify,
+     :details {},
+     :status :completed,
+     :elapsed-ns 259106}
+    {:phase :private-analysis-check,
+     :details {},
+     :status :completed,
+     :elapsed-ns 820074}
+    {:phase :owned-erasure,
+     :details {:use :emission},
+     :status :completed,
+     :elapsed-ns 5392409}
+    {:phase :host-compilation,
+     :details {:backend :private-clojure},
+     :status :completed,
+     :elapsed-ns 2358576}
+    {:phase :owned-erasure,
+     :details {:use :validation},
+     :status :completed,
+     :elapsed-ns 1191673}
+    {:phase :source-relation,
+     :details {},
+     :status :completed,
+     :elapsed-ns 2983626}],
+   :dropped 0},
+  :validation-ns 13215686,
+  :owned-nodes 56,
+  :preparation-ns 221345713,
+  :mode :checked,
+  :source-nodes 51,
+  :usage {:work 7571, :bytes 2425, :emissions 1},
+  :result true,
+  :installation-ns 687677,
+  :cache-stats
+  {:hits 1, :misses 0, :fallbacks 0, :revalidations 1, :deopts 0}},
+ :limits
+ [:diagnostic-timing-only
+  :nested-phase-times-inclusive
+  :warm-pairs-uninstrumented
+  :no-time-assertions
+  :fixed-source-one-input
+  :rotating-warm-pairs
+  :first-use-includes-lazy-backend-loading
+  :both-modes-use-the-same-artifact-and-ownership-checker
+  :repeat-control-is-original-production-plus-new-checker
+  :erasure-and-registry-validation-are-not-cached]}

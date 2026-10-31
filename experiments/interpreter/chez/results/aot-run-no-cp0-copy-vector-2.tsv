@@ -1,0 +1,11 @@
+2	no-cp0	copy-vector	load-object	0	94826	ok
+2	no-cp0	copy-vector	first-call	0	107379	#(49995000 10000)
+2	no-cp0	copy-vector	warm-call	0	13598.94	#(49995000 10000)
+2	no-cp0	copy-vector	warm-call	1	13910.02	#(49995000 10000)
+2	no-cp0	copy-vector	warm-call	2	13712.22	#(49995000 10000)
+2	no-cp0	copy-vector	warm-call	3	14316.02	#(49995000 10000)
+2	no-cp0	copy-vector	warm-call	4	13664.28	#(49995000 10000)
+2	no-cp0	copy-vector	warm-call	5	14461.82	#(49995000 10000)
+2	no-cp0	copy-vector	warm-call	6	14309.48	#(49995000 10000)
+2	no-cp0	copy-vector	warm-call	7	14193.66	#(49995000 10000)
+2	no-cp0	copy-vector	warm-call	8	14692.78	#(49995000 10000)

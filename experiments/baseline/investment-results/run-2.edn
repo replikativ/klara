@@ -1,0 +1,3377 @@
+{:repeated-preparation
+ [{:workload :tiny,
+   :source-id
+   "74a970b2f9d7f61f2ddaa9f246c1643ac93ff2dd0b4cc825ef6b4d87f643c0e9",
+   :attempts
+   [{:baseline
+     {:compile {:ns 1321701, :bytes 694696},
+      :validation {:ns 165601, :bytes 219848},
+      :installation {:ns 19909, :bytes 4640},
+      :usage {:work 6, :bytes 206, :emissions 1},
+      :pass-log
+      [{:pass :baseline-admission}
+       {:pass :lower}
+       {:pass :emit, :backend :clojure, :typed-loops? false}],
+      :transfer-receipts [],
+      :loop-layouts [],
+      :total-ns 1507211},
+     :optimizing
+     {:compile {:ns 987333, :bytes 657896},
+      :validation {:ns 125351, :bytes 208720},
+      :installation {:ns 14830, :bytes 4648},
+      :usage {},
+      :pass-log
+      [{:pass :speculate, :sites 0}
+       {:pass :inline, :changes 0}
+       {:pass :lower, :hof-rewrites 0, :classes {}}
+       {:pass :pe, :rounds 0, :fuel-exhausted? false}
+       {:pass :escape, :allocations-removed 0}
+       {:pass :pe, :rounds 0, :fuel-exhausted? false}
+       {:pass :emit, :backend :clojure}],
+      :transfer-receipts nil,
+      :loop-layouts [],
+      :total-ns 1127514}}
+    {:baseline
+     {:compile {:ns 1012551, :bytes 694744},
+      :validation {:ns 162454, :bytes 219848},
+      :installation {:ns 15235, :bytes 4640},
+      :usage {:work 6, :bytes 206, :emissions 1},
+      :pass-log
+      [{:pass :baseline-admission}
+       {:pass :lower}
+       {:pass :emit, :backend :clojure, :typed-loops? false}],
+      :transfer-receipts [],
+      :loop-layouts [],
+      :total-ns 1190240},
+     :optimizing
+     {:compile {:ns 1012755, :bytes 657776},
+      :validation {:ns 143035, :bytes 208720},
+      :installation {:ns 15500, :bytes 4648},
+      :usage {},
+      :pass-log
+      [{:pass :speculate, :sites 0}
+       {:pass :inline, :changes 0}
+       {:pass :lower, :hof-rewrites 0, :classes {}}
+       {:pass :pe, :rounds 0, :fuel-exhausted? false}
+       {:pass :escape, :allocations-removed 0}
+       {:pass :pe, :rounds 0, :fuel-exhausted? false}
+       {:pass :emit, :backend :clojure}],
+      :transfer-receipts nil,
+      :loop-layouts [],
+      :total-ns 1171290}}
+    {:baseline
+     {:compile {:ns 1038293, :bytes 694744},
+      :validation {:ns 165928, :bytes 219848},
+      :installation {:ns 15838, :bytes 4640},
+      :usage {:work 6, :bytes 206, :emissions 1},
+      :pass-log
+      [{:pass :baseline-admission}
+       {:pass :lower}
+       {:pass :emit, :backend :clojure, :typed-loops? false}],
+      :transfer-receipts [],
+      :loop-layouts [],
+      :total-ns 1220059},
+     :optimizing
+     {:compile {:ns 947308, :bytes 657768},
+      :validation {:ns 126747, :bytes 208720},
+      :installation {:ns 27548, :bytes 4648},
+      :usage {},
+      :pass-log
+      [{:pass :speculate, :sites 0}
+       {:pass :inline, :changes 0}
+       {:pass :lower, :hof-rewrites 0, :classes {}}
+       {:pass :pe, :rounds 0, :fuel-exhausted? false}
+       {:pass :escape, :allocations-removed 0}
+       {:pass :pe, :rounds 0, :fuel-exhausted? false}
+       {:pass :emit, :backend :clojure}],
+      :transfer-receipts nil,
+      :loop-layouts [],
+      :total-ns 1101603}}
+    {:baseline
+     {:compile {:ns 2690792, :bytes 694696},
+      :validation {:ns 177187, :bytes 219848},
+      :installation {:ns 22880, :bytes 4640},
+      :usage {:work 6, :bytes 206, :emissions 1},
+      :pass-log
+      [{:pass :baseline-admission}
+       {:pass :lower}
+       {:pass :emit, :backend :clojure, :typed-loops? false}],
+      :transfer-receipts [],
+      :loop-layouts [],
+      :total-ns 2890859},
+     :optimizing
+     {:compile {:ns 1092146, :bytes 657816},
+      :validation {:ns 135459, :bytes 208720},
+      :installation {:ns 15769, :bytes 4648},
+      :usage {},
+      :pass-log
+      [{:pass :speculate, :sites 0}
+       {:pass :inline, :changes 0}
+       {:pass :lower, :hof-rewrites 0, :classes {}}
+       {:pass :pe, :rounds 0, :fuel-exhausted? false}
+       {:pass :escape, :allocations-removed 0}
+       {:pass :pe, :rounds 0, :fuel-exhausted? false}
+       {:pass :emit, :backend :clojure}],
+      :transfer-receipts nil,
+      :loop-layouts [],
+      :total-ns 1243374}}
+    {:baseline
+     {:compile {:ns 1137048, :bytes 694704},
+      :validation {:ns 155753, :bytes 219848},
+      :installation {:ns 15825, :bytes 4640},
+      :usage {:work 6, :bytes 206, :emissions 1},
+      :pass-log
+      [{:pass :baseline-admission}
+       {:pass :lower}
+       {:pass :emit, :backend :clojure, :typed-loops? false}],
+      :transfer-receipts [],
+      :loop-layouts [],
+      :total-ns 1308626},
+     :optimizing
+     {:compile {:ns 978890, :bytes 657816},
+      :validation {:ns 126122, :bytes 208720},
+      :installation {:ns 12325, :bytes 4648},
+      :usage {},
+      :pass-log
+      [{:pass :speculate, :sites 0}
+       {:pass :inline, :changes 0}
+       {:pass :lower, :hof-rewrites 0, :classes {}}
+       {:pass :pe, :rounds 0, :fuel-exhausted? false}
+       {:pass :escape, :allocations-removed 0}
+       {:pass :pe, :rounds 0, :fuel-exhausted? false}
+       {:pass :emit, :backend :clojure}],
+      :transfer-receipts nil,
+      :loop-layouts [],
+      :total-ns 1117337}}]}
+  {:workload :loop,
+   :source-id
+   "6c0ac29c603e0e3c5d72717378cbf82d1b171768d221e624321c86fa95d805c9",
+   :attempts
+   [{:baseline
+     {:compile {:ns 2440574, :bytes 1626048},
+      :validation {:ns 206337, :bytes 277520},
+      :installation {:ns 35107, :bytes 4744},
+      :usage {:work 73, :bytes 491, :emissions 1},
+      :pass-log
+      [{:pass :baseline-admission}
+       {:pass :lower}
+       {:pass :emit, :backend :clojure, :typed-loops? false}],
+      :transfer-receipts
+      [{:version :ordered-transfer-v1,
+        :arity 2,
+        :destinations [v13648 v13649],
+        :argument-ids
+        ["3922fcac614ba6b3440510494741627083da18b416ffa7db8dd107ab1287b33f"
+         "2032afe3af555bea321cf4e32ce797f43f7a673750dde21b26338f9a07fbec37"],
+        :plan-id
+        "00d75d81b04caf9d965177372f61ec28758a8d90446df0e9d15e0618a20b2e94",
+        :producer :klara-baseline,
+        :producer-code-id
+        "c36e86c477235203453381c8ff6199acd1c5e606dd4323ff4a93c99ef61747de"}],
+      :loop-layouts [[]],
+      :total-ns 2682018},
+     :optimizing
+     {:compile {:ns 2589903, :bytes 2678768},
+      :validation {:ns 771795, :bytes 1644144},
+      :installation {:ns 34713, :bytes 4648},
+      :usage {},
+      :pass-log
+      [{:pass :speculate, :sites 1}
+       {:pass :inline, :changes 0}
+       {:pass :lower, :hof-rewrites 0, :classes {}}
+       {:pass :pe, :rounds 1, :fuel-exhausted? false}
+       {:pass :escape, :allocations-removed 0}
+       {:pass :pe, :rounds 0, :fuel-exhausted? false}
+       {:pass :emit, :backend :clojure}],
+      :transfer-receipts nil,
+      :loop-layouts [[]],
+      :total-ns 3396411}}
+    {:baseline
+     {:compile {:ns 2106269, :bytes 1625688},
+      :validation {:ns 197874, :bytes 277520},
+      :installation {:ns 17798, :bytes 4744},
+      :usage {:work 73, :bytes 491, :emissions 1},
+      :pass-log
+      [{:pass :baseline-admission}
+       {:pass :lower}
+       {:pass :emit, :backend :clojure, :typed-loops? false}],
+      :transfer-receipts
+      [{:version :ordered-transfer-v1,
+        :arity 2,
+        :destinations [v13685 v13686],
+        :argument-ids
+        ["2b0b481ed7d9979863dd9d8a86ab47870a9a1edee33b0a5184a6ff6dc0c4ea7d"
+         "8a8ab72c3bd5e19c1e012c25124d167e2cebe390a3b3e1e86a0b6b84b24ac0b9"],
+        :plan-id
+        "fc5641832a581dc2781bf980e6402a6aff53cbd84d68243bcf20758518783278",
+        :producer :klara-baseline,
+        :producer-code-id
+        "c36e86c477235203453381c8ff6199acd1c5e606dd4323ff4a93c99ef61747de"}],
+      :loop-layouts [[]],
+      :total-ns 2321941},
+     :optimizing
+     {:compile {:ns 2371710, :bytes 2678384},
+      :validation {:ns 697573, :bytes 1644144},
+      :installation {:ns 21025, :bytes 4648},
+      :usage {},
+      :pass-log
+      [{:pass :speculate, :sites 1}
+       {:pass :inline, :changes 0}
+       {:pass :lower, :hof-rewrites 0, :classes {}}
+       {:pass :pe, :rounds 1, :fuel-exhausted? false}
+       {:pass :escape, :allocations-removed 0}
+       {:pass :pe, :rounds 0, :fuel-exhausted? false}
+       {:pass :emit, :backend :clojure}],
+      :transfer-receipts nil,
+      :loop-layouts [[]],
+      :total-ns 3090308}}
+    {:baseline
+     {:compile {:ns 2214800, :bytes 1625960},
+      :validation {:ns 201549, :bytes 277520},
+      :installation {:ns 20079, :bytes 4744},
+      :usage {:work 73, :bytes 491, :emissions 1},
+      :pass-log
+      [{:pass :baseline-admission}
+       {:pass :lower}
+       {:pass :emit, :backend :clojure, :typed-loops? false}],
+      :transfer-receipts
+      [{:version :ordered-transfer-v1,
+        :arity 2,
+        :destinations [v13722 v13723],
+        :argument-ids
+        ["a7fc4df0a4f9a6e17ed8ab85267583d688e2a25bfefdba8697dac13e549d7b52"
+         "f53a2d1a58b2a7cc2daa187cac3c10361ef6cf03944e05ee4864be5fbd151567"],
+        :plan-id
+        "ff132a843834fe0bbf3e7258bbf3aa2c04754b9e7ed47a3001eac19dfea3ca49",
+        :producer :klara-baseline,
+        :producer-code-id
+        "c36e86c477235203453381c8ff6199acd1c5e606dd4323ff4a93c99ef61747de"}],
+      :loop-layouts [[]],
+      :total-ns 2436428},
+     :optimizing
+     {:compile {:ns 3974449, :bytes 2678496},
+      :validation {:ns 1326316, :bytes 1644144},
+      :installation {:ns 49980, :bytes 4648},
+      :usage {},
+      :pass-log
+      [{:pass :speculate, :sites 1}
+       {:pass :inline, :changes 0}
+       {:pass :lower, :hof-rewrites 0, :classes {}}
+       {:pass :pe, :rounds 1, :fuel-exhausted? false}
+       {:pass :escape, :allocations-removed 0}
+       {:pass :pe, :rounds 0, :fuel-exhausted? false}
+       {:pass :emit, :backend :clojure}],
+      :transfer-receipts nil,
+      :loop-layouts [[]],
+      :total-ns 5350745}}
+    {:baseline
+     {:compile {:ns 2968958, :bytes 1625808},
+      :validation {:ns 219103, :bytes 277520},
+      :installation {:ns 31614, :bytes 4744},
+      :usage {:work 73, :bytes 491, :emissions 1},
+      :pass-log
+      [{:pass :baseline-admission}
+       {:pass :lower}
+       {:pass :emit, :backend :clojure, :typed-loops? false}],
+      :transfer-receipts
+      [{:version :ordered-transfer-v1,
+        :arity 2,
+        :destinations [v13759 v13760],
+        :argument-ids
+        ["4ab4327d3c2e62c5a6e42877842eaa398ab68f8abfef0d3614c6b57c6752c7ef"
+         "500ba0083e7a7107ee156fae77f2644a99c78d775e93df2542b9de97a058ffb5"],
+        :plan-id
+        "5251828d7893958227254b1f6791d575fbea7f91bf6ded2b8fc7db780efd2c6c",
+        :producer :klara-baseline,
+        :producer-code-id
+        "c36e86c477235203453381c8ff6199acd1c5e606dd4323ff4a93c99ef61747de"}],
+      :loop-layouts [[]],
+      :total-ns 3219675},
+     :optimizing
+     {:compile {:ns 2541853, :bytes 2678464},
+      :validation {:ns 724440, :bytes 1644144},
+      :installation {:ns 21353, :bytes 4648},
+      :usage {},
+      :pass-log
+      [{:pass :speculate, :sites 1}
+       {:pass :inline, :changes 0}
+       {:pass :lower, :hof-rewrites 0, :classes {}}
+       {:pass :pe, :rounds 1, :fuel-exhausted? false}
+       {:pass :escape, :allocations-removed 0}
+       {:pass :pe, :rounds 0, :fuel-exhausted? false}
+       {:pass :emit, :backend :clojure}],
+      :transfer-receipts nil,
+      :loop-layouts [[]],
+      :total-ns 3287646}}
+    {:baseline
+     {:compile {:ns 2031782, :bytes 1625960},
+      :validation {:ns 204324, :bytes 277520},
+      :installation {:ns 19021, :bytes 4744},
+      :usage {:work 73, :bytes 491, :emissions 1},
+      :pass-log
+      [{:pass :baseline-admission}
+       {:pass :lower}
+       {:pass :emit, :backend :clojure, :typed-loops? false}],
+      :transfer-receipts
+      [{:version :ordered-transfer-v1,
+        :arity 2,
+        :destinations [v13796 v13797],
+        :argument-ids
+        ["84bf9fa05866c66b3dc656029df67cdd53ba2cd3050d5409abf2a9ae75e24906"
+         "499da0afa13aa98c0a1bcdfdc5f375a5b7ba83276d2d3d5d59a2c05c52787445"],
+        :plan-id
+        "5b61a0ec7a090c62d8c5785e639d4ce1eb9deda2b9f6c217c5a2f24e9c2c6db1",
+        :producer :klara-baseline,
+        :producer-code-id
+        "c36e86c477235203453381c8ff6199acd1c5e606dd4323ff4a93c99ef61747de"}],
+      :loop-layouts [[]],
+      :total-ns 2255127},
+     :optimizing
+     {:compile {:ns 2195490, :bytes 2678744},
+      :validation {:ns 683473, :bytes 1644144},
+      :installation {:ns 20031, :bytes 4648},
+      :usage {},
+      :pass-log
+      [{:pass :speculate, :sites 1}
+       {:pass :inline, :changes 0}
+       {:pass :lower, :hof-rewrites 0, :classes {}}
+       {:pass :pe, :rounds 1, :fuel-exhausted? false}
+       {:pass :escape, :allocations-removed 0}
+       {:pass :pe, :rounds 0, :fuel-exhausted? false}
+       {:pass :emit, :backend :clojure}],
+      :transfer-receipts nil,
+      :loop-layouts [[]],
+      :total-ns 2898994}}]}
+  {:workload :loop-carried-bound,
+   :source-id
+   "a0d9c67f3112cf15ab5dd2b18b326e985ab40f9f99305e8d45d83e871a64a028",
+   :attempts
+   [{:baseline
+     {:compile {:ns 2376354, :bytes 1787368},
+      :validation {:ns 181921, :bytes 275696},
+      :installation {:ns 21571, :bytes 4744},
+      :usage {:work 90, :bytes 575, :emissions 1},
+      :pass-log
+      [{:pass :baseline-admission}
+       {:pass :lower}
+       {:pass :emit, :backend :clojure, :typed-loops? false}],
+      :transfer-receipts
+      [{:version :ordered-transfer-v1,
+        :arity 3,
+        :destinations [v13842 v13843 v13844],
+        :argument-ids
+        ["1081ded2b6ad4f5eff08478fc3cfbb1eebbe3c616a81f493652978fccdd632c6"
+         "eb4717dcc623c37b9be66121db858ad87b4dfe9bf1c3c83c17cc4e352252d74d"
+         "2309aab44f7aeae46100ad8e42ab01624cbadcc14958cce008e57c54c87c7d7d"],
+        :plan-id
+        "a8ac86970c8589e84ceb7dca3c1daa46b7879ba82b1adacc9f5b9412c6568ebe",
+        :producer :klara-baseline,
+        :producer-code-id
+        "c36e86c477235203453381c8ff6199acd1c5e606dd4323ff4a93c99ef61747de"}],
+      :loop-layouts [[:long :double]],
+      :total-ns 2579846},
+     :optimizing
+     {:compile {:ns 2677066, :bytes 3378344},
+      :validation {:ns 768507, :bytes 1929552},
+      :installation {:ns 22113, :bytes 4648},
+      :usage {},
+      :pass-log
+      [{:pass :speculate, :sites 1}
+       {:pass :inline, :changes 0}
+       {:pass :lower, :hof-rewrites 0, :classes {}}
+       {:pass :pe, :rounds 1, :fuel-exhausted? false}
+       {:pass :escape, :allocations-removed 0}
+       {:pass :pe, :rounds 0, :fuel-exhausted? false}
+       {:pass :emit, :backend :clojure}],
+      :transfer-receipts nil,
+      :loop-layouts [[:long]],
+      :total-ns 3467686}}
+    {:baseline
+     {:compile {:ns 2223776, :bytes 1787560},
+      :validation {:ns 203227, :bytes 275696},
+      :installation {:ns 20389, :bytes 4744},
+      :usage {:work 90, :bytes 575, :emissions 1},
+      :pass-log
+      [{:pass :baseline-admission}
+       {:pass :lower}
+       {:pass :emit, :backend :clojure, :typed-loops? false}],
+      :transfer-receipts
+      [{:version :ordered-transfer-v1,
+        :arity 3,
+        :destinations [v13890 v13891 v13892],
+        :argument-ids
+        ["f7643edfe7bee715415a9c020fdda18f5e0e2bb44e392f20ebb4438c2b378df1"
+         "356e02e05954b60279b624d1bae0d8da639d7c41295072d58f6862dccbe37b43"
+         "117fe9ef5ab19fa1b55dce1b2f31b9924e888f9822cec04d10a3d040cae5fa9e"],
+        :plan-id
+        "fb3211b2a8b593feb591d5905a497348230d537a7de17156caa89b6f195523d4",
+        :producer :klara-baseline,
+        :producer-code-id
+        "c36e86c477235203453381c8ff6199acd1c5e606dd4323ff4a93c99ef61747de"}],
+      :loop-layouts [[:long :double]],
+      :total-ns 2447392},
+     :optimizing
+     {:compile {:ns 2640538, :bytes 3371984},
+      :validation {:ns 762511, :bytes 1929552},
+      :installation {:ns 20905, :bytes 4648},
+      :usage {},
+      :pass-log
+      [{:pass :speculate, :sites 1}
+       {:pass :inline, :changes 0}
+       {:pass :lower, :hof-rewrites 0, :classes {}}
+       {:pass :pe, :rounds 1, :fuel-exhausted? false}
+       {:pass :escape, :allocations-removed 0}
+       {:pass :pe, :rounds 0, :fuel-exhausted? false}
+       {:pass :emit, :backend :clojure}],
+      :transfer-receipts nil,
+      :loop-layouts [[:long]],
+      :total-ns 3423954}}
+    {:baseline
+     {:compile {:ns 2172960, :bytes 1784904},
+      :validation {:ns 169333, :bytes 275696},
+      :installation {:ns 19945, :bytes 4744},
+      :usage {:work 90, :bytes 575, :emissions 1},
+      :pass-log
+      [{:pass :baseline-admission}
+       {:pass :lower}
+       {:pass :emit, :backend :clojure, :typed-loops? false}],
+      :transfer-receipts
+      [{:version :ordered-transfer-v1,
+        :arity 3,
+        :destinations [v13938 v13939 v13940],
+        :argument-ids
+        ["39244cb6ab4fb3307a88be389816d612e1fc44947809913140346df849490123"
+         "b5953f372a8f986e813b2bc51a7c224e4af0b163c8a363a6a38dfe2010ee1f95"
+         "336715b59666c459445435927a7b4be60de87fc97b0ddc6b8c59ed64f5ee4543"],
+        :plan-id
+        "a95472620961b74d5a89d6fd179d0577196bcf718efcc1a61048e9d99a89b393",
+        :producer :klara-baseline,
+        :producer-code-id
+        "c36e86c477235203453381c8ff6199acd1c5e606dd4323ff4a93c99ef61747de"}],
+      :loop-layouts [[:long :double]],
+      :total-ns 2362238},
+     :optimizing
+     {:compile {:ns 2602619, :bytes 3372584},
+      :validation {:ns 766698, :bytes 1925256},
+      :installation {:ns 21021, :bytes 4648},
+      :usage {},
+      :pass-log
+      [{:pass :speculate, :sites 1}
+       {:pass :inline, :changes 0}
+       {:pass :lower, :hof-rewrites 0, :classes {}}
+       {:pass :pe, :rounds 1, :fuel-exhausted? false}
+       {:pass :escape, :allocations-removed 0}
+       {:pass :pe, :rounds 0, :fuel-exhausted? false}
+       {:pass :emit, :backend :clojure}],
+      :transfer-receipts nil,
+      :loop-layouts [[:long]],
+      :total-ns 3390338}}
+    {:baseline
+     {:compile {:ns 2027667, :bytes 1781856},
+      :validation {:ns 167543, :bytes 275000},
+      :installation {:ns 18810, :bytes 4744},
+      :usage {:work 90, :bytes 575, :emissions 1},
+      :pass-log
+      [{:pass :baseline-admission}
+       {:pass :lower}
+       {:pass :emit, :backend :clojure, :typed-loops? false}],
+      :transfer-receipts
+      [{:version :ordered-transfer-v1,
+        :arity 3,
+        :destinations [v13986 v13987 v13988],
+        :argument-ids
+        ["756a10976a0b10283fd52e2a3f7c38dba91b5593376145e980a0596f407c71d6"
+         "d8ded487e042dc46195aae548a86070e10caaddbd6260f7abd6646b0f9ccb172"
+         "ab0fc6bbcb21cd73c74bf6db6ae8fb0500232d229064b14229b376c0d74d686d"],
+        :plan-id
+        "9b5a5b837fc556acdbeb5ac0dfebf243ecfa022a221a0b895310c95066108554",
+        :producer :klara-baseline,
+        :producer-code-id
+        "c36e86c477235203453381c8ff6199acd1c5e606dd4323ff4a93c99ef61747de"}],
+      :loop-layouts [[:long :double]],
+      :total-ns 2214020},
+     :optimizing
+     {:compile {:ns 2426431, :bytes 3368400},
+      :validation {:ns 715570, :bytes 1925256},
+      :installation {:ns 20082, :bytes 4648},
+      :usage {},
+      :pass-log
+      [{:pass :speculate, :sites 1}
+       {:pass :inline, :changes 0}
+       {:pass :lower, :hof-rewrites 0, :classes {}}
+       {:pass :pe, :rounds 1, :fuel-exhausted? false}
+       {:pass :escape, :allocations-removed 0}
+       {:pass :pe, :rounds 0, :fuel-exhausted? false}
+       {:pass :emit, :backend :clojure}],
+      :transfer-receipts nil,
+      :loop-layouts [[:long]],
+      :total-ns 3162083}}
+    {:baseline
+     {:compile {:ns 1896533, :bytes 1781752},
+      :validation {:ns 167928, :bytes 275000},
+      :installation {:ns 17479, :bytes 4744},
+      :usage {:work 90, :bytes 575, :emissions 1},
+      :pass-log
+      [{:pass :baseline-admission}
+       {:pass :lower}
+       {:pass :emit, :backend :clojure, :typed-loops? false}],
+      :transfer-receipts
+      [{:version :ordered-transfer-v1,
+        :arity 3,
+        :destinations [v14034 v14035 v14036],
+        :argument-ids
+        ["dbedb144c029dbf310fc86f09eac60f2f43b3608a5fa982bcc0d6df14feb1840"
+         "0c5bed3c49af028cec956119051b3f3fab37e5f12ab86ef031d575d1e60089d4"
+         "559a8ab695789ebb80eaac23125ffd25f6c0a71b3a2965e6f6a940c52855f3e0"],
+        :plan-id
+        "c539e53536fba6095815b8424575006303f5ac64541e11769976130a4c894750",
+        :producer :klara-baseline,
+        :producer-code-id
+        "c36e86c477235203453381c8ff6199acd1c5e606dd4323ff4a93c99ef61747de"}],
+      :loop-layouts [[:long :double]],
+      :total-ns 2081940},
+     :optimizing
+     {:compile {:ns 2371272, :bytes 3368720},
+      :validation {:ns 704722, :bytes 1925256},
+      :installation {:ns 19069, :bytes 4648},
+      :usage {},
+      :pass-log
+      [{:pass :speculate, :sites 1}
+       {:pass :inline, :changes 0}
+       {:pass :lower, :hof-rewrites 0, :classes {}}
+       {:pass :pe, :rounds 1, :fuel-exhausted? false}
+       {:pass :escape, :allocations-removed 0}
+       {:pass :pe, :rounds 0, :fuel-exhausted? false}
+       {:pass :emit, :backend :clojure}],
+      :transfer-receipts nil,
+      :loop-layouts [[:long]],
+      :total-ns 3095063}}]}
+  {:workload :recurrence,
+   :source-id
+   "2c0b816c789e2279d70ff3f6287aea6752ec1994a084390208967b685b426789",
+   :attempts
+   [{:baseline
+     {:compile {:ns 1989603, :bytes 1749672},
+      :validation {:ns 160544, :bytes 269368},
+      :installation {:ns 19659, :bytes 4744},
+      :usage {:work 93, :bytes 585, :emissions 1},
+      :pass-log
+      [{:pass :baseline-admission}
+       {:pass :lower}
+       {:pass :emit, :backend :clojure, :typed-loops? false}],
+      :transfer-receipts
+      [{:version :ordered-transfer-v1,
+        :arity 3,
+        :destinations [v14090 v14091 v14092],
+        :argument-ids
+        ["9a617d699d32f91c89eefab4dc52f2e6eb8db524c520617c71a89aa0255001c0"
+         "a680e5cb35348d05d52133bcbb3a595a64484be29c57de92b68991f6520c9331"
+         "16a8a35fdc0d01d648119231a81721229143939460eda280ffbc88a2c2098f6d"],
+        :plan-id
+        "19329127d707d05b6cd42ffd53ea5f0463f055a8ec44672d01a9bbe6af2969b4",
+        :producer :klara-baseline,
+        :producer-code-id
+        "c36e86c477235203453381c8ff6199acd1c5e606dd4323ff4a93c99ef61747de"}],
+      :loop-layouts [[]],
+      :total-ns 2169806},
+     :optimizing
+     {:compile {:ns 2290254, :bytes 3020584},
+      :validation {:ns 711087, :bytes 1961648},
+      :installation {:ns 21714, :bytes 4648},
+      :usage {},
+      :pass-log
+      [{:pass :speculate, :sites 1}
+       {:pass :inline, :changes 0}
+       {:pass :lower, :hof-rewrites 0, :classes {}}
+       {:pass :pe, :rounds 1, :fuel-exhausted? false}
+       {:pass :escape, :allocations-removed 0}
+       {:pass :pe, :rounds 0, :fuel-exhausted? false}
+       {:pass :emit, :backend :clojure}],
+      :transfer-receipts nil,
+      :loop-layouts [[]],
+      :total-ns 3023055}}
+    {:baseline
+     {:compile {:ns 1903635, :bytes 1749960},
+      :validation {:ns 186818, :bytes 269368},
+      :installation {:ns 18337, :bytes 4744},
+      :usage {:work 93, :bytes 585, :emissions 1},
+      :pass-log
+      [{:pass :baseline-admission}
+       {:pass :lower}
+       {:pass :emit, :backend :clojure, :typed-loops? false}],
+      :transfer-receipts
+      [{:version :ordered-transfer-v1,
+        :arity 3,
+        :destinations [v14133 v14134 v14135],
+        :argument-ids
+        ["4f25706c833c58779de35fa353121f2c4ae6b0fc128aba6cfe3d3427eecfb940"
+         "0d5fa4d8998017e77235be3a15b73bd09711062b40ac604a459716f713b214c5"
+         "62b48371885491584c3da05c2cb51c79e7e86acd26c7696bd42c6c44b0a7912c"],
+        :plan-id
+        "093b8bd27b96cc6285d012285bbec273adc599815f9cd1a165814819c0a911a4",
+        :producer :klara-baseline,
+        :producer-code-id
+        "c36e86c477235203453381c8ff6199acd1c5e606dd4323ff4a93c99ef61747de"}],
+      :loop-layouts [[]],
+      :total-ns 2108790},
+     :optimizing
+     {:compile {:ns 2290623, :bytes 3020536},
+      :validation {:ns 764370, :bytes 1961648},
+      :installation {:ns 22398, :bytes 4648},
+      :usage {},
+      :pass-log
+      [{:pass :speculate, :sites 1}
+       {:pass :inline, :changes 0}
+       {:pass :lower, :hof-rewrites 0, :classes {}}
+       {:pass :pe, :rounds 1, :fuel-exhausted? false}
+       {:pass :escape, :allocations-removed 0}
+       {:pass :pe, :rounds 0, :fuel-exhausted? false}
+       {:pass :emit, :backend :clojure}],
+      :transfer-receipts nil,
+      :loop-layouts [[]],
+      :total-ns 3077391}}
+    {:baseline
+     {:compile {:ns 1995826, :bytes 1749520},
+      :validation {:ns 144849, :bytes 269368},
+      :installation {:ns 25910, :bytes 4744},
+      :usage {:work 93, :bytes 585, :emissions 1},
+      :pass-log
+      [{:pass :baseline-admission}
+       {:pass :lower}
+       {:pass :emit, :backend :clojure, :typed-loops? false}],
+      :transfer-receipts
+      [{:version :ordered-transfer-v1,
+        :arity 3,
+        :destinations [v14176 v14177 v14178],
+        :argument-ids
+        ["fb6c0b0a94af11e22eb7c119082bd3d51e08a37caac379f2f97936487e4a786e"
+         "4fef6e0e218021b2372f33fd603fa06d7bf7789b2a0c5059580ef1d51a000672"
+         "be9b7f10a799c0665d161a3e616f594c5cd279bb1799d959ad72e320788617ac"],
+        :plan-id
+        "0e979248eff581db309e5f1674aa284f1454e9ccc8263fbd45447d7e157ee947",
+        :producer :klara-baseline,
+        :producer-code-id
+        "c36e86c477235203453381c8ff6199acd1c5e606dd4323ff4a93c99ef61747de"}],
+      :loop-layouts [[]],
+      :total-ns 2166585},
+     :optimizing
+     {:compile {:ns 2351804, :bytes 3020720},
+      :validation {:ns 717422, :bytes 1961648},
+      :installation {:ns 38350, :bytes 4648},
+      :usage {},
+      :pass-log
+      [{:pass :speculate, :sites 1}
+       {:pass :inline, :changes 0}
+       {:pass :lower, :hof-rewrites 0, :classes {}}
+       {:pass :pe, :rounds 1, :fuel-exhausted? false}
+       {:pass :escape, :allocations-removed 0}
+       {:pass :pe, :rounds 0, :fuel-exhausted? false}
+       {:pass :emit, :backend :clojure}],
+      :transfer-receipts nil,
+      :loop-layouts [[]],
+      :total-ns 3107576}}
+    {:baseline
+     {:compile {:ns 1907105, :bytes 1749752},
+      :validation {:ns 152423, :bytes 269368},
+      :installation {:ns 16763, :bytes 4744},
+      :usage {:work 93, :bytes 585, :emissions 1},
+      :pass-log
+      [{:pass :baseline-admission}
+       {:pass :lower}
+       {:pass :emit, :backend :clojure, :typed-loops? false}],
+      :transfer-receipts
+      [{:version :ordered-transfer-v1,
+        :arity 3,
+        :destinations [v14219 v14220 v14221],
+        :argument-ids
+        ["85a18f1659aa8117b88a48ab60efb186a7df3822726abd39f8882af393f35e5c"
+         "3f7fcd2311940e0047ddaac16a650d0d90fb53d5fe2cd5b5b89dea009805fa45"
+         "50d8e570d89f43bd85e4aad3532baf393958e4f2ae7c45bb17718e74a0f72e04"],
+        :plan-id
+        "4f55ec92a58da64524b27c1dde105840c351ffe666f7c74e45e90971dab9a949",
+        :producer :klara-baseline,
+        :producer-code-id
+        "c36e86c477235203453381c8ff6199acd1c5e606dd4323ff4a93c99ef61747de"}],
+      :loop-layouts [[]],
+      :total-ns 2076291},
+     :optimizing
+     {:compile {:ns 2134306, :bytes 3020592},
+      :validation {:ns 722996, :bytes 1961648},
+      :installation {:ns 17037, :bytes 4648},
+      :usage {},
+      :pass-log
+      [{:pass :speculate, :sites 1}
+       {:pass :inline, :changes 0}
+       {:pass :lower, :hof-rewrites 0, :classes {}}
+       {:pass :pe, :rounds 1, :fuel-exhausted? false}
+       {:pass :escape, :allocations-removed 0}
+       {:pass :pe, :rounds 0, :fuel-exhausted? false}
+       {:pass :emit, :backend :clojure}],
+      :transfer-receipts nil,
+      :loop-layouts [[]],
+      :total-ns 2874339}}
+    {:baseline
+     {:compile {:ns 1913464, :bytes 1749528},
+      :validation {:ns 146525, :bytes 269368},
+      :installation {:ns 16904, :bytes 4744},
+      :usage {:work 93, :bytes 585, :emissions 1},
+      :pass-log
+      [{:pass :baseline-admission}
+       {:pass :lower}
+       {:pass :emit, :backend :clojure, :typed-loops? false}],
+      :transfer-receipts
+      [{:version :ordered-transfer-v1,
+        :arity 3,
+        :destinations [v14262 v14263 v14264],
+        :argument-ids
+        ["79184aec2028d01ced36abfc8e16a73057db07e206e09ffb14cb96b41b14626d"
+         "3307f8af2244030063e48093fce8efc2cc0e2a8f232705b6c89cba55722ef1cf"
+         "7bedaf12fbd9eedfb7f3c5c649830bb660b105909e440e8722e8717ce96e1557"],
+        :plan-id
+        "c710658ec0fab806117ae6233922515287d965a255b2afc87e297e09af68e677",
+        :producer :klara-baseline,
+        :producer-code-id
+        "c36e86c477235203453381c8ff6199acd1c5e606dd4323ff4a93c99ef61747de"}],
+      :loop-layouts [[]],
+      :total-ns 2076893},
+     :optimizing
+     {:compile {:ns 2239923, :bytes 3021008},
+      :validation {:ns 723839, :bytes 1961648},
+      :installation {:ns 18680, :bytes 4648},
+      :usage {},
+      :pass-log
+      [{:pass :speculate, :sites 1}
+       {:pass :inline, :changes 0}
+       {:pass :lower, :hof-rewrites 0, :classes {}}
+       {:pass :pe, :rounds 1, :fuel-exhausted? false}
+       {:pass :escape, :allocations-removed 0}
+       {:pass :pe, :rounds 0, :fuel-exhausted? false}
+       {:pass :emit, :backend :clojure}],
+      :transfer-receipts nil,
+      :loop-layouts [[]],
+      :total-ns 2982442}}]}],
+ :budgets
+ [{:limits {:work 0},
+   :cost {:ns 490048, :bytes 15680},
+   :report
+   {:status :complete,
+    :definitions
+    [{:name bad, :status :declined, :reason :budget-exhausted}
+     {:status :skipped, :reason :budget-exhausted, :remaining 2}],
+    :usage {},
+    :files {:one {}}}}
+  {:limits {:emissions 0},
+   :cost {:ns 355530, :bytes 81344},
+   :report
+   {:status :complete,
+    :definitions
+    [{:name bad,
+      :status :declined,
+      :reason "outside baseline control subset"}
+     {:name good, :status :declined, :reason :budget-exhausted}
+     {:status :skipped, :reason :budget-exhausted, :remaining 1}],
+    :usage {:work 11, :bytes 206},
+    :files {:one {:work 11, :bytes 206}}}}
+  {:limits {:emissions 1},
+   :cost {:ns 1507520, :bytes 941752},
+   :report
+   {:status :complete,
+    :definitions
+    [{:name bad,
+      :status :declined,
+      :reason "outside baseline control subset"}
+     {:status :installed,
+      :code-id
+      "74a970b2f9d7f61f2ddaa9f246c1643ac93ff2dd0b4cc825ef6b4d87f643c0e9",
+      :name good}
+     {:name good, :status :deduplicated}],
+    :usage {:work 12, :bytes 206, :emissions 1},
+    :files
+    {:one {:work 11, :bytes 206, :emissions 1}, :two {:work 1}}}}
+  {:limits {},
+   :cost {:ns 1091952, :bytes 940072},
+   :report
+   {:status :complete,
+    :definitions
+    [{:name bad,
+      :status :declined,
+      :reason "outside baseline control subset"}
+     {:status :installed,
+      :code-id
+      "74a970b2f9d7f61f2ddaa9f246c1643ac93ff2dd0b4cc825ef6b4d87f643c0e9",
+      :name good}
+     {:name good, :status :deduplicated}],
+    :usage {:work 12, :bytes 206, :emissions 1},
+    :files
+    {:one {:work 11, :bytes 206, :emissions 1}, :two {:work 1}}}}],
+ :vendor "Oracle Corporation",
+ :experiment-ns 27469330350,
+ :clojure "1.12.4",
+ :jvm-arguments
+ ["-XX:ThreadPriorityPolicy=1"
+  "-XX:+UnlockExperimentalVMOptions"
+  "-XX:+EnableJVMCIProduct"
+  "-XX:+EnableJVMCI"
+  "-XX:-UnlockExperimentalVMOptions"
+  "-XX:-OmitStackTraceInFastThrow"
+  "-Xmx1g"
+  "-Dclojure.basis=.cpcache/1803097264.basis"],
+ :source-sha256
+ {"src/klara/compile/inline.clj"
+  "2c06694af339b84e6f501fc035ac17023d55dd5da0babbd74becd849966f8f8a",
+  "src/klara/compile/unbox.clj"
+  "36580c8fb6d74c2f27f0e62689cbc71c29195da9033f7f43a0a6aa7034ddecf6",
+  "src/klara/compile/speculate.clj"
+  "0c322d771e8da13d944c86e0b9af6b18cb8795f215608bcc1d8a48778be713c9",
+  "src/klara/compile/core.clj"
+  "8c59aa51f636c8e7a38b1d63cd07a4badd775ca23582155ef4deb64800cdd128",
+  "src/klara/compile/affine_erase.clj"
+  "6753d87aba8efec5821c80ae4e85761e3a26399838e3e2fb83de5b58a5cf079d",
+  "src/klara/fusion/kernel.clj"
+  "edc582a5b412a83e61b465c45a980f3811c770167627188da1ba3ad18e1c9453",
+  "src/klara/compile/pe.clj"
+  "4f91d077a3ab0e94f8d096e48523b9077b712c0e32c004e24f0ced09ca2b3c2d",
+  "src/klara/deploy.clj"
+  "88e3503486932d88ecdd900ba148637e645d18aa5d2605a9d65d343fb5c30c75",
+  "src/klara/compile/infer_affine.clj"
+  "a5631d2d71cfd5d74a3a8a15c27d146b8db3b957f019209e6bc3e948d61c5ce0",
+  "src/klara/compile/emit.clj"
+  "02800f48573946bf30c3c69f96a6efe6451b114ddaee6beddabf5c63d6573927",
+  "src/klara/world.clj"
+  "29ea09915982d5daa246251c87da3095f0014c0f7680ff017e618e36fd9e9286",
+  "src/klara/core.clj"
+  "3615a76ace4b7eeb556a014dc4d08045af8be4fb3b6d5cd47850e927e962d61f",
+  "src/klara/affine.clj"
+  "fe4c6984af77f93aefb9862401f23eec70a3aebd7c5cdbdae4106d98ce1f787b",
+  "src/klara/compile/budget.clj"
+  "a14c2c3a158f950915b6e12e39266ac68b9f07614b386932ca2f5655eade70f2",
+  "src/klara/repl.clj"
+  "13dd5b6feb07238fc1e976d027beb638ec6db9c8e753acfde3778b27c9a3a031",
+  "src/klara/load.clj"
+  "13360862c46395b41c048d5e19fc9d08dfad74e80046b4a1d3e3d685cd4e1968",
+  "src/klara/compile/escape.clj"
+  "6ea0f55f13b8fc4ce1d430a43864f8bae66b8481be921aa5e7d1f7658caaa4cf",
+  "experiments/baseline/investment.clj"
+  "100f9459f3c707f2414610ed90a68cfae3a836f19692e27753e0ddfcccdd0a7a",
+  "experiments/baseline/run.clj"
+  "a7f6699d247e83c296f6c14f4d4abd40a428d17574adfff3c419222e2361e297",
+  "src/klara/code.clj"
+  "9a4663239a849215d83cc21ce24390d6ba3f6c3b80a4951d758285fffe7f80e8",
+  "src/klara/compile/ir.clj"
+  "04da4006359a881b8f5c849632d64714cc0ee43c3717e13b81f70b2ff8557989",
+  "src/klara/defs.clj"
+  "fa2cef5153903f49de13676785c8d0075d87086f6bdd78fb66c61cfbd3d0c436",
+  "src/klara/compile/guest.clj"
+  "53c148b546e50de7511546435cb075129bf0e528fbc3cae3420e9d3848d72916",
+  "src/klara/expand.clj"
+  "c89a1c988eb4b134d49050302bee0361c984f8c4ca669047795cf22f6c6374fe",
+  "src/klara/compile/baseline.clj"
+  "5dc7ba061dcbf64fa26c9d481793bfbd42248a972afb91aaf35a8f6a0d03513c",
+  "src/klara/effect_class.clj"
+  "354e1100fe88a79195d8bb5958ce38053ed67657440c59e5e04a1918c87870fe",
+  "experiments/interpreter/activation.clj"
+  "25676fd2f11da577f18e779ff64e32724785c4fc4502c79513a011087e8e9a40",
+  "experiments/interpreter/bridge.clj"
+  "d78cfa87857548c471d9913c7d8b9ca056048ad643c582a235ca5671bcd4d985",
+  "experiments/interpreter/mutable.clj"
+  "0c459949f966165cfcabf8269adb1ab4761eb8e20b711ec1aa307b1c74a3252e",
+  "src/klara/compile/loop.clj"
+  "70288d9e58db5ac74f631404da32cb209bb29cba9fc71d56bf67a49d90ed5b47",
+  "src/klara/nrepl.clj"
+  "087b57b1b3d925efe37d72c14f0d9e515591b88dc885e29f67dfad359405b8b1",
+  "src/klara/compile/hof.clj"
+  "07188ab272fe59cae69d8f0a495f191a743835d13b1c28c28a7cbb341ec9af96",
+  "src/klara/compile/staged.clj"
+  "9ae66b1ed66e2d9307e0a188918312fce19fb0924fc973a488174d124d69fdf8",
+  "src/klara/syntax.clj"
+  "8963b902a00dd3f778ba0fbb5efd2ef15244c904070195fd4a47a48d5825db44",
+  "deps.edn"
+  "1f90365ec52312bdd07dcfb2ad33c13f990f7147fd6d948b0f88c8a950376fe1",
+  "src/klara/compile/runtime.clj"
+  "f4fcfcf98fc25874f6cb4ad120751b2d66ad4ca16fcc27bb3a51b5000cc16a74",
+  "src/klara/compile/scalar.clj"
+  "352012cdc752465d36452302da1d8cc60cd521fd79081f8f4915da209d273966",
+  "src/klara/stage.clj"
+  "021fef386accd9e9c64d4a66f072b715bcca7401afb2851a4720fb4e74a1c123",
+  "src/klara/compile/analysis.clj"
+  "8c29cd30f8b8814efd55094db8a4310a815c33584e1b8a6ee39dabaf34245ebc",
+  "src/klara/compile/updates.clj"
+  "446b74e76cb10a9f77e7eefebc2ae68401b3adf6bf7a3bd1f567e1873e0cc721",
+  "src/klara/fusion.clj"
+  "8e88dbe66640c4d60be5a1dafc07c86a17bef5b0633c08179256f56a1658a356",
+  "src/klara/authority.clj"
+  "70c91dac1f5beace4e6426913f27a8a4dca3a5517f70bc86516f50f4ac369a9d",
+  "src/klara/compile/strict_fold.clj"
+  "bd35e878609a1822e127d90f7b668465386b4c2cc56c36e0c16eb56ce3f4d28d",
+  "src/klara/eval.clj"
+  "f3426a67ec736d5e07c1e1e836a7d242ed6f5efdc1ebb16ab079afcf3d80ad65",
+  "src/klara/compile/prepare.clj"
+  "d1f6f5fe4b3cb62cd784712e526f1953db99f6e081d65dfdb437a0eb031d839f",
+  "src/klara/compile/requirements.clj"
+  "b551f12324b50024fbae1f448e3819736e2004d602ed8cdfde02674c22300969"},
+ :process 2,
+ :vm "Java HotSpot(TM) 64-Bit Server VM",
+ :java "25.0.1+8-LTS-jvmci-b01",
+ :measurement
+ {:warmup 200,
+  :samples 9,
+  :small-batch 100,
+  :large-batch 5,
+  :cache-scope :per-sample,
+  :order :rotating,
+  :entry-study {:warmup 2000, :samples 9, :batch 100}},
+ :workloads
+ [{:workload :branchy,
+   :source (fn [n] (let [y (+ n 1)] (if (< y 0) (- y) (* y y)))),
+   :definition {:ns 11397391, :bytes 5029584},
+   :preparation
+   {:clojure {:total-ns 786649},
+    :sci {:total-ns 5577415},
+    :t0 {:total-ns 11397391},
+    :nodes {:ns 1018736, :bytes 231976, :total-ns 1018736},
+    :activation {:ns 995425, :bytes 263128, :total-ns 995425},
+    :baseline
+    {:compile {:ns 8445665, :bytes 5884832},
+     :validation {:ns 724043, :bytes 329648},
+     :installation {:ns 141231, :bytes 5504},
+     :usage {:work 17, :bytes 328, :emissions 1},
+     :pass-log
+     [{:pass :baseline-admission}
+      {:pass :lower}
+      {:pass :emit, :backend :clojure, :typed-loops? false}],
+     :transfer-receipts [],
+     :loop-layouts [],
+     :total-ns 9310939},
+    :optimizing
+    {:compile {:ns 4244821, :bytes 938568},
+     :validation {:ns 300237, :bytes 224928},
+     :installation {:ns 22912, :bytes 4648},
+     :usage {},
+     :pass-log
+     [{:pass :speculate, :sites 0}
+      {:pass :inline, :changes 0}
+      {:pass :lower, :hof-rewrites 0, :classes {}}
+      {:pass :pe, :rounds 0, :fuel-exhausted? false}
+      {:pass :escape, :allocations-removed 0}
+      {:pass :pe, :rounds 0, :fuel-exhausted? false}
+      {:pass :emit, :backend :clojure}],
+     :transfer-receipts nil,
+     :loop-layouts [],
+     :total-ns 4567970}},
+   :rows
+   [{:n 1,
+     :expected-id
+     "8d4fbe0fd5aba137c92a9e36086c0aa4571d58f6b58e7329c801065022448bb8",
+     :first-calls
+     {:clojure {:ns 37385, :bytes 2088},
+      :sci {:ns 54929, :bytes 2136},
+      :t0 {:ns 295207, :bytes 8064},
+      :nodes {:ns 317892, :bytes 8440},
+      :activation {:ns 190999, :bytes 7104},
+      :baseline {:ns 1258104, :bytes 36728},
+      :optimizing {:ns 66075, :bytes 8320}},
+     :engines
+     {:clojure
+      {:median-ns 100.35,
+       :median-bytes 0.64,
+       :samples
+       [{:ns-per-call 189.32, :bytes-per-call 0.64}
+        {:ns-per-call 168.2, :bytes-per-call 0.64}
+        {:ns-per-call 131.44, :bytes-per-call 0.64}
+        {:ns-per-call 254.44, :bytes-per-call 0.64}
+        {:ns-per-call 76.24, :bytes-per-call 0.64}
+        {:ns-per-call 77.41, :bytes-per-call 0.64}
+        {:ns-per-call 100.35, :bytes-per-call 0.64}
+        {:ns-per-call 79.58, :bytes-per-call 0.64}
+        {:ns-per-call 81.69, :bytes-per-call 0.64}]},
+      :sci
+      {:median-ns 588.02,
+       :median-bytes 24.64,
+       :samples
+       [{:ns-per-call 764.33, :bytes-per-call 24.64}
+        {:ns-per-call 869.59, :bytes-per-call 24.64}
+        {:ns-per-call 497.96, :bytes-per-call 24.64}
+        {:ns-per-call 934.24, :bytes-per-call 24.64}
+        {:ns-per-call 560.75, :bytes-per-call 24.64}
+        {:ns-per-call 537.02, :bytes-per-call 24.64}
+        {:ns-per-call 588.02, :bytes-per-call 24.64}
+        {:ns-per-call 555.05, :bytes-per-call 24.64}
+        {:ns-per-call 605.94, :bytes-per-call 24.64}]},
+      :t0
+      {:median-ns 6612.8,
+       :median-bytes 3768.64,
+       :samples
+       [{:ns-per-call 8206.42, :bytes-per-call 3768.64}
+        {:ns-per-call 6612.8, :bytes-per-call 3768.64}
+        {:ns-per-call 6907.19, :bytes-per-call 3768.64}
+        {:ns-per-call 6331.74, :bytes-per-call 3768.64}
+        {:ns-per-call 7681.32, :bytes-per-call 3768.64}
+        {:ns-per-call 6434.86, :bytes-per-call 3768.64}
+        {:ns-per-call 5514.76, :bytes-per-call 3768.64}
+        {:ns-per-call 6414.02, :bytes-per-call 3768.64}
+        {:ns-per-call 7148.72, :bytes-per-call 3768.64}]},
+      :nodes
+      {:median-ns 8370.32,
+       :median-bytes 3985.12,
+       :samples
+       [{:ns-per-call 7622.27, :bytes-per-call 3985.12}
+        {:ns-per-call 9128.35, :bytes-per-call 3985.12}
+        {:ns-per-call 8425.23, :bytes-per-call 3985.12}
+        {:ns-per-call 8061.32, :bytes-per-call 3984.64}
+        {:ns-per-call 8741.98, :bytes-per-call 3985.12}
+        {:ns-per-call 8370.32, :bytes-per-call 3985.12}
+        {:ns-per-call 8074.51, :bytes-per-call 3985.12}
+        {:ns-per-call 7902.74, :bytes-per-call 3985.12}
+        {:ns-per-call 8952.14, :bytes-per-call 3985.12}]},
+      :activation
+      {:median-ns 7611.92,
+       :median-bytes 3201.12,
+       :samples
+       [{:ns-per-call 11947.08, :bytes-per-call 3201.12}
+        {:ns-per-call 8942.5, :bytes-per-call 3201.12}
+        {:ns-per-call 7564.46, :bytes-per-call 3200.64}
+        {:ns-per-call 7390.63, :bytes-per-call 3201.12}
+        {:ns-per-call 7074.16, :bytes-per-call 3201.12}
+        {:ns-per-call 7728.9, :bytes-per-call 3205.6}
+        {:ns-per-call 8984.31, :bytes-per-call 3201.12}
+        {:ns-per-call 7152.53, :bytes-per-call 3201.12}
+        {:ns-per-call 7611.92, :bytes-per-call 3201.12}]},
+      :baseline
+      {:median-ns 3841.92,
+       :median-bytes 2264.88,
+       :samples
+       [{:ns-per-call 4019.34, :bytes-per-call 2264.88}
+        {:ns-per-call 3714.97, :bytes-per-call 2264.64}
+        {:ns-per-call 3841.92, :bytes-per-call 2264.88}
+        {:ns-per-call 4044.42, :bytes-per-call 2264.88}
+        {:ns-per-call 6302.99, :bytes-per-call 2264.88}
+        {:ns-per-call 3008.19, :bytes-per-call 2264.88}
+        {:ns-per-call 3712.65, :bytes-per-call 2264.88}
+        {:ns-per-call 3854.33, :bytes-per-call 2264.88}
+        {:ns-per-call 3565.79, :bytes-per-call 2264.64}]},
+      :optimizing
+      {:median-ns 1684.81,
+       :median-bytes 424.64,
+       :samples
+       [{:ns-per-call 3282.56, :bytes-per-call 424.64}
+        {:ns-per-call 1912.47, :bytes-per-call 424.64}
+        {:ns-per-call 2035.48, :bytes-per-call 424.64}
+        {:ns-per-call 1673.87, :bytes-per-call 424.64}
+        {:ns-per-call 1684.81, :bytes-per-call 424.88}
+        {:ns-per-call 1177.32, :bytes-per-call 424.64}
+        {:ns-per-call 2014.55, :bytes-per-call 424.64}
+        {:ns-per-call 1455.51, :bytes-per-call 424.64}
+        {:ns-per-call 1188.94, :bytes-per-call 424.64}]}}}],
+   :entry-studies nil,
+   :cache-stats
+   {:baseline
+    {:hits 1, :misses 0, :fallbacks 0, :revalidations 1, :deopts 0},
+    :optimizing
+    {:hits 1, :misses 0, :fallbacks 0, :revalidations 1, :deopts 0}}}
+  {:workload :calls,
+   :source
+   (let
+    [f (fn [x] (+ x 1))]
+    (fn
+     [n]
+     (loop
+      [i 0 sum 0]
+      (if (< i n) (recur (inc i) (+ sum (f i))) sum)))),
+   :definition {:ns 3582286, :bytes 2475904},
+   :preparation
+   {:clojure {:total-ns 1310115},
+    :sci {:total-ns 2292085},
+    :t0 {:total-ns 3582286},
+    :nodes {:ns 363205, :bytes 23528, :total-ns 363205},
+    :activation {:ns 377561, :bytes 89352, :total-ns 377561},
+    :baseline
+    {:declined? true,
+     :total-ns 507044,
+     :unsupported
+     {:message
+      "compile: definition must be a current, closed function",
+      :klara/error :compile,
+      :reason "definition must be a current, closed function",
+      :op nil}},
+    :optimizing
+    {:declined? true,
+     :total-ns 170666,
+     :unsupported
+     {:message
+      "compile: definition must be a current, closed function",
+      :klara/error :compile,
+      :reason "definition must be a current, closed function",
+      :op nil}}},
+   :rows
+   [{:n 1000,
+     :expected-id
+     "0305b890ca5359d2f9afd78f3dabb758d36b103a5bf9b246f6bac23838c3769a",
+     :first-calls
+     {:clojure {:ns 96772, :bytes 88368},
+      :sci {:ns 772029, :bytes 91824},
+      :t0 {:ns 8668719, :bytes 5704128},
+      :nodes {:ns 3472089, :bytes 152120},
+      :activation {:ns 1611937, :bytes 103168}},
+     :engines
+     {:clojure
+      {:median-ns 717.0,
+       :median-bytes 36.8,
+       :samples
+       [{:ns-per-call 718.6, :bytes-per-call 36.8}
+        {:ns-per-call 596.8, :bytes-per-call 36.8}
+        {:ns-per-call 717.0, :bytes-per-call 36.8}
+        {:ns-per-call 800.8, :bytes-per-call 36.8}
+        {:ns-per-call 712.2, :bytes-per-call 36.8}
+        {:ns-per-call 858.6, :bytes-per-call 36.8}
+        {:ns-per-call 635.8, :bytes-per-call 36.8}
+        {:ns-per-call 684.2, :bytes-per-call 36.8}
+        {:ns-per-call 723.2, :bytes-per-call 36.8}]},
+      :sci
+      {:median-ns 25730.8,
+       :median-bytes 89692.8,
+       :samples
+       [{:ns-per-call 26061.2, :bytes-per-call 89692.8}
+        {:ns-per-call 24438.4, :bytes-per-call 89692.8}
+        {:ns-per-call 25730.8, :bytes-per-call 89692.8}
+        {:ns-per-call 26943.2, :bytes-per-call 89692.8}
+        {:ns-per-call 25381.2, :bytes-per-call 89692.8}
+        {:ns-per-call 29257.8, :bytes-per-call 89692.8}
+        {:ns-per-call 25239.0, :bytes-per-call 89692.8}
+        {:ns-per-call 26346.0, :bytes-per-call 89692.8}
+        {:ns-per-call 25251.8, :bytes-per-call 89692.8}]},
+      :t0
+      {:median-ns 1706555.0,
+       :median-bytes 5688204.8,
+       :samples
+       [{:ns-per-call 1706555.0, :bytes-per-call 5688204.8}
+        {:ns-per-call 1704777.0, :bytes-per-call 5688204.8}
+        {:ns-per-call 2083162.6, :bytes-per-call 5688204.8}
+        {:ns-per-call 1658649.4, :bytes-per-call 5688204.8}
+        {:ns-per-call 1652570.2, :bytes-per-call 5688204.8}
+        {:ns-per-call 1715430.4, :bytes-per-call 5688204.8}
+        {:ns-per-call 1707913.6, :bytes-per-call 5688204.8}
+        {:ns-per-call 1647230.2, :bytes-per-call 5688204.8}
+        {:ns-per-call 2117495.8, :bytes-per-call 5688204.8}]},
+      :nodes
+      {:median-ns 333715.6,
+       :median-bytes 149182.4,
+       :samples
+       [{:ns-per-call 333715.6, :bytes-per-call 149182.4}
+        {:ns-per-call 341562.0, :bytes-per-call 149182.4}
+        {:ns-per-call 340662.4, :bytes-per-call 149182.4}
+        {:ns-per-call 324870.4, :bytes-per-call 149172.8}
+        {:ns-per-call 332484.8, :bytes-per-call 149182.4}
+        {:ns-per-call 337979.0, :bytes-per-call 149182.4}
+        {:ns-per-call 357986.2, :bytes-per-call 149182.4}
+        {:ns-per-call 331805.6, :bytes-per-call 149182.4}
+        {:ns-per-call 316955.4, :bytes-per-call 149172.8}]},
+      :activation
+      {:median-ns 261159.4,
+       :median-bytes 100782.4,
+       :samples
+       [{:ns-per-call 268869.2, :bytes-per-call 100782.4}
+        {:ns-per-call 261159.4, :bytes-per-call 100782.4}
+        {:ns-per-call 255079.8, :bytes-per-call 100772.8}
+        {:ns-per-call 287372.4, :bytes-per-call 100782.4}
+        {:ns-per-call 277905.6, :bytes-per-call 100782.4}
+        {:ns-per-call 281511.8, :bytes-per-call 100782.4}
+        {:ns-per-call 259914.2, :bytes-per-call 100782.4}
+        {:ns-per-call 252971.4, :bytes-per-call 100772.8}
+        {:ns-per-call 260728.2, :bytes-per-call 100782.4}]}}}
+    {:n 10000,
+     :expected-id
+     "fce39f14949c10e7866946f0462a0f35dde0fe0b1cb4ef8e1e992610ef4eb812",
+     :first-calls
+     {:clojure {:ns 8422, :bytes 1688},
+      :sci {:ns 242899, :bytes 955344},
+      :t0 {:ns 16283998, :bytes 56881856},
+      :nodes {:ns 18250715, :bytes 1521304},
+      :activation {:ns 11613015, :bytes 1039688}},
+     :engines
+     {:clojure
+      {:median-ns 4564.2,
+       :median-bytes 36.8,
+       :samples
+       [{:ns-per-call 4564.2, :bytes-per-call 36.8}
+        {:ns-per-call 4564.8, :bytes-per-call 36.8}
+        {:ns-per-call 4968.8, :bytes-per-call 36.8}
+        {:ns-per-call 4573.0, :bytes-per-call 36.8}
+        {:ns-per-call 4294.0, :bytes-per-call 36.8}
+        {:ns-per-call 4402.4, :bytes-per-call 36.8}
+        {:ns-per-call 4401.0, :bytes-per-call 36.8}
+        {:ns-per-call 4719.8, :bytes-per-call 36.8}
+        {:ns-per-call 4405.4, :bytes-per-call 36.8}]},
+      :sci
+      {:median-ns 216368.6,
+       :median-bytes 953692.8,
+       :samples
+       [{:ns-per-call 200629.0, :bytes-per-call 953692.8}
+        {:ns-per-call 205089.8, :bytes-per-call 953692.8}
+        {:ns-per-call 216368.6, :bytes-per-call 953692.8}
+        {:ns-per-call 202773.2, :bytes-per-call 953692.8}
+        {:ns-per-call 217831.2, :bytes-per-call 953692.8}
+        {:ns-per-call 198591.8, :bytes-per-call 953692.8}
+        {:ns-per-call 222742.6, :bytes-per-call 953692.8}
+        {:ns-per-call 229196.6, :bytes-per-call 953692.8}
+        {:ns-per-call 223934.4, :bytes-per-call 953692.8}]},
+      :t0
+      {:median-ns 1.59260268E7,
+       :median-bytes 5.68802048E7,
+       :samples
+       [{:ns-per-call 1.59110368E7, :bytes-per-call 5.68802048E7}
+        {:ns-per-call 1.68686402E7, :bytes-per-call 5.68802048E7}
+        {:ns-per-call 1.74683672E7, :bytes-per-call 5.68802048E7}
+        {:ns-per-call 1.5953225E7, :bytes-per-call 5.68802048E7}
+        {:ns-per-call 1.59065314E7, :bytes-per-call 5.68802048E7}
+        {:ns-per-call 1.59260268E7, :bytes-per-call 5.68802048E7}
+        {:ns-per-call 1.64392108E7, :bytes-per-call 5.68802048E7}
+        {:ns-per-call 1.57414556E7, :bytes-per-call 5.68802048E7}
+        {:ns-per-call 1.58178484E7, :bytes-per-call 5.68802048E7}]},
+      :nodes
+      {:median-ns 3056487.8,
+       :median-bytes 1519614.4,
+       :samples
+       [{:ns-per-call 3055849.6, :bytes-per-call 1519614.4}
+        {:ns-per-call 3054768.4, :bytes-per-call 1519614.4}
+        {:ns-per-call 3135951.0, :bytes-per-call 1519614.4}
+        {:ns-per-call 3150918.2, :bytes-per-call 1519604.8}
+        {:ns-per-call 3090864.0, :bytes-per-call 1519614.4}
+        {:ns-per-call 3056487.8, :bytes-per-call 1519614.4}
+        {:ns-per-call 3056290.8, :bytes-per-call 1519614.4}
+        {:ns-per-call 3055011.8, :bytes-per-call 1519614.4}
+        {:ns-per-call 3089014.6, :bytes-per-call 1519604.8}]},
+      :activation
+      {:median-ns 2472225.0,
+       :median-bytes 1037998.4,
+       :samples
+       [{:ns-per-call 2440285.0, :bytes-per-call 1037998.4}
+        {:ns-per-call 2490951.2, :bytes-per-call 1037998.4}
+        {:ns-per-call 2670280.8, :bytes-per-call 1037988.8}
+        {:ns-per-call 2637052.8, :bytes-per-call 1037998.4}
+        {:ns-per-call 2448013.4, :bytes-per-call 1037998.4}
+        {:ns-per-call 2430113.2, :bytes-per-call 1037998.4}
+        {:ns-per-call 2442800.2, :bytes-per-call 1037998.4}
+        {:ns-per-call 2506033.4, :bytes-per-call 1037988.8}
+        {:ns-per-call 2472225.0, :bytes-per-call 1037998.4}]}}}],
+   :entry-studies nil,
+   :cache-stats {}}
+  {:workload :host-callback,
+   :source (fn [n] (reduce + 0 (map (fn [x] (* x x)) (range n)))),
+   :definition {:ns 2110546, :bytes 1016256},
+   :preparation
+   {:clojure {:total-ns 831763},
+    :sci {:total-ns 1082520},
+    :t0 {:total-ns 2110546},
+    :nodes
+    {:declined? true,
+     :total-ns 228645,
+     :unsupported
+     {:message "mutable CEK: unsupported", :decline :perform}},
+    :activation
+    {:declined? true,
+     :total-ns 72882,
+     :unsupported
+     {:message "mutable CEK: unsupported", :decline :perform}},
+    :baseline
+    {:declined? true,
+     :total-ns 214332,
+     :unsupported
+     {:message "compile: outside baseline control subset",
+      :klara/error :compile,
+      :reason "outside baseline control subset",
+      :op :perform}},
+    :optimizing
+    {:compile {:ns 4028319, :bytes 3590312},
+     :validation {:ns 356446, :bytes 366184},
+     :installation {:ns 39502, :bytes 4976},
+     :usage {},
+     :pass-log
+     [{:pass :speculate, :sites 0}
+      {:pass :inline, :changes 0}
+      {:pass :lower, :hof-rewrites 3, :classes {}}
+      {:pass :pe, :rounds 0, :fuel-exhausted? false}
+      {:pass :escape, :allocations-removed 0}
+      {:pass :pe, :rounds 0, :fuel-exhausted? false}
+      {:pass :emit, :backend :clojure}],
+     :transfer-receipts nil,
+     :loop-layouts [],
+     :total-ns 4424267}},
+   :rows
+   [{:n 1000,
+     :expected-id
+     "1fceca9466fb51915b5bfb7b1f57e5a19beb1163c221619df0b4e9184cc82a6f",
+     :first-calls
+     {:clojure {:ns 78639, :bytes 83472},
+      :sci {:ns 118615, :bytes 107584},
+      :t0 {:ns 2427692, :bytes 2293776},
+      :optimizing {:ns 588582, :bytes 97272}},
+     :engines
+     {:clojure
+      {:median-ns 17038.2,
+       :median-bytes 81820.8,
+       :samples
+       [{:ns-per-call 17826.8, :bytes-per-call 81820.8}
+        {:ns-per-call 17038.2, :bytes-per-call 81820.8}
+        {:ns-per-call 17157.0, :bytes-per-call 81820.8}
+        {:ns-per-call 16559.2, :bytes-per-call 81820.8}
+        {:ns-per-call 16734.2, :bytes-per-call 81820.8}
+        {:ns-per-call 16910.2, :bytes-per-call 81820.8}
+        {:ns-per-call 16564.4, :bytes-per-call 81820.8}
+        {:ns-per-call 17736.2, :bytes-per-call 81820.8}
+        {:ns-per-call 17322.8, :bytes-per-call 81820.8}]},
+      :sci
+      {:median-ns 21535.4,
+       :median-bytes 105932.8,
+       :samples
+       [{:ns-per-call 22898.2, :bytes-per-call 105932.8}
+        {:ns-per-call 20584.2, :bytes-per-call 105932.8}
+        {:ns-per-call 20412.8, :bytes-per-call 105932.8}
+        {:ns-per-call 20410.2, :bytes-per-call 105932.8}
+        {:ns-per-call 25736.2, :bytes-per-call 105932.8}
+        {:ns-per-call 20706.8, :bytes-per-call 105932.8}
+        {:ns-per-call 22436.2, :bytes-per-call 105932.8}
+        {:ns-per-call 21535.4, :bytes-per-call 105932.8}
+        {:ns-per-call 25911.2, :bytes-per-call 105932.8}]},
+      :t0
+      {:median-ns 551674.0,
+       :median-bytes 2290644.8,
+       :samples
+       [{:ns-per-call 569494.8, :bytes-per-call 2290644.8}
+        {:ns-per-call 554226.0, :bytes-per-call 2290644.8}
+        {:ns-per-call 525905.0, :bytes-per-call 2290644.8}
+        {:ns-per-call 1916493.2, :bytes-per-call 2290644.8}
+        {:ns-per-call 516508.4, :bytes-per-call 2290644.8}
+        {:ns-per-call 559849.0, :bytes-per-call 2290644.8}
+        {:ns-per-call 546660.6, :bytes-per-call 2290644.8}
+        {:ns-per-call 546378.8, :bytes-per-call 2290644.8}
+        {:ns-per-call 551674.0, :bytes-per-call 2290644.8}]},
+      :optimizing
+      {:median-ns 17269.2,
+       :median-bytes 83937.6,
+       :samples
+       [{:ns-per-call 17112.0, :bytes-per-call 83937.6}
+        {:ns-per-call 16514.8, :bytes-per-call 83932.8}
+        {:ns-per-call 17023.8, :bytes-per-call 83937.6}
+        {:ns-per-call 21124.6, :bytes-per-call 83937.6}
+        {:ns-per-call 17438.8, :bytes-per-call 83937.6}
+        {:ns-per-call 16949.6, :bytes-per-call 83932.8}
+        {:ns-per-call 18696.2, :bytes-per-call 83937.6}
+        {:ns-per-call 17269.2, :bytes-per-call 83937.6}
+        {:ns-per-call 17516.6, :bytes-per-call 83937.6}]}}}
+    {:n 10000,
+     :expected-id
+     "566b83ccfe147b0940863de04cc478f5dabd5b4ab9b9b31a7886b88ecd1319cc",
+     :first-calls
+     {:clojure {:ns 163662, :bytes 848400},
+      :sci {:ns 192645, :bytes 1088512},
+      :t0 {:ns 5542584, :bytes 22857224},
+      :optimizing {:ns 204925, :bytes 852480}},
+     :engines
+     {:clojure
+      {:median-ns 118297.6,
+       :median-bytes 846748.8,
+       :samples
+       [{:ns-per-call 111053.2, :bytes-per-call 846748.8}
+        {:ns-per-call 118297.6, :bytes-per-call 846748.8}
+        {:ns-per-call 116111.8, :bytes-per-call 846748.8}
+        {:ns-per-call 144343.6, :bytes-per-call 846748.8}
+        {:ns-per-call 114294.4, :bytes-per-call 846748.8}
+        {:ns-per-call 115587.6, :bytes-per-call 846748.8}
+        {:ns-per-call 119434.8, :bytes-per-call 846748.8}
+        {:ns-per-call 121721.4, :bytes-per-call 846748.8}
+        {:ns-per-call 118814.4, :bytes-per-call 846748.8}]},
+      :sci
+      {:median-ns 177460.6,
+       :median-bytes 1086860.8,
+       :samples
+       [{:ns-per-call 175095.8, :bytes-per-call 1086860.8}
+        {:ns-per-call 177460.6, :bytes-per-call 1086860.8}
+        {:ns-per-call 176160.8, :bytes-per-call 1086860.8}
+        {:ns-per-call 181883.4, :bytes-per-call 1086860.8}
+        {:ns-per-call 176277.0, :bytes-per-call 1086860.8}
+        {:ns-per-call 176558.6, :bytes-per-call 1086860.8}
+        {:ns-per-call 187888.8, :bytes-per-call 1086860.8}
+        {:ns-per-call 179675.6, :bytes-per-call 1086860.8}
+        {:ns-per-call 188404.8, :bytes-per-call 1086860.8}]},
+      :t0
+      {:median-ns 5637978.8,
+       :median-bytes 2.28555728E7,
+       :samples
+       [{:ns-per-call 5184679.4, :bytes-per-call 2.28555728E7}
+        {:ns-per-call 5388947.2, :bytes-per-call 2.28555728E7}
+        {:ns-per-call 5949303.0, :bytes-per-call 2.28555728E7}
+        {:ns-per-call 6019195.2, :bytes-per-call 2.28555728E7}
+        {:ns-per-call 5432463.0, :bytes-per-call 2.28555728E7}
+        {:ns-per-call 5663721.8, :bytes-per-call 2.28555728E7}
+        {:ns-per-call 5686462.6, :bytes-per-call 2.28555728E7}
+        {:ns-per-call 5354058.8, :bytes-per-call 2.28555728E7}
+        {:ns-per-call 5637978.8, :bytes-per-call 2.28555728E7}]},
+      :optimizing
+      {:median-ns 124839.8,
+       :median-bytes 848865.6,
+       :samples
+       [{:ns-per-call 120029.0, :bytes-per-call 848865.6}
+        {:ns-per-call 122997.6, :bytes-per-call 848860.8}
+        {:ns-per-call 129584.6, :bytes-per-call 848865.6}
+        {:ns-per-call 162076.8, :bytes-per-call 848865.6}
+        {:ns-per-call 122789.8, :bytes-per-call 848865.6}
+        {:ns-per-call 185642.2, :bytes-per-call 848860.8}
+        {:ns-per-call 128943.8, :bytes-per-call 848865.6}
+        {:ns-per-call 124440.8, :bytes-per-call 848865.6}
+        {:ns-per-call 124839.8, :bytes-per-call 848865.6}]}}}],
+   :entry-studies nil,
+   :cache-stats
+   {:optimizing
+    {:hits 1, :misses 0, :fallbacks 0, :revalidations 1, :deopts 0}}}
+  {:workload :loop,
+   :source
+   (fn
+    [n]
+    (loop [i 0 sum 0] (if (< i n) (recur (inc i) (+ sum i)) sum))),
+   :definition {:ns 2038579, :bytes 1632560},
+   :preparation
+   {:clojure {:total-ns 589129},
+    :sci {:total-ns 988761},
+    :t0 {:total-ns 2038579},
+    :nodes {:ns 237166, :bytes 19520, :total-ns 237166},
+    :activation {:ns 233908, :bytes 67896, :total-ns 233908},
+    :baseline
+    {:compile {:ns 12935158, :bytes 10337224},
+     :validation {:ns 261661, :bytes 278888},
+     :installation {:ns 32324, :bytes 4744},
+     :usage {:work 128, :bytes 1313, :emissions 2},
+     :pass-log
+     [{:pass :baseline-admission}
+      {:pass :lower}
+      {:pass :emit, :backend :clojure, :typed-loops? false}],
+     :transfer-receipts
+     [{:version :ordered-transfer-v1,
+       :arity 2,
+       :destinations [v13247 v13248],
+       :argument-ids
+       ["1ea82d4b4f92ba6d47853ce5c8cebbc8462329ab58284039abaaf767e22378c0"
+        "6c0feb2919cca6d7f7e622b86e861a21cea83b80e8f153946b074c9cf0d2f299"],
+       :plan-id
+       "3b14d9a3cfa8f87daf131fb9b5adc02b68feab5dee44781564f3fcfd31af77e1",
+       :producer :klara-baseline,
+       :producer-code-id
+       "c36e86c477235203453381c8ff6199acd1c5e606dd4323ff4a93c99ef61747de"}],
+     :loop-layouts [[]],
+     :total-ns 13229143},
+    :optimizing
+    {:compile {:ns 3246606, :bytes 2687936},
+     :validation {:ns 1518189, :bytes 1652024},
+     :installation {:ns 26764, :bytes 4648},
+     :usage {},
+     :pass-log
+     [{:pass :speculate, :sites 1}
+      {:pass :inline, :changes 0}
+      {:pass :lower, :hof-rewrites 0, :classes {}}
+      {:pass :pe, :rounds 1, :fuel-exhausted? false}
+      {:pass :escape, :allocations-removed 0}
+      {:pass :pe, :rounds 0, :fuel-exhausted? false}
+      {:pass :emit, :backend :clojure}],
+     :transfer-receipts nil,
+     :loop-layouts [[]],
+     :total-ns 4791559}},
+   :rows
+   [{:n 0,
+     :expected-id
+     "5910edceded33405ec7edfed18e5db148fb47582441975802910f0c086e31882",
+     :first-calls
+     {:clojure {:ns 6030, :bytes 1664},
+      :sci {:ns 12914, :bytes 1800},
+      :t0 {:ns 150255, :bytes 8288},
+      :nodes {:ns 53477, :bytes 5520},
+      :activation {:ns 16200, :bytes 4800},
+      :baseline {:ns 175076, :bytes 14216},
+      :optimizing {:ns 182760, :bytes 9680}},
+     :engines
+     {:clojure
+      {:median-ns 57.29,
+       :median-bytes 0.64,
+       :samples
+       [{:ns-per-call 61.7, :bytes-per-call 0.64}
+        {:ns-per-call 54.65, :bytes-per-call 0.64}
+        {:ns-per-call 56.06, :bytes-per-call 0.64}
+        {:ns-per-call 72.29, :bytes-per-call 0.64}
+        {:ns-per-call 62.06, :bytes-per-call 0.64}
+        {:ns-per-call 54.04, :bytes-per-call 0.64}
+        {:ns-per-call 58.4, :bytes-per-call 0.64}
+        {:ns-per-call 55.94, :bytes-per-call 0.64}
+        {:ns-per-call 57.29, :bytes-per-call 0.64}]},
+      :sci
+      {:median-ns 283.49,
+       :median-bytes 136.64,
+       :samples
+       [{:ns-per-call 370.83, :bytes-per-call 136.64}
+        {:ns-per-call 264.89, :bytes-per-call 136.64}
+        {:ns-per-call 259.81, :bytes-per-call 136.64}
+        {:ns-per-call 264.48, :bytes-per-call 136.64}
+        {:ns-per-call 293.41, :bytes-per-call 136.64}
+        {:ns-per-call 283.49, :bytes-per-call 136.64}
+        {:ns-per-call 282.07, :bytes-per-call 136.64}
+        {:ns-per-call 287.94, :bytes-per-call 136.64}
+        {:ns-per-call 284.6, :bytes-per-call 136.64}]},
+      :t0
+      {:median-ns 2665.7,
+       :median-bytes 6624.64,
+       :samples
+       [{:ns-per-call 2440.43, :bytes-per-call 6624.64}
+        {:ns-per-call 2974.75, :bytes-per-call 6624.64}
+        {:ns-per-call 2884.79, :bytes-per-call 6624.64}
+        {:ns-per-call 2665.7, :bytes-per-call 6624.64}
+        {:ns-per-call 2714.45, :bytes-per-call 6624.64}
+        {:ns-per-call 2573.44, :bytes-per-call 6624.64}
+        {:ns-per-call 2653.2, :bytes-per-call 6624.64}
+        {:ns-per-call 2557.54, :bytes-per-call 6624.64}
+        {:ns-per-call 2716.61, :bytes-per-call 6624.64}]},
+      :nodes
+      {:median-ns 4802.79,
+       :median-bytes 3809.12,
+       :samples
+       [{:ns-per-call 7233.43, :bytes-per-call 3809.12}
+        {:ns-per-call 7357.08, :bytes-per-call 3809.12}
+        {:ns-per-call 8453.74, :bytes-per-call 3809.12}
+        {:ns-per-call 9773.52, :bytes-per-call 3808.64}
+        {:ns-per-call 4197.28, :bytes-per-call 3809.12}
+        {:ns-per-call 3611.96, :bytes-per-call 3809.12}
+        {:ns-per-call 4802.79, :bytes-per-call 3809.12}
+        {:ns-per-call 4534.73, :bytes-per-call 3809.12}
+        {:ns-per-call 4069.87, :bytes-per-call 3809.12}]},
+      :activation
+      {:median-ns 2739.85,
+       :median-bytes 3089.12,
+       :samples
+       [{:ns-per-call 2482.58, :bytes-per-call 3089.12}
+        {:ns-per-call 2300.32, :bytes-per-call 3089.12}
+        {:ns-per-call 3060.95, :bytes-per-call 3088.64}
+        {:ns-per-call 2739.85, :bytes-per-call 3089.12}
+        {:ns-per-call 2527.46, :bytes-per-call 3089.12}
+        {:ns-per-call 5115.53, :bytes-per-call 3089.12}
+        {:ns-per-call 2783.92, :bytes-per-call 3089.12}
+        {:ns-per-call 2737.77, :bytes-per-call 3089.12}
+        {:ns-per-call 2775.39, :bytes-per-call 3089.12}]},
+      :baseline
+      {:median-ns 1770.59,
+       :median-bytes 1984.88,
+       :samples
+       [{:ns-per-call 1633.2, :bytes-per-call 1984.88}
+        {:ns-per-call 1770.59, :bytes-per-call 1984.64}
+        {:ns-per-call 1774.65, :bytes-per-call 1984.88}
+        {:ns-per-call 1967.07, :bytes-per-call 1984.88}
+        {:ns-per-call 1719.79, :bytes-per-call 1984.88}
+        {:ns-per-call 1660.52, :bytes-per-call 1984.88}
+        {:ns-per-call 1638.7, :bytes-per-call 1984.88}
+        {:ns-per-call 2117.88, :bytes-per-call 1984.88}
+        {:ns-per-call 1802.83, :bytes-per-call 1984.64}]},
+      :optimizing
+      {:median-ns 951.77,
+       :median-bytes 448.64,
+       :samples
+       [{:ns-per-call 951.77, :bytes-per-call 448.64}
+        {:ns-per-call 917.7, :bytes-per-call 448.64}
+        {:ns-per-call 1089.14, :bytes-per-call 448.64}
+        {:ns-per-call 1122.37, :bytes-per-call 448.64}
+        {:ns-per-call 1040.19, :bytes-per-call 448.88}
+        {:ns-per-call 907.08, :bytes-per-call 448.64}
+        {:ns-per-call 943.69, :bytes-per-call 448.64}
+        {:ns-per-call 1014.03, :bytes-per-call 448.64}
+        {:ns-per-call 933.55, :bytes-per-call 448.64}]}}}
+    {:n 8,
+     :expected-id
+     "a838eb015e4b44830bff46cc5ab81812bb41ce4d641e6bb52c6211af81e24eb9",
+     :first-calls
+     {:clojure {:ns 4258, :bytes 1664},
+      :sci {:ns 103436, :bytes 1800},
+      :t0 {:ns 32873, :bytes 34336},
+      :nodes {:ns 38417, :bytes 5520},
+      :activation {:ns 14424, :bytes 4800},
+      :baseline {:ns 70753, :bytes 5616},
+      :optimizing {:ns 54181, :bytes 4056}},
+     :engines
+     {:clojure
+      {:median-ns 129.33,
+       :median-bytes 0.64,
+       :samples
+       [{:ns-per-call 134.95, :bytes-per-call 0.64}
+        {:ns-per-call 127.6, :bytes-per-call 0.64}
+        {:ns-per-call 126.69, :bytes-per-call 0.64}
+        {:ns-per-call 127.84, :bytes-per-call 0.64}
+        {:ns-per-call 132.09, :bytes-per-call 0.64}
+        {:ns-per-call 146.75, :bytes-per-call 0.64}
+        {:ns-per-call 129.33, :bytes-per-call 0.64}
+        {:ns-per-call 128.61, :bytes-per-call 0.64}
+        {:ns-per-call 134.51, :bytes-per-call 0.64}]},
+      :sci
+      {:median-ns 1229.72,
+       :median-bytes 136.64,
+       :samples
+       [{:ns-per-call 1328.65, :bytes-per-call 136.64}
+        {:ns-per-call 1211.69, :bytes-per-call 136.64}
+        {:ns-per-call 1166.77, :bytes-per-call 136.64}
+        {:ns-per-call 1213.45, :bytes-per-call 136.64}
+        {:ns-per-call 1276.59, :bytes-per-call 136.64}
+        {:ns-per-call 1366.45, :bytes-per-call 136.64}
+        {:ns-per-call 1208.16, :bytes-per-call 136.64}
+        {:ns-per-call 1258.45, :bytes-per-call 136.64}
+        {:ns-per-call 1229.72, :bytes-per-call 136.64}]},
+      :t0
+      {:median-ns 12295.19,
+       :median-bytes 32672.64,
+       :samples
+       [{:ns-per-call 12204.29, :bytes-per-call 32672.64}
+        {:ns-per-call 12414.23, :bytes-per-call 32672.64}
+        {:ns-per-call 12303.71, :bytes-per-call 32672.64}
+        {:ns-per-call 12301.8, :bytes-per-call 32672.64}
+        {:ns-per-call 11920.8, :bytes-per-call 32672.64}
+        {:ns-per-call 12198.72, :bytes-per-call 32672.64}
+        {:ns-per-call 11503.98, :bytes-per-call 32672.64}
+        {:ns-per-call 12320.13, :bytes-per-call 32672.64}
+        {:ns-per-call 12295.19, :bytes-per-call 32672.64}]},
+      :nodes
+      {:median-ns 15144.48,
+       :median-bytes 3809.12,
+       :samples
+       [{:ns-per-call 14795.01, :bytes-per-call 3809.12}
+        {:ns-per-call 15322.86, :bytes-per-call 3809.12}
+        {:ns-per-call 15144.48, :bytes-per-call 3809.12}
+        {:ns-per-call 15289.7, :bytes-per-call 3808.64}
+        {:ns-per-call 15096.83, :bytes-per-call 3809.12}
+        {:ns-per-call 15273.94, :bytes-per-call 3809.12}
+        {:ns-per-call 14454.42, :bytes-per-call 3809.12}
+        {:ns-per-call 15793.09, :bytes-per-call 3809.12}
+        {:ns-per-call 14861.33, :bytes-per-call 3809.12}]},
+      :activation
+      {:median-ns 4629.8,
+       :median-bytes 3089.12,
+       :samples
+       [{:ns-per-call 4586.15, :bytes-per-call 3089.12}
+        {:ns-per-call 4741.47, :bytes-per-call 3089.12}
+        {:ns-per-call 4825.07, :bytes-per-call 3088.64}
+        {:ns-per-call 4652.8, :bytes-per-call 3089.12}
+        {:ns-per-call 4629.8, :bytes-per-call 3089.12}
+        {:ns-per-call 4489.38, :bytes-per-call 3089.12}
+        {:ns-per-call 4670.0, :bytes-per-call 3089.12}
+        {:ns-per-call 4604.86, :bytes-per-call 3089.12}
+        {:ns-per-call 4547.76, :bytes-per-call 3089.12}]},
+      :baseline
+      {:median-ns 1981.26,
+       :median-bytes 1984.88,
+       :samples
+       [{:ns-per-call 1981.26, :bytes-per-call 1984.88}
+        {:ns-per-call 2001.19, :bytes-per-call 1984.64}
+        {:ns-per-call 1894.73, :bytes-per-call 1984.88}
+        {:ns-per-call 1995.08, :bytes-per-call 1984.88}
+        {:ns-per-call 2153.88, :bytes-per-call 1984.88}
+        {:ns-per-call 1916.46, :bytes-per-call 1984.88}
+        {:ns-per-call 2082.9, :bytes-per-call 1984.88}
+        {:ns-per-call 1915.34, :bytes-per-call 1984.88}
+        {:ns-per-call 1943.47, :bytes-per-call 1984.64}]},
+      :optimizing
+      {:median-ns 1309.29,
+       :median-bytes 448.64,
+       :samples
+       [{:ns-per-call 1344.88, :bytes-per-call 448.64}
+        {:ns-per-call 1309.29, :bytes-per-call 448.64}
+        {:ns-per-call 1307.85, :bytes-per-call 448.64}
+        {:ns-per-call 1565.86, :bytes-per-call 448.64}
+        {:ns-per-call 1319.03, :bytes-per-call 448.88}
+        {:ns-per-call 1280.23, :bytes-per-call 448.64}
+        {:ns-per-call 1344.6, :bytes-per-call 448.64}
+        {:ns-per-call 1257.54, :bytes-per-call 448.64}
+        {:ns-per-call 1261.29, :bytes-per-call 448.64}]}}}
+    {:n 64,
+     :expected-id
+     "4828c37092b942c3f60fedd46ee1368b7d3f793031e4b51f1dcf1a35cb4bae5b",
+     :first-calls
+     {:clojure {:ns 5269, :bytes 1688},
+      :sci {:ns 12712, :bytes 2952},
+      :t0 {:ns 82209, :bytes 217824},
+      :nodes {:ns 103573, :bytes 6672},
+      :activation {:ns 23163, :bytes 5952},
+      :baseline {:ns 16349, :bytes 6768},
+      :optimizing {:ns 8857, :bytes 5208}},
+     :engines
+     {:clojure
+      {:median-ns 799.71,
+       :median-bytes 24.64,
+       :samples
+       [{:ns-per-call 830.2, :bytes-per-call 24.64}
+        {:ns-per-call 795.44, :bytes-per-call 24.64}
+        {:ns-per-call 799.71, :bytes-per-call 24.64}
+        {:ns-per-call 801.77, :bytes-per-call 24.64}
+        {:ns-per-call 837.09, :bytes-per-call 24.64}
+        {:ns-per-call 1136.31, :bytes-per-call 25.36}
+        {:ns-per-call 40.44, :bytes-per-call 24.64}
+        {:ns-per-call 39.35, :bytes-per-call 24.64}
+        {:ns-per-call 36.67, :bytes-per-call 24.64}]},
+      :sci
+      {:median-ns 2359.27,
+       :median-bytes 1288.64,
+       :samples
+       [{:ns-per-call 6768.11, :bytes-per-call 1288.64}
+        {:ns-per-call 6220.44, :bytes-per-call 1288.64}
+        {:ns-per-call 6343.58, :bytes-per-call 1288.64}
+        {:ns-per-call 6542.63, :bytes-per-call 1288.64}
+        {:ns-per-call 2359.27, :bytes-per-call 1288.64}
+        {:ns-per-call 1877.19, :bytes-per-call 1288.64}
+        {:ns-per-call 1844.92, :bytes-per-call 1288.64}
+        {:ns-per-call 2100.32, :bytes-per-call 1288.64}
+        {:ns-per-call 1880.79, :bytes-per-call 1288.64}]},
+      :t0
+      {:median-ns 70987.73,
+       :median-bytes 216160.64,
+       :samples
+       [{:ns-per-call 72062.46, :bytes-per-call 216160.64}
+        {:ns-per-call 70987.73, :bytes-per-call 216160.64}
+        {:ns-per-call 70948.54, :bytes-per-call 216160.64}
+        {:ns-per-call 67225.0, :bytes-per-call 216160.64}
+        {:ns-per-call 67556.46, :bytes-per-call 216160.64}
+        {:ns-per-call 67154.81, :bytes-per-call 216160.64}
+        {:ns-per-call 80503.85, :bytes-per-call 216160.64}
+        {:ns-per-call 71716.25, :bytes-per-call 216160.64}
+        {:ns-per-call 72050.75, :bytes-per-call 216160.64}]},
+      :nodes
+      {:median-ns 19626.36,
+       :median-bytes 4961.12,
+       :samples
+       [{:ns-per-call 101205.46, :bytes-per-call 4961.12}
+        {:ns-per-call 102615.97, :bytes-per-call 4961.12}
+        {:ns-per-call 101241.95, :bytes-per-call 4961.12}
+        {:ns-per-call 99572.12, :bytes-per-call 4960.64}
+        {:ns-per-call 18177.58, :bytes-per-call 4961.12}
+        {:ns-per-call 17779.9, :bytes-per-call 4961.12}
+        {:ns-per-call 18926.01, :bytes-per-call 4961.12}
+        {:ns-per-call 19626.36, :bytes-per-call 4961.12}
+        {:ns-per-call 19198.78, :bytes-per-call 4961.12}]},
+      :activation
+      {:median-ns 14096.28,
+       :median-bytes 4241.12,
+       :samples
+       [{:ns-per-call 13900.81, :bytes-per-call 4241.12}
+        {:ns-per-call 13707.63, :bytes-per-call 4241.12}
+        {:ns-per-call 14096.28, :bytes-per-call 4240.64}
+        {:ns-per-call 13933.17, :bytes-per-call 4241.12}
+        {:ns-per-call 14085.19, :bytes-per-call 4241.12}
+        {:ns-per-call 14138.7, :bytes-per-call 4241.12}
+        {:ns-per-call 15387.7, :bytes-per-call 4241.12}
+        {:ns-per-call 15539.31, :bytes-per-call 4241.68}
+        {:ns-per-call 15415.46, :bytes-per-call 4241.12}]},
+      :baseline
+      {:median-ns 3263.48,
+       :median-bytes 3136.88,
+       :samples
+       [{:ns-per-call 3302.46, :bytes-per-call 3136.88}
+        {:ns-per-call 3246.93, :bytes-per-call 3136.64}
+        {:ns-per-call 3263.48, :bytes-per-call 3136.88}
+        {:ns-per-call 3175.43, :bytes-per-call 3136.88}
+        {:ns-per-call 3282.23, :bytes-per-call 3136.88}
+        {:ns-per-call 3380.71, :bytes-per-call 3136.88}
+        {:ns-per-call 3573.97, :bytes-per-call 3136.88}
+        {:ns-per-call 2035.41, :bytes-per-call 2008.88}
+        {:ns-per-call 1728.04, :bytes-per-call 2008.64}]},
+      :optimizing
+      {:median-ns 4577.67,
+       :median-bytes 1600.64,
+       :samples
+       [{:ns-per-call 4806.77, :bytes-per-call 1600.64}
+        {:ns-per-call 4616.14, :bytes-per-call 1600.64}
+        {:ns-per-call 4742.71, :bytes-per-call 1600.64}
+        {:ns-per-call 4577.67, :bytes-per-call 1600.64}
+        {:ns-per-call 4862.65, :bytes-per-call 1600.88}
+        {:ns-per-call 3890.94, :bytes-per-call 1600.64}
+        {:ns-per-call 3919.36, :bytes-per-call 1600.64}
+        {:ns-per-call 3823.95, :bytes-per-call 1600.64}
+        {:ns-per-call 3929.37, :bytes-per-call 1600.64}]}}}
+    {:n 1000,
+     :expected-id
+     "6e1d2afe89cb1cb41accb9bc0d63a3951031b31eda5b0b2b06456f22dd4924aa",
+     :first-calls
+     {:clojure {:ns 6167, :bytes 1688},
+      :sci {:ns 34573, :bytes 46368},
+      :t0 {:ns 1058010, :bytes 3308856},
+      :nodes {:ns 272812, :bytes 50088},
+      :activation {:ns 178305, :bytes 49368},
+      :baseline {:ns 33387, :bytes 5640},
+      :optimizing {:ns 46777, :bytes 48624}},
+     :engines
+     {:clojure
+      {:median-ns 490.0,
+       :median-bytes 36.8,
+       :samples
+       [{:ns-per-call 512.2, :bytes-per-call 36.8}
+        {:ns-per-call 423.8, :bytes-per-call 36.8}
+        {:ns-per-call 530.2, :bytes-per-call 36.8}
+        {:ns-per-call 502.2, :bytes-per-call 36.8}
+        {:ns-per-call 490.0, :bytes-per-call 36.8}
+        {:ns-per-call 479.2, :bytes-per-call 36.8}
+        {:ns-per-call 484.0, :bytes-per-call 36.8}
+        {:ns-per-call 516.8, :bytes-per-call 36.8}
+        {:ns-per-call 382.6, :bytes-per-call 36.8}]},
+      :sci
+      {:median-ns 13079.4,
+       :median-bytes 44716.8,
+       :samples
+       [{:ns-per-call 14826.8, :bytes-per-call 44716.8}
+        {:ns-per-call 12523.4, :bytes-per-call 44716.8}
+        {:ns-per-call 15323.6, :bytes-per-call 44716.8}
+        {:ns-per-call 13079.4, :bytes-per-call 44716.8}
+        {:ns-per-call 13163.0, :bytes-per-call 44716.8}
+        {:ns-per-call 12631.0, :bytes-per-call 44716.8}
+        {:ns-per-call 12487.0, :bytes-per-call 44716.8}
+        {:ns-per-call 14080.2, :bytes-per-call 44716.8}
+        {:ns-per-call 11236.8, :bytes-per-call 44716.8}]},
+      :t0
+      {:median-ns 980193.6,
+       :median-bytes 3307204.8,
+       :samples
+       [{:ns-per-call 1104980.4, :bytes-per-call 3307204.8}
+        {:ns-per-call 1453010.8, :bytes-per-call 3307204.8}
+        {:ns-per-call 1233697.4, :bytes-per-call 3307204.8}
+        {:ns-per-call 952812.8, :bytes-per-call 3307204.8}
+        {:ns-per-call 980193.6, :bytes-per-call 3307204.8}
+        {:ns-per-call 963804.6, :bytes-per-call 3307204.8}
+        {:ns-per-call 963908.6, :bytes-per-call 3307204.8}
+        {:ns-per-call 978428.6, :bytes-per-call 3307204.8}
+        {:ns-per-call 985047.2, :bytes-per-call 3307204.8}]},
+      :nodes
+      {:median-ns 221319.0,
+       :median-bytes 48398.4,
+       :samples
+       [{:ns-per-call 243242.0, :bytes-per-call 48398.4}
+        {:ns-per-call 241965.8, :bytes-per-call 48398.4}
+        {:ns-per-call 265479.8, :bytes-per-call 48398.4}
+        {:ns-per-call 221319.0, :bytes-per-call 48388.8}
+        {:ns-per-call 205913.4, :bytes-per-call 48398.4}
+        {:ns-per-call 216637.4, :bytes-per-call 48398.4}
+        {:ns-per-call 215589.6, :bytes-per-call 48398.4}
+        {:ns-per-call 866087.6, :bytes-per-call 48409.6}
+        {:ns-per-call 211896.4, :bytes-per-call 48398.4}]},
+      :activation
+      {:median-ns 170080.4,
+       :median-bytes 47678.4,
+       :samples
+       [{:ns-per-call 195135.2, :bytes-per-call 47678.4}
+        {:ns-per-call 188320.8, :bytes-per-call 47678.4}
+        {:ns-per-call 225494.6, :bytes-per-call 47668.8}
+        {:ns-per-call 170080.4, :bytes-per-call 47678.4}
+        {:ns-per-call 164793.4, :bytes-per-call 47678.4}
+        {:ns-per-call 174104.4, :bytes-per-call 47678.4}
+        {:ns-per-call 164809.6, :bytes-per-call 47678.4}
+        {:ns-per-call 155983.2, :bytes-per-call 47678.4}
+        {:ns-per-call 158927.8, :bytes-per-call 47678.4}]},
+      :baseline
+      {:median-ns 3470.0,
+       :median-bytes 2001.6,
+       :samples
+       [{:ns-per-call 3470.0, :bytes-per-call 2001.6}
+        {:ns-per-call 1952.8, :bytes-per-call 1996.8}
+        {:ns-per-call 8660.4, :bytes-per-call 2001.6}
+        {:ns-per-call 5528.4, :bytes-per-call 2001.6}
+        {:ns-per-call 3811.0, :bytes-per-call 2001.6}
+        {:ns-per-call 2950.6, :bytes-per-call 2001.6}
+        {:ns-per-call 2832.0, :bytes-per-call 2001.6}
+        {:ns-per-call 5042.4, :bytes-per-call 2001.6}
+        {:ns-per-call 1666.0, :bytes-per-call 1996.8}]},
+      :optimizing
+      {:median-ns 7804.2,
+       :median-bytes 45028.8,
+       :samples
+       [{:ns-per-call 8312.8, :bytes-per-call 45028.8}
+        {:ns-per-call 7804.2, :bytes-per-call 45028.8}
+        {:ns-per-call 9679.8, :bytes-per-call 45028.8}
+        {:ns-per-call 7133.2, :bytes-per-call 45028.8}
+        {:ns-per-call 8614.8, :bytes-per-call 45033.6}
+        {:ns-per-call 7587.6, :bytes-per-call 45028.8}
+        {:ns-per-call 7694.0, :bytes-per-call 45028.8}
+        {:ns-per-call 8225.6, :bytes-per-call 45028.8}
+        {:ns-per-call 6881.0, :bytes-per-call 45028.8}]}}}
+    {:n 10000,
+     :expected-id
+     "215e88f214db32ca40b2ba15d9bf538c84327a56e61ff938ab6d7a07dbed4309",
+     :first-calls
+     {:clojure {:ns 14180, :bytes 1688},
+      :sci {:ns 116784, :bytes 478368},
+      :t0 {:ns 9710335, :bytes 33044856},
+      :nodes {:ns 2217386, :bytes 484520},
+      :activation {:ns 1729142, :bytes 482584},
+      :baseline {:ns 32752, :bytes 5616},
+      :optimizing {:ns 73772, :bytes 480624}},
+     :engines
+     {:clojure
+      {:median-ns 3388.4,
+       :median-bytes 36.8,
+       :samples
+       [{:ns-per-call 3205.2, :bytes-per-call 36.8}
+        {:ns-per-call 3245.8, :bytes-per-call 36.8}
+        {:ns-per-call 3315.4, :bytes-per-call 36.8}
+        {:ns-per-call 3388.4, :bytes-per-call 36.8}
+        {:ns-per-call 3881.8, :bytes-per-call 36.8}
+        {:ns-per-call 3729.8, :bytes-per-call 36.8}
+        {:ns-per-call 3395.8, :bytes-per-call 36.8}
+        {:ns-per-call 4081.6, :bytes-per-call 36.8}
+        {:ns-per-call 2925.8, :bytes-per-call 36.8}]},
+      :sci
+      {:median-ns 127914.2,
+       :median-bytes 476716.8,
+       :samples
+       [{:ns-per-call 123536.6, :bytes-per-call 476716.8}
+        {:ns-per-call 118686.2, :bytes-per-call 476716.8}
+        {:ns-per-call 141044.0, :bytes-per-call 476716.8}
+        {:ns-per-call 126616.8, :bytes-per-call 476716.8}
+        {:ns-per-call 129186.2, :bytes-per-call 476716.8}
+        {:ns-per-call 132540.0, :bytes-per-call 476716.8}
+        {:ns-per-call 131234.8, :bytes-per-call 476716.8}
+        {:ns-per-call 127914.2, :bytes-per-call 476716.8}
+        {:ns-per-call 120940.2, :bytes-per-call 476716.8}]},
+      :t0
+      {:median-ns 9921093.0,
+       :median-bytes 3.30432048E7,
+       :samples
+       [{:ns-per-call 9877267.4, :bytes-per-call 3.30432048E7}
+        {:ns-per-call 9921093.0, :bytes-per-call 3.30432048E7}
+        {:ns-per-call 9838480.4, :bytes-per-call 3.30432048E7}
+        {:ns-per-call 1.01146074E7, :bytes-per-call 3.30432048E7}
+        {:ns-per-call 1.01723268E7, :bytes-per-call 3.30432048E7}
+        {:ns-per-call 1.00885718E7, :bytes-per-call 3.30432048E7}
+        {:ns-per-call 1.00301198E7, :bytes-per-call 3.30432048E7}
+        {:ns-per-call 9849493.6, :bytes-per-call 3.30432048E7}
+        {:ns-per-call 9771396.0, :bytes-per-call 3.30432048E7}]},
+      :nodes
+      {:median-ns 2136063.0,
+       :median-bytes 483142.4,
+       :samples
+       [{:ns-per-call 2136063.0, :bytes-per-call 483142.4}
+        {:ns-per-call 2114572.8, :bytes-per-call 483142.4}
+        {:ns-per-call 2173365.2, :bytes-per-call 483142.4}
+        {:ns-per-call 2186593.6, :bytes-per-call 483132.8}
+        {:ns-per-call 2223174.6, :bytes-per-call 483142.4}
+        {:ns-per-call 2106869.8, :bytes-per-call 483142.4}
+        {:ns-per-call 2123373.6, :bytes-per-call 483142.4}
+        {:ns-per-call 2159734.6, :bytes-per-call 483142.4}
+        {:ns-per-call 2124616.8, :bytes-per-call 483142.4}]},
+      :activation
+      {:median-ns 1627056.8,
+       :median-bytes 481102.4,
+       :samples
+       [{:ns-per-call 1623180.8, :bytes-per-call 481102.4}
+        {:ns-per-call 1612341.8, :bytes-per-call 481102.4}
+        {:ns-per-call 1617674.8, :bytes-per-call 481092.8}
+        {:ns-per-call 1656045.0, :bytes-per-call 481102.4}
+        {:ns-per-call 1691921.2, :bytes-per-call 481102.4}
+        {:ns-per-call 1604330.8, :bytes-per-call 481102.4}
+        {:ns-per-call 1627799.8, :bytes-per-call 481102.4}
+        {:ns-per-call 1627056.8, :bytes-per-call 481102.4}
+        {:ns-per-call 1932712.4, :bytes-per-call 481102.4}]},
+      :baseline
+      {:median-ns 11218.8,
+       :median-bytes 2001.6,
+       :samples
+       [{:ns-per-call 11218.8, :bytes-per-call 2001.6}
+        {:ns-per-call 6436.2, :bytes-per-call 1996.8}
+        {:ns-per-call 12998.2, :bytes-per-call 2001.6}
+        {:ns-per-call 12493.8, :bytes-per-call 2001.6}
+        {:ns-per-call 32190.8, :bytes-per-call 2012.8}
+        {:ns-per-call 23938.6, :bytes-per-call 2001.6}
+        {:ns-per-call 7903.4, :bytes-per-call 2001.6}
+        {:ns-per-call 8780.4, :bytes-per-call 2001.6}
+        {:ns-per-call 7577.4, :bytes-per-call 1996.8}]},
+      :optimizing
+      {:median-ns 109427.6,
+       :median-bytes 477028.8,
+       :samples
+       [{:ns-per-call 108997.0, :bytes-per-call 477028.8}
+        {:ns-per-call 109270.0, :bytes-per-call 477028.8}
+        {:ns-per-call 112947.6, :bytes-per-call 477028.8}
+        {:ns-per-call 109663.8, :bytes-per-call 477028.8}
+        {:ns-per-call 131769.0, :bytes-per-call 477076.8}
+        {:ns-per-call 111753.0, :bytes-per-call 477028.8}
+        {:ns-per-call 78560.6, :bytes-per-call 477028.8}
+        {:ns-per-call 109427.6, :bytes-per-call 477028.8}
+        {:ns-per-call 107528.6, :bytes-per-call 477028.8}]}}}],
+   :entry-studies
+   {64
+    {:session
+     {:median-ns 633.91,
+      :median-bytes 1984.64,
+      :samples
+      [{:ns-per-call 670.72, :bytes-per-call 1984.64}
+       {:ns-per-call 633.91, :bytes-per-call 1984.64}
+       {:ns-per-call 643.98, :bytes-per-call 1984.64}
+       {:ns-per-call 608.47, :bytes-per-call 1984.64}
+       {:ns-per-call 671.19, :bytes-per-call 1984.64}
+       {:ns-per-call 612.86, :bytes-per-call 1984.64}
+       {:ns-per-call 635.05, :bytes-per-call 1984.64}
+       {:ns-per-call 630.71, :bytes-per-call 1984.64}
+       {:ns-per-call 604.93, :bytes-per-call 1984.64}]},
+     :clojure
+     {:median-ns 28.13,
+      :median-bytes 24.64,
+      :samples
+      [{:ns-per-call 31.31, :bytes-per-call 24.64}
+       {:ns-per-call 28.17, :bytes-per-call 24.64}
+       {:ns-per-call 27.74, :bytes-per-call 24.64}
+       {:ns-per-call 27.58, :bytes-per-call 24.64}
+       {:ns-per-call 27.27, :bytes-per-call 24.64}
+       {:ns-per-call 27.97, :bytes-per-call 24.64}
+       {:ns-per-call 28.32, :bytes-per-call 24.64}
+       {:ns-per-call 28.73, :bytes-per-call 24.64}
+       {:ns-per-call 28.13, :bytes-per-call 24.64}]},
+     :sci
+     {:median-ns 848.92,
+      :median-bytes 1288.64,
+      :samples
+      [{:ns-per-call 892.0, :bytes-per-call 1288.64}
+       {:ns-per-call 848.17, :bytes-per-call 1288.64}
+       {:ns-per-call 826.4, :bytes-per-call 1288.64}
+       {:ns-per-call 861.77, :bytes-per-call 1288.64}
+       {:ns-per-call 848.92, :bytes-per-call 1288.64}
+       {:ns-per-call 842.37, :bytes-per-call 1288.64}
+       {:ns-per-call 902.58, :bytes-per-call 1288.64}
+       {:ns-per-call 9070.26, :bytes-per-call 1288.64}
+       {:ns-per-call 832.6, :bytes-per-call 1288.64}]},
+     :optimizing
+     {:median-ns 522.74,
+      :median-bytes 1600.64,
+      :samples
+      [{:ns-per-call 588.85, :bytes-per-call 1600.64}
+       {:ns-per-call 520.85, :bytes-per-call 1600.64}
+       {:ns-per-call 541.23, :bytes-per-call 1600.64}
+       {:ns-per-call 529.63, :bytes-per-call 1600.64}
+       {:ns-per-call 500.88, :bytes-per-call 1600.64}
+       {:ns-per-call 547.74, :bytes-per-call 1600.64}
+       {:ns-per-call 520.98, :bytes-per-call 1600.64}
+       {:ns-per-call 499.77, :bytes-per-call 1600.64}
+       {:ns-per-call 522.74, :bytes-per-call 1600.64}]},
+     :host-entry
+     {:median-ns 1400.24,
+      :median-bytes 5504.64,
+      :samples
+      [{:ns-per-call 1526.16, :bytes-per-call 5504.64}
+       {:ns-per-call 1400.24, :bytes-per-call 5504.64}
+       {:ns-per-call 1515.78, :bytes-per-call 5504.64}
+       {:ns-per-call 1360.56, :bytes-per-call 5504.64}
+       {:ns-per-call 1367.95, :bytes-per-call 5504.64}
+       {:ns-per-call 1344.74, :bytes-per-call 5504.64}
+       {:ns-per-call 1421.1, :bytes-per-call 5504.64}
+       {:ns-per-call 1386.19, :bytes-per-call 5504.64}
+       {:ns-per-call 1432.03, :bytes-per-call 5504.64}]},
+     :body
+     {:median-ns 78.67,
+      :median-bytes 96.64,
+      :samples
+      [{:ns-per-call 97.31, :bytes-per-call 96.64}
+       {:ns-per-call 80.11, :bytes-per-call 96.64}
+       {:ns-per-call 109.52, :bytes-per-call 96.64}
+       {:ns-per-call 75.33, :bytes-per-call 96.64}
+       {:ns-per-call 78.67, :bytes-per-call 96.64}
+       {:ns-per-call 75.05, :bytes-per-call 96.64}
+       {:ns-per-call 75.83, :bytes-per-call 96.64}
+       {:ns-per-call 74.8, :bytes-per-call 96.64}
+       {:ns-per-call 81.09, :bytes-per-call 96.64}]}},
+    10000
+    {:session
+     {:median-ns 3922.4,
+      :median-bytes 1984.64,
+      :samples
+      [{:ns-per-call 4388.93, :bytes-per-call 1984.64}
+       {:ns-per-call 3902.45, :bytes-per-call 1984.64}
+       {:ns-per-call 3987.18, :bytes-per-call 1984.64}
+       {:ns-per-call 3865.38, :bytes-per-call 1984.64}
+       {:ns-per-call 3924.27, :bytes-per-call 1984.64}
+       {:ns-per-call 3922.4, :bytes-per-call 1984.64}
+       {:ns-per-call 3893.22, :bytes-per-call 1984.64}
+       {:ns-per-call 3961.5, :bytes-per-call 1984.64}
+       {:ns-per-call 3869.73, :bytes-per-call 1984.64}]},
+     :clojure
+     {:median-ns 2850.95,
+      :median-bytes 24.64,
+      :samples
+      [{:ns-per-call 2850.95, :bytes-per-call 24.64}
+       {:ns-per-call 3080.3, :bytes-per-call 24.64}
+       {:ns-per-call 2846.61, :bytes-per-call 24.64}
+       {:ns-per-call 2850.36, :bytes-per-call 24.64}
+       {:ns-per-call 2864.1, :bytes-per-call 24.64}
+       {:ns-per-call 2965.76, :bytes-per-call 24.64}
+       {:ns-per-call 2850.62, :bytes-per-call 24.64}
+       {:ns-per-call 3022.66, :bytes-per-call 24.64}
+       {:ns-per-call 2844.87, :bytes-per-call 24.64}]},
+     :sci
+     {:median-ns 106129.5,
+      :median-bytes 476704.64,
+      :samples
+      [{:ns-per-call 110094.29, :bytes-per-call 476704.64}
+       {:ns-per-call 104353.54, :bytes-per-call 476704.64}
+       {:ns-per-call 106129.5, :bytes-per-call 476704.64}
+       {:ns-per-call 105255.34, :bytes-per-call 476704.64}
+       {:ns-per-call 110599.5, :bytes-per-call 476704.64}
+       {:ns-per-call 104691.02, :bytes-per-call 476704.64}
+       {:ns-per-call 105245.75, :bytes-per-call 476704.64}
+       {:ns-per-call 106458.21, :bytes-per-call 476704.64}
+       {:ns-per-call 114835.71, :bytes-per-call 476704.64}]},
+     :optimizing
+     {:median-ns 65026.02,
+      :median-bytes 477016.64,
+      :samples
+      [{:ns-per-call 68522.41, :bytes-per-call 477016.64}
+       {:ns-per-call 64301.35, :bytes-per-call 477016.64}
+       {:ns-per-call 65026.02, :bytes-per-call 477016.64}
+       {:ns-per-call 72281.15, :bytes-per-call 477016.64}
+       {:ns-per-call 61069.96, :bytes-per-call 477016.64}
+       {:ns-per-call 64480.78, :bytes-per-call 477016.64}
+       {:ns-per-call 65109.46, :bytes-per-call 477016.64}
+       {:ns-per-call 71524.35, :bytes-per-call 477016.64}
+       {:ns-per-call 64566.59, :bytes-per-call 477016.64}]},
+     :host-entry
+     {:median-ns 4716.73,
+      :median-bytes 5504.64,
+      :samples
+      [{:ns-per-call 5138.89, :bytes-per-call 5504.64}
+       {:ns-per-call 4627.99, :bytes-per-call 5504.64}
+       {:ns-per-call 4549.46, :bytes-per-call 5504.64}
+       {:ns-per-call 4867.24, :bytes-per-call 5504.64}
+       {:ns-per-call 4493.58, :bytes-per-call 5504.64}
+       {:ns-per-call 4580.38, :bytes-per-call 5504.64}
+       {:ns-per-call 4757.28, :bytes-per-call 5504.64}
+       {:ns-per-call 4716.73, :bytes-per-call 5504.64}
+       {:ns-per-call 4730.94, :bytes-per-call 5504.64}]},
+     :body
+     {:median-ns 3556.46,
+      :median-bytes 72.64,
+      :samples
+      [{:ns-per-call 3645.3, :bytes-per-call 72.64}
+       {:ns-per-call 3765.67, :bytes-per-call 72.64}
+       {:ns-per-call 3475.9, :bytes-per-call 72.64}
+       {:ns-per-call 3422.34, :bytes-per-call 72.64}
+       {:ns-per-call 3670.06, :bytes-per-call 72.64}
+       {:ns-per-call 3422.59, :bytes-per-call 72.64}
+       {:ns-per-call 3768.95, :bytes-per-call 72.64}
+       {:ns-per-call 3556.46, :bytes-per-call 72.64}
+       {:ns-per-call 3423.61, :bytes-per-call 72.64}]}}},
+   :cache-stats
+   {:baseline
+    {:hits 1, :misses 0, :fallbacks 0, :revalidations 1, :deopts 0},
+    :optimizing
+    {:hits 1, :misses 0, :fallbacks 0, :revalidations 1, :deopts 0}}}
+  {:workload :loop-carried-bound,
+   :source
+   (fn
+    [n]
+    (loop
+     [i 0 sum 0 bound n]
+     (if (< i bound) (recur (inc i) (+ sum i) bound) sum))),
+   :definition {:ns 1842496, :bytes 1969352},
+   :preparation
+   {:clojure {:total-ns 578777},
+    :sci {:total-ns 1033952},
+    :t0 {:total-ns 1842496},
+    :nodes {:ns 190096, :bytes 21008, :total-ns 190096},
+    :activation {:ns 206070, :bytes 75368, :total-ns 206070},
+    :baseline
+    {:compile {:ns 2605309, :bytes 1805760},
+     :validation {:ns 240961, :bytes 278888},
+     :installation {:ns 22598, :bytes 4744},
+     :usage {:work 90, :bytes 575, :emissions 1},
+     :pass-log
+     [{:pass :baseline-admission}
+      {:pass :lower}
+      {:pass :emit, :backend :clojure, :typed-loops? false}],
+     :transfer-receipts
+     [{:version :ordered-transfer-v1,
+       :arity 3,
+       :destinations [v13343 v13344 v13345],
+       :argument-ids
+       ["08662be286c8d2fcef8aea87063e5836fda1fd8e51d9d881fbb46d77cba7959f"
+        "e7bac0c89f97e423ed02ce09eb0d4c7179f8e562fd1a7f9f1b8ba94938ef8132"
+        "8bc46bdac0ef5a05ff3eac7d6929f9b9734504930e95c2f63659d3e1019889a6"],
+       :plan-id
+       "02fe7e7077eee7d7fd1136b48e60eb0022150195590a991d233df1970a33db74",
+       :producer :klara-baseline,
+       :producer-code-id
+       "c36e86c477235203453381c8ff6199acd1c5e606dd4323ff4a93c99ef61747de"}],
+     :loop-layouts [[:long :double]],
+     :total-ns 2868868},
+    :optimizing
+    {:compile {:ns 2951976, :bytes 3388216},
+     :validation {:ns 920012, :bytes 1933136},
+     :installation {:ns 20350, :bytes 4648},
+     :usage {},
+     :pass-log
+     [{:pass :speculate, :sites 1}
+      {:pass :inline, :changes 0}
+      {:pass :lower, :hof-rewrites 0, :classes {}}
+      {:pass :pe, :rounds 1, :fuel-exhausted? false}
+      {:pass :escape, :allocations-removed 0}
+      {:pass :pe, :rounds 0, :fuel-exhausted? false}
+      {:pass :emit, :backend :clojure}],
+     :transfer-receipts nil,
+     :loop-layouts [[:long]],
+     :total-ns 3892338}},
+   :rows
+   [{:n 64,
+     :expected-id
+     "4828c37092b942c3f60fedd46ee1368b7d3f793031e4b51f1dcf1a35cb4bae5b",
+     :first-calls
+     {:clojure {:ns 6408, :bytes 1688},
+      :sci {:ns 163441, :bytes 3040},
+      :t0 {:ns 92577, :bytes 226408},
+      :nodes {:ns 46861, :bytes 6784},
+      :activation {:ns 26231, :bytes 6088},
+      :baseline {:ns 226817, :bytes 15360},
+      :optimizing {:ns 50733, :bytes 7896}},
+     :engines
+     {:clojure
+      {:median-ns 798.7,
+       :median-bytes 24.64,
+       :samples
+       [{:ns-per-call 1041.42, :bytes-per-call 24.64}
+        {:ns-per-call 764.39, :bytes-per-call 24.64}
+        {:ns-per-call 793.59, :bytes-per-call 24.64}
+        {:ns-per-call 930.43, :bytes-per-call 24.64}
+        {:ns-per-call 769.09, :bytes-per-call 24.64}
+        {:ns-per-call 738.44, :bytes-per-call 24.64}
+        {:ns-per-call 846.6, :bytes-per-call 24.64}
+        {:ns-per-call 798.7, :bytes-per-call 24.64}
+        {:ns-per-call 1018.22, :bytes-per-call 25.36}]},
+      :sci
+      {:median-ns 1816.13,
+       :median-bytes 1264.64,
+       :samples
+       [{:ns-per-call 6770.7, :bytes-per-call 1264.64}
+        {:ns-per-call 6563.58, :bytes-per-call 1264.64}
+        {:ns-per-call 4750.81, :bytes-per-call 1264.64}
+        {:ns-per-call 2391.03, :bytes-per-call 1264.64}
+        {:ns-per-call 1696.43, :bytes-per-call 1264.64}
+        {:ns-per-call 1640.32, :bytes-per-call 1264.64}
+        {:ns-per-call 1816.13, :bytes-per-call 1264.64}
+        {:ns-per-call 1706.01, :bytes-per-call 1264.64}
+        {:ns-per-call 1655.66, :bytes-per-call 1264.64}]},
+      :t0
+      {:median-ns 65957.14,
+       :median-bytes 224744.64,
+       :samples
+       [{:ns-per-call 64467.32, :bytes-per-call 224744.64}
+        {:ns-per-call 65120.1, :bytes-per-call 224744.64}
+        {:ns-per-call 80792.34, :bytes-per-call 224744.64}
+        {:ns-per-call 84266.16, :bytes-per-call 224744.64}
+        {:ns-per-call 63178.21, :bytes-per-call 224744.64}
+        {:ns-per-call 66300.96, :bytes-per-call 224744.64}
+        {:ns-per-call 67201.28, :bytes-per-call 224744.64}
+        {:ns-per-call 65761.88, :bytes-per-call 224744.64}
+        {:ns-per-call 65957.14, :bytes-per-call 224744.64}]},
+      :nodes
+      {:median-ns 16345.62,
+       :median-bytes 5073.12,
+       :samples
+       [{:ns-per-call 16161.2, :bytes-per-call 5073.12}
+        {:ns-per-call 16159.02, :bytes-per-call 5073.12}
+        {:ns-per-call 21998.26, :bytes-per-call 5073.12}
+        {:ns-per-call 21288.42, :bytes-per-call 5072.64}
+        {:ns-per-call 16292.89, :bytes-per-call 5073.12}
+        {:ns-per-call 16292.76, :bytes-per-call 5073.12}
+        {:ns-per-call 16631.41, :bytes-per-call 5073.12}
+        {:ns-per-call 16789.68, :bytes-per-call 5073.12}
+        {:ns-per-call 16345.62, :bytes-per-call 5073.12}]},
+      :activation
+      {:median-ns 12347.35,
+       :median-bytes 4377.12,
+       :samples
+       [{:ns-per-call 12609.37, :bytes-per-call 4377.12}
+        {:ns-per-call 12347.35, :bytes-per-call 4377.12}
+        {:ns-per-call 12345.45, :bytes-per-call 4376.64}
+        {:ns-per-call 11659.83, :bytes-per-call 4377.12}
+        {:ns-per-call 12296.31, :bytes-per-call 4377.12}
+        {:ns-per-call 12201.61, :bytes-per-call 4377.12}
+        {:ns-per-call 12520.68, :bytes-per-call 4377.12}
+        {:ns-per-call 12578.71, :bytes-per-call 4377.12}
+        {:ns-per-call 12500.85, :bytes-per-call 4377.12}]},
+      :baseline
+      {:median-ns 2299.73,
+       :median-bytes 3128.88,
+       :samples
+       [{:ns-per-call 2635.87, :bytes-per-call 3128.88}
+        {:ns-per-call 2243.17, :bytes-per-call 3128.64}
+        {:ns-per-call 2252.59, :bytes-per-call 3128.88}
+        {:ns-per-call 3116.24, :bytes-per-call 3128.88}
+        {:ns-per-call 2693.7, :bytes-per-call 3128.88}
+        {:ns-per-call 2299.73, :bytes-per-call 3128.88}
+        {:ns-per-call 2238.49, :bytes-per-call 3128.88}
+        {:ns-per-call 2448.85, :bytes-per-call 3128.88}
+        {:ns-per-call 2205.2, :bytes-per-call 3128.64}]},
+      :optimizing
+      {:median-ns 727.84,
+       :median-bytes 448.64,
+       :samples
+       [{:ns-per-call 644.08, :bytes-per-call 448.64}
+        {:ns-per-call 715.19, :bytes-per-call 448.64}
+        {:ns-per-call 701.67, :bytes-per-call 448.64}
+        {:ns-per-call 815.91, :bytes-per-call 448.64}
+        {:ns-per-call 808.84, :bytes-per-call 448.88}
+        {:ns-per-call 683.31, :bytes-per-call 448.64}
+        {:ns-per-call 727.84, :bytes-per-call 448.64}
+        {:ns-per-call 791.0, :bytes-per-call 448.64}
+        {:ns-per-call 742.21, :bytes-per-call 448.64}]}}}
+    {:n 10000,
+     :expected-id
+     "215e88f214db32ca40b2ba15d9bf538c84327a56e61ff938ab6d7a07dbed4309",
+     :first-calls
+     {:clojure {:ns 141544, :bytes 238640},
+      :sci {:ns 238489, :bytes 478344},
+      :t0 {:ns 9854947, :bytes 34325248},
+      :nodes {:ns 2213138, :bytes 484840},
+      :activation {:ns 1647910, :bytes 482824},
+      :baseline {:ns 39801, :bytes 5632},
+      :optimizing {:ns 7469, :bytes 4056}},
+     :engines
+     {:clojure
+      {:median-ns 3181.8,
+       :median-bytes 36.8,
+       :samples
+       [{:ns-per-call 3161.2, :bytes-per-call 36.8}
+        {:ns-per-call 3180.6, :bytes-per-call 36.8}
+        {:ns-per-call 3191.6, :bytes-per-call 36.8}
+        {:ns-per-call 3236.0, :bytes-per-call 36.8}
+        {:ns-per-call 3232.2, :bytes-per-call 36.8}
+        {:ns-per-call 2955.0, :bytes-per-call 36.8}
+        {:ns-per-call 3181.8, :bytes-per-call 36.8}
+        {:ns-per-call 3228.0, :bytes-per-call 36.8}
+        {:ns-per-call 3150.0, :bytes-per-call 36.8}]},
+      :sci
+      {:median-ns 132418.4,
+       :median-bytes 476692.8,
+       :samples
+       [{:ns-per-call 111582.8, :bytes-per-call 476692.8}
+        {:ns-per-call 132418.4, :bytes-per-call 476692.8}
+        {:ns-per-call 112047.6, :bytes-per-call 476692.8}
+        {:ns-per-call 115253.4, :bytes-per-call 476692.8}
+        {:ns-per-call 138048.0, :bytes-per-call 476692.8}
+        {:ns-per-call 132799.2, :bytes-per-call 476692.8}
+        {:ns-per-call 138233.4, :bytes-per-call 476692.8}
+        {:ns-per-call 136605.6, :bytes-per-call 476692.8}
+        {:ns-per-call 130693.8, :bytes-per-call 476692.8}]},
+      :t0
+      {:median-ns 9918461.0,
+       :median-bytes 3.43235968E7,
+       :samples
+       [{:ns-per-call 1.00338746E7, :bytes-per-call 3.43235968E7}
+        {:ns-per-call 9966023.2, :bytes-per-call 3.43235968E7}
+        {:ns-per-call 9936216.0, :bytes-per-call 3.43235968E7}
+        {:ns-per-call 9949380.0, :bytes-per-call 3.43235968E7}
+        {:ns-per-call 9857195.6, :bytes-per-call 3.43235968E7}
+        {:ns-per-call 9758527.6, :bytes-per-call 3.43235968E7}
+        {:ns-per-call 9918461.0, :bytes-per-call 3.43235968E7}
+        {:ns-per-call 9896084.4, :bytes-per-call 3.43235968E7}
+        {:ns-per-call 9804573.0, :bytes-per-call 3.43235968E7}]},
+      :nodes
+      {:median-ns 2108339.8,
+       :median-bytes 482982.4,
+       :samples
+       [{:ns-per-call 2117139.0, :bytes-per-call 482982.4}
+        {:ns-per-call 2115393.0, :bytes-per-call 482982.4}
+        {:ns-per-call 2139854.8, :bytes-per-call 482982.4}
+        {:ns-per-call 2118741.8, :bytes-per-call 482972.8}
+        {:ns-per-call 2044017.0, :bytes-per-call 482982.4}
+        {:ns-per-call 2085178.4, :bytes-per-call 482982.4}
+        {:ns-per-call 2106289.0, :bytes-per-call 482982.4}
+        {:ns-per-call 2092013.6, :bytes-per-call 482982.4}
+        {:ns-per-call 2108339.8, :bytes-per-call 482982.4}]},
+      :activation
+      {:median-ns 1545240.2,
+       :median-bytes 481134.4,
+       :samples
+       [{:ns-per-call 1565834.6, :bytes-per-call 481134.4}
+        {:ns-per-call 1545240.2, :bytes-per-call 481134.4}
+        {:ns-per-call 1566755.6, :bytes-per-call 481124.8}
+        {:ns-per-call 1568261.4, :bytes-per-call 481134.4}
+        {:ns-per-call 1505409.4, :bytes-per-call 481134.4}
+        {:ns-per-call 1542460.6, :bytes-per-call 481134.4}
+        {:ns-per-call 1537580.8, :bytes-per-call 481134.4}
+        {:ns-per-call 1544994.0, :bytes-per-call 481134.4}
+        {:ns-per-call 1553453.8, :bytes-per-call 481134.4}]},
+      :baseline
+      {:median-ns 8545.2,
+       :median-bytes 2017.6,
+       :samples
+       [{:ns-per-call 8545.2, :bytes-per-call 2017.6}
+        {:ns-per-call 6715.4, :bytes-per-call 2012.8}
+        {:ns-per-call 8242.0, :bytes-per-call 2017.6}
+        {:ns-per-call 9812.0, :bytes-per-call 2017.6}
+        {:ns-per-call 12009.8, :bytes-per-call 2017.6}
+        {:ns-per-call 11207.4, :bytes-per-call 2017.6}
+        {:ns-per-call 8240.2, :bytes-per-call 2017.6}
+        {:ns-per-call 10471.6, :bytes-per-call 2017.6}
+        {:ns-per-call 6671.6, :bytes-per-call 2012.8}]},
+      :optimizing
+      {:median-ns 3601.4,
+       :median-bytes 460.8,
+       :samples
+       [{:ns-per-call 3528.2, :bytes-per-call 460.8}
+        {:ns-per-call 3415.0, :bytes-per-call 460.8}
+        {:ns-per-call 3568.6, :bytes-per-call 460.8}
+        {:ns-per-call 3920.8, :bytes-per-call 460.8}
+        {:ns-per-call 7350.6, :bytes-per-call 465.6}
+        {:ns-per-call 4149.6, :bytes-per-call 460.8}
+        {:ns-per-call 3601.4, :bytes-per-call 460.8}
+        {:ns-per-call 4071.0, :bytes-per-call 460.8}
+        {:ns-per-call 3508.0, :bytes-per-call 460.8}]}}}],
+   :entry-studies
+   {10000
+    {:session
+     {:median-ns 3855.97,
+      :median-bytes 2000.64,
+      :samples
+      [{:ns-per-call 4214.33, :bytes-per-call 2000.64}
+       {:ns-per-call 3854.81, :bytes-per-call 2000.64}
+       {:ns-per-call 3887.66, :bytes-per-call 2000.64}
+       {:ns-per-call 3853.24, :bytes-per-call 2000.64}
+       {:ns-per-call 3847.36, :bytes-per-call 2000.64}
+       {:ns-per-call 3855.97, :bytes-per-call 2000.64}
+       {:ns-per-call 3831.43, :bytes-per-call 2000.64}
+       {:ns-per-call 3900.22, :bytes-per-call 2000.64}
+       {:ns-per-call 3863.5, :bytes-per-call 2000.64}]},
+     :clojure
+     {:median-ns 2719.38,
+      :median-bytes 24.64,
+      :samples
+      [{:ns-per-call 2670.31, :bytes-per-call 24.64}
+       {:ns-per-call 3013.23, :bytes-per-call 24.64}
+       {:ns-per-call 2666.5, :bytes-per-call 24.64}
+       {:ns-per-call 2755.21, :bytes-per-call 24.64}
+       {:ns-per-call 2677.66, :bytes-per-call 24.64}
+       {:ns-per-call 2719.38, :bytes-per-call 24.64}
+       {:ns-per-call 2704.77, :bytes-per-call 24.64}
+       {:ns-per-call 2929.28, :bytes-per-call 24.64}
+       {:ns-per-call 2834.15, :bytes-per-call 24.64}]},
+     :sci
+     {:median-ns 106011.99,
+      :median-bytes 476680.64,
+      :samples
+      [{:ns-per-call 116348.75, :bytes-per-call 476680.64}
+       {:ns-per-call 105299.81, :bytes-per-call 476680.64}
+       {:ns-per-call 106011.99, :bytes-per-call 476680.64}
+       {:ns-per-call 106334.72, :bytes-per-call 476680.64}
+       {:ns-per-call 110161.92, :bytes-per-call 476680.64}
+       {:ns-per-call 104181.2, :bytes-per-call 476680.64}
+       {:ns-per-call 104899.23, :bytes-per-call 476680.64}
+       {:ns-per-call 104584.17, :bytes-per-call 476680.64}
+       {:ns-per-call 138700.45, :bytes-per-call 476680.64}]},
+     :optimizing
+     {:median-ns 2790.14,
+      :median-bytes 448.64,
+      :samples
+      [{:ns-per-call 3351.39, :bytes-per-call 448.64}
+       {:ns-per-call 2726.58, :bytes-per-call 448.64}
+       {:ns-per-call 2743.08, :bytes-per-call 448.64}
+       {:ns-per-call 2820.91, :bytes-per-call 448.64}
+       {:ns-per-call 2803.34, :bytes-per-call 448.64}
+       {:ns-per-call 2797.69, :bytes-per-call 448.64}
+       {:ns-per-call 2790.14, :bytes-per-call 448.64}
+       {:ns-per-call 2656.35, :bytes-per-call 448.64}
+       {:ns-per-call 2669.94, :bytes-per-call 448.64}]},
+     :host-entry
+     {:median-ns 4564.19,
+      :median-bytes 5504.64,
+      :samples
+      [{:ns-per-call 4914.44, :bytes-per-call 5504.64}
+       {:ns-per-call 4654.01, :bytes-per-call 5504.64}
+       {:ns-per-call 4655.25, :bytes-per-call 5504.64}
+       {:ns-per-call 4507.51, :bytes-per-call 5504.64}
+       {:ns-per-call 4602.36, :bytes-per-call 5504.64}
+       {:ns-per-call 4548.87, :bytes-per-call 5504.64}
+       {:ns-per-call 4564.19, :bytes-per-call 5504.64}
+       {:ns-per-call 4557.82, :bytes-per-call 5504.64}
+       {:ns-per-call 4489.49, :bytes-per-call 5504.64}]},
+     :body
+     {:median-ns 3438.19,
+      :median-bytes 88.64,
+      :samples
+      [{:ns-per-call 3438.19, :bytes-per-call 88.64}
+       {:ns-per-call 3530.44, :bytes-per-call 88.64}
+       {:ns-per-call 3522.77, :bytes-per-call 88.64}
+       {:ns-per-call 3450.37, :bytes-per-call 88.64}
+       {:ns-per-call 3293.4, :bytes-per-call 88.64}
+       {:ns-per-call 3410.81, :bytes-per-call 88.64}
+       {:ns-per-call 3408.17, :bytes-per-call 88.64}
+       {:ns-per-call 3347.12, :bytes-per-call 88.64}
+       {:ns-per-call 3457.39, :bytes-per-call 88.64}]}}},
+   :cache-stats
+   {:baseline
+    {:hits 1, :misses 0, :fallbacks 0, :revalidations 1, :deopts 0},
+    :optimizing
+    {:hits 1, :misses 0, :fallbacks 0, :revalidations 1, :deopts 0}}}
+  {:workload :persistent-update,
+   :source
+   (fn
+    [n]
+    (loop
+     [i 0 acc [0 0]]
+     (if
+      (< i n)
+      (recur
+       (inc i)
+       (assoc acc 0 (+ (nth acc 0) i) 1 (inc (nth acc 1))))
+      acc))),
+   :definition {:ns 2175031, :bytes 2714552},
+   :preparation
+   {:clojure {:total-ns 933073},
+    :sci {:total-ns 1269812},
+    :t0 {:total-ns 2175031},
+    :nodes {:ns 165898, :bytes 26944, :total-ns 165898},
+    :activation {:ns 391828, :bytes 116408, :total-ns 391828},
+    :baseline
+    {:compile {:ns 3231825, :bytes 3384808},
+     :validation {:ns 270294, :bytes 338440},
+     :installation {:ns 22788, :bytes 4880},
+     :usage {:work 147, :bytes 627, :emissions 1},
+     :pass-log
+     [{:pass :baseline-admission}
+      {:pass :lower}
+      {:pass :emit, :backend :clojure, :typed-loops? false}],
+     :transfer-receipts
+     [{:version :ordered-transfer-v1,
+       :arity 2,
+       :destinations [v13414 v13415],
+       :argument-ids
+       ["f5c1ca7432717e2a57518a6043dcc3ab04b30c3c631ddeb55812bc5f348a62c6"
+        "a36cb296e62a51f8c1381d1d39b70a8b36bab96986b4491ee9adf9d88277861d"],
+       :plan-id
+       "340ed919f390bba074a784fdfd80c5fa27ba37ba7983cec14f8d0ef2370c5a71",
+       :producer :klara-baseline,
+       :producer-code-id
+       "c36e86c477235203453381c8ff6199acd1c5e606dd4323ff4a93c99ef61747de"}],
+     :loop-layouts [[]],
+     :total-ns 3524907},
+    :optimizing
+    {:compile {:ns 2761317, :bytes 3758840},
+     :validation {:ns 1045363, :bytes 2507120},
+     :installation {:ns 20569, :bytes 4648},
+     :usage {},
+     :pass-log
+     [{:pass :speculate, :sites 1}
+      {:pass :inline, :changes 0}
+      {:pass :lower, :hof-rewrites 0, :classes {}}
+      {:pass :pe, :rounds 1, :fuel-exhausted? false}
+      {:pass :escape, :allocations-removed 0}
+      {:pass :pe, :rounds 0, :fuel-exhausted? false}
+      {:pass :emit, :backend :clojure}],
+     :transfer-receipts nil,
+     :loop-layouts [[]],
+     :total-ns 3827249}},
+   :rows
+   [{:n 1000,
+     :expected-id
+     "bca386321a4c797de77d514e9862c739080696b2a4cf01b40f5cbdce5b57f838",
+     :first-calls
+     {:clojure {:ns 263886, :bytes 326232},
+      :sci {:ns 1246175, :bytes 347320},
+      :t0 {:ns 4944234, :bytes 8434112},
+      :nodes {:ns 11167296, :bytes 352384},
+      :activation {:ns 2533752, :bytes 350880},
+      :baseline {:ns 463837, :bytes 360792},
+      :optimizing {:ns 7553509, :bytes 9862272}},
+     :engines
+     {:clojure
+      {:median-ns 81038.4,
+       :median-bytes 364872.0,
+       :samples
+       [{:ns-per-call 78792.2, :bytes-per-call 366460.8}
+        {:ns-per-call 82359.4, :bytes-per-call 361204.8}
+        {:ns-per-call 81038.4, :bytes-per-call 363038.4}
+        {:ns-per-call 63494.8, :bytes-per-call 366460.8}
+        {:ns-per-call 84212.4, :bytes-per-call 364872.0}
+        {:ns-per-call 74702.2, :bytes-per-call 366460.8}
+        {:ns-per-call 86017.6, :bytes-per-call 358084.8}
+        {:ns-per-call 85412.8, :bytes-per-call 358939.2}
+        {:ns-per-call 75676.6, :bytes-per-call 366460.8}]},
+      :sci
+      {:median-ns 64425.4,
+       :median-bytes 345668.8,
+       :samples
+       [{:ns-per-call 69402.2, :bytes-per-call 345668.8}
+        {:ns-per-call 64190.8, :bytes-per-call 345668.8}
+        {:ns-per-call 64042.4, :bytes-per-call 345668.8}
+        {:ns-per-call 52957.6, :bytes-per-call 345668.8}
+        {:ns-per-call 66086.6, :bytes-per-call 345668.8}
+        {:ns-per-call 66551.4, :bytes-per-call 345668.8}
+        {:ns-per-call 64934.6, :bytes-per-call 345668.8}
+        {:ns-per-call 63299.2, :bytes-per-call 345668.8}
+        {:ns-per-call 64425.4, :bytes-per-call 345668.8}]},
+      :t0
+      {:median-ns 2658194.2,
+       :median-bytes 8480156.8,
+       :samples
+       [{:ns-per-call 2663909.6, :bytes-per-call 8480156.8}
+        {:ns-per-call 2652666.4, :bytes-per-call 8480156.8}
+        {:ns-per-call 3258857.6, :bytes-per-call 8480156.8}
+        {:ns-per-call 2513444.8, :bytes-per-call 8480156.8}
+        {:ns-per-call 2644274.4, :bytes-per-call 8480156.8}
+        {:ns-per-call 2658194.2, :bytes-per-call 8480156.8}
+        {:ns-per-call 2856679.8, :bytes-per-call 8480156.8}
+        {:ns-per-call 2643915.0, :bytes-per-call 8480156.8}
+        {:ns-per-call 2672770.0, :bytes-per-call 8480156.8}]},
+      :nodes
+      {:median-ns 544309.8,
+       :median-bytes 350694.4,
+       :samples
+       [{:ns-per-call 540135.4, :bytes-per-call 350694.4}
+        {:ns-per-call 552214.4, :bytes-per-call 350694.4}
+        {:ns-per-call 656878.2, :bytes-per-call 350694.4}
+        {:ns-per-call 544309.8, :bytes-per-call 350684.8}
+        {:ns-per-call 532278.0, :bytes-per-call 350694.4}
+        {:ns-per-call 542199.0, :bytes-per-call 350694.4}
+        {:ns-per-call 550949.4, :bytes-per-call 350694.4}
+        {:ns-per-call 544939.4, :bytes-per-call 350694.4}
+        {:ns-per-call 537581.0, :bytes-per-call 350694.4}]},
+      :activation
+      {:median-ns 409404.2,
+       :median-bytes 349190.4,
+       :samples
+       [{:ns-per-call 415140.2, :bytes-per-call 349190.4}
+        {:ns-per-call 398417.0, :bytes-per-call 349190.4}
+        {:ns-per-call 405339.6, :bytes-per-call 349180.8}
+        {:ns-per-call 406528.6, :bytes-per-call 349190.4}
+        {:ns-per-call 410804.4, :bytes-per-call 349190.4}
+        {:ns-per-call 415208.6, :bytes-per-call 349190.4}
+        {:ns-per-call 425484.2, :bytes-per-call 349190.4}
+        {:ns-per-call 409404.2, :bytes-per-call 349190.4}
+        {:ns-per-call 402048.4, :bytes-per-call 349190.4}]},
+      :baseline
+      {:median-ns 92801.4,
+       :median-bytes 347793.6,
+       :samples
+       [{:ns-per-call 86347.0, :bytes-per-call 347793.6}
+        {:ns-per-call 89926.6, :bytes-per-call 347788.8}
+        {:ns-per-call 84925.4, :bytes-per-call 347793.6}
+        {:ns-per-call 124578.2, :bytes-per-call 347793.6}
+        {:ns-per-call 92801.4, :bytes-per-call 347793.6}
+        {:ns-per-call 80317.0, :bytes-per-call 347793.6}
+        {:ns-per-call 151244.4, :bytes-per-call 347793.6}
+        {:ns-per-call 127271.8, :bytes-per-call 347793.6}
+        {:ns-per-call 103664.6, :bytes-per-call 347788.8}]},
+      :optimizing
+      {:median-ns 126448.2,
+       :median-bytes 347012.8,
+       :samples
+       [{:ns-per-call 122449.4, :bytes-per-call 347012.8}
+        {:ns-per-call 118809.6, :bytes-per-call 347012.8}
+        {:ns-per-call 145788.2, :bytes-per-call 347012.8}
+        {:ns-per-call 168992.0, :bytes-per-call 347012.8}
+        {:ns-per-call 122581.2, :bytes-per-call 347017.6}
+        {:ns-per-call 128586.2, :bytes-per-call 347012.8}
+        {:ns-per-call 126448.2, :bytes-per-call 347012.8}
+        {:ns-per-call 118846.4, :bytes-per-call 347012.8}
+        {:ns-per-call 141467.4, :bytes-per-call 347012.8}]}}}
+    {:n 10000,
+     :expected-id
+     "550b56f7ed308e11dfeb1c8e85c4472d609453240bba11a238c08e02a3d5c064",
+     :first-calls
+     {:clojure {:ns 714956, :bytes 3752112},
+      :sci {:ns 648861, :bytes 3515320},
+      :t0 {:ns 27561346, :bytes 84801808},
+      :nodes {:ns 5598794, :bytes 3525952},
+      :activation {:ns 4046628, :bytes 3521776},
+      :baseline {:ns 865410, :bytes 3519408},
+      :optimizing {:ns 1660872, :bytes 3518608}},
+     :engines
+     {:clojure
+      {:median-ns 319184.6,
+       :median-bytes 3276580.8,
+       :samples
+       [{:ns-per-call 300440.2, :bytes-per-call 3276580.8}
+        {:ns-per-call 520175.4, :bytes-per-call 3276580.8}
+        {:ns-per-call 314013.2, :bytes-per-call 3276580.8}
+        {:ns-per-call 319184.6, :bytes-per-call 3276580.8}
+        {:ns-per-call 329949.8, :bytes-per-call 3276580.8}
+        {:ns-per-call 307526.8, :bytes-per-call 3276580.8}
+        {:ns-per-call 318298.2, :bytes-per-call 3276580.8}
+        {:ns-per-call 324909.4, :bytes-per-call 3276580.8}
+        {:ns-per-call 478865.2, :bytes-per-call 3276580.8}]},
+      :sci
+      {:median-ns 567701.4,
+       :median-bytes 3513668.8,
+       :samples
+       [{:ns-per-call 568761.6, :bytes-per-call 3513668.8}
+        {:ns-per-call 490175.8, :bytes-per-call 3513668.8}
+        {:ns-per-call 563905.4, :bytes-per-call 3513668.8}
+        {:ns-per-call 573740.0, :bytes-per-call 3513668.8}
+        {:ns-per-call 762675.6, :bytes-per-call 3513668.8}
+        {:ns-per-call 562625.2, :bytes-per-call 3513668.8}
+        {:ns-per-call 567701.4, :bytes-per-call 3513668.8}
+        {:ns-per-call 568944.2, :bytes-per-call 3513668.8}
+        {:ns-per-call 561392.0, :bytes-per-call 3513668.8}]},
+      :t0
+      {:median-ns 2.4184559E7,
+       :median-bytes 8.48001328E7,
+       :samples
+       [{:ns-per-call 2.40798844E7, :bytes-per-call 8.48001328E7}
+        {:ns-per-call 2.3733138E7, :bytes-per-call 8.48001328E7}
+        {:ns-per-call 2.50175546E7, :bytes-per-call 8.48001328E7}
+        {:ns-per-call 2.4240568E7, :bytes-per-call 8.48001328E7}
+        {:ns-per-call 2.38747876E7, :bytes-per-call 8.48001328E7}
+        {:ns-per-call 2.4184559E7, :bytes-per-call 8.48001328E7}
+        {:ns-per-call 2.43526836E7, :bytes-per-call 8.48001328E7}
+        {:ns-per-call 2.37339996E7, :bytes-per-call 8.48001328E7}
+        {:ns-per-call 2.43906238E7, :bytes-per-call 8.48001328E7}]},
+      :nodes
+      {:median-ns 4760244.0,
+       :median-bytes 3524262.4,
+       :samples
+       [{:ns-per-call 4765410.2, :bytes-per-call 3524262.4}
+        {:ns-per-call 4741635.2, :bytes-per-call 3524262.4}
+        {:ns-per-call 5148512.6, :bytes-per-call 3524262.4}
+        {:ns-per-call 4760391.6, :bytes-per-call 3524252.8}
+        {:ns-per-call 4749114.0, :bytes-per-call 3524262.4}
+        {:ns-per-call 4774415.4, :bytes-per-call 3524262.4}
+        {:ns-per-call 4752855.8, :bytes-per-call 3524262.4}
+        {:ns-per-call 4760244.0, :bytes-per-call 3524262.4}
+        {:ns-per-call 4753345.8, :bytes-per-call 3524262.4}]},
+      :activation
+      {:median-ns 3601595.8,
+       :median-bytes 3520086.4,
+       :samples
+       [{:ns-per-call 3605844.2, :bytes-per-call 3520086.4}
+        {:ns-per-call 3617126.8, :bytes-per-call 3520086.4}
+        {:ns-per-call 3585638.8, :bytes-per-call 3520076.8}
+        {:ns-per-call 3595545.2, :bytes-per-call 3520086.4}
+        {:ns-per-call 3600429.0, :bytes-per-call 3520086.4}
+        {:ns-per-call 3623183.2, :bytes-per-call 3520086.4}
+        {:ns-per-call 3601595.8, :bytes-per-call 3520086.4}
+        {:ns-per-call 3611287.6, :bytes-per-call 3520086.4}
+        {:ns-per-call 3593290.8, :bytes-per-call 3520086.4}]},
+      :baseline
+      {:median-ns 382546.0,
+       :median-bytes 3515793.6,
+       :samples
+       [{:ns-per-call 382892.2, :bytes-per-call 3515793.6}
+        {:ns-per-call 382546.0, :bytes-per-call 3515788.8}
+        {:ns-per-call 376432.0, :bytes-per-call 3515793.6}
+        {:ns-per-call 324970.6, :bytes-per-call 3515793.6}
+        {:ns-per-call 379547.2, :bytes-per-call 3515793.6}
+        {:ns-per-call 618760.0, :bytes-per-call 3515793.6}
+        {:ns-per-call 326817.0, :bytes-per-call 3515793.6}
+        {:ns-per-call 409645.4, :bytes-per-call 3515793.6}
+        {:ns-per-call 398631.6, :bytes-per-call 3515788.8}]},
+      :optimizing
+      {:median-ns 541171.0,
+       :median-bytes 3515012.8,
+       :samples
+       [{:ns-per-call 545516.6, :bytes-per-call 3515012.8}
+        {:ns-per-call 541171.0, :bytes-per-call 3515012.8}
+        {:ns-per-call 536401.4, :bytes-per-call 3515012.8}
+        {:ns-per-call 559858.2, :bytes-per-call 3515012.8}
+        {:ns-per-call 571505.4, :bytes-per-call 3515017.6}
+        {:ns-per-call 533759.0, :bytes-per-call 3515012.8}
+        {:ns-per-call 541875.2, :bytes-per-call 3515012.8}
+        {:ns-per-call 539430.6, :bytes-per-call 3515012.8}
+        {:ns-per-call 534031.0, :bytes-per-call 3515012.8}]}}}],
+   :entry-studies nil,
+   :cache-stats
+   {:baseline
+    {:hits 1, :misses 0, :fallbacks 0, :revalidations 1, :deopts 0},
+    :optimizing
+    {:hits 1,
+     :misses 3000,
+     :fallbacks 0,
+     :revalidations 1,
+     :deopts 3}}}
+  {:workload :recurrence,
+   :source
+   (fn
+    [n]
+    (loop
+     [i n a [1] b [2]]
+     (if (> i 0) (recur (dec i) b (conj a i)) a))),
+   :definition {:ns 1665447, :bytes 2015608},
+   :preparation
+   {:clojure {:total-ns 716893},
+    :sci {:total-ns 1046629},
+    :t0 {:total-ns 1665447},
+    :nodes
+    {:declined? true,
+     :total-ns 548958,
+     :unsupported
+     {:message "mutable CEK: unsupported", :decline :primitive}},
+    :activation
+    {:declined? true,
+     :total-ns 59435,
+     :unsupported
+     {:message "mutable CEK: unsupported", :decline :primitive}},
+    :baseline
+    {:compile {:ns 3369791, :bytes 2985200},
+     :validation {:ns 252085, :bytes 273200},
+     :installation {:ns 25656, :bytes 4744},
+     :usage {:work 93, :bytes 585, :emissions 1},
+     :pass-log
+     [{:pass :baseline-admission}
+      {:pass :lower}
+      {:pass :emit, :backend :clojure, :typed-loops? false}],
+     :transfer-receipts
+     [{:version :ordered-transfer-v1,
+       :arity 3,
+       :destinations [v13482 v13483 v13484],
+       :argument-ids
+       ["6b6775024bf6458496e2306e9dc114f15c95505e1caf91c679a0d243654cec61"
+        "177a866c5605d1589a4aff573daecb37e318bbe5c8942e54bd6128251aef2793"
+        "abde893b2448b51c8084d02019bd020c62b7aa4f4c4bca7de37c47186432a787"],
+       :plan-id
+       "29f31e8f17115c9ff7a85755dad237c34ef7261d0dcd86a881f201609cf8b998",
+       :producer :klara-baseline,
+       :producer-code-id
+       "c36e86c477235203453381c8ff6199acd1c5e606dd4323ff4a93c99ef61747de"}],
+     :loop-layouts [[]],
+     :total-ns 3647532},
+    :optimizing
+    {:compile {:ns 2717750, :bytes 3035432},
+     :validation {:ns 847290, :bytes 1969528},
+     :installation {:ns 26828, :bytes 4648},
+     :usage {},
+     :pass-log
+     [{:pass :speculate, :sites 1}
+      {:pass :inline, :changes 0}
+      {:pass :lower, :hof-rewrites 0, :classes {}}
+      {:pass :pe, :rounds 1, :fuel-exhausted? false}
+      {:pass :escape, :allocations-removed 0}
+      {:pass :pe, :rounds 0, :fuel-exhausted? false}
+      {:pass :emit, :backend :clojure}],
+     :transfer-receipts nil,
+     :loop-layouts [[]],
+     :total-ns 3591868}},
+   :rows
+   [{:n 8,
+     :expected-id
+     "df7521550d810d9e74accc0110f61e6794a1f988a01173d0c2be50464ec674d0",
+     :first-calls
+     {:clojure {:ns 5500, :bytes 2240},
+      :sci {:ns 117502, :bytes 2352},
+      :t0 {:ns 93051, :bytes 43408},
+      :baseline {:ns 236538, :bytes 14872},
+      :optimizing {:ns 652299, :bytes 694040}},
+     :engines
+     {:clojure
+      {:median-ns 240.66,
+       :median-bytes 576.64,
+       :samples
+       [{:ns-per-call 453.21, :bytes-per-call 576.64}
+        {:ns-per-call 454.64, :bytes-per-call 576.64}
+        {:ns-per-call 386.54, :bytes-per-call 576.64}
+        {:ns-per-call 233.57, :bytes-per-call 576.64}
+        {:ns-per-call 240.18, :bytes-per-call 576.64}
+        {:ns-per-call 233.53, :bytes-per-call 576.64}
+        {:ns-per-call 245.6, :bytes-per-call 576.64}
+        {:ns-per-call 240.66, :bytes-per-call 576.64}
+        {:ns-per-call 231.79, :bytes-per-call 576.64}]},
+      :sci
+      {:median-ns 1449.57,
+       :median-bytes 688.64,
+       :samples
+       [{:ns-per-call 1998.85, :bytes-per-call 688.64}
+        {:ns-per-call 1434.08, :bytes-per-call 688.64}
+        {:ns-per-call 1449.57, :bytes-per-call 688.64}
+        {:ns-per-call 1441.85, :bytes-per-call 688.64}
+        {:ns-per-call 1439.07, :bytes-per-call 688.64}
+        {:ns-per-call 1501.04, :bytes-per-call 688.64}
+        {:ns-per-call 1737.11, :bytes-per-call 688.64}
+        {:ns-per-call 1526.99, :bytes-per-call 688.64}
+        {:ns-per-call 1437.41, :bytes-per-call 688.64}]},
+      :t0
+      {:median-ns 13700.66,
+       :median-bytes 41744.64,
+       :samples
+       [{:ns-per-call 17734.02, :bytes-per-call 41744.64}
+        {:ns-per-call 14418.5, :bytes-per-call 41744.64}
+        {:ns-per-call 14142.52, :bytes-per-call 41744.64}
+        {:ns-per-call 13689.61, :bytes-per-call 41744.64}
+        {:ns-per-call 13756.53, :bytes-per-call 41744.64}
+        {:ns-per-call 13700.66, :bytes-per-call 41744.64}
+        {:ns-per-call 13647.8, :bytes-per-call 41744.64}
+        {:ns-per-call 13554.59, :bytes-per-call 41744.64}
+        {:ns-per-call 13621.72, :bytes-per-call 41744.64}]},
+      :baseline
+      {:median-ns 972.06,
+       :median-bytes 2552.88,
+       :samples
+       [{:ns-per-call 1500.61, :bytes-per-call 2552.88}
+        {:ns-per-call 1447.45, :bytes-per-call 2552.64}
+        {:ns-per-call 1038.11, :bytes-per-call 2552.88}
+        {:ns-per-call 951.06, :bytes-per-call 2552.88}
+        {:ns-per-call 934.43, :bytes-per-call 2552.88}
+        {:ns-per-call 932.53, :bytes-per-call 2552.88}
+        {:ns-per-call 948.09, :bytes-per-call 2552.64}
+        {:ns-per-call 972.06, :bytes-per-call 2552.88}
+        {:ns-per-call 1004.14, :bytes-per-call 2552.88}]},
+      :optimizing
+      {:median-ns 1144.61,
+       :median-bytes 2056.64,
+       :samples
+       [{:ns-per-call 1995.44, :bytes-per-call 2056.64}
+        {:ns-per-call 2003.32, :bytes-per-call 2056.64}
+        {:ns-per-call 1423.42, :bytes-per-call 2056.88}
+        {:ns-per-call 1089.4, :bytes-per-call 2056.64}
+        {:ns-per-call 1109.54, :bytes-per-call 2056.64}
+        {:ns-per-call 1120.1, :bytes-per-call 2056.64}
+        {:ns-per-call 1144.61, :bytes-per-call 2056.64}
+        {:ns-per-call 1163.49, :bytes-per-call 2056.88}
+        {:ns-per-call 1076.46, :bytes-per-call 2056.64}]}}}
+    {:n 64,
+     :expected-id
+     "0ff555d6a014b652d879472ebd98289d1fb4fe0b0687c540acb1f4039c0e97cf",
+     :first-calls
+     {:clojure {:ns 5324, :bytes 9984},
+      :sci {:ns 15612, :bytes 10096},
+      :t0 {:ns 104495, :bytes 290384},
+      :baseline {:ns 9206, :bytes 13928},
+      :optimizing {:ns 6914, :bytes 13408}},
+     :engines
+     {:clojure
+      {:median-ns 1997.47,
+       :median-bytes 8320.64,
+       :samples
+       [{:ns-per-call 1996.22, :bytes-per-call 8320.64}
+        {:ns-per-call 1972.54, :bytes-per-call 8320.64}
+        {:ns-per-call 2185.82, :bytes-per-call 8320.64}
+        {:ns-per-call 1964.37, :bytes-per-call 8320.64}
+        {:ns-per-call 2028.13, :bytes-per-call 8320.64}
+        {:ns-per-call 1997.47, :bytes-per-call 8320.64}
+        {:ns-per-call 2213.8, :bytes-per-call 8321.36}
+        {:ns-per-call 2017.43, :bytes-per-call 8320.64}
+        {:ns-per-call 1993.52, :bytes-per-call 8320.64}]},
+      :sci
+      {:median-ns 2692.06,
+       :median-bytes 8432.64,
+       :samples
+       [{:ns-per-call 9446.42, :bytes-per-call 8432.64}
+        {:ns-per-call 3509.53, :bytes-per-call 8432.64}
+        {:ns-per-call 2840.06, :bytes-per-call 8432.64}
+        {:ns-per-call 2593.33, :bytes-per-call 8432.64}
+        {:ns-per-call 2678.51, :bytes-per-call 8432.64}
+        {:ns-per-call 2868.48, :bytes-per-call 8432.64}
+        {:ns-per-call 2628.74, :bytes-per-call 8432.64}
+        {:ns-per-call 2692.06, :bytes-per-call 8432.64}
+        {:ns-per-call 2454.01, :bytes-per-call 8432.64}]},
+      :t0
+      {:median-ns 76971.78,
+       :median-bytes 288720.64,
+       :samples
+       [{:ns-per-call 81842.82, :bytes-per-call 288720.64}
+        {:ns-per-call 77040.14, :bytes-per-call 288720.64}
+        {:ns-per-call 76525.15, :bytes-per-call 288720.64}
+        {:ns-per-call 76451.38, :bytes-per-call 288720.64}
+        {:ns-per-call 76220.8, :bytes-per-call 288720.64}
+        {:ns-per-call 76660.28, :bytes-per-call 288720.64}
+        {:ns-per-call 77221.46, :bytes-per-call 288720.64}
+        {:ns-per-call 77524.0, :bytes-per-call 288720.64}
+        {:ns-per-call 76971.78, :bytes-per-call 288720.64}]},
+      :baseline
+      {:median-ns 2893.23,
+       :median-bytes 10296.88,
+       :samples
+       [{:ns-per-call 2933.72, :bytes-per-call 10296.88}
+        {:ns-per-call 2788.0, :bytes-per-call 10296.64}
+        {:ns-per-call 2852.65, :bytes-per-call 10296.88}
+        {:ns-per-call 3044.77, :bytes-per-call 10296.88}
+        {:ns-per-call 2893.23, :bytes-per-call 10296.88}
+        {:ns-per-call 2924.04, :bytes-per-call 10296.88}
+        {:ns-per-call 2759.18, :bytes-per-call 10296.64}
+        {:ns-per-call 2923.17, :bytes-per-call 10296.88}
+        {:ns-per-call 2813.52, :bytes-per-call 10296.88}]},
+      :optimizing
+      {:median-ns 4728.01,
+       :median-bytes 9800.64,
+       :samples
+       [{:ns-per-call 4695.92, :bytes-per-call 9800.64}
+        {:ns-per-call 4752.02, :bytes-per-call 9800.64}
+        {:ns-per-call 4747.79, :bytes-per-call 9800.88}
+        {:ns-per-call 4721.04, :bytes-per-call 9800.64}
+        {:ns-per-call 4936.17, :bytes-per-call 9800.64}
+        {:ns-per-call 12976.5, :bytes-per-call 9800.64}
+        {:ns-per-call 4622.4, :bytes-per-call 9800.64}
+        {:ns-per-call 4728.01, :bytes-per-call 9800.88}
+        {:ns-per-call 4719.31, :bytes-per-call 9800.64}]}}}
+    {:n 1000,
+     :expected-id
+     "107eedf9d9cb5208ae9f2a66a498803d3670be95d6bed989895b5ba8f8ca86e5",
+     :first-calls
+     {:clojure {:ns 36118, :bytes 151552},
+      :sci {:ns 40720, :bytes 151664},
+      :t0 {:ns 1164866, :bytes 4430544},
+      :baseline {:ns 47860, :bytes 155496},
+      :optimizing {:ns 69591, :bytes 154976}},
+     :engines
+     {:clojure
+      {:median-ns 18505.8,
+       :median-bytes 149900.8,
+       :samples
+       [{:ns-per-call 19522.2, :bytes-per-call 149900.8}
+        {:ns-per-call 19541.2, :bytes-per-call 149900.8}
+        {:ns-per-call 19275.2, :bytes-per-call 149900.8}
+        {:ns-per-call 15722.2, :bytes-per-call 149900.8}
+        {:ns-per-call 16040.4, :bytes-per-call 149900.8}
+        {:ns-per-call 15184.2, :bytes-per-call 149900.8}
+        {:ns-per-call 15564.2, :bytes-per-call 149900.8}
+        {:ns-per-call 19416.6, :bytes-per-call 149900.8}
+        {:ns-per-call 18505.8, :bytes-per-call 149900.8}]},
+      :sci
+      {:median-ns 30506.0,
+       :median-bytes 150012.8,
+       :samples
+       [{:ns-per-call 31376.0, :bytes-per-call 150012.8}
+        {:ns-per-call 30506.0, :bytes-per-call 150012.8}
+        {:ns-per-call 31138.2, :bytes-per-call 150012.8}
+        {:ns-per-call 30453.6, :bytes-per-call 150012.8}
+        {:ns-per-call 31597.0, :bytes-per-call 150012.8}
+        {:ns-per-call 30417.2, :bytes-per-call 150012.8}
+        {:ns-per-call 29763.0, :bytes-per-call 150012.8}
+        {:ns-per-call 33406.6, :bytes-per-call 150012.8}
+        {:ns-per-call 30064.6, :bytes-per-call 150012.8}]},
+      :t0
+      {:median-ns 1221436.8,
+       :median-bytes 4428868.8,
+       :samples
+       [{:ns-per-call 1263638.4, :bytes-per-call 4428868.8}
+        {:ns-per-call 1269962.2, :bytes-per-call 4428868.8}
+        {:ns-per-call 1351279.0, :bytes-per-call 4428868.8}
+        {:ns-per-call 1190072.8, :bytes-per-call 4428868.8}
+        {:ns-per-call 1201669.4, :bytes-per-call 4428868.8}
+        {:ns-per-call 1199959.0, :bytes-per-call 4428868.8}
+        {:ns-per-call 1208310.0, :bytes-per-call 4428868.8}
+        {:ns-per-call 1221436.8, :bytes-per-call 4428868.8}
+        {:ns-per-call 1230928.6, :bytes-per-call 4428868.8}]},
+      :baseline
+      {:median-ns 20853.0,
+       :median-bytes 151881.6,
+       :samples
+       [{:ns-per-call 20853.0, :bytes-per-call 151881.6}
+        {:ns-per-call 21729.8, :bytes-per-call 151876.8}
+        {:ns-per-call 19107.2, :bytes-per-call 151881.6}
+        {:ns-per-call 21203.8, :bytes-per-call 151881.6}
+        {:ns-per-call 18536.8, :bytes-per-call 151881.6}
+        {:ns-per-call 18671.4, :bytes-per-call 151881.6}
+        {:ns-per-call 16789.8, :bytes-per-call 151876.8}
+        {:ns-per-call 21389.0, :bytes-per-call 151881.6}
+        {:ns-per-call 21520.2, :bytes-per-call 151881.6}]},
+      :optimizing
+      {:median-ns 40215.8,
+       :median-bytes 151380.8,
+       :samples
+       [{:ns-per-call 41388.0, :bytes-per-call 151380.8}
+        {:ns-per-call 40205.8, :bytes-per-call 151380.8}
+        {:ns-per-call 42909.2, :bytes-per-call 151385.6}
+        {:ns-per-call 40215.8, :bytes-per-call 151380.8}
+        {:ns-per-call 38514.4, :bytes-per-call 151380.8}
+        {:ns-per-call 37089.0, :bytes-per-call 151380.8}
+        {:ns-per-call 38630.4, :bytes-per-call 151380.8}
+        {:ns-per-call 40521.4, :bytes-per-call 151385.6}
+        {:ns-per-call 40249.4, :bytes-per-call 151380.8}]}}}],
+   :entry-studies
+   {64
+    {:session
+     {:median-ns 1487.57,
+      :median-bytes 10296.64,
+      :samples
+      [{:ns-per-call 1548.32, :bytes-per-call 10296.64}
+       {:ns-per-call 1501.97, :bytes-per-call 10296.64}
+       {:ns-per-call 1456.64, :bytes-per-call 10296.64}
+       {:ns-per-call 1492.57, :bytes-per-call 10296.64}
+       {:ns-per-call 1455.9, :bytes-per-call 10296.64}
+       {:ns-per-call 1467.84, :bytes-per-call 10296.64}
+       {:ns-per-call 1512.91, :bytes-per-call 10296.64}
+       {:ns-per-call 1487.57, :bytes-per-call 10296.64}
+       {:ns-per-call 1429.02, :bytes-per-call 10296.64}]},
+     :clojure
+     {:median-ns 867.45,
+      :median-bytes 8320.64,
+      :samples
+      [{:ns-per-call 950.68, :bytes-per-call 8320.64}
+       {:ns-per-call 912.13, :bytes-per-call 8320.64}
+       {:ns-per-call 867.45, :bytes-per-call 8320.64}
+       {:ns-per-call 887.97, :bytes-per-call 8320.64}
+       {:ns-per-call 864.62, :bytes-per-call 8320.64}
+       {:ns-per-call 885.34, :bytes-per-call 8320.64}
+       {:ns-per-call 859.4, :bytes-per-call 8320.64}
+       {:ns-per-call 854.44, :bytes-per-call 8320.64}
+       {:ns-per-call 850.26, :bytes-per-call 8320.64}]},
+     :sci
+     {:median-ns 1987.86,
+      :median-bytes 8432.64,
+      :samples
+      [{:ns-per-call 1915.5, :bytes-per-call 8432.64}
+       {:ns-per-call 1947.17, :bytes-per-call 8432.64}
+       {:ns-per-call 1945.03, :bytes-per-call 8432.64}
+       {:ns-per-call 1987.86, :bytes-per-call 8432.64}
+       {:ns-per-call 1982.43, :bytes-per-call 8432.64}
+       {:ns-per-call 2070.26, :bytes-per-call 8432.64}
+       {:ns-per-call 2430.18, :bytes-per-call 8432.64}
+       {:ns-per-call 2063.34, :bytes-per-call 8432.64}
+       {:ns-per-call 2080.43, :bytes-per-call 8432.64}]},
+     :optimizing
+     {:median-ns 2748.99,
+      :median-bytes 9800.64,
+      :samples
+      [{:ns-per-call 2737.26, :bytes-per-call 9800.64}
+       {:ns-per-call 2748.99, :bytes-per-call 9800.64}
+       {:ns-per-call 2816.15, :bytes-per-call 9800.64}
+       {:ns-per-call 2745.96, :bytes-per-call 9800.64}
+       {:ns-per-call 2841.34, :bytes-per-call 9800.64}
+       {:ns-per-call 2674.63, :bytes-per-call 9800.64}
+       {:ns-per-call 2755.2, :bytes-per-call 9800.64}
+       {:ns-per-call 2698.56, :bytes-per-call 9800.64}
+       {:ns-per-call 2871.09, :bytes-per-call 9800.64}]},
+     :host-entry
+     {:median-ns 2290.5,
+      :median-bytes 13816.64,
+      :samples
+      [{:ns-per-call 2432.39, :bytes-per-call 13816.64}
+       {:ns-per-call 2349.95, :bytes-per-call 13816.64}
+       {:ns-per-call 2290.5, :bytes-per-call 13816.64}
+       {:ns-per-call 2428.94, :bytes-per-call 13816.64}
+       {:ns-per-call 2266.26, :bytes-per-call 13816.64}
+       {:ns-per-call 2275.05, :bytes-per-call 13816.64}
+       {:ns-per-call 2275.13, :bytes-per-call 13816.64}
+       {:ns-per-call 2231.12, :bytes-per-call 13816.64}
+       {:ns-per-call 2345.63, :bytes-per-call 13816.64}]},
+     :body
+     {:median-ns 948.51,
+      :median-bytes 8384.64,
+      :samples
+      [{:ns-per-call 973.48, :bytes-per-call 8384.64}
+       {:ns-per-call 1353.41, :bytes-per-call 8384.64}
+       {:ns-per-call 948.51, :bytes-per-call 8384.64}
+       {:ns-per-call 951.68, :bytes-per-call 8384.64}
+       {:ns-per-call 934.75, :bytes-per-call 8384.64}
+       {:ns-per-call 925.29, :bytes-per-call 8384.64}
+       {:ns-per-call 918.07, :bytes-per-call 8384.64}
+       {:ns-per-call 961.51, :bytes-per-call 8384.64}
+       {:ns-per-call 912.62, :bytes-per-call 8384.64}]}}},
+   :cache-stats
+   {:baseline
+    {:hits 1, :misses 0, :fallbacks 0, :revalidations 1, :deopts 0},
+    :optimizing
+    {:hits 1, :misses 24, :fallbacks 0, :revalidations 1, :deopts 3}}}
+  {:workload :tiny,
+   :source (fn [n] (+ n 1)),
+   :definition {:ns 826552, :bytes 213064},
+   :preparation
+   {:clojure {:total-ns 497861},
+    :sci {:total-ns 809114},
+    :t0 {:total-ns 826552},
+    :nodes {:ns 126597, :bytes 10048, :total-ns 126597},
+    :activation {:ns 156388, :bytes 20728, :total-ns 156388},
+    :baseline
+    {:compile {:ns 1452459, :bytes 694752},
+     :validation {:ns 177707, :bytes 219848},
+     :installation {:ns 28834, :bytes 4640},
+     :usage {:work 6, :bytes 206, :emissions 1},
+     :pass-log
+     [{:pass :baseline-admission}
+      {:pass :lower}
+      {:pass :emit, :backend :clojure, :typed-loops? false}],
+     :transfer-receipts [],
+     :loop-layouts [],
+     :total-ns 1659000},
+    :optimizing
+    {:compile {:ns 1107813, :bytes 657816},
+     :validation {:ns 130546, :bytes 208720},
+     :installation {:ns 15843, :bytes 4648},
+     :usage {},
+     :pass-log
+     [{:pass :speculate, :sites 0}
+      {:pass :inline, :changes 0}
+      {:pass :lower, :hof-rewrites 0, :classes {}}
+      {:pass :pe, :rounds 0, :fuel-exhausted? false}
+      {:pass :escape, :allocations-removed 0}
+      {:pass :pe, :rounds 0, :fuel-exhausted? false}
+      {:pass :emit, :backend :clojure}],
+     :transfer-receipts nil,
+     :loop-layouts [],
+     :total-ns 1254202}},
+   :rows
+   [{:n 1,
+     :expected-id
+     "86317e92590bd54ce0f1e695310a90d1f7f29dab3ad48d469da5ce8a9d57f383",
+     :first-calls
+     {:clojure {:ns 4476, :bytes 1664},
+      :sci {:ns 1274, :bytes 1688},
+      :t0 {:ns 15928, :bytes 4344},
+      :nodes {:ns 35837, :bytes 4816},
+      :activation {:ns 14511, :bytes 4496},
+      :baseline {:ns 126224, :bytes 13272},
+      :optimizing {:ns 23351, :bytes 7872}},
+     :engines
+     {:clojure
+      {:median-ns 26.36,
+       :median-bytes 0.64,
+       :samples
+       [{:ns-per-call 51.25, :bytes-per-call 0.64}
+        {:ns-per-call 86.15, :bytes-per-call 0.64}
+        {:ns-per-call 24.46, :bytes-per-call 0.64}
+        {:ns-per-call 25.01, :bytes-per-call 0.64}
+        {:ns-per-call 23.4, :bytes-per-call 0.64}
+        {:ns-per-call 26.66, :bytes-per-call 0.64}
+        {:ns-per-call 26.36, :bytes-per-call 0.64}
+        {:ns-per-call 31.42, :bytes-per-call 0.64}
+        {:ns-per-call 24.95, :bytes-per-call 0.64}]},
+      :sci
+      {:median-ns 19.28,
+       :median-bytes 24.64,
+       :samples
+       [{:ns-per-call 18.09, :bytes-per-call 24.64}
+        {:ns-per-call 20.5, :bytes-per-call 24.64}
+        {:ns-per-call 17.95, :bytes-per-call 24.64}
+        {:ns-per-call 17.54, :bytes-per-call 24.64}
+        {:ns-per-call 17.19, :bytes-per-call 24.64}
+        {:ns-per-call 20.0, :bytes-per-call 24.64}
+        {:ns-per-call 20.52, :bytes-per-call 24.64}
+        {:ns-per-call 20.47, :bytes-per-call 24.64}
+        {:ns-per-call 19.28, :bytes-per-call 24.64}]},
+      :t0
+      {:median-ns 661.32,
+       :median-bytes 2680.64,
+       :samples
+       [{:ns-per-call 660.05, :bytes-per-call 2680.64}
+        {:ns-per-call 659.92, :bytes-per-call 2680.64}
+        {:ns-per-call 663.31, :bytes-per-call 2680.64}
+        {:ns-per-call 697.56, :bytes-per-call 2680.64}
+        {:ns-per-call 643.32, :bytes-per-call 2680.64}
+        {:ns-per-call 681.59, :bytes-per-call 2680.64}
+        {:ns-per-call 681.87, :bytes-per-call 2680.64}
+        {:ns-per-call 653.3, :bytes-per-call 2680.64}
+        {:ns-per-call 661.32, :bytes-per-call 2680.64}]},
+      :nodes
+      {:median-ns 1512.22,
+       :median-bytes 3105.12,
+       :samples
+       [{:ns-per-call 1476.25, :bytes-per-call 3105.12}
+        {:ns-per-call 1506.31, :bytes-per-call 3105.12}
+        {:ns-per-call 1494.97, :bytes-per-call 3105.12}
+        {:ns-per-call 1577.65, :bytes-per-call 3104.64}
+        {:ns-per-call 1515.89, :bytes-per-call 3105.12}
+        {:ns-per-call 1520.86, :bytes-per-call 3105.12}
+        {:ns-per-call 1573.28, :bytes-per-call 3105.12}
+        {:ns-per-call 1512.22, :bytes-per-call 3105.12}
+        {:ns-per-call 1495.02, :bytes-per-call 3105.12}]},
+      :activation
+      {:median-ns 1468.3,
+       :median-bytes 2785.12,
+       :samples
+       [{:ns-per-call 1468.12, :bytes-per-call 2785.12}
+        {:ns-per-call 1444.87, :bytes-per-call 2785.12}
+        {:ns-per-call 1451.3, :bytes-per-call 2784.64}
+        {:ns-per-call 1468.3, :bytes-per-call 2785.12}
+        {:ns-per-call 1497.58, :bytes-per-call 2785.12}
+        {:ns-per-call 1452.07, :bytes-per-call 2785.12}
+        {:ns-per-call 1595.73, :bytes-per-call 2785.12}
+        {:ns-per-call 1556.69, :bytes-per-call 2785.12}
+        {:ns-per-call 1495.62, :bytes-per-call 2785.12}]},
+      :baseline
+      {:median-ns 450.0,
+       :median-bytes 1688.88,
+       :samples
+       [{:ns-per-call 544.37, :bytes-per-call 1688.88}
+        {:ns-per-call 601.76, :bytes-per-call 1688.64}
+        {:ns-per-call 408.04, :bytes-per-call 1688.88}
+        {:ns-per-call 426.08, :bytes-per-call 1688.88}
+        {:ns-per-call 453.85, :bytes-per-call 1688.88}
+        {:ns-per-call 668.48, :bytes-per-call 1688.88}
+        {:ns-per-call 413.32, :bytes-per-call 1688.88}
+        {:ns-per-call 450.0, :bytes-per-call 1688.88}
+        {:ns-per-call 406.86, :bytes-per-call 1688.64}]},
+      :optimizing
+      {:median-ns 191.42,
+       :median-bytes 424.64,
+       :samples
+       [{:ns-per-call 225.04, :bytes-per-call 424.64}
+        {:ns-per-call 260.28, :bytes-per-call 424.64}
+        {:ns-per-call 187.39, :bytes-per-call 424.64}
+        {:ns-per-call 197.19, :bytes-per-call 424.64}
+        {:ns-per-call 171.6, :bytes-per-call 424.88}
+        {:ns-per-call 186.45, :bytes-per-call 424.64}
+        {:ns-per-call 183.5, :bytes-per-call 424.64}
+        {:ns-per-call 192.04, :bytes-per-call 424.64}
+        {:ns-per-call 191.42, :bytes-per-call 424.64}]}}}],
+   :entry-studies
+   {1
+    {:session
+     {:median-ns 431.91,
+      :median-bytes 1688.64,
+      :samples
+      [{:ns-per-call 486.21, :bytes-per-call 1688.64}
+       {:ns-per-call 420.64, :bytes-per-call 1688.64}
+       {:ns-per-call 421.46, :bytes-per-call 1688.64}
+       {:ns-per-call 449.5, :bytes-per-call 1688.64}
+       {:ns-per-call 412.67, :bytes-per-call 1688.64}
+       {:ns-per-call 930.5, :bytes-per-call 1688.64}
+       {:ns-per-call 456.22, :bytes-per-call 1688.64}
+       {:ns-per-call 425.01, :bytes-per-call 1688.64}
+       {:ns-per-call 431.91, :bytes-per-call 1688.64}]},
+     :clojure
+     {:median-ns 24.66,
+      :median-bytes 0.64,
+      :samples
+      [{:ns-per-call 31.0, :bytes-per-call 0.64}
+       {:ns-per-call 24.32, :bytes-per-call 0.64}
+       {:ns-per-call 273.61, :bytes-per-call 0.64}
+       {:ns-per-call 26.17, :bytes-per-call 0.64}
+       {:ns-per-call 24.66, :bytes-per-call 0.64}
+       {:ns-per-call 24.49, :bytes-per-call 0.64}
+       {:ns-per-call 24.66, :bytes-per-call 0.64}
+       {:ns-per-call 24.53, :bytes-per-call 0.64}
+       {:ns-per-call 23.93, :bytes-per-call 0.64}]},
+     :sci
+     {:median-ns 17.79,
+      :median-bytes 24.64,
+      :samples
+      [{:ns-per-call 21.37, :bytes-per-call 24.64}
+       {:ns-per-call 17.72, :bytes-per-call 24.64}
+       {:ns-per-call 17.75, :bytes-per-call 24.64}
+       {:ns-per-call 17.79, :bytes-per-call 24.64}
+       {:ns-per-call 17.82, :bytes-per-call 24.64}
+       {:ns-per-call 19.49, :bytes-per-call 24.64}
+       {:ns-per-call 18.59, :bytes-per-call 24.64}
+       {:ns-per-call 17.69, :bytes-per-call 24.64}
+       {:ns-per-call 17.6, :bytes-per-call 24.64}]},
+     :optimizing
+     {:median-ns 190.32,
+      :median-bytes 424.64,
+      :samples
+      [{:ns-per-call 194.82, :bytes-per-call 424.64}
+       {:ns-per-call 180.62, :bytes-per-call 424.64}
+       {:ns-per-call 195.57, :bytes-per-call 424.64}
+       {:ns-per-call 182.42, :bytes-per-call 424.64}
+       {:ns-per-call 197.41, :bytes-per-call 424.64}
+       {:ns-per-call 181.91, :bytes-per-call 424.64}
+       {:ns-per-call 190.32, :bytes-per-call 424.64}
+       {:ns-per-call 201.63, :bytes-per-call 424.64}
+       {:ns-per-call 187.82, :bytes-per-call 424.64}]},
+     :host-entry
+     {:median-ns 1115.74,
+      :median-bytes 5208.64,
+      :samples
+      [{:ns-per-call 1184.16, :bytes-per-call 5208.64}
+       {:ns-per-call 1066.41, :bytes-per-call 5208.64}
+       {:ns-per-call 1129.48, :bytes-per-call 5208.64}
+       {:ns-per-call 1130.23, :bytes-per-call 5208.64}
+       {:ns-per-call 1109.95, :bytes-per-call 5208.64}
+       {:ns-per-call 1115.74, :bytes-per-call 5208.64}
+       {:ns-per-call 1090.3, :bytes-per-call 5208.64}
+       {:ns-per-call 1090.99, :bytes-per-call 5208.64}
+       {:ns-per-call 1139.08, :bytes-per-call 5208.64}]},
+     :body
+     {:median-ns 53.22,
+      :median-bytes 48.64,
+      :samples
+      [{:ns-per-call 131.19, :bytes-per-call 48.64}
+       {:ns-per-call 53.47, :bytes-per-call 48.64}
+       {:ns-per-call 58.97, :bytes-per-call 48.64}
+       {:ns-per-call 52.03, :bytes-per-call 48.64}
+       {:ns-per-call 56.05, :bytes-per-call 48.64}
+       {:ns-per-call 53.22, :bytes-per-call 48.64}
+       {:ns-per-call 52.89, :bytes-per-call 48.64}
+       {:ns-per-call 51.22, :bytes-per-call 48.64}
+       {:ns-per-call 52.29, :bytes-per-call 48.64}]}}},
+   :cache-stats
+   {:baseline
+    {:hits 1, :misses 0, :fallbacks 0, :revalidations 1, :deopts 0},
+    :optimizing
+    {:hits 1, :misses 0, :fallbacks 0, :revalidations 1, :deopts 0}}}],
+ :sci "0.15.59"}

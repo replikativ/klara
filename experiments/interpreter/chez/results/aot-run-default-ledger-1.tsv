@@ -1,0 +1,11 @@
+1	default	ledger	load-object	0	102923	ok
+1	default	ledger	first-call	0	104373	(499500 1000 124750)
+1	default	ledger	warm-call	0	33758.96	(499500 1000 124750)
+1	default	ledger	warm-call	1	36276.78	(499500 1000 124750)
+1	default	ledger	warm-call	2	37312.18	(499500 1000 124750)
+1	default	ledger	warm-call	3	35555.14	(499500 1000 124750)
+1	default	ledger	warm-call	4	37485.16	(499500 1000 124750)
+1	default	ledger	warm-call	5	35028.84	(499500 1000 124750)
+1	default	ledger	warm-call	6	36278.74	(499500 1000 124750)
+1	default	ledger	warm-call	7	35793.3	(499500 1000 124750)
+1	default	ledger	warm-call	8	34305.0	(499500 1000 124750)

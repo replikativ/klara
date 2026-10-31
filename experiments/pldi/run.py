@@ -74,7 +74,7 @@ try:
              'experiments/pldi/scale.clj',out], 'generated.txt')
     with tempfile.TemporaryDirectory(prefix='klara-s16-') as classes:
         command(['javac','-J-Xmx128m','-d',classes,
-                 'experiments/compiler/java/klara/bench/Baselines.java','experiments/pldi/Smc.java'], 'javac.txt')
+                 'experiments/history/compiler/java/klara/bench/Baselines.java','experiments/pldi/Smc.java'], 'javac.txt')
         order=[]; rng=random.Random(162027)
         for repeat in range(a.runs):
             modes=['t0','compiled','clojure','java']; rng.shuffle(modes)
