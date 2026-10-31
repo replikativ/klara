@@ -30,11 +30,19 @@ by the [conformance cases](spec/cases/), the [examples](examples/) or the
 - **`finally` and discarded continuations.** A handler that drops its
   continuation skips `finally` blocks inside it (`L0.eval.exception`).
 
-## Not yet proved
+## Verification
 
-No rule is mechanically proved. The checker rules (`L4.check.*`) are the
-first targets for ansatz proofs against an L0 semantics; the earlier
-prototype's proof models are a starting point.
+[spec/formal](spec/formal/README.md) holds a kernel-checked semantics of a
+Core fragment (integers, functions, recursion, late and pinned links,
+handlers by operation name, staging) with determinism, preservation,
+progress and safety proved in ansatz. The CEK machine is compared with it
+differentially on generated programs and the conformance corpus, through
+the real reader and expander (`clojure -M:formal:test-formal`; 10003 of
+10003 forms agreed over 5000 programs). The comparison found and fixed a
+Clojure subtraction inconsistency and a missing not-a-function rule.
+
+Not yet proved: the checker rules (`L4.check.*`), and that the CEK machine
+refines the semantics (tested, not proved).
 
 ## Next milestone: performance
 

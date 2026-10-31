@@ -432,12 +432,15 @@
     [none (Out.stuck (Stuck.unbound id))]
     [(some v) (Out.next n v)]))
 
+(a/defn pinValue [n :- Nat, wi :- Nat, id :- Nat, r :- (Option Tm)] Out
+  (match r
+    [none (Out.stuck (Stuck.unbound id))]
+    [(some v) (Out.next n (pinTm wi v))]))
+
 (a/defn pinResult [n :- Nat, wi :- Nat, id :- Nat, w :- (Option World)] Out
   (match w
     [none (Out.stuck (Stuck.unbound id))]
-    [(some wv) (match (lookup wv id)
-                 [none (Out.stuck (Stuck.unbound id))]
-                 [(some v) (Out.next n (pinTm wi v))])]))
+    [(some wv) (pinValue n wi id (lookup wv id))]))
 
 (a/defn atZero [l :- Nat, a :- Out, b :- Out] Out
   (match l [zero a] [(succ m) b]))
