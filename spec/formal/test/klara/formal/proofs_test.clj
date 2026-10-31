@@ -3,10 +3,12 @@
   the formal semantics; this test fails if any of them did not check."
   (:require [ansatz.core :as a]
             [clojure.test :refer [deftest is]]
-            [klara.formal.props]))
+            [klara.formal.props]
+            [klara.formal.checker]))
 
 (def headline
-  '[step-det preservation progress safety run-quote ws-subst ws-pinTm wsb-WS])
+  '[step-det preservation progress safety run-quote ws-subst ws-pinTm wsb-WS
+    beta-step fix-step let-value-step if-true-step if-false-step prim-step delta-step pin-step step-equiv])
 
 (deftest kernel-checked
   (doseq [n headline]

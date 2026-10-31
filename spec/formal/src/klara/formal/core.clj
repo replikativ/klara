@@ -103,12 +103,13 @@
 ;; ---------------------------------------------------------------------------
 ;; Values, substitution, lookup
 
+;; Simple values: they are values at every level of evaluation. Code values
+;; are values too, but their valuehood is recursive (the body must be built).
 (a/defn isVal [t :- Tm] Bool
   (match t
     [(lit d) true]
     [(lam b) true]
     [(fix fb) true]
-    [(code u) true]
     [_ false]))
 
 ;; Substitute the closed value v for index j, lowering indices above j.

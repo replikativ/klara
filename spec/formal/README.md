@@ -18,6 +18,7 @@ KLARA_DIFF_SEEDS=5000 clojure -M:formal:test-formal
 | `src/klara/formal/core.clj` | Syntax (`Tm`), worlds, checked 64-bit primitives, staging with generated names, `ev`, `step` |
 | `src/klara/formal/ws.clj` | Well-scopedness: weakening, substitution, pinning, soundness of `run`'s closedness check |
 | `src/klara/formal/props.clj` | Determinism, preservation, progress, safety, running quoted code |
+| `src/klara/formal/checker.clj` | The checker's head rules are steps; a step preserves the terminal configurations reached |
 | `src/klara/formal/bridge.clj` | The trusted bridge: quoting real Core terms into `Tm`, running the model, observations |
 | `src/klara/formal/gen.clj` | A seeded generator of Klara programs inside the fragment |
 | `test/klara/formal/` | Proof check and differential tests |
@@ -44,8 +45,16 @@ compiler. Forms outside the fragment are reported, not compared.
 | `wsb-WS` | `run`'s closedness check is sound | L2.run.closed |
 | `run-quote` | `(run (code t))` steps to `t` for binder- and escape-free `t` | L2.run.context |
 
-Not yet proved: that the checker's rewrites (`L4.check.*`) preserve meaning;
-that the CEK machine refines `step` (tested differentially, not proved).
+| `beta-step`, `fix-step` | a call of a function on a value steps to the substituted body | L4.check.beta |
+| `let-value-step` | a let of a value steps to the substituted body | L4.check.let-value |
+| `if-true-step`, `if-false-step` | an if on a constant steps to the selected branch | L4.check.if-constant |
+| `prim-step` | a primitive on constants steps to its result when it succeeds | L4.check.prim |
+| `delta-step`, `pin-step` | a late or pinned global steps to its definition | L4.check.delta |
+| `step-equiv` | a configuration and its step reach the same terminal configurations | composition |
+
+Not yet proved: rewriting under binders (needs contextual equivalence),
+`L4.check.let-app`, that the CEK machine refines `step` (tested
+differentially), and the bridge between named Core and `Tm` (tested).
 
 ## The bridge
 
