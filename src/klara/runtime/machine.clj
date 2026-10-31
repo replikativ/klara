@@ -257,6 +257,9 @@
     (instance? klara.runtime.value.IExecutable f)
     (v/-execute f st args)
 
+    (not (instance? clojure.lang.IFn f))
+    (fail :L0.eval.not-fn (str "cannot call " (pr-str f) ": not a function") :value (pr-str f))
+
     :else
     (let [snapshot (job-snapshot st)
           r (try (binding [*nested* st] (apply f args))

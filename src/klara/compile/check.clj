@@ -51,11 +51,13 @@
   [t]
   (let [f (:fn t) args (:args t)]
     (when (and (= :host (:op f))
-               (= "clojure.core" (namespace (:name f)))
-               (contains? b/pure-host (symbol (name (:name f))))
+               (or (and (= "clojure.core" (namespace (:name f)))
+                        (contains? b/pure-host (symbol (name (:name f)))))
+                   (:pure (b/lookup (:name f))))
                (every? #(= :const (:op %)) args)
                (every? (comp data? :value) args))
-      (try (let [r (apply @(resolve (:name f)) (map :value args))]
+      (try (let [hf (if-let [e (b/lookup (:name f))] (:fn e) @(resolve (:name f)))
+                 r (apply hf (map :value args))]
              (when (data? r) (t/const r)))
            (catch Throwable _ nil)))))
 

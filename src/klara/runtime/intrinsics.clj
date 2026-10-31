@@ -5,6 +5,7 @@
   Each intrinsic receives the machine state and its arguments and returns a
   new state. Rule IDs refer to spec/."
   (:require [klara.lang.builtins :as b]
+            [klara.runtime.prims :as prims]
             [klara.lang.term :as t]
             [klara.runtime.machine :as m]
             [klara.runtime.value :as v]
@@ -222,3 +223,8 @@
 
 (defintrinsic klara.code/host-fn [st [code]]
   (let [t (term-of code)] (ret st (when (= :host (:op t)) (m/host-value (:name t))))))
+
+;; ---------------------------------------------------------------------------
+;; Primitives that correct host behaviour (klara.runtime.prims)
+
+(b/register! 'klara.core/- {:kind :host :fn prims/- :symbol 'klara.runtime.prims/- :pure true})

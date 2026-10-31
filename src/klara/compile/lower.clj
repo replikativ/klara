@@ -65,8 +65,9 @@
                          x (constant x)))
               :local (:name t)
               :host (let [q (:name t)]
-                      (if (and (= "clojure.core" (namespace q)) (not (m/intrinsic? (m/host-value q))))
-                        q (constant (m/host-value q))))
+                      (cond (and (= "clojure.core" (namespace q)) (not (m/intrinsic? (m/host-value q)))) q
+                            (:symbol (klara.lang.builtins/lookup q)) (:symbol (klara.lang.builtins/lookup q))
+                            :else (constant (m/host-value q))))
               :global (let [l (:link t)]
                         (if (= :late (:kind l))
                           (list 'klara.compile.lower/late (list 'quote (:name l)))
@@ -83,6 +84,8 @@
                        (and (= :host (:op f)) (= "clojure.core" (namespace (:name f)))
                             (not (m/intrinsic? (m/host-value (:name f)))))
                        (list* (:name f) args)
+                       (and (= :host (:op f)) (:symbol (klara.lang.builtins/lookup (:name f))))
+                       (list* (:symbol (klara.lang.builtins/lookup (:name f))) args)
                        :else (list 'klara.compile.lower/call (go f) (vec args))))
               :recur (list* 'recur (map go (:args t)))
               :let (list 'let* [(:name t) (go (:init t))] (go (:body t)))

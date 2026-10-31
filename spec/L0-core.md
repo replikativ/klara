@@ -69,6 +69,10 @@ an `ArityException`-equivalent `ex-info` with rule `L0.eval.arity`.
 `L0.eval.arity` Calling a closure with a number of arguments that no arity
 accepts raises this rule.
 
+`L0.eval.not-fn` Calling a value that is not a function raises this rule.
+As in Clojure, keywords, maps, sets and vectors are functions: a keyword
+applied to a value that is not a map returns `nil` (or its second argument).
+
 `L0.eval.host` Calling a host function applies it to the argument values.
 A host exception becomes a Klara exception at that point.
 
