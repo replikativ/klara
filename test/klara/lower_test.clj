@@ -47,7 +47,7 @@
         (is (= #{328350} (set (k/eval-string s "(vec (for [_ (range 30)] (h (range 100))))"))))
         (finally (reset! lower/stress nil))))))
 
-(deftest L4-lower-hint
+(deftest L4-lower-hint   ; L4.lower.hint
   (testing "a type hint is a guard: right, it is used; wrong, the interpreter goes on"
     (let [s (k/session {:roots ["lib"] :out (java.io.StringWriter.)})]
       (is (= [3 3 "abc" :left]
