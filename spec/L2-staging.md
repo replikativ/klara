@@ -81,7 +81,8 @@ links pinned to `w`.
 ## Views and printing
 
 `L2.view.total` `code/view` has a view for every construct: `:const`,
-`:local`, `:host`, `:global`, `:app`, `:let`, `:if`, `:do`, `:recur`, `:fn`
+`:local`, `:host`, `:global`, `:app`, `:let` (with `:tag`, its host hint, if
+it has one), `:if`, `:do`, `:recur`, `:fn`
 (`:self` and `:arities`, each `{:params :rest :body}`; a function with one
 fixed arity also shows `:params` and `:body`), `:letrec` (`:bindings` of
 name and function), `:throw`, `:try` (`:body`, `:catches` of class, name

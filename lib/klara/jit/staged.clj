@@ -60,7 +60,7 @@
    :host (fn [c] (run c))
    :global (fn [c] (run c))
    :if (fn [t then else] (if t (then) (else)))
-   :let (fn [init body] (body init))
+   :let (fn [init body & _] (body init))
    :do (fn [xs] (last xs))
    :fn (fn [n body] (letfn [(self [& args] (body self (vec args)))] self))
    :app (fn [f args] (apply f args))
@@ -101,11 +101,13 @@
          (if (static? t)
            (if (value t) (then) (else))
            (dynamic (code/make {:op :if :test (->code t) :then (->code (then)) :else (->code (else))}))))
-   :let (fn [init body]
+   ;; tag: the reference let's host hint (L4.lower.hint), kept on the new let
+   :let (fn [init body & [tag]]
           (if (static? init)
             (body init)
-            (dynamic (code (let [x (esc (->code init))]
-                             (esc (->code (body (dynamic (code x))))))))))
+            (let [c (code (let [x (esc (->code init))]
+                            (esc (->code (body (dynamic (code x)))))))]
+              (dynamic (if tag (code/make (assoc (code/view c) :tag tag)) c)))))
    :do (fn [xs]
          (let [effects (filterv #(not (static? %)) (butlast xs))]   ; static values have no effects
            (if (empty? effects)
@@ -325,7 +327,8 @@
             (or (and (::policy env) (not (static? t)) (spec-if dom v t env))
                 ((:if dom) t (fn [] (gen dom (:then v) env)) (fn [] (gen dom (:else v) env)))))
       :let ((:let dom) (gen dom (:init v) env)
-                       (fn [i] (gen dom (:body v) (assoc env (:name v) i))))
+                       (fn [i] (gen dom (:body v) (assoc env (:name v) i)))
+                       (:tag v))
       :do ((:do dom) (mapv (fn [b] (gen dom b env)) (:body v)))
       :fn (if (:body v)
             (let [stable (when (and (::top env) (::policy env)) (stable-params v (::policy env)))

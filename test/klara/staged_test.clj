@@ -137,3 +137,15 @@
                 (mapv (fn [q] (let [o (compiler/prepare (compiler/reference q) {:recipe (fn [r] (staged/residual r)) :name q})]
                                 (if (= :L4.lower.subset (:rule o)) :checked (:status o))))
                       ['oc/t1 'oc/t2 'oc/t3 'oc/t4 'oc/t5])]"))))))
+
+(deftest hints-survive-generation   ; L2.view.total L4.lower.hint L4.jit.staged
+  (testing "a let's host hint is in its view and in the residual, so the backend still checks it and avoids reflection"
+    (let [s (session)]
+      (is (= ['booleans true]
+             (k/eval-string s "(ns ht (:require [klara.jit.staged :as staged] [klara.compiler :as compiler] [klara.code :as code]))
+               (defn first-flag [n] (let [^booleans a (boolean-array n true)] (aget a 0)))
+               (def r (compiler/reference 'ht/first-flag))
+               [(:tag (code/view (:body (code/view r))))
+                (.contains (pr-str (:compiled (compiler/explain (do (compiler/optimize! 'ht/first-flag {:recipe staged/residual}) first-flag))))
+                           \"isInstance\")]"))))))
+

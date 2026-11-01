@@ -199,7 +199,8 @@
       :host {:op :host :name (:name t)}
       :global {:op :global :name (get-in t [:link :name]) :kind (get-in t [:link :kind])}
       :app {:op :app :fn (c (:fn t)) :args (mapv c (:args t))}
-      :let {:op :let :name (:name t) :init (c (:init t)) :body (c (:body t))}
+      :let (cond-> {:op :let :name (:name t) :init (c (:init t)) :body (c (:body t))}
+             (:tag t) (assoc :tag (:tag t)))                  ; a host hint (L4.lower.hint)
       :if {:op :if :test (c (:test t)) :then (c (:then t)) :else (c (:else t))}
       :do {:op :do :body (mapv c (:body t))}
       :recur {:op :recur :target (:target t) :arity (:arity t) :args (mapv c (:args t))}
@@ -250,7 +251,9 @@
                 (t/host q)
                 (fail :L2.view.make (str "not a host function Klara supports: " q))))
       :app (t/app (term-of (:fn m)) (map term-of (:args m)))
-      :let (t/let1 (:name m) (term-of (:init m)) (term-of (:body m)))
+      :let (cond-> (t/let1 (:name m) (term-of (:init m)) (term-of (:body m)))
+             (:tag m) (assoc :tag (if (symbol? (:tag m)) (:tag m)
+                                      (throw (ex-info "a let hint is a symbol" {:rule :L2.view.make :tag (:tag m)})))))
       :if (t/if* (term-of (:test m)) (term-of (:then m)) (term-of (:else m)))
       :do (t/do* (mapv term-of (:body m)))
       :recur {:op :recur :target (:target m) :arity (:arity m) :args (mapv term-of (:args m))}
