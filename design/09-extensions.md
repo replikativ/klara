@@ -175,6 +175,25 @@ The backend needs to emit Vector API calls, which the bytecode backend
    definition in another namespace cannot be redefined from there; the
    showcase attaches the rule to `matches?` instead).
 5. Primitive loops; then vectorization with the bytecode backend.
+   Measured first (plain Clojure, 100,000 elements, 2026-11-01):
+
+   | kernel | scalar | alternative |
+   |---|---|---|
+   | persistent vector of longs, boxed vs primitive accumulator (class guard per element) | 677 µs | 615 µs |
+   | `double[]` sum, scalar vs Vector API (4 lanes) | 53 µs | 23 µs |
+   | `long[]` sum, checked `+` vs unchecked (HotSpot vectorizes it) | 28 µs | 11 µs |
+   | `long[]` sum, Vector API through Clojure forms | | 24 µs |
+
+   So primitive accumulators do not pay (again, as in 06-speculation.md
+   §4): the cost is element access and unboxing. Floating-point reductions
+   gain 2.3x from the Vector API, but only with the reassociation opt-in,
+   and through Clojure forms that is about the ceiling: the case for the
+   bytecode backend. Long reductions gain 2.5x from dropping the overflow
+   check, after which HotSpot vectorizes on its own: that needs a proof
+   that the sum cannot overflow, linear arithmetic (ansatz's linarith, not
+   the nonlinear Horner case), but a range check per element at run time
+   costs a pass over the array, so it pays only where the range is a
+   static fact (an array the program filled with bounded values).
 
 Before step 2: whether a rule pays is the investor's measurement, so that
 came first. Towers and List varied with how the investor measured, not
