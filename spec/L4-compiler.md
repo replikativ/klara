@@ -137,9 +137,11 @@ subterms.
 calling the function definition `q` on plain data can neither mutate
 anything that existed before the call nor perform an effect: its body and
 those of the definitions it calls use only pure host functions, functions
-that allocate, and writes to arrays allocated in the same call; no interop,
-intrinsics or definitions. Otherwise `{:pure false :why ..}`. The analysis
-is conservative.
+that allocate, and writes to arrays allocated in the same call; no interop
+or intrinsics. A definition it uses holds data, a pure function definition,
+or a host function declared pure (record constructors, L0.surface.defrecord);
+any other host function in a definition makes it impure. Otherwise
+`{:pure false :why ..}`. The analysis is conservative.
 
 ## Lowering
 

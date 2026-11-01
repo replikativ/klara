@@ -14,20 +14,17 @@
                       (list 'clojure.core/let [x v]
                             (list 'clojure.core/vreset! x (list* f (list 'clojure.core/deref x) args)))))})
 
-;; defrecord (L0.surface.defrecord): a record is a map of its fields, tagged
-;; with its type in metadata; ->Name and map->Name construct it.
+;; defrecord (L0.surface.defrecord): a host record class, as in Clojure, so a
+;; field is read directly; Name is the class, ->Name and map->Name construct.
 (b/register! 'klara.core/defrecord
              {:kind :macro
               :fn (fn [[_ nm fields & impls] env]
                     (when (seq impls)
                       (fail :L0.surface.defrecord "protocol implementations in defrecord are not supported yet"))
-                    (let [tag (symbol (str (:ns env)) (name nm))
-                          ks (mapv (comp keyword name) fields)
-                          m (gensym "m")]
-                      (list 'do
-                            (list 'def nm (list 'quote tag))
-                            (list 'defn (symbol (str "->" nm)) (vec fields)
-                                  (list 'clojure.core/with-meta (zipmap ks fields) {:klara/record (list 'quote tag)}))
-                            (list 'defn (symbol (str "map->" nm)) [m]
-                                  (list 'clojure.core/with-meta (list 'clojure.core/merge (zipmap ks (repeat nil)) m)
-                                        {:klara/record (list 'quote tag)})))))})
+                    (let [q (symbol (str (:ns env)) (name nm))
+                          r (gensym "record")]
+                      (list 'clojure.core/let [r (list 'klara.core/record-type (list 'quote q) (list 'quote (vec fields)))]
+                            (list 'def nm (list 'clojure.core/get r :class))
+                            (list 'def (symbol (str "->" nm)) (list 'clojure.core/get r :new))
+                            (list 'def (symbol (str "map->" nm)) (list 'clojure.core/get r :create))
+                            (list 'clojure.core/get r :class))))})

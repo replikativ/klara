@@ -104,10 +104,14 @@ updated collection, as Clojure requires its callers to use). Clojure code
 that uses transients correctly computes the same results; whether a
 collection is updated in place is the compiler's choice (L4.check.in-place).
 
-`L0.surface.defrecord` `(defrecord Name [f ..])` defines `Name` (its type
-tag, a symbol), `->Name` and `map->Name`. A record is a map with exactly its
-fields, tagged `{:klara/record ns/Name}` in its metadata; equality is map
-equality. Protocol implementations inside `defrecord` raise this rule.
+`L0.surface.defrecord` `(defrecord Name [f ..])` defines `Name` (a host
+record class, as Clojure's `defrecord` makes), `->Name` and `map->Name`.
+Records behave as in Clojure: maps whose fields are read directly, equal
+only to records of the same class, a map after dissociating a field. Each
+evaluation of a `defrecord` makes a new class, so a record defined again
+(or in another world) does not change the class of existing instances. The
+constructors are pure (L4.facts.pure). Protocol implementations inside
+`defrecord` raise this rule.
 
 `L0.surface.read` Source is read by the Clojure reader with reader
 conditionals enabled for the feature `:klara`. `*read-eval*` is false.

@@ -131,6 +131,18 @@
       (and (instance? java.util.Collection x) (not (instance? clojure.lang.IPersistentCollection x)))
       (and (instance? java.util.Map x) (not (instance? clojure.lang.IPersistentMap x))))))
 
+(defonce ^:private pure-objects
+  (java.util.Collections/synchronizedSet (java.util.Collections/newSetFromMap (java.util.WeakHashMap.))))
+
+(defn declare-pure!
+  "Declare host function object f pure (a record constructor): pure code may
+   call a definition holding it (L4.facts.pure). Weak: f is not kept alive."
+  [f]
+  (.add ^java.util.Set pure-objects f)
+  f)
+
+(defn declared-pure? [f] (.contains ^java.util.Set pure-objects f))
+
 (defn find-mutable
   "The first mutable object reachable through immutable data, or nil."
   [x]

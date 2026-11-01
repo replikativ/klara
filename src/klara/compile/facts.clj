@@ -45,8 +45,15 @@
     (case (:op t)
       (:const :local :host) nil
       :global (let [q (get-in t [:link :name])
-                    d (w/lookup (:world ctx) q)]
-                (when (v/closure? (:value d)) (definition-pure ctx q)))
+                    d (w/lookup (:world ctx) q)
+                    x (:value d)]
+                (cond
+                  (v/closure? x) (definition-pure ctx q)
+                  ;; anything else callable (a host function, an intrinsic) is pure
+                  ;; only if declared so; data is looked up when called
+                  (and (instance? clojure.lang.IFn x) (not (v/data? x)) (not (v/declared-pure? x)))
+                  (str "calls the host function in " q)
+                  :else (do (when d (vswap! (:premises ctx) conj [q (:generation d)])) nil)))
       ;; an inner function (a loop) may write arrays this call allocated: they
       ;; did not exist before the call either
       :fn (some (fn [a] (term-impurity ctx (:body a) fresh)) (:arities t))

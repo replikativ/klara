@@ -178,3 +178,12 @@
                   (:tier (investor/consider 'adv/sq {:baseline-ns 0 :explore-ns (inc s)}))
                   ;; explored: alternatives were prepared and measured
                   (some? (:alternatives (investor/consider 'adv/sq {:baseline-ns 0 :explore-ns 0})))]"))))))
+
+(deftest host-functions-in-definitions-are-not-assumed-pure   ; L4.facts.pure L0.surface.defrecord
+  (testing "a definition holding an impure host function makes its callers impure; record constructors are pure"
+    (is (= [false true]
+           (run (str header "(def say! println)
+                 (defn greet [x] (say! x))
+                 (defrecord P [x y])
+                 (defn mk [x] (->P x x))
+                 [(:pure (jit/pure? 'adv/greet)) (:pure (jit/pure? 'adv/mk))]"))))))

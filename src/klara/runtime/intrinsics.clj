@@ -223,6 +223,26 @@
       :code {:op :code :template (c (:template t)) :holes (mapv c (:holes t)) :code code}
       :hole {:op :hole :index (:index t) :code code}))
 
+;; ---------------------------------------------------------------------------
+;; Records (L0.surface.defrecord): host record classes, as in Clojure
+
+(defonce ^:private record-count (java.util.concurrent.atomic.AtomicLong.))
+
+(defintrinsic klara.core/record-type [st [q fields]]            ; L0.surface.defrecord
+  ;; a fresh class per definition: another world's or an earlier definition
+  ;; of the same record keeps its own class (and its instances stay its)
+  (let [cname (symbol (str (munge (name q)) "_" (.incrementAndGet ^java.util.concurrent.atomic.AtomicLong record-count)))
+        fields (mapv (comp symbol name) fields)
+        c (locking record-count
+            (binding [*ns* (create-ns 'klara.records)]
+              (eval (list 'clojure.core/defrecord cname fields))))
+        csym (symbol (.getName ^Class c))
+        ->r (eval (list 'clojure.core/fn fields (list* 'new csym fields)))
+        map->r (eval (let [m (gensym "m")] (list 'clojure.core/fn [m] (list '. csym 'create (list 'clojure.core/or m {})))))]
+    (v/declare-pure! ->r)
+    (v/declare-pure! map->r)
+    (ret st {:class c :new ->r :create map->r})))
+
 (defintrinsic klara.code/free [st [code]]                      ; L2.view.free
   (ret st (vec (sort (t/free-locals (term-of code))))))
 
