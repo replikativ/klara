@@ -163,6 +163,8 @@
         :letrec (update t :bindings (partial mapv (fn [[n i]] [(r n) i])))
         :try (update t :catches (partial mapv #(update % :name r)))
         :code (update t :free (partial mapv r))
+        ;; a recur names the function it returns to by that function's name
+        :recur (update t :target r)
         t))))
 
 (defn freshen

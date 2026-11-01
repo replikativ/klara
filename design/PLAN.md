@@ -95,7 +95,7 @@ and `clojure -M:bench` stay green at every commit. Progress is recorded here.
   1. [x] **Total views.** Every construct has a view (multi-arity and variadic
      functions, letrec, throw, try, interop, def, perform, handle, code
      templates and holes); `:other` disappears (L2.view.total).
-  2. **Binding times and the domain.** `static`/`dynamic`/`reify`, the
+  2. [x] **Binding times and the domain.** `static`/`dynamic`/`reify`, the
      environment, the domain interface; the generator instantiated with
      values is an interpreter, tested against the machine on the
      conformance corpus and generated programs.

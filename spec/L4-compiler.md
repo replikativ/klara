@@ -287,5 +287,14 @@ known arguments, folds pure host functions on constants and selects
 branches on known tests, within the job's budget. Its result is a candidate
 like any other; nothing it does is trusted.
 
+`L4.jit.staged` The staged interpreter (`klara.jit.staged`, Klara code)
+interprets Core through views against a domain. With the values domain,
+`(staged/interpret c args ..)` computes what calling the function Code `c`
+on the arguments computes. With the staged domain it computes what is known
+and generates code for the rest, introducing names only through templates
+and binder constructors (L2.code.binders); `(staged/residual c)` with
+nothing known is the function again, which the kernel admits as
+equivalent to `c`.
+
 `L4.jit.attach` `^{:klara/specialize f}` on a definition names its
 specializer, resolved in the definition's namespace when the JIT runs.
