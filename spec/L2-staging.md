@@ -30,13 +30,19 @@ used inside `e` is lifted: the Code contains its value as a constant.
 stage when the Code is constructed. Its value must be Code
 (`L2.esc.not-code` otherwise), whose body replaces the `esc` form.
 
+`L2.code.recur` A `recur` in a fragment, `(code (recur ..))` built in a
+hole of a template's `loop` (or `fn`), re-enters that loop: like a local of
+the template, the loop it names is renamed with each instantiation, and the
+fragment counts as using it (L2.code.extrusion).
+
 `L2.esc.not-code` The generator in `esc` returned something other than Code.
 
 `L2.esc.level` `esc` outside `code` is rejected at expansion.
 
 `L2.stage.level` A local bound inside `code` (a future-stage local) used at
 the present stage, for example directly inside an `esc` without an inner
-`code`, is rejected at expansion.
+`code`, is rejected at expansion; so is a `recur` whose loop or function is
+of another stage than the `recur`.
 
 `L2.code.extrusion` When `(code e)` completes, every free local of its result
 must be bound by a `code` construction that is still in progress on the

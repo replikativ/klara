@@ -180,12 +180,15 @@
                                  (fail :L2.esc.not-code (str "esc must produce code, got " (pr-str c)))))
                      hole-values)
         spliced (splice-holes tmpl (:id term) bodies)
-        subst (into {} (map (fn [[n slot]]
-                              (let [x (nth env slot)
-                                    x (if (instance? RecRef x) @x x)]
-                                [n (if (instance? CodeVar x) (t/local (:name x)) (lift-term x))])))
-                    (.-free-slots node))
-        result (t/refresh-free (t/substitute spliced subst))
+        present (map (fn [[n slot]]
+                       (let [x (nth env slot)]
+                         [n (if (instance? RecRef x) @x x)]))
+                     (.-free-slots node))
+        ;; future-stage variables are renamed (a local, or the loop a recur
+        ;; returns to); present values are lifted
+        renaming (into {} (keep (fn [[n x]] (when (instance? CodeVar x) [n (:name x)]))) present)
+        subst (into {} (keep (fn [[n x]] (when-not (instance? CodeVar x) [n (lift-term x)]))) present)
+        result (t/refresh-free (t/substitute (t/rename spliced renaming) subst))
         allowed (into allowed (keep (fn [x] (when (instance? CodeVar x) (:name x)))) env)
         free (t/free-locals result)
         extruded (remove allowed free)]

@@ -135,7 +135,7 @@
                       [names env] (reduce (fn [[ns env] p] (let [[n env] (bind-local env p)] [(conj ns n) env]))
                                           [[] env] fixed)
                       [rest-name env] (if rest-sym (bind-local env rest-sym) [nil env])
-                      env (assoc env :recur {:target self-name :arity i
+                      env (assoc env :recur {:target self-name :arity i :level (or (:level env) 0)
                                              :n (+ (count names) (if rest-name 1 0))})]
                   (t/arity names rest-name (expand-body env body))))]
     (t/fn-term self-name (vec (map-indexed arity clauses)))))
@@ -164,8 +164,11 @@
                              syms)))))
 
 (defn- expand-recur [env [_ & args]]
-  (let [{:keys [target arity n]} (:recur env)]
+  (let [{:keys [target arity n level]} (:recur env)]
     (when-not target (fail :L0.term.wf "recur outside loop or fn"))
+    ;; L2.stage.level: a recur in code re-enters a loop of that code's stage
+    (when-not (= level (or (:level env) 0))
+      (fail :L2.stage.level "recur in code to a function of another stage"))
     (when-not (= n (count args))
       (fail :L0.term.wf (str "recur expects " n " arguments, got " (count args))))
     {:op :recur :target target :arity arity :args (mapv #(expand env %) args)}))

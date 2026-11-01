@@ -52,6 +52,27 @@ if `c` is truthy and `b` otherwise.
 `L4.check.prim` A call of a host function in the pure table to constant
 arguments may be replaced by its result, if the call returns normally.
 
+`L4.check.bool-let` `(let [x e] b)` where `e` is a call of a host function
+that returns true or false whenever it returns (`=`, `<`, `empty?`, the type
+predicates, ...) may be replaced by `(if e b[x := true] b[x := false])`.
+This is how `and` and `or` of tests compare with the `if`s they mean.
+
+`L4.check.commute` `(if (let [x e] b) p q)` may be replaced by
+`(let [x e] (if b p q))`, and `(if (if c a b) p q)` by
+`(if c (if a p q) (if b p q))`. The checker reshapes (bool-let, commute)
+only where the two sides' heads differ.
+
+`L4.check.fix` A loop in the candidate, `((fn L [x1 .. xk] B) a1 .. ak)`,
+is equivalent to a call `(g r1 .. rn)` in the reference of a function
+definition `g` if each loop variable `xj` stands for an argument position
+`pj` with `r_pj` equivalent to `aj`, the other arguments are values, and
+`B` is equivalent to the body of `g` with `xj` at `pj` and the other
+arguments as given, where (the hypothesis) `(recur e1 .. ek)` in `B` is
+equivalent to a call of `g` with `ej` at `pj` and the same other
+arguments. The hypothesis is used only under that one unfolding of `g`:
+this is fixpoint (Scott) induction, sound for a deterministic language with
+divergence; its proof for the formal semantics is open (PLAN.md, P7).
+
 `L4.check.alpha` Terms that differ only in the names of bound locals are
 equal. Equality is a congruence: two terms of the same construct are equal
 if their parts are, with their binders paired (`let`, `fn`, `letrec`, the

@@ -99,6 +99,9 @@
                     (reduce set/union #{} (map (fn [c] (disj (free-locals (:body c)) (:name c)))
                                                (:catches t)))
                     (if (:finally t) (free-locals (:finally t)) #{}))
+    ;; a recur names the function it re-enters: free in a code fragment that
+    ;; a hole splices into a loop of the enclosing template (L2.code.recur)
+    :recur (conj (reduce set/union #{} (map free-locals (children t))) (:target t))
     ;; holes see the template's binders as future-stage variables, not as free locals
     :code (let [bound (into #{} (mapcat binders) (nodes (:template t)))]
             (set/union (set (:free t))

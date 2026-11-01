@@ -208,3 +208,25 @@
                 ]")))
       ;; under the guards, no seq is left: only the fallback computes it
       (is (= 1 (count (re-seq #"\(seq " (pr-str (klara.lang.term/->form (.-term ^klara.compile.kernel.Candidate (:candidate (k/eval-string s "(ns ps) o"))))))))))))
+
+(deftest loops-against-recursion   ; L4.check.fix L4.check.bool-let L4.check.commute
+  (let [s (session)
+        status (fn [src] (k/eval-string s (str "(ns lr (:require [klara.jit :as jit] [klara.stage :refer [code esc]])) " src)))]
+    (status "(defn upto [s i] (if (< i (count s)) (upto s (inc i)) i))
+             (defn walk [s k i] (if (< i (count s)) (walk s (inc k) (inc i)) k))
+             (defn both [a b] (and (< a b) (> b 0)))
+             (defn either [a b] (or (= a 1) (= b 2)))
+             (defn pick [x] (and (get x :a) 1))
+             (defn with [q f] (:status (jit/prepare q {:specializer (fn [ctx d] (jit/function ctx f))})))")
+    (testing "a loop is the recursive definition it unrolls, by fixpoint induction"
+      (is (= :ready (status "(with 'lr/upto (fn [s i] (code (loop [j (esc i)] (if (< j (count (esc s))) (recur (inc j)) j)))))"))))
+    (testing "a loop that steps differently is not"
+      (is (= :rejected (status "(with 'lr/upto (fn [s i] (code (loop [j (esc i)] (if (< j (count (esc s))) (recur (+ j 2)) j)))))"))))
+    (testing "an argument that changes on recursion is not fixed in the loop"
+      (is (= :rejected (status "(with 'lr/walk (fn [s k i] (code (loop [j (esc i)] (if (< j (count (esc s))) (recur (inc j)) (esc k))))))"))))
+    (testing "and and or of tests are the ifs they mean"
+      (is (= [:ready :ready]
+             [(status "(with 'lr/both (fn [a b] (code (if (< (esc a) (esc b)) (> (esc b) 0) false))))")
+              (status "(with 'lr/either (fn [a b] (code (if (= (esc a) 1) true (= (esc b) 2)))))")])))
+    (testing "but not where the test may be nil: (and nil 1) is nil, not false"
+      (is (= :rejected (status "(with 'lr/pick (fn [x] (code (if (get (esc x) :a) 1 false))))"))))))

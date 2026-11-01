@@ -186,6 +186,21 @@
       (assoc-in ctx [:assume (term-key (first (:args g)))] false)
       ctx)))
 
+(def ^:private boolean-host
+  "Host functions that return true or false whenever they return."
+  '#{clojure.core/= clojure.core/== clojure.core/not= clojure.core/< clojure.core/> clojure.core/<=
+     clojure.core/>= clojure.core/zero? clojure.core/pos? clojure.core/neg? clojure.core/even?
+     clojure.core/odd? clojure.core/empty? clojure.core/contains? clojure.core/instance?
+     clojure.core/number? clojure.core/integer? clojure.core/int? clojure.core/double?
+     clojure.core/float? clojure.core/string? clojure.core/keyword? clojure.core/symbol?
+     clojure.core/map? clojure.core/vector? clojure.core/seq? clojure.core/coll?
+     clojure.core/fn? clojure.core/boolean? clojure.core/set? clojure.core/nil?
+     clojure.core/some? clojure.core/true? clojure.core/false? clojure.core/not
+     clojure.core/identical?})
+
+(defn- boolean-valued? [t]
+  (and (= :app (:op t)) (= :host (get-in t [:fn :op])) (contains? boolean-host (get-in t [:fn :name]))))
+
 (defn whnf
   "Rewrite `t` at its head until no head rule applies."
   [ctx t]
@@ -221,6 +236,25 @@
 ;; Comparison
 
 (declare equal?)
+
+(defn- reshape
+  "One step of L4.check.bool-let or L4.check.commute at the head of whnf
+   term `t`, or nil. Tried only where the two sides' heads differ:
+   - (let [x e] b) with e true or false (as and and or expand) is
+     (if e b[x:=true] b[x:=false]);
+   - (if (let [x e] b) p q) is (let [x e] (if b p q));
+   - (if (if c a b) p q) is (if c (if a p q) (if b p q))."
+  [t]
+  (case (:op t)
+    :let (let [body (:body t) x (:name t)]
+           (when (boolean-valued? (:init t))
+             (t/if* (:init t) (t/substitute body {x (t/const true)}) (t/substitute body {x (t/const false)}))))
+    :if (let [c (:test t)]
+          (cond (or (:speculate t) (:speculate c)) nil
+                (= :let (:op c)) (t/let1 (:name c) (:init c) (assoc t :test (:body c)))
+                (= :if (:op c)) (t/if* (:test c) (assoc t :test (:then c)) (assoc t :test (:else c)))
+                :else nil))
+    nil))
 
 (defn- unfold-head
   "Unfold the definition at the head of `t` (its function position for a
@@ -396,11 +430,97 @@
     (let [[x c] (:args t)]
       (when (and (= :local (:op x)) (= :const (:op c))) [(:name x) c]))))
 
+;; ---------------------------------------------------------------------------
+;; Loops against recursive definitions (L4.check.fix)
+
+(defn- denotes
+  "The function value a function-position term `f` denotes, or nil."
+  [ctx f]
+  (case (:op f)
+    :global (let [{:keys [kind name world generation]} (:link f)]
+              (case kind
+                :pinned (w/pin world name)
+                (:late :guarded) (let [d (w/lookup (:world ctx) name)]
+                                   (when (and d (or (= kind :late) (= generation (:generation d))))
+                                     (:value d)))
+                nil))
+    :const (:value f)
+    nil))
+
+(defn- loop-redex
+  "[self params body] if `t` is ((fn self [x..] body) a..) whose body recurs
+   to self, else nil."
+  [t]
+  (let [f (:fn t)]
+    (when (and (= :app (:op t)) (= :fn (:op f)) (:self f) (= 1 (count (:arities f))))
+      (let [{:keys [params rest body]} (first (:arities f))]
+        (when (and (nil? rest) (= (count params) (count (:args t)))
+                   (some #(and (= :recur (:op %)) (= (:self f) (:target %))) (t/nodes body)))
+          [(:self f) params body])))))
+
+(defn- correspondences
+  "Injective maps from loop variable j to argument position p of the
+   reference call with (r p) equivalent to (a j), lazily."
+  [ctx rs as]
+  (letfn [(go [j used]
+            (if (= j (count as))
+              [{}]
+              (for [p (range (count rs))
+                    :when (and (not (used p)) (equal? ctx (nth rs p) (nth as j)))
+                    m (go (inc j) (conj used p))]
+                (assoc m j p))))]
+    (go 0 #{})))
+
+(defn- fix
+  "L4.check.fix: reference call `a` = (g r..) of a function definition g and
+   candidate loop `b` = ((fn L [x..] B) a..). Each loop variable x_j stands
+   for an argument position p_j with r_{p_j} equivalent to a_j; the other
+   arguments are values, the same on every iteration. Then B must mean g's
+   body with x_j at p_j and the others as given, where (recur e..) in B
+   means g called with e_j at p_j and the same others (the hypothesis, used
+   only under this one unfolding of g: fixpoint induction)."
+  [ctx a b]
+  (when-let [[self params body] (loop-redex b)]
+    (when-let [a (cond (= :app (:op a)) a
+                       ;; the body of the definition being prepared is its call
+                       ;; on its parameters, unfolded once
+                       (= (get-in ctx [:own-body :key]) (term-key a)) (get-in ctx [:own-body :call]))]
+      (let [g (denotes ctx (:fn a))
+            rs (:args a)]
+        (when-let [gt (and (v/closure? g) (unfold ctx (:fn a) :reference))]
+          (when-let [arity (first (filter #(and (nil? (:rest %)) (= (count rs) (count (:params %)))) (:arities gt)))]
+            (boolean
+             (some (fn [pi]
+                     (let [loop-pos (set (vals pi))
+                           inv (into {} (remove (comp loop-pos first)) (map-indexed vector rs))]
+                       (when (every? value-term? (vals inv))
+                         (let [[gt' _] (t/freshen gt)
+                               arity' (first (filter #(and (nil? (:rest %)) (= (count rs) (count (:params %)))) (:arities gt')))
+                               gps (:params arity')
+                               subst (merge (into {} (map (fn [[q r]] [(nth gps q) r])) inv)
+                                            (into {} (map (fn [[j p]] [(nth gps p) (t/local (nth params j))])) pi))
+                               gbody (cond-> (:body arity') (:self gt') (t/substitute {(:self gt') (dissoc gt' :self)}))
+                               ctx' (assoc-in ctx [:fix self] {:g g :pi pi :inv inv :n (count rs)})]
+                           (equal? ctx' (t/substitute gbody subst) body)))))
+                   (take 8 (correspondences ctx rs (:args b)))))))))))
+
+(defn- by-hypothesis
+  "L4.check.fix: (recur e..) to a loop being related to g means g called
+   with e_j at the loop's positions and its fixed arguments elsewhere."
+  [ctx a b]
+  (when-let [{:keys [g pi inv n]} (and (= :recur (:op b)) (get-in ctx [:fix (:target b)]))]
+    (and (= :app (:op a)) (= n (count (:args a))) (= (count pi) (count (:args b)))
+         (identical? g (denotes ctx (:fn a)))
+         (every? (fn [[q r]] (equal? ctx (nth (:args a) q) r)) inv)
+         (every? (fn [[j p]] (equal? ctx (nth (:args a) p) (nth (:args b) j))) pi))))
+
 (defn equal?
   "Is `a` equivalent to `b` under the checker's rules?"
   [ctx a b]
   (let [a (whnf ctx a) b (whnf ctx b)]
     (or (identical? a b)                             ; the same term means the same
+        (by-hypothesis ctx a b)
+        (fix ctx a b)
         (cond
           ;; L4.check.speculate: both branches must mean the other side
           (and (speculation? b) (not (speculation? a)))
@@ -414,6 +534,9 @@
           (and (speculation? a) (not (speculation? b)))
           (and (guard? (:test a) (:else a)) (equal? ctx (:then a) b) (equal? ctx (:else a) b)))
         (and (= (:op a) (:op b)) (same-shape ctx a b))
+        ;; L4.check.bool-let, L4.check.commute: where the heads differ
+        (when-let [a' (reshape a)] (equal? ctx a' b))
+        (when-let [b' (reshape b)] (equal? ctx a b'))
         ;; a is on the reference's side, b on the candidate's (see check)
         (if-let [a' (unfold-head ctx a :reference)]
           (equal? ctx a' b)
@@ -430,7 +553,15 @@
      {:result :different :difference [ref-form cand-form]}
      {:result :exhausted}"
   [reference candidate world meter & [self]]
-  (let [ctx {:world world :meter meter :self self :premises (volatile! #{}) :difference (volatile! nil)}]
+  (let [ctx {:world world :meter meter :self self :premises (volatile! #{}) :difference (volatile! nil)}
+        ;; L4.check.fix: the prepared definition's body, as a call of it
+        arity (when (and self (= :fn (:op reference)) (= 1 (count (:arities reference))))
+                (first (:arities reference)))
+        ctx (cond-> ctx
+              (and arity (nil? (:rest arity)))
+              (assoc :own-body {:key (term-key (whnf (assoc ctx :meter nil) (:body arity)))
+                                :call {:op :app :fn {:op :global :link {:kind :late :name self}}
+                                       :args (mapv t/local (:params arity))}}))]
     (try
       (if (equal? ctx reference candidate)
         {:result :equal :premises @(:premises ctx)}
