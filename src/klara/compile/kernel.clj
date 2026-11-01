@@ -54,15 +54,16 @@
 ;; Compiled code left (L4.exec.leave); carries the leave state.
 (deftype Left [leave])
 
-(v/deftype-callable Executable [cand ^:volatile-mutable last-world ^:volatile-mutable last-valid
+(v/deftype-callable Executable [cand ^:volatile-mutable validity   ; [world valid?], one write
                                 ^:volatile-mutable last-path]
   v/IExecutable
   (-execute [this st args]
     (let [world (:world st)
           ok (and (or (nil? (:mint st)) (:mint-safe cand))
-                  (if (identical? world last-world)
-                    last-valid
-                    (let [r (valid? cand world)] (set! last-world world) (set! last-valid r) r))
+                  (let [^objects v validity]
+                    (if (and v (identical? world (aget v 0)))
+                      (aget v 1)
+                      (let [r (valid? cand world)] (set! validity (object-array [world r])) r)))
                   (guards-hold? cand args))
           r (if ok
               (try (m/set-context! world (:mint st) (:dyn st))
@@ -81,9 +82,10 @@
         :else (do (set! last-path :compiled) (ret st r)))))
   (-call [this world mint dyn args]
     (if (and (or (nil? mint) (:mint-safe cand))
-             (if (identical? world last-world)
-               last-valid
-               (let [r (valid? cand world)] (set! last-world world) (set! last-valid r) r))
+             (let [^objects v validity]
+               (if (and v (identical? world (aget v 0)))
+                 (aget v 1)
+                 (let [r (valid? cand world)] (set! validity (object-array [world r])) r)))
              (guards-hold? cand args))
       (do (set! last-path :compiled) (apply (:host-fn cand) args))
       v/fallback))
@@ -97,7 +99,7 @@
 
 (defmethod print-method Executable [x ^java.io.Writer out] (.write out (str x)))
 
-(defn executable [cand] (Executable. cand nil false nil))
+(defn executable [cand] (Executable. cand nil nil))
 
 (defn- candidate-of [^Executable e] (.-cand e))
 

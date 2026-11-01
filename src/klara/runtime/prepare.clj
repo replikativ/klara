@@ -46,11 +46,21 @@
   (cached [id ^long epoch])
   (cache [id ^long epoch value]))
 
-(deftype Global [term link ^:volatile-mutable cid ^:volatile-mutable ^long cepoch ^:volatile-mutable cvalue]
+;; One immutable entry per cache, replaced as a whole: jobs run in parallel
+;; on different worlds (L3.job.parallel), so a world id and its value must
+;; never be read from two different writes.
+(deftype CacheEntry [id ^long epoch value])
+
+(defn entry-value
+  "The value cached in `e` for world `id` at dispatch `epoch`, or nil."
+  [^CacheEntry e id ^long epoch]
+  (when (and e (identical? (.-id e) id) (== (.-epoch e) epoch)) (.-value e)))
+
+(deftype Global [term link ^:volatile-mutable entry]
   INode (tag [_] 2) (sourceTerm [_] term)
   IGlobalCache
-  (cached [_ id epoch] (when (and (identical? cid id) (== cepoch epoch)) cvalue))
-  (cache [_ id epoch value] (set! cid id) (set! cepoch epoch) (set! cvalue value) value)
+  (cached [_ id epoch] (entry-value entry id epoch))
+  (cache [_ id epoch value] (set! entry (CacheEntry. id epoch value)) value)
   Object (toString [_] "#node/Global"))
 (defnode Host 3 [value name])
 ;; arities: vector of Arity; captured: slots of the free locals in the enclosing scope
@@ -111,6 +121,15 @@
 (defn- observed [v]
   (if (instance? java.lang.ref.WeakReference v) (.get ^java.lang.ref.WeakReference v) v))
 
+(defn- sample-of
+  "Arguments kept as a sample: held strongly when small (scalars and
+   collections of at most 10000 elements), so a profile retains at most one
+   bounded sample per function; large arguments only weakly (L1.retain.roots)."
+  [args]
+  (if (every? #(or (not (coll? %)) (and (counted? %) (<= (count %) 10000))) args)
+    args
+    (java.lang.ref.WeakReference. args)))
+
 (defn- same-observation? [v x]
   (if (instance? java.lang.ref.WeakReference v)
     (identical? (.get ^java.lang.ref.WeakReference v) x)
@@ -121,10 +140,13 @@
                   ^:volatile-mutable ^objects values    ; per argument: a value, or unstable
                   ^:volatile-mutable callee
                   ^:volatile-mutable ^long taken
-                  ^:volatile-mutable ^long not-taken]
+                  ^:volatile-mutable ^long not-taken
+                  ^:volatile-mutable sample]                   ; recent arguments (see sample-of)
   IProfile
   (enter [_ args external]
     (set! n (inc n))
+    (when (and external (zero? (bit-and n (dec n))))     ; at counts 1, 2, 4, 8, ...
+      (set! sample (sample-of args)))
     (let [cnt (count args)]
      (when external
       (if (nil? classes)
@@ -149,9 +171,10 @@
      :classes (when classes (mapv #(if (identical? % poly) :polymorphic %) classes))
      :stable (when values (mapv #(if (identical? % unstable) :unstable [:value (observed %)]) values))
      :callee (cond (nil? callee) nil (identical? callee poly) :polymorphic :else callee)
-     :branches [taken not-taken]}))
+     :branches [taken not-taken]
+     :sample (observed sample)}))
 
-(defn new-profile [] (Profile. 0 nil nil nil 0 0))
+(defn new-profile [] (Profile. 0 nil nil nil 0 0 nil))
 
 (defonce ^{:doc "Whether the interpreter records profiles (L4.profile.record)."} profiling (atom true))
 
@@ -206,7 +229,7 @@
     (case (:op t)
       :const (Const. t (:value t))
       :local (Local. t (slot-of scope (:name t)) (:name t))
-      :global (Global. t (:link t) nil -1 nil)
+      :global (Global. t (:link t) nil)
       :host (Host. t (host-value (:name t)) (:name t))
       :fn (prep-fn scope t host-value)
       :app (let [f (:fn t)

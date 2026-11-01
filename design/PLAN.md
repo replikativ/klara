@@ -62,7 +62,17 @@ and `clojure -M:bench` stay green at every commit. Progress is recorded here.
   Originally: The facts interface; a built-in
   checker for literal and checked-arithmetic types; ansatz certificates;
   discharge at call sites; AOT given a saved profile.
-- [ ] **P5. The investor.** A Klara policy over profiles and measured
+- [ ] **P5. The investor.** Done (v1, `klara.investor`, Klara code): per
+  definition, gate on work (loop iterations count), prepare alternatives
+  (`:as-is`, `:default`, `:attached`) in parallel jobs (`job/run-all`,
+  L3.job.parallel), measure each at steady state on a profile sample in a
+  job that does not train profiles (L3.job.profile), install the best net
+  gain (as many calls again expected; savings within 10% count as none),
+  account for everything; `showcases/investor.clj`. Caches are single-entry
+  so parallel jobs on different worlds cannot mix them. Open: proof-carrying
+  alternatives (needs the arithmetic certifier), decisions kept in a world,
+  automatic triggering.
+  Originally: A Klara policy over profiles and measured
   costs: threshold and cost table first, parallel exploration in forks,
   honest accounting, declining when it does not pay.
 - [ ] **P6. Ownership, functional but in-place.** Uniqueness judgment,

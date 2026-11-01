@@ -113,18 +113,17 @@
 ;; last resolution, as in the interpreter's globals (klara.runtime.prepare).
 (definterface ISite (lookup [q]))
 
-(deftype Site [^:volatile-mutable cid ^:volatile-mutable ^long cepoch ^:volatile-mutable cvalue]
+(deftype Site [^:volatile-mutable entry]
   ISite
   (lookup [_ q]
     (let [^objects c (m/current-context)
           world (aget c 0)
           id (.-id ^klara.runtime.value.World world)
           epoch (.get m/dispatch-epoch)]
-      (if (and (identical? cid id) (== cepoch epoch))
-        cvalue
-        (let [x (m/resolve-link {:kind :late :name q} world (:session (aget c 2)))]
-          (set! cid id) (set! cepoch epoch) (set! cvalue x)
-          x)))))
+      (or (klara.runtime.prepare/entry-value entry id epoch)
+          (let [x (m/resolve-link {:kind :late :name q} world (:session (aget c 2)))]
+            (set! entry (klara.runtime.prepare.CacheEntry. id epoch x))
+            x)))))
 
 (defn late [^ISite site q] (.lookup site q))
 
@@ -222,7 +221,7 @@
                           ;; generation is a premise, so it denotes this function (L4.exec.valid)
                           (and (= :late (:kind l)) self-name (= (:name l) self-name)) self-sym
                           (= :late (:kind l))
-                          (list 'klara.compile.lower/late (constant (Site. nil -1 nil)) (list 'quote (:name l)))
+                          (list 'klara.compile.lower/late (constant (Site. nil)) (list 'quote (:name l)))
                           :else (constant (link-value l))))
               :fn (let [^klara.runtime.prepare.Fn fnode n
                         self (or (:self t) (t/fresh "fn"))

@@ -438,18 +438,20 @@
       (aset m 0 n)
       (neg? n))))
 
+(defn- profiling? [dyn] (and @prep/profiling (nil? (:no-profile dyn))))
+
 (defn- record-entry!
   "L4.profile.record: a function entry (or loop iteration) with its arguments."
-  [^Closure f args external]
-  (when @prep/profiling
+  [dyn ^Closure f args external]
+  (when (profiling? dyn)
     (.enter ^klara.runtime.prepare.IProfile (.-profile ^klara.runtime.prepare.Fn (.-node f)) args (boolean external))))
 
-(defn- record-call! [^klara.runtime.prepare.App c fv]
-  (when (and @prep/profiling (or (instance? Closure fv) (instance? klara.runtime.value.IExecutable fv)))
+(defn- record-call! [dyn ^klara.runtime.prepare.App c fv]
+  (when (and (profiling? dyn) (or (instance? Closure fv) (instance? klara.runtime.value.IExecutable fv)))
     (.call ^klara.runtime.prepare.IProfile (.-profile c) fv)))
 
-(defn- record-branch! [^klara.runtime.prepare.If c x]
-  (when @prep/profiling (.branch ^klara.runtime.prepare.IProfile (.-profile c) (boolean x))))
+(defn- record-branch! [dyn ^klara.runtime.prepare.If c x]
+  (when (profiling? dyn) (.branch ^klara.runtime.prepare.IProfile (.-profile c) (boolean x))))
 
 (defn- save! [^objects r mode ctl env k world mint dyn]
   (aset r 0 mode) (aset r 1 ctl) (aset r 2 env) (aset r 3 k)
@@ -479,7 +481,7 @@
           (case (prep/tag c)
             5 (let [^klara.runtime.prepare.App c c
                     fv (imm (.-f c) env world mint dyn)
-                    _ (when-not (identical? fv none) (record-call! c fv))]
+                    _ (when-not (identical? fv none) (record-call! dyn c fv))]
                 (cond
                   (identical? fv none)
                   (next! regs :eval (.-f c) env (conj k {:f :args :todo (.-args c) :vals [] :env env :recur (.-recur-arity c)}) world mint dyn)
@@ -490,7 +492,7 @@
                         ra (.-recur-arity c)
                         i (if ra (long ra) (select-arity fv (count args)))
                         ^klara.runtime.prepare.Arity a (nth (.-arities ^klara.runtime.prepare.Fn (.-node fv)) i)]
-                    (record-entry! fv args (not (.-self-call c)))
+                    (record-entry! dyn fv args (not (.-self-call c)))
                     (next! regs :eval (.-body a) (bind-args fv a args (boolean ra)) k world mint dyn))
                   (.-all-imm c)
                   (next! regs :apply [fv (imm-all (.-args c) env world mint dyn) (.-recur-arity c) (.-self-call c)] env k world mint dyn)
@@ -510,7 +512,7 @@
                     x (imm (.-test c) env world mint dyn)]
                 (if (identical? x none)
                   (next! regs :eval (.-test c) env (conj k {:f :if :node c :then (.-then c) :else (.-else c) :env env}) world mint dyn)
-                  (do (record-branch! c x)
+                  (do (record-branch! dyn c x)
                       (next! regs :eval (if x (.-then c) (.-else c)) env k world mint dyn))))
             9 (let [^klara.runtime.prepare.Do c c
                     exprs (.-exprs c)]
@@ -537,7 +539,7 @@
                      (if compiled
                        ;; L4.exec.osr: compiled code for this loop exists and holds here
                        (next! regs :apply [compiled args nil] env k world mint dyn)
-                       (do (record-entry! self args true)
+                       (do (record-entry! dyn self args true)
                            (next! regs :eval (.-body a) (bind-args self a args true) k world mint dyn))))
                  (let [[vals remaining] (if (.-all-imm c)
                                         [(imm-all (.-args c) env world mint dyn) nil]
@@ -592,7 +594,7 @@
                                  (conj k (assoc f :todo (next remaining) :vals vals)) world mint dyn)))
                       (next! regs :apply [(first vals) (subvec vals 1) (:recur f)] env k world mint dyn)))
             :let (next! regs :eval (:body f) (conj (:env f) x) k world mint dyn)
-            :if (do (record-branch! (:node f) x)
+            :if (do (record-branch! dyn (:node f) x)
                     (next! regs :eval (if x (:then f) (:else f)) (:env f) k world mint dyn))
             :do (let [[a & more] (:rest f)]
                   (next! regs :eval a (:env f) (if more (conj k (assoc f :rest more)) k) world mint dyn))
@@ -637,7 +639,7 @@
             (let [^Closure fv fv
                   i (if recur-arity (long recur-arity) (select-arity fv (count args)))
                   ^klara.runtime.prepare.Arity a (nth (.-arities ^klara.runtime.prepare.Fn (.-node fv)) i)
-                  _ (record-entry! fv args (not (get ctl 3)))
+                  _ (record-entry! dyn fv args (not (get ctl 3)))
                   env' (bind-args fv a args (boolean recur-arity))
                   basis (.-basis fv)]
               (if (and basis (not (identical? basis mint)))

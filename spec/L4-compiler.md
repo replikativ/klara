@@ -131,7 +131,10 @@ records, without changing any result: for each function, its entries
 (including loop iterations) with the class and, for simple values, the
 value of each argument, marked polymorphic or unstable once they vary; for
 each call of a Klara function, the count and the callee; for each `if`, how
-often each branch was taken. `(klara.profile/record! false)` turns recording
+often each branch was taken. A function's profile also keeps a recent
+argument vector as `:sample`: strongly when its elements are scalars or
+collections of at most 10000 elements (a bounded retention of one sample per
+function), otherwise weakly. `(klara.profile/record! false)` turns recording
 off, `(klara.profile/record! true)` on again.
 
 `L4.profile.snapshot` `(klara.profile/snapshot f)` returns the profile of

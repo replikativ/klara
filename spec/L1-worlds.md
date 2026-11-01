@@ -11,6 +11,9 @@ with the same id are the same world.
 initializer term mentions). Generations are unique: no two evaluations of
 any definition share one.
 
+`L1.world.names` `(world/names w 'ns)` returns the names defined in
+namespace `ns` in world `w`, sorted.
+
 `L1.world.define` `(world/define w name value)` returns a new world equal
 to `w` except that `name` is defined as `value`. It does not change the
 session; `(world/publish! w)` does (`L1.session.publish`).

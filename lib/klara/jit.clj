@@ -32,6 +32,17 @@
 
 (defn calls [ctx] (get-in ctx [:profile :entries :count]))
 
+(defn- counts [c]
+  (let [p (:profile (code/view c))]
+    (cons (or (:count p) (when p (+ (:then p 0) (:else p 0))) 0)
+          (mapcat counts (code/children c)))))
+
+(defn work
+  "How much the definition ran: the largest count in its profile, so a
+   loop's iterations count, not only the calls of the function."
+  [ctx]
+  (apply max 0 (counts (:reference ctx))))
+
 (defn params [ctx] (:params (code/view (:reference ctx))))
 
 (defn body [ctx] (:body (code/view (:reference ctx))))
@@ -143,16 +154,23 @@
     (s ctx default)
     (default ctx)))
 
-(defn compile!
-  "Specialize, check, compile and install the definition named q. Returns the
-   preparation outcome. opts may name a :specializer to use instead of the
-   attached one; other options go to compiler/prepare."
-  ([q] (compile! q {}))
+(defn prepare
+  "Specialize and check the definition named q, without installing it.
+   opts may name a :specializer to use instead of the attached one and a
+   saved :profile; other options go to compiler/prepare."
+  ([q] (prepare q {}))
   ([q opts]
    (let [ctx (cond-> (context q (:profile opts)) (:specializer opts) (assoc :specializer (:specializer opts)))
-         candidate (specialize ctx)
-         outcome (compiler/prepare (:reference ctx)
-                                   (merge {:recipe (fn [_] candidate) :name q} (dissoc opts :specializer :profile)))]
+         candidate (specialize ctx)]
+     (compiler/prepare (:reference ctx)
+                       (merge {:recipe (fn [_] candidate) :name q} (dissoc opts :specializer :profile))))))
+
+(defn compile!
+  "Prepare the definition named q (see prepare) and install it when ready.
+   Returns the preparation outcome."
+  ([q] (compile! q {}))
+  ([q opts]
+   (let [outcome (prepare q opts)]
      (when (= :ready (:status outcome))
        (compiler/install! outcome))
      outcome)))

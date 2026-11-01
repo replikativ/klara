@@ -92,8 +92,10 @@
         frame {:f :job :job job :meter meter :reserved (aget meter 0)
                :parent-dyn (:dyn st) :world (:world st) :mint (:mint st)
                :on-return on-return :on-throw on-throw}
-        dyn {:meter meter :defaults (job-defaults) :session (get-in st [:dyn :session])
-             :job job :on-exhausted on-exhausted}]
+        dyn (cond-> {:meter meter :defaults (job-defaults) :session (get-in st [:dyn :session])
+                     :job job :on-exhausted on-exhausted}
+              ;; L3.job.profile: a job may run without training profiles
+              (or (false? (:profile @job)) (get-in st [:dyn :no-profile])) (assoc :no-profile true))]
     (assoc st :k (conj (:k st) frame) :dyn dyn)))
 
 (defn- steps-of [budget] (long (or (:steps budget) default-steps)))
@@ -103,7 +105,7 @@
    the job's context. The caller then sets the control to run inside it."
   [st opts]
   (let [fork (w/fork (:world st))
-        job (atom {:world fork :intents [] :owned #{}
+        job (atom {:world fork :intents [] :owned #{} :profile (:profile opts)
                    :intent-limit (or (:intent-limit opts) default-intent-limit)})]
     (assoc (enter st job (steps-of (:budget opts))) :world fork :mint nil)))
 
@@ -111,6 +113,28 @@
   {:kind :intrinsic
    :fn (fn [st [opts thunk]]
          (assoc (start st opts) :mode :apply :ctl [thunk []]))})
+
+(b/register! 'klara.job/run-all                                      ; L3.job.parallel
+  {:kind :intrinsic
+   :fn (fn [st [opts thunks]]
+         ;; Jobs are isolated (a forked world, their own budget, no mutation of
+         ;; outside objects), so they may run at the same time. Each runs its
+         ;; own machine on its own thread; the parent reserves all budgets
+         ;; first and takes back what is left after all have finished.
+         (let [thunks (vec thunks)
+               n (count thunks)
+               steps (steps-of (:budget opts))
+               granted (reserve! (get-in st [:dyn :meter]) (* n steps))
+               each (quot granted (max n 1))
+               run1 (fn [thunk]
+                      (let [own (long-array [each])
+                            base (assoc st :k () :dyn (assoc (:dyn st) :meter own))
+                            s (assoc (start base (assoc opts :budget {:steps each})) :mode :apply :ctl [thunk []])]
+                        [(:ctl (m/run-state s)) (aget own 0)]))
+               results (mapv deref (mapv #(future (run1 %)) thunks))]
+           (when-let [^longs pm (get-in st [:dyn :meter])]
+             (aset pm 0 (long (+ (aget pm 0) (+ (- granted (* n each)) (reduce + (map second results)))))))
+           (assoc st :mode :ret :ctl (mapv first results) :env nil)))})
 
 (b/register! 'klara.job/resume                                       ; L3.job.resume
   {:kind :intrinsic

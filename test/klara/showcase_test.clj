@@ -52,3 +52,14 @@
       (is (= :ready (get-in @second-run [:aot-outcomes 'showcases.ahead-of-time/settle])))
       (is (#{:compiled :left} (:ran r)))
       (is (= 217801084 (:total r))))))
+
+(deftest investor   ; L3.job.parallel
+  (let [r (run "showcases/investor.clj")]
+    (testing "the investor compiles the loop and declines what does not pay"
+      (is (= :compiled (get-in r [:decisions 'showcases.investor/rank])))
+      (is (= :default (get-in r [:chosen 'showcases.investor/rank])))
+      (is (= :not-hot (get-in r [:decisions 'showcases.investor/banner])))
+      (is (not= :compiled (get-in r [:decisions 'showcases.investor/score]))))
+    (testing "same result, faster"
+      (is (:same-result r))
+      (is (< 5 (:speedup r))))))

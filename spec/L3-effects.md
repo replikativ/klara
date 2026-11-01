@@ -46,6 +46,16 @@ inside the job.
 effects in order), `:spent` (`{:steps n}`) and `:value`, `:error` or
 `:continuation` according to the status.
 
+`L3.job.parallel` `(job/run-all opts thunks)` runs one job per thunk, as
+`job/run` would, and returns their outcomes in order. The jobs may run at
+the same time: each has its own forked world and budget and cannot mutate
+objects created outside it, so no job can observe another. The parent's
+budget is charged with what the jobs spent together.
+
+`L3.job.profile` With `{:profile false}` in its options, a job (and the jobs
+it starts) does not record profiles (L4.profile.record): measuring code by
+running it does not change what the JIT learns about it.
+
 `L3.job.define` Inside a job `:world/define` changes the job's world only.
 
 `L3.job.print` Inside a job `:io/print` is appended to `:intents` instead of

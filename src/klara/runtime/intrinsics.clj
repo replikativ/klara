@@ -61,6 +61,9 @@
   (check-world world)
   (ret st (Code. {:op :global :link {:kind :pinned :world (w/slice world (w/footprint world q)) :name q}})))
 
+(defintrinsic klara.world/names [st [world ns-sym]]              ; L1.world.names
+  (ret st (vec (sort (filter #(= (str ns-sym) (namespace %)) (keys (w/defs (check-world world))))))))
+
 (defintrinsic klara.world/id [st [world]] (ret st (w/id (check-world world))))
 
 (defintrinsic klara.world/generation [st [world q]] (ret st (w/generation (check-world world) q)))
@@ -345,7 +348,7 @@
        (<= (count (filter (complement coll?) (tree-seq coll? seq x))) 64)))
 
 (defn- export-profile [p]
-  (cond-> p
+  (cond-> (dissoc p :sample)
     (:classes p) (update :classes (fn [cs] (mapv #(if (class? %) (.getName ^Class %) %) cs)))
     (:stable p) (update :stable (fn [vs] (mapv #(if (and (vector? %) (small-data? (second %))) % :unstable) vs)))
     (contains? p :callee) (update :callee #(if (or (string? %) (keyword? %) (nil? %)) % (str %)))))
