@@ -155,3 +155,14 @@
     (is (= :declined
            (run (str header "(defn f [x] (* x 2)) (dotimes [_ 3] (f 1))
                  (:status (jit/prepare 'adv/f {:specializer own/in-place :certificate {:kind :in-place}}))"))))))
+
+(deftest parallel-jobs-share-profiles-safely   ; L3.job.parallel
+  (testing "preparations running at the same time read and write the same profiles without failing"
+    (is (= #{:ready}
+           (run (str header "(defn wc [ws] (loop [i 0 m {}] (if (< i (count ws)) (recur (inc i) (assoc m (nth ws i) i)) m)))
+                 (def ws (vec (range 50)))
+                 (dotimes [_ 200] (wc ws))
+                 (set (for [_ (range 6)
+                            o (job/run-all {:budget {:steps 50000000}}
+                                (for [_ (range 6)] (fn [] (wc ws) (:status (jit/prepare 'adv/wc)))))]
+                        (:value o)))"))))))

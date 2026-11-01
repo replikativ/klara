@@ -149,10 +149,16 @@
     (identical? (.get ^java.lang.ref.WeakReference v) x)
     (and (cheap-value? x) (= v x) (= (class v) (class x)))))
 
+(deftype Observed [^objects classes ^objects values])   ; per argument: a class or poly, a value or unstable
+
+;; Parallel jobs run the same code (L3.job.parallel), so a profile is
+;; written by several threads without locks. Every field holds one object
+;; published at once (the argument observations as one Observed), so a
+;; reader never sees half of an update; element updates only move towards
+;; poly/unstable, and lost counts only make the heuristics coarser.
 (deftype Profile [^:volatile-mutable ^long n
                   ^:volatile-mutable ^long external-n            ; entries other than self calls
-                  ^:volatile-mutable ^objects classes   ; per argument: a class, or poly
-                  ^:volatile-mutable ^objects values    ; per argument: a value, or unstable
+                  ^:volatile-mutable observed-args              ; an Observed, or nil
                   ^:volatile-mutable callee
                   ^:volatile-mutable ^long taken
                   ^:volatile-mutable ^long not-taken
@@ -163,36 +169,40 @@
     (when external
       (set! external-n (inc external-n))
       (when (zero? (bit-and external-n (dec external-n)))     ; at counts 1, 2, 4, 8, ...
-        (set! sample (sample-of args))))
-    (let [cnt (count args)]
-     (when external
-      (if (nil? classes)
-        (do (set! classes (object-array (map class args)))
-            (set! values (object-array (map observe-value args))))
-        (when (== cnt (alength classes))
-          (dotimes [i cnt]
-            (let [x (nth args i) c (aget classes i)]
-              (when (and (not (identical? c poly)) (not (identical? c (class x))))
-                (aset classes i poly))
-              (let [v (aget values i)]
-                (when-not (or (identical? v unstable) (same-observation? v x))
-                  (aset values i unstable))))))))))
+        (set! sample (sample-of args)))
+      (let [cnt (count args)
+            ^Observed o observed-args]
+        (if (nil? o)
+          (set! observed-args (Observed. (object-array (map class args)) (object-array (map observe-value args))))
+          (let [^objects classes (.-classes o)
+                ^objects values (.-values o)]
+            (when (== cnt (alength classes))
+              (dotimes [i cnt]
+                (let [x (nth args i) c (aget classes i)]
+                  (when (and (not (identical? c poly)) (not (identical? c (class x))))
+                    (aset classes i poly))
+                  (let [v (aget values i)]
+                    (when-not (or (identical? v unstable) (same-observation? v x))
+                      (aset values i unstable)))))))))))
   (call [_ f]
     (set! n (inc n))
-    (cond (nil? callee) (set! callee f)
-          (and (not (identical? callee poly)) (not (identical? callee f))) (set! callee poly)))
+    (let [c callee]
+      (cond (nil? c) (set! callee f)
+            (and (not (identical? c poly)) (not (identical? c f))) (set! callee poly))))
   (branch [_ t]
     (if t (set! taken (inc taken)) (set! not-taken (inc not-taken))))
   (snapshot [_]
-    {:count n
-     :external external-n
-     :classes (when classes (mapv #(if (identical? % poly) :polymorphic %) classes))
-     :stable (when values (mapv #(if (identical? % unstable) :unstable [:value (observed %)]) values))
-     :callee (cond (nil? callee) nil (identical? callee poly) :polymorphic :else callee)
-     :branches [taken not-taken]
-     :sample (observed sample)}))
+    (let [^Observed o observed-args
+          c callee]
+      {:count n
+       :external external-n
+       :classes (when o (mapv #(if (identical? % poly) :polymorphic %) (.-classes o)))
+       :stable (when o (mapv #(if (identical? % unstable) :unstable [:value (observed %)]) (.-values o)))
+       :callee (cond (nil? c) nil (identical? c poly) :polymorphic :else c)
+       :branches [taken not-taken]
+       :sample (observed sample)})))
 
-(defn new-profile [] (Profile. 0 0 nil nil nil 0 0 nil))
+(defn new-profile [] (Profile. 0 0 nil nil 0 0 nil))
 
 
 

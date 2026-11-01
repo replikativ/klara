@@ -225,7 +225,7 @@
                         :message "the recipe ran out of budget"}
             :failed (reject :L4.prepare.recipe-failed
                             (str "the recipe failed: " (get-in outcome [:error :message]))
-                            :error (:error outcome) :spent (:spent outcome)))))
+                            :error (:error outcome) :exception (:exception outcome) :spent (:spent outcome)))))
 
 (b/register! 'klara.compiler.kernel/prepare
   {:kind :intrinsic
