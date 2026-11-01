@@ -78,7 +78,9 @@
         4 (.put by-term (.sourceTerm ^klara.runtime.prepare.INode n) (snap (.-profile ^klara.runtime.prepare.Fn n)))
         5 (let [p (snap (.-profile ^klara.runtime.prepare.App n))]
             (.put by-term (.sourceTerm ^klara.runtime.prepare.INode n)
-                  {:count (:count p) :callee (describe-callee (:callee p))}))
+                  ;; the callee itself (a specializer may guard on it); annotations
+                  ;; are stripped before a candidate is stored
+                  {:count (:count p) :callee (:callee p)}))
         8 (let [[a b] (:branches (snap (.-profile ^klara.runtime.prepare.If n)))]
             (.put by-term (.sourceTerm ^klara.runtime.prepare.INode n) {:then a :else b}))
         nil))

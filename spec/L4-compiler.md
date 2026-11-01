@@ -53,7 +53,13 @@ if `c` is truthy and `b` otherwise.
 arguments may be replaced by its result, if the call returns normally.
 
 `L4.check.alpha` Terms that differ only in the names of bound locals are
-equal.
+equal. Equality is a congruence: two terms of the same construct are equal
+if their parts are, with their binders paired (`let`, `fn`, `letrec`, the
+names of `catch` clauses).
+
+`L4.check.code` Two code templates are equal if their templates are the
+same syntax up to renaming the locals they bind (a template is a value: it
+is never unfolded or computed), and their holes are equal terms in order.
 
 `L4.check.const` Two constants are equal only if no Klara program can tell
 them apart: the same class and metadata and, for collections, equal
@@ -296,7 +302,16 @@ on the arguments computes. With the staged domain it computes what is known
 and generates code for the rest, introducing names only through templates
 and binder constructors (L2.code.binders); `(staged/residual c)` with
 nothing known is the function again, which the kernel admits as
-equivalent to `c`.
+equivalent to `c`. A call of a known function with a known argument is
+unfolded, within a fuel per generation. `(staged/specialize ctx)` also
+turns the facts of the reference's profile annotations into speculations
+(a branch not taken, an argument always the same value, a call site that
+always called the same function); each fallback is generated again with
+speculation off, never spliced from the reference. Constructs it does not
+take apart (`try`, interop, `letrec`, `def`, code templates, functions with
+several arities) are kept whole, their free locals replaced by the code of
+their values, which is always a local, a constant or a global, so nothing
+runs twice or out of order.
 
 `L4.jit.attach` `^{:klara/specialize f}` on a definition names its
 specializer, resolved in the definition's namespace when the JIT runs.

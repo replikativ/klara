@@ -239,6 +239,36 @@
   [b pairs]
   (t/rename b (into {} (map (fn [[x y]] [y x])) pairs)))
 
+(defn- ordered-binders
+  "Locals bound by `t` itself, in the order they occur (for pairing)."
+  [t]
+  (case (:op t)
+    :fn (cond->> (vec (mapcat (fn [a] (cond-> (vec (:params a)) (:rest a) (conj (:rest a)))) (:arities t)))
+          (:self t) (into [(:self t)]))
+    :let [(:name t)]
+    :letrec (mapv first (:bindings t))
+    :try (mapv :name (:catches t))
+    []))
+
+(defn- template-binders [tmpl] (vec (mapcat ordered-binders (t/nodes tmpl))))
+
+(defn- canonical-template
+  "The template of code term `id`, with its own binders and code ids renamed
+   by position, profiles dropped and constants signed: two templates are the
+   same syntax up to the names they bind iff these are equal (L4.check.code)."
+  [id tmpl]
+  (let [ns (t/nodes tmpl)
+        bm (zipmap (template-binders tmpl) (map #(symbol (str "b" %)) (range)))
+        im (zipmap (into [id] (keep #(when (= :code (:op %)) (:id %))) ns) (map #(symbol (str "c" %)) (range)))
+        relabel (fn relabel [t]
+                  (let [cs (t/children t)
+                        t (cond-> (dissoc t :profile) (seq cs) (t/with-children (mapv relabel cs)))]
+                    (case (:op t)
+                      :code (update t :id im)
+                      :hole (update t :code im)
+                      t)))]
+    (signed (t/refresh-free (relabel (t/rename tmpl bm))))))
+
 (defn- atomic? [t] (contains? #{:global :host :local :const} (:op t)))
 
 (defn- same-shape [ctx a b]
@@ -261,6 +291,26 @@
     :if (and (equal? ctx (:test a) (:test b)) (equal? ctx (:then a) (:then b)) (equal? ctx (:else a) (:else b)))
     :do (and (= (count (:body a)) (count (:body b))) (every? true? (map #(equal? ctx %1 %2) (:body a) (:body b))))
     :throw (equal? ctx (:ex a) (:ex b))
+    :try (and (equal? ctx (:body a) (:body b))
+              (= (count (:catches a)) (count (:catches b)))
+              (every? true? (map (fn [x y]
+                                   (and (= (:class x) (:class y))
+                                        (equal? ctx (:body x) (bind-pairs (:body y) [[(:name x) (:name y)]]))))
+                                 (:catches a) (:catches b)))
+              (= (nil? (:finally a)) (nil? (:finally b)))
+              (or (nil? (:finally a)) (equal? ctx (:finally a) (:finally b))))
+    :letrec (and (= (count (:bindings a)) (count (:bindings b)))
+                 (let [b (bind-pairs b (map (fn [[x] [y]] [x y]) (:bindings a) (:bindings b)))]
+                   (and (every? true? (map (fn [[_ i] [_ j]] (equal? ctx i j)) (:bindings a) (:bindings b)))
+                        (equal? ctx (:body a) (:body b)))))
+    :def (and (= (select-keys a [:name :macro? :meta :doc]) (select-keys b [:name :macro? :meta :doc]))
+              (equal? ctx (:init a) (:init b)))
+    ;; L4.check.code: a template is a value, compared as syntax; its holes are
+    ;; terms evaluated in order, which see the template's binders
+    :code (and (= (count (:holes a)) (count (:holes b)))
+               (= (canonical-template (:id a) (:template a)) (canonical-template (:id b) (:template b)))
+               (let [pairs (map vector (template-binders (:template a)) (template-binders (:template b)))]
+                 (every? true? (map #(equal? ctx %1 (bind-pairs %2 pairs)) (:holes a) (:holes b)))))
     :interop (and (= (select-keys a [:static? :new? :target :member]) (select-keys b [:static? :new? :target :member]))
                   (= (count (t/children a)) (count (t/children b)))
                   (every? true? (map #(equal? ctx %1 %2) (t/children a) (t/children b))))

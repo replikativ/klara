@@ -222,6 +222,9 @@
       :code {:op :code :template (c (:template t)) :holes (mapv c (:holes t)) :code code}
       :hole {:op :hole :index (:index t) :code code}))
 
+(defintrinsic klara.code/free [st [code]]                      ; L2.view.free
+  (ret st (vec (sort (t/free-locals (term-of code))))))
+
 (defintrinsic klara.code/children [st [code]]                  ; L2.view.children
   (ret st (mapv c (t/children (term-of code)))))
 

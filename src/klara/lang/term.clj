@@ -140,11 +140,23 @@
       :code (assoc t :template (first cs) :holes (subvec cs 1))
       :recur (assoc t :args cs))))
 
-(defn refresh-free
-  "Recompute :free of every :fn term bottom-up (after splicing or substitution)."
+(defn- refresh-node
+  "Recompute :free of a :fn or :code term from its children. A template's
+   :free are its cross-stage uses (the locals of the enclosing stage it
+   captures, L2.code.build), so a substitution into the template changes them."
   [t]
-  (let [t (with-children t (map refresh-free (children t)))]
-    (if (= :fn (:op t)) (fn-term (:self t) (:arities t)) t)))
+  (case (:op t)
+    :fn (fn-term (:self t) (:arities t))
+    ;; as the expander computes it (L2.code.build)
+    :code (let [bound (into #{} (mapcat binders) (nodes (:template t)))]
+            (assoc t :free (vec (sort (remove bound (free-locals (:template t)))))))
+    t))
+
+(defn refresh-free
+  "Recompute :free of every :fn and :code term bottom-up (after splicing or
+   substitution)."
+  [t]
+  (refresh-node (with-children t (map refresh-free (children t)))))
 
 (defn rename
   "Rename locals according to `m` everywhere (binders and uses). Names not
@@ -182,8 +194,7 @@
   (if (empty? m) t
     (case (:op t)
       :local (get m (:name t) t)
-      (let [t' (with-children t (map #(substitute % m) (children t)))]
-        (if (= :fn (:op t')) (fn-term (:self t') (:arities t')) t')))))
+      (refresh-node (with-children t (map #(substitute % m) (children t)))))))
 
 ;; ---------------------------------------------------------------------------
 ;; Printing (L2.print.form): a readable form. Not read back; Code is not text.

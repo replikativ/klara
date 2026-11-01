@@ -64,6 +64,9 @@
    :do (fn [xs] (last xs))
    :fn (fn [n body] (letfn [(self [& args] (body self (vec args)))] self))
    :app (fn [f args] (apply f args))
+   ;; a construct the interpreter does not take apart: run it with its free
+   ;; locals given their values
+   :other (fn [c bindings] (run (code/subst c (into {} (map (fn [[n x]] [n (lift x)])) bindings))))
    :loop (fn [inits body]
            (loop [args inits]
              (let [r (body args (fn [& as] {::recur (vec as)}))]
@@ -108,6 +111,10 @@
    :fn (fn [n body]
          (dynamic (code/fn* n (fn [self & ps] (->code (body (dynamic self) (mapv dynamic ps)))))))
    :app (fn [f args] (or (fold f args) (dynamic (call-code f args))))
+   ;; a construct the generator does not take apart: kept as it is, its free
+   ;; locals replaced by their code (always trivial: locals, constants,
+   ;; globals, see apply-known and :let), so nothing runs twice or moves
+   :other (fn [c bindings] (dynamic (code/subst c (into {} (map (fn [[n x]] [n (->code x)])) bindings))))
    :loop (fn [inits body]
            (dynamic (code/loop* (mapv ->code inits)
                                 (fn [ps recur-to]
@@ -167,6 +174,96 @@
       (swap! fuel dec)
       true)))
 
+;; ---------------------------------------------------------------------------
+;; Speculation from profiles (design/08-staged-jit.md; L4.check.speculate)
+;;
+;; With a ::policy in env (the staged specializer), facts the reference's
+;; profile annotations carry become speculations (guard specialized
+;; fallback). The fallback is generated again with speculation off, not
+;; spliced from the reference.
+
+(def policy
+  "Observations before a profile counts, and how rare a branch is cold."
+  {:hot 100 :rare 10000})
+
+(defn- cold? [pol taken other]
+  (and (>= other (:hot pol)) (<= (* taken (:rare pol)) other)))
+
+(defn- quiet "env for a fallback: no speculation." [env] (dissoc env ::policy))
+
+(defn- speculation [guard hot fallback]
+  (dynamic (klara.jit/guard guard (->code hot) (->code fallback))))
+
+(defn- spec-if
+  "An if whose test is dynamic and one of whose branches the profile (almost)
+   never saw taken: the hot branch under the test (or its negation) as guard."
+  [dom v t env]
+  (let [p (:profile v)
+        pol (::policy env)
+        then-cold (and p (cold? pol (:then p) (:else p)))
+        else-cold (and p (cold? pol (:else p) (:then p)))
+        tc (->code t)
+        guard (cond else-cold tc then-cold (code (not (esc tc))))]
+    (when (and guard
+               ;; the fallback evaluates the same test first (L4.check.speculate)
+               (klara.jit/admissible? guard (code/make {:op :if :test tc :then (lift nil) :else (lift nil)})))
+      (speculation guard
+                   (gen dom (if else-cold (:then v) (:else v)) env)
+                   ((:if dom) t (fn [] (gen dom (:then v) (quiet env))) (fn [] (gen dom (:else v) (quiet env))))))))
+
+(defn- stable-params
+  "[[index value] ..] for the parameters the function's entry profile saw
+   always with the same value, often enough."
+  [v pol]
+  (let [p (:profile v)]
+    (when (>= (or (:external p) 0) (:hot pol))
+      (keep-indexed (fn [i s] (when (and (vector? s) (= :value (first s))) [i (second s)])) (:stable p)))))
+
+(defn- spec-stable
+  "The body under guards (same? p c), one per stable parameter, with the
+   parameter known inside; each fallback generated with it dynamic."
+  [gen-body ps stable env]
+  (if (empty? stable)
+    (gen-body ps env)
+    (let [[i c] (first stable)
+          p (nth ps i)]
+      (speculation (code (klara.jit/same? (esc (->code p)) (esc (lift c))))
+                   (spec-stable gen-body (assoc ps i (static c)) (rest stable) env)
+                   (gen-body ps (quiet env))))))
+
+(defn- spec-call
+  "A call of a dynamic function that the profile saw calling one closure C:
+   C unfolded under (same? f C), the plain call otherwise."
+  [dom v f args env]
+  (let [callee (get-in v [:profile :callee])
+        u (when (fn? callee) (code/unfold (lift callee)))]
+    (when (and u (>= (or (get-in v [:profile :count]) 0) (:hot (::policy env))))
+      (speculation (code (klara.jit/same? (esc (->code f)) (esc (lift callee))))
+                   (apply-known dom (assoc (static callee) ::unfold u) args env)
+                   ((:app dom) f args)))))
+
+(defn- recurs-to-any?
+  "Does c recur to one of the loops in env (whose names the generator
+   replaced)?"
+  [c env]
+  (let [loops (set (keep (fn [k] (when (and (vector? k) (= ::recur (first k))) (second k))) (keys env)))]
+    (letfn [(walk [c] (let [v (code/view c)]
+                        (or (and (= :recur (:op v)) (contains? loops (:target v)))
+                            (boolean (some walk (code/children c))))))]
+      (and (seq loops) (walk c)))))
+
+(defn- other
+  "A construct the interpreter does not take apart, with its free locals
+   from env."
+  [dom c env]
+  (when (recurs-to-any? c env)
+    (throw (ex-info "a construct that recurs to an enclosing loop is not interpreted yet" {:op (:op (code/view c))})))
+  ((:other dom) c (mapv (fn [n]
+                          (when-not (contains? env n)
+                            (throw (ex-info (str "unbound local " n) {:name n})))
+                          [n (get env n)])
+                        (code/free c))))
+
 (defn gen
   "Interpret Code c with domain dom in env (local name -> domain value)."
   [dom c env]
@@ -178,18 +275,22 @@
                (throw (ex-info (str "unbound local " (:name v)) {:name (:name v)})))
       :host ((:host dom) c)
       :global ((:global dom) c)
-      :if ((:if dom) (gen dom (:test v) env)
-                     (fn [] (gen dom (:then v) env))
-                     (fn [] (gen dom (:else v) env)))
+      :if (let [t (gen dom (:test v) env)]
+            (or (and (::policy env) (not (static? t)) (spec-if dom v t env))
+                ((:if dom) t (fn [] (gen dom (:then v) env)) (fn [] (gen dom (:else v) env)))))
       :let ((:let dom) (gen dom (:init v) env)
                        (fn [i] (gen dom (:body v) (assoc env (:name v) i))))
       :do ((:do dom) (mapv (fn [b] (gen dom b env)) (:body v)))
       :fn (if (:body v)
-            ((:fn dom) (count (:params v))
-                       (fn [self ps]
-                         (gen dom (:body v) (cond-> (merge env (zipmap (:params v) ps))
-                                              (:self v) (assoc (:self v) self)))))
-            (throw (ex-info "functions with several arities are not interpreted yet" {:op :fn})))
+            (let [stable (when (and (::top env) (::policy env)) (stable-params v (::policy env)))
+                  env (dissoc env ::top)]
+              ((:fn dom) (count (:params v))
+                         (fn [self ps]
+                           (spec-stable (fn [ps env]
+                                          (gen dom (:body v) (cond-> (merge env (zipmap (:params v) ps))
+                                                               (:self v) (assoc (:self v) self))))
+                                        (vec ps) stable env))))
+            (other dom c env))
       :app (if-let [f (loop-view v)]
              ((:loop dom) (mapv (fn [a] (gen dom a env)) (:args v))
                           (fn [ps recur-to]
@@ -199,9 +300,12 @@
                    args (mapv (fn [a] (gen dom a env)) (:args v))]
                (if (unfold? env f args)
                  (apply-known dom f args env)
-                 ((:app dom) f args))))
+                 (or (and (::policy env) (not (static? f)) (spec-call dom v f args env))
+                     ((:app dom) f args)))))
       :recur (apply (get env [::recur (:target v)]) (mapv (fn [a] (gen dom a env)) (:args v)))
-      (throw (ex-info (str "not interpreted yet: " (:op v)) {:op (:op v)})))))
+      ;; throw, try, interop, letrec, def, code templates, functions with
+      ;; several arities: residualized whole (design/08-staged-jit.md)
+      (other dom c env))))
 
 (defn interpret
   "Call function Code c on args, computing with the values domain."
@@ -211,6 +315,14 @@
 (def fuel
   "Unfoldings of known functions one generation may do."
   64)
+
+(defn specialize
+  "The staged specializer (L4.jit.staged): the context's reference generated
+   with known functions unfolded and the facts its profile annotations carry
+   (cold branches, stable arguments, single callees) as speculations."
+  [ctx]
+  (->code (gen staged (:reference ctx)
+               {::fuel (atom fuel) ::policy (merge policy (:policy ctx)) ::top true})))
 
 (defn residual
   "Code for function Code c generated with what it does not know dynamic:

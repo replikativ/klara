@@ -103,11 +103,13 @@ and `clojure -M:bench` stay green at every commit. Progress is recorded here.
      if, let, do, fn (fresh binders through templates), app (pure host
      functions computed, known functions unfolded within the budget), loops
      and recur; residuals checked by the kernel.
-  4. **Facts from profiles.** Cold branches, stable values, monomorphic
+  4. [x] **Facts from profiles.** Cold branches, stable values, monomorphic
      call sites, each emitted as a speculation whose fallback is generated
      with everything dynamic (no splicing of open reference code).
-  5. **Everything else dynamic.** try, interop, perform, handle, def, code,
-     generated with their parts dynamic.
+  5. [x] **Everything else dynamic.** try, interop, letrec, def, code and
+     several arities kept whole (their free locals substituted); the checker
+     relates them part by part (L4.check.alpha, L4.check.code). perform and
+     handle are surface macros over host calls, so they need nothing here.
   6. **Switch.** The staged interpreter becomes `jit/default`; the rewrite
      passes and `recipes/inline` are removed; showcases, awfy and the
      investor run on it; `code/make` is no longer used by specializers.

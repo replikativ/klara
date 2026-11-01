@@ -107,8 +107,26 @@ loop (its body generated once, its parameters dynamic). A loop whose bound
 is static and small may be unrolled within the budget.
 
 **Constructs the generator does not specialize** (`try`, interop,
-`perform`, `handle`, `def`, code templates) are generated with their parts
-dynamic, so their effects and order are kept.
+`letrec`, `def`, code templates, functions with several arities) are kept
+whole: their free locals are replaced by the code of their values. The
+generator binds every non-trivial dynamic value with a `let` first, so that
+code is always a local, a constant or a global, and the substitution
+neither repeats work nor moves it. A substituted template keeps its
+cross-stage uses (`:free`) in step with its body, which `t/substitute` now
+maintains. The checker relates these constructs part by part
+(L4.check.alpha) and templates as syntax up to their own binders
+(L4.check.code).
+
+What one profile fact looks like in a residual, for the expression
+interpreter `calc` called 200 times on the same model
+`[:+ [:* :x :x] 3]`:
+
+```clojure
+(fn self [p0 p1]
+  (if (klara.jit/same? p0 [:+ [:* :x :x] 3])
+    (+ (* (get p1 :x) (get p1 :x)) 3)          ; the model's arithmetic, no interpreter
+    (if (number? p0) p0 ...)))                 ; the fallback: calc, generated again
+```
 
 ## What stays the same
 

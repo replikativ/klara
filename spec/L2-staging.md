@@ -107,6 +107,9 @@ or of a global defined as immutable data (L4.check.delta-data), else nil.
 `(code/pure-host? c)` tells whether `c` is a host function the checker may
 evaluate on constants (L4.check.prim).
 
+`L2.view.free` `(code/free c)` returns the names of the locals free in `c`
+(those a substitution may replace), sorted.
+
 `L2.view.children` `(code/children c)` returns the direct subterms of `c`
 as Code, in evaluation order; `(code/with-children c cs)` returns `c` with
 them replaced (same count), keeping what `c` binds. Together they let Klara
