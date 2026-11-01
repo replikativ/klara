@@ -331,5 +331,16 @@ any is measurably faster than the interpreter, and otherwise compiles the
 definition as it is (it is past the baseline). Measuring
 never runs an impure definition (L4.facts.pure).
 
+`L4.jit.trigger` With `(klara.host.api/automatic-investor! session pol)`,
+profiles that cross a power of two of entries (from 64) or branch counts
+(from 1024) mark activity; after the next top-level form, the session
+evaluates `(klara.investor/tick! nss pol)` as a form of its own, over its
+program namespaces. `tick!` considers interpreted function definitions past
+the baseline (L4.jit.tiers), each again only once its estimated interpreted
+time has doubled since its last decision. Compiled code does not profile,
+so a baseline candidate counts its entries instead; its definition's time
+is extrapolated from them, and it is considered again (to explore it) once
+that passes `:explore-ns`. Nothing runs inside a form.
+
 `L4.jit.attach` `^{:klara/specialize f}` on a definition names its
 specializer, resolved in the definition's namespace when the JIT runs.

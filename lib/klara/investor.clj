@@ -63,6 +63,8 @@
 
 (defn interpreted? [x] (= :interpreted (:kind (compiler/explain x))))
 
+(defn- v-fn? "An interpreted function value (a function definition)." [x] (interpreted? x))
+
 (def policy
   "When a definition is worth a tier, in nanoseconds of interpreted time spent
    so far. Compiling as it is costs milliseconds; exploring prepares every
@@ -98,6 +100,19 @@
   "Estimated interpreted time the definition has cost so far."
   [ctx]
   (* (jit/events ctx) (event-ns)))
+
+(defn estimated-ns
+  "What definition q has cost, as if it had stayed interpreted: its profile's
+   estimate, or, once compiled at the baseline (where it no longer
+   profiles), what it had cost then scaled by the entries its compiled code
+   counted since (L4.jit.trigger)."
+  [q ctx]
+  (let [base (spent-ns ctx)
+        d (peek (get decisions q))
+        counted (some-> (compiler/compiled q) compiler/explain :entries)]
+    (if (and counted (= :baseline (:tier d)) (pos? (or (:entries-at-compile d) 0)))
+      (max base (+ (:spent-ns d) (quot (* (:spent-ns d) counted) (:entries-at-compile d))))
+      base)))
 
 (def budget
   "Steps for preparing an alternative."
@@ -156,8 +171,9 @@
   "Compile q as it is, unmeasured: compiled code is never slower than the
    interpreter by much, and nothing runs to find out."
   [q d why]
-  (let [o (jit/prepare q {:specializer (:as-is alternatives) :specializer-name :as-is})
-        d (assoc d :tier :baseline :why why)]
+  (let [o (jit/prepare q {:specializer (:as-is alternatives) :specializer-name :as-is :count-entries true})
+        d (assoc d :tier :baseline :why why
+                 :entries-at-compile (get-in (jit/context q) [:profile :entries :count]))]
     (if (= :ready (:status o))
       (let [d (assoc d :decision :compiled :chosen :as-is)]
         (compiler/install! (assoc-in o [:provenance :decision] d))
@@ -167,7 +183,7 @@
 (defn- decide
   [q pol]
   (let [ctx (jit/context q)
-        spent (spent-ns ctx)
+        spent (estimated-ns q ctx)
         ;; calls from outside: a recursive function's own calls run compiled
         ;; inside the measured call, so they are not further calls
         calls (get-in ctx [:profile :entries :external])
@@ -232,12 +248,8 @@
           ;; nothing measurably faster: still past the baseline, so compiled as it
           ;; is (a callee left interpreted costs its compiled callers an entry
           ;; into the interpreter on every call, which measuring alone cannot see)
-          :else (if-let [as-is (first (filter #(and (= :as-is (:name %)) (= :ready (:status %))) tried))]
-                  (let [d (assoc decision :decision :compiled :chosen :as-is :tier :baseline
-                                 :why "explored: none measurably faster")]
-                    (compiler/install! (assoc-in (:outcome as-is) [:provenance :decision] d))
-                    d)
-                  (assoc decision :decision :declined)))))))
+          (compiler/compiled q) (assoc decision :decision :kept :why "explored: none measurably faster than its compiled code")
+          :else (baseline q decision "explored: none measurably faster"))))))
 
 (defn consider
   "Decide about the definition named q. Returns the decision, also recorded
@@ -252,8 +264,32 @@
    pays for entering the interpreter on every call."
   ([ns-sym] (invest! ns-sym {}))
   ([ns-sym pol]
-  (let [round (fn [names] (mapv #(consider % pol) (filter #(interpreted? (world/get (world/current) %)) names)))
+  (let [round (fn [names] (mapv #(consider % pol)
+                                (filter #(and (v-fn? (world/get (world/current) %)) (nil? (compiler/compiled %))) names)))
         first-round (round (world/names (world/current) ns-sym))
         again (round (map :name (filter #(= :declined (:decision %)) first-round)))
         by-name (into {} (map (juxt :name identity)) (concat first-round again))]
     (mapv #(get by-name (:name %)) first-round))))
+
+(defn tick!
+  "Consider the interpreted function definitions of namespaces `nss` that
+   have spent past the baseline (L4.jit.tiers), each again only once its
+   interpreted time has doubled since its last decision (L4.jit.trigger).
+   Returns the decisions made."
+  ([nss] (tick! nss {}))
+  ([nss pol]
+   (let [pol (merge policy pol)
+         w (world/current)]
+     (vec (for [ns nss
+                q (world/names w ns)
+                :let [last-d (peek (get decisions q))]
+                ;; interpreted, or compiled at the baseline and so still promotable
+                :when (and (v-fn? (world/get w q))
+                           (or (nil? (compiler/compiled q)) (= :baseline (:tier last-d))))
+                :let [s (estimated-ns q (jit/context q))
+                      last-s (:spent-ns last-d)]
+                :when (and (>= s (:baseline-ns pol))
+                           (or (nil? last-s) (>= s (* 2 last-s)))
+                           ;; a baseline definition is considered again to explore it
+                           (or (not= :baseline (:tier last-d)) (>= s (:explore-ns pol))))]
+            (consider q pol))))))

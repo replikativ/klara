@@ -55,6 +55,11 @@
       {:ok ok}
       (let [interpreted (batched call "(b/run)")
             decisions (call (str "(mapv (juxt :name :decision :chosen) (investor/invest! '" ns-sym "))"))
+            ;; from here on the investor also runs between forms (L4.jit.trigger)
+            _ (k/automatic-investor! s)
+            _ (dotimes [_ 3] (batched call "(b/run)"))
+            ;; each definition's latest decision
+            decisions (call "(mapv (fn [[q ds]] (let [d (peek ds)] [q (:decision d) (:chosen d)])) investor/decisions)")
             ok-after (= (call "(b/run)") (call "b/expected"))
             compiled (batched call "(b/run)")]
         {:ok (and ok ok-after) :interpreted-ms interpreted :ms compiled

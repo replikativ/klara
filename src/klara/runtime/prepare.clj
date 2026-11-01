@@ -151,6 +151,14 @@
 
 (deftype Observed [^objects classes ^objects values])   ; per argument: a class or poly, a value or unstable
 
+(defonce ^{:doc "Set when a profile crosses a power of two of entries (from 64)
+  or branch counts (from 1024): something may have become worth compiling.
+  Read and cleared between top-level forms by an automatic investor
+  (klara.host.api/automatic-investor!, L4.jit.trigger)."}
+  activity (java.util.concurrent.atomic.AtomicBoolean.))
+
+(defn- power-of-two? [^long x] (zero? (bit-and x (dec x))))
+
 ;; Parallel jobs run the same code (L3.job.parallel), so a profile is
 ;; written by several threads without locks. Every field holds one object
 ;; published at once (the argument observations as one Observed), so a
@@ -168,8 +176,9 @@
     (set! n (inc n))
     (when external
       (set! external-n (inc external-n))
-      (when (zero? (bit-and external-n (dec external-n)))     ; at counts 1, 2, 4, 8, ...
-        (set! sample (sample-of args)))
+      (when (power-of-two? external-n)                        ; at counts 1, 2, 4, 8, ...
+        (set! sample (sample-of args))
+        (when (>= external-n 64) (.set ^java.util.concurrent.atomic.AtomicBoolean activity true)))
       (let [cnt (count args)
             ^Observed o observed-args]
         (if (nil? o)
@@ -190,7 +199,9 @@
       (cond (nil? c) (set! callee f)
             (and (not (identical? c poly)) (not (identical? c f))) (set! callee poly))))
   (branch [_ t]
-    (if t (set! taken (inc taken)) (set! not-taken (inc not-taken))))
+    (if t (set! taken (inc taken)) (set! not-taken (inc not-taken)))
+    (let [s (+ taken not-taken)]
+      (when (and (>= s 1024) (power-of-two? s)) (.set ^java.util.concurrent.atomic.AtomicBoolean activity true))))
   (snapshot [_]
     (let [^Observed o observed-args
           c callee]

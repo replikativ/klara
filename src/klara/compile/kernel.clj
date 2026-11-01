@@ -101,7 +101,9 @@
      ;; L4.exec.provenance: what was checked, from what, by whom, and why
      :candidate (Code. (:term cand))
      :provenance (:provenance cand)
-     :reentries (some-> ^java.util.concurrent.atomic.AtomicLong (:reentries cand) .get)})
+     :reentries (some-> ^java.util.concurrent.atomic.AtomicLong (:reentries cand) .get)
+     ;; entries counted by a baseline candidate (L4.jit.trigger)
+     :entries (some-> ^longs (:entries cand) (aget 0))})
   Object
   (toString [_] (str "#klara/executable[" (or (:name cand) "anonymous") "]")))
 
@@ -201,13 +203,16 @@
                  (reject :L4.lower.subset (str "the backend does not compile " x))
                  (let [premises (cond-> (:premises r)
                                   (:name opts) (conj [(:name opts) (w/generation (:world st) (:name opts))]))
+                       entries (when (:count-entries opts) (long-array 1))   ; L4.jit.trigger
                        {:keys [fn form osr]} (lower/lower cand-term {:self-name (:name opts)
-                                                                     :owned? (= :in-place (:evidence r))})
+                                                                     :owned? (= :in-place (:evidence r))
+                                                                     :entries entries})
                        ;; the stored reference has no profile annotations (whose
                        ;; samples would otherwise stay alive with the candidate)
                        cand (assoc (->Candidate (:name opts) (Code. ref-term) cand-term premises fn form
                                                 (:guards r) (:evidence r) (lower/mint-safe? cand-term))
-                                   :reentries (java.util.concurrent.atomic.AtomicLong.))]
+                                   :reentries (java.util.concurrent.atomic.AtomicLong.)
+                                   :entries entries)]
                    (attach-osr! cand osr)
                    {:status :ready
                     :candidate cand
@@ -275,6 +280,12 @@
                    (assoc (v/-describe f) :valid (valid? (candidate-of f) (:world st)))
                    (v/closure? f) {:kind :interpreted :code (intr/reify-closure f)}
                    :else {:kind :host :value f})))})
+
+(b/register! 'klara.compiler.kernel/compiled                    ; L4.exec.install
+  {:kind :intrinsic
+   :fn (fn [st [q]]
+         ;; what a call of q runs in this world: its valid compiled code, or nil
+         (ret st (when-let [d (w/lookup (:world st) q)] (@m/resolve-hook q d (:world st)))))})
 
 (b/register! 'klara.compiler.kernel/arity
   {:kind :intrinsic

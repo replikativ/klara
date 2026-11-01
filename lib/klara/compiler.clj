@@ -45,6 +45,13 @@
   [f]
   (kernel/explain f))
 
+(defn compiled
+  "The compiled code a call of the definition named q runs in the current
+   world, or nil when it is interpreted (world/get gives its value, the
+   interpreted function)."
+  [q]
+  (kernel/compiled q))
+
 (defn optimize!
   "Prepare the definition named `q` with a recipe (default: as-is) and
    install it when ready. Returns the outcome."

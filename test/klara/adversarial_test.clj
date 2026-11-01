@@ -187,3 +187,26 @@
                  (defrecord P [x y])
                  (defn mk [x] (->P x x))
                  [(:pure (jit/pure? 'adv/greet)) (:pure (jit/pure? 'adv/mk))]"))))))
+
+(deftest the-investor-runs-between-forms   ; L4.jit.trigger
+  (testing "with the automatic investor, a definition that became hot is compiled after the form that ran it"
+    (let [s (k/session {:roots ["lib"] :out (java.io.StringWriter.)})]
+      (k/automatic-investor! s {:baseline-ns 0 :explore-ns Long/MAX_VALUE})
+      (is (= [:interpreted :compiled]
+             [(k/eval-string s "(ns trig (:require [klara.compiler :as compiler])) (defn sq [x] (* x x)) (:kind (compiler/explain sq))")
+              (do (k/eval-string s "(ns trig) (dotimes [i 100] (sq i))")
+                  (if (= :interpreted (k/eval-string s "(ns trig) (:kind (compiler/explain sq))")) :interpreted :compiled))])))))
+
+(deftest baseline-code-is-promoted   ; L4.jit.trigger L4.jit.tiers
+  (testing "a definition compiled at the baseline counts its entries and is explored once its extrapolated time passes the exploring cost"
+    (let [s (k/session {:roots ["lib"] :out (java.io.StringWriter.)})]
+      (k/eval-string s "(ns promo (:require [klara.compiler :as compiler] [klara.investor :as investor] [klara.jit :as jit])) (defn sq [x] (* x x)) (dotimes [i 100] (sq i))")
+      (let [first-d (k/eval-string s "(ns promo) (:tier (investor/consider 'promo/sq {:baseline-ns 0 :explore-ns Long/MAX_VALUE}))")
+            spent (k/eval-string s "(ns promo) (:spent-ns (peek (get investor/decisions 'promo/sq)))")
+            _ (k/eval-string s "(ns promo) (dotimes [i 1000] (sq i))")
+            counted (k/eval-string s "(ns promo) (:entries (compiler/explain sq))")
+            promoted (k/eval-string s (str "(ns promo) (mapv (juxt :name :tier) (investor/tick! '[promo] {:baseline-ns 0 :explore-ns " (* 5 spent) "}))"))]
+        (is (= :baseline first-d))
+        (is (<= 1000 counted))
+        (is (= [['promo/sq :explored]] (mapv (fn [[q t]] [q (if (= t :baseline) :baseline :explored)]) promoted)))))))
+

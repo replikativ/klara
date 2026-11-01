@@ -118,6 +118,12 @@
      (klara.compile.lower/tick-meter! klara-meter__)
      false))
 
+(defn count-entry!
+  "One more entry of a counting candidate (unsynchronized: a lost count only
+   makes the estimate coarser)."
+  [^longs a]
+  (aset a 0 (unchecked-inc (aget a 0))))
+
 (defn interpreted
   "The interpreter's closure for a compiled function: its node and captured values."
   [fn-node captured]
@@ -305,7 +311,7 @@
   "Lower term `t` with prepared node `n`. `scope` is the environment layout
    (names, as in klara.runtime.prepare); `frames` are the let contexts of the
    current function around this point, innermost first, each [body-node scope]."
-  [t n scope frames consts self-name self-sym osr owned?]
+  [t n scope frames consts self-name self-sym osr owned? entries]
   (let [selves (atom {})                 ; self name -> [fn node, free names]
         top t]
   (letfn [(constant [x]
@@ -348,7 +354,10 @@
                                                 true (into params)
                                                 rest (conj rest))]
                                     (list (cond-> (vec params) rest (conj '& rest))
-                                          (list 'let* entry-bindings
+                                          (list 'let* (cond-> entry-bindings
+                                                        ;; L4.jit.trigger: a baseline candidate counts its entries
+                                                        (and entries (identical? t top))
+                                                        (into ['_ (list 'klara.compile.lower/count-entry! (constant entries))]))
                                                 (list 'if tick-form
                                                       (list 'klara.compile.lower/leave-apply (constant fnode) (vec free)
                                                             (if rest (list 'clojure.core/into (vec params) rest) (vec params)))
@@ -495,9 +504,10 @@
 (defn lower
   "Compile a :fn term to a host function. With :self-name, late references
    to that definition call the compiled function itself. With :owned?, the
-   term was admitted as owned (L4.check.in-place) and `own` makes transients."
+   term was admitted as owned (L4.check.in-place) and `own` makes transients.
+   With :entries (a long array), the function counts its entries in it."
   ([term] (lower term {}))
-  ([term {:keys [self-name owned?]}]
+  ([term {:keys [self-name owned? entries]}]
    (when-not (= :fn (:op term)) (fail :L4.lower.subset "only functions are compiled"))
    (when-let [x (subset-violation term)]
      (fail :L4.lower.subset (str "the backend does not compile " x)))
@@ -507,7 +517,7 @@
          term (anf/anf (assoc term :self self-sym))
          node (m/prepare-term term)
          osr (atom [])
-         form (lower* term node [] () consts self-name self-sym osr (boolean owned?))
+         form (lower* term node [] () consts self-name self-sym osr (boolean owned?) entries)
          osr-entries @osr
          wrapper (list 'fn* ['consts] (vector form (mapv second osr-entries)))
          [f factories] ((with-bindings {#'*ns* (the-ns 'klara.compile.lower)
