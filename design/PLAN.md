@@ -110,7 +110,17 @@ evidence, guards, time, allocation), and run as a test.
    the guard inside the loop and the interpreter continues at that
    iteration; redefining a helper invalidates the compiled code while an old
    world keeps its own.
-3. **Proofs where they pay** (P4–P5). Polynomial scoring: the investor plans
+3. **Proofs where they pay** (P4–P5). The investor part is done
+   (`showcases/investor.clj`). The proof part, Horner's rule under a range
+   guard as a certified alternative, has its first building blocks proved
+   (`ev-prim-lit`, `ev-prim-l`, `ev-prim-r`, `step-of-ev`: a step inside
+   nested arithmetic), but is blocked on bounding nonlinear intermediates
+   (`i*i <= 2^40` from `|i| <= 2^20`): ansatz has no `nlinarith`, and
+   `linarith` over the product of the bounds did not finish. Next: a
+   nonlinear tactic in ansatz, or a reflected arithmetic evaluator proved
+   once. (The plan said "long arithmetic" as the speculative step; it is
+   pointless on HotSpot, see 06-speculation.md §4.)
+   Originally: Polynomial scoring: the investor plans
    fusion (definitional), Horner's rule (certificate under a range guard)
    and long arithmetic (speculative); rejected without the premise.
 4. **Functional but in-place** (P6). Done as `showcases/in_place.clj`. A persistent `frequencies`-style loop;

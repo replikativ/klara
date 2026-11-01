@@ -161,6 +161,32 @@
   (Star (Config.mk w ws n (Tm.prim op (Tm.lit x) (Tm.lit y))) m)
   (exact (Star.step _ _ _ (prim-step w ws n op x y r hr) hm)))
 
+;; Evaluation inside arithmetic: a step of a nested prim is a step of the
+;; operand it is in (left first, then right once the left is a literal). With
+;; ev-prim-lit and step-of-ev, a certificate for straight-line integer code
+;; is a chain of these lemmas, one per operation (design/07-performance.md).
+(a/theorem ev-prim-lit [w :- World, ws :- Worlds, n :- Nat, op :- PrimOp, x :- Datum, y :- Datum, r :- Datum,
+                        hr :- (= PrimRes (primApply op x y) (PrimRes.ok r))]
+  (= Out (ev w ws n 0 (Tm.prim op (Tm.lit x) (Tm.lit y))) (Out.next n (Tm.lit r)))
+  (simp only [ev, seq2, atZero, primStep]) (rw [hr]) (try (rfl)))
+
+(a/theorem ev-prim-l [w :- World, ws :- Worlds, n :- Nat, n2 :- Nat, op :- PrimOp, x :- Tm, x2 :- Tm, y :- Tm,
+                      hx :- (= Out (ev w ws n 0 x) (Out.next n2 x2))]
+  (= Out (ev w ws n 0 (Tm.prim op x y)) (Out.next n2 (Tm.prim op x2 y)))
+  (simp only [ev, seq2, hx, frame]) (try (rfl)))
+
+(a/theorem ev-prim-r [w :- World, ws :- Worlds, n :- Nat, n2 :- Nat, op :- PrimOp, d :- Datum, y :- Tm, y2 :- Tm,
+                      hy :- (= Out (ev w ws n 0 y) (Out.next n2 y2))]
+  (= Out (ev w ws n 0 (Tm.prim op (Tm.lit d) y)) (Out.next n2 (Tm.prim op (Tm.lit d) y2)))
+  (simp only [ev, seq2, hy, frame]) (try (rfl)))
+
+(a/theorem step-of-ev [w :- World, ws :- Worlds, n :- Nat, n2 :- Nat, t :- Tm, t2 :- Tm,
+                       h :- (= Out (ev w ws n 0 t) (Out.next n2 t2))]
+  (Step (Config.mk w ws n t) (Config.mk w ws n2 t2))
+  (have r (= (Option Config) (step (Config.mk w ws n t)) (Option.some Config (Config.mk w ws n2 t2))))
+  (simp only [step, run1, h, stepOut]) (try (rfl))
+  (exact (Step.mk _ _ r)))
+
 ;; ---------------------------------------------------------------------------
 ;; Speculation (L4.check.speculate): `(if g a r)` means `r` when `a` does,
 ;; whatever the guard's value. On the implementation side the guard must be

@@ -9,12 +9,12 @@ by the [conformance cases](spec/cases/), the [examples](examples/) or the
 
 | Layer | What works | Limits |
 |---|---|---|
-| L0 Core | Clojure surface via host macros, destructuring, multi-arity and variadic fns, `loop`/`recur`, `letfn`, `try`/`catch`/`finally`, interop, `defmacro`, `case`; proper tail calls; closures capture only free locals | No `deftype`/`defrecord`/protocols, `binding`, `eval`; host lazy seqs call Klara functions in nested machines |
+| L0 Core | Clojure surface via host macros, destructuring, multi-arity and variadic fns, `loop`/`recur`, `letfn`, `try`/`catch`/`finally`, interop, `defmacro`, `case`; proper tail calls; closures capture only free locals | `defrecord` as tagged maps (no protocol implementations); no `deftype`/protocols, `binding`, `eval`; host lazy seqs call Klara functions in nested machines |
 | L1 Worlds | Immutable worlds, late binding, pinned functions, `world/in`/`get`/`define`/`publish!`/`advance`, deltas and conflict detection, footprint slices, bounded history, `ns`/`require` with aliases and refers | No durable storage; reload of an already loaded namespace is not supported |
 | L2 Staging | `code`/`esc`/`lift`/`run`/`reify`, fresh names, implicit cross-stage persistence, late and pinned links, dynamic extrusion check, Code views | No let-insertion; guarded links exist in the semantics but are not yet produced by the compiler |
-| L3 Effects and jobs | Deep multi-shot handlers, default handlers, jobs with forked worlds, step budgets, nested reservation, deferred printing, adopt, resume, host-mutation refusal | No first-class affine resources; only printing and definitions are isolated effects |
-| L4 Compilation | Preparation as a job, the definitional checker with premises, lowering to JVM functions, executables with per-world validity, installation, deopt by re-execution, pinning (AOT), `specialize`, `optimize!`, `explain` | Lowering excludes `try`, interop, `letrec` and effects; no type-directed rewrites; synchronous preparation |
-| L5 Guest compiler | `klara.compiler` API and the `inline` partial evaluator, both written in Klara | No policies or threshold scheduling yet |
+| L3 Effects and jobs | Deep multi-shot handlers, default handlers, jobs with forked worlds, step budgets, nested reservation, deferred printing, adopt, resume, host-mutation refusal, parallel jobs (`run-all`), jobs without profiling | No first-class affine resources; only printing and definitions are isolated effects |
+| L4 Compilation | Profiles; preparation as a job; the definitional checker with premises, speculation (assumptions, value guards), data definitions; certificates (ansatz, in-place ownership); lowering to JVM code with frame states, leaves as values, OSR, direct calls, host loops, hints as guards; compiled code in the world with provenance; AOT from saved profiles | Lowering excludes `try`, interop, `letrec` and effects outside speculation; Clojure forms as host IR (loops outside return position cost a closure) |
+| L5 Guest compiler | Klara code: `klara.jit` (specializers, the default specializer: cold-branch speculation, known-call specialization, inlining), `klara.own` (in-place), `klara.investor` (parallel exploration, steady-state measurement, net-gain decisions) | No automatic triggering; decisions are not kept in a world yet |
 | Lifetimes | Named roots, footprint slices, deltas instead of parent references, per-candidate class loaders, retention report; collectability tests and a soak test | Retention is reported, not charged |
 
 ## Known gaps in the guarantees
@@ -57,6 +57,13 @@ functions; the prototype's affine/ownership fragment and its proof models
 are not yet ported.
 
 ## Performance
+
+Are We Fast Yet? subset (`clojure -M:awfy`, ms per iteration, see
+design/07-performance.md): Mandelbrot node 24 / Clojure 27 / Klara
+compiled 79; Sieve 0.010 / 0.008 / 0.33; Towers 0.065 / 0.25 / 0.77;
+List 0.013 / 0.033 / 0.51. The interpreter is 400-1000x slower than V8.
+
+Older micro benchmarks (`clojure -M:bench`):
 
 `clojure -M:bench` runs the same programs in Klara (interpreted), Klara
 (compiled with `optimize!`), SCI and Clojure. One JVM, best of seven: good
