@@ -161,9 +161,16 @@
   ([q] (prepare q {}))
   ([q opts]
    (let [ctx (cond-> (context q (:profile opts)) (:specializer opts) (assoc :specializer (:specializer opts)))
-         candidate (specialize ctx)]
-     (compiler/prepare (:reference ctx)
-                       (merge {:recipe (fn [_] candidate) :name q} (dissoc opts :specializer :profile))))))
+         candidate (specialize ctx)
+         outcome (compiler/prepare (:reference ctx)
+                                   (merge {:recipe (fn [_] candidate) :name q}
+                                          (dissoc opts :specializer :profile :specializer-name)))]
+     ;; L4.exec.provenance: how this candidate came about
+     (assoc outcome :provenance
+            {:specializer (or (:specializer-name opts)
+                              (when (:specializer ctx) (:specializer-name ctx))
+                              :default)
+             :profile {:work (work ctx) :calls (calls ctx) :saved (some? (:profile opts))}}))))
 
 (defn compile!
   "Prepare the definition named q (see prepare) and install it when ready.

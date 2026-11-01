@@ -93,6 +93,9 @@
     {:name (:name cand) :reference (:reference cand) :premises (:premises cand)
      :guards (:guards cand) :evidence (:evidence cand)
      :compiled (:form cand) :last-path last-path
+     ;; L4.exec.provenance: what was checked, from what, by whom, and why
+     :candidate (Code. (:term cand))
+     :provenance (:provenance cand)
      :reentries (some-> ^java.util.concurrent.atomic.AtomicLong (:reentries cand) .get)})
   Object
   (toString [_] (str "#klara/executable[" (or (:name cand) "anonymous") "]")))
@@ -120,19 +123,34 @@
 
 (def candidates-per-name 4)
 
-(defn install! [session cand]
+(defn installed
+  "World `w` in which definition q also has executable `e`, newest first
+   (L4.exec.install). The definition keeps its generation: what it means is
+   unchanged, so no premise on it breaks. Installing a candidate for a
+   definition that has changed since is refused."
+  [w q e]
+  (let [d (w/lookup w q)
+        cand (candidate-of e)]
+    (when-not d (fail :L4.exec.install (str q " is not defined")))
+    (when-not (valid? cand w)
+      (fail :L4.exec.install (str "the candidate for " q " does not hold in this world (a premise changed)")))
+    (w/put-definition w q (update d :compiled
+                                  (fn [xs] (vec (take candidates-per-name
+                                                      (cons e (remove #(= (:term (candidate-of %)) (:term cand)) xs)))))))))
+
+(defn- install-state
+  "Install through :world/update, so the change goes where world changes go:
+   the session, or the job's fork when inside a job (adopting the job
+   publishes it)."
+  [st cand provenance]
   (let [q (:name cand)]
     (when-not q (fail :L4.exec.install "only a candidate for a named definition can be installed"))
-    (.incrementAndGet m/dispatch-epoch)        ; invalidate globals' inline caches
-    (swap! session update-in [:dispatch q]
-           (fn [xs] (vec (take candidates-per-name
-                               (cons (executable cand) (remove #(= (:term (candidate-of %)) (:term cand)) xs))))))
-    q))
+    (let [e (executable (assoc cand :provenance (assoc provenance :installed-in (w/id (:world st)))))]
+      (m/perform st :world/update [(fn [w] (installed w q e))]))))
 
 (reset! m/resolve-hook
-        (fn [q _d world session]
-          (when-let [xs (get-in @session [:dispatch q])]
-            (some #(when (valid? (candidate-of %) world) %) xs))))
+        (fn [q d world _session]
+          (some #(when (valid? (candidate-of %) world) %) (:compiled d))))
 
 ;; ---------------------------------------------------------------------------
 ;; Preparation (L4.prepare.job)
@@ -218,7 +236,7 @@
    :fn (fn [st [outcome]]
          (when-not (= :ready (:status outcome))
            (fail :L4.exec.install (str "no candidate: the outcome is " (:status outcome))))
-         (ret st (install! (get-in st [:dyn :session]) (:candidate outcome))))})
+         (install-state st (:candidate outcome) (:provenance outcome)))})
 
 (b/register! 'klara.compiler.kernel/reference
   {:kind :intrinsic
@@ -304,7 +322,8 @@
                       :reference (if saved (intr/reference-with-profile f saved) (intr/annotated-reference f))
                       :profile (intr/profile-snapshot f)
                       :runtime (runtime-info)
-                      :specializer specializer}))))})
+                      :specializer specializer
+                      :specializer-name sq}))))})
 
 (b/register! 'klara.jit/function                                      ; L4.jit.function
   {:kind :intrinsic

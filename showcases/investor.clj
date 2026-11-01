@@ -9,10 +9,16 @@
   the expected gain covers what preparing cost. Measuring by running a
   function is safe: each measurement is a job on a fork of the world.
 
-  The decisions are not obvious, and that is the point: `score` alone is
-  too cheap to be worth entering compiled code for, but `rank`, which calls
-  it in a loop, is worth compiling with `score` inlined."
-  (:require [klara.investor :as investor]))
+  The decisions are not obvious, and that is the point: `score` alone gains
+  little (entering compiled code costs about what it saves, so the decision
+  rests on a margin the investor requires of its measurements), while
+  `rank`, which calls it in a loop, gains a lot compiled with `score`
+  inlined. The compiled `rank` carries its provenance: the reference, the
+  candidate the kernel checked, its premises, the specializer and the
+  investor's decision."
+  (:require [klara.investor :as investor]
+            [klara.compiler :as compiler]))
+
 
 (defn score [x] (+ (* 3 x x) (* -2 x) 7))
 
@@ -56,4 +62,6 @@
 {:decisions (into {} (map (juxt :name :decision) decisions))
  :chosen (into {} (keep #(when (:chosen %) [(:name %) (:chosen %)]) decisions))
  :same-result (= (second before) (second after))
- :speedup (/ (first before) (first after))}
+ :speedup (/ (first before) (first after))
+ :provenance (:provenance (compiler/explain rank))
+ :premises (:premises (compiler/explain rank))}

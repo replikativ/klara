@@ -212,6 +212,15 @@ iteration, if the candidate still holds in the current world and mint
 same arguments the interpreter would have bound, so the result is the
 same. `(compiler/explain f)` counts these entries as `:reentries`.
 
+`L4.exec.provenance` Installed code belongs to the world: the definition
+keeps its value and generation and lists its executables, so a fork or an
+older world has exactly the compiled code it had, and installing inside a
+job changes only the job's world. `(compiler/explain f)` returns, besides
+the compiled form, the candidate Code the kernel checked (`:candidate`),
+the reference, premises, evidence and guards, and `:provenance`: the
+specializer, a summary of the profile it used, the world it was installed
+in and, when the investor chose it, its decision.
+
 `L4.exec.mint-safe` Compiled code may run under a mint (L1.context.mint)
 when its only inner functions are applied where they are made, so it
 creates no closure that would need the mint as basis.

@@ -31,8 +31,7 @@
           :history-limit history-limit
           :ns 'user
           :roots roots
-          :out (or out *out*)
-          :dispatch {}})))
+          :out (or out *out*)})))
 
 (defn current-world [session] (:world @session))
 
@@ -264,8 +263,9 @@
      :world-definitions (count (w/defs (:world s)))
      :history-entries (count (:history s))
      :history-limit (:history-limit s)
-     :candidates (reduce + 0 (map count (vals (:dispatch s))))
-     :candidates-by-name (into {} (map (fn [[q xs]] [q (count xs)])) (:dispatch s))}))
+     :candidates (reduce + 0 (map (comp count :compiled) (vals (w/defs (:world s)))))
+     :candidates-by-name (into {} (keep (fn [[q d]] (when (seq (:compiled d)) [q (count (:compiled d))])))
+                               (w/defs (:world s)))}))
 
 (b/register! 'klara.kernel/retained
              {:kind :intrinsic

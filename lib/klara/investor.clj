@@ -53,10 +53,10 @@
           (recur (* 2 n) (when (>= d 1000000) per)))))))
 
 (defn- explore
-  "Prepare q with specializer s. Runs inside a job."
-  [q s]
+  "Prepare q with specializer s (called name). Runs inside a job."
+  [q name s]
   (let [t0 (now)
-        outcome (jit/prepare q {:specializer s})
+        outcome (jit/prepare q {:specializer s :specializer-name name})
         prep (- (now) t0)]
     (if (= :ready (:status outcome))
       {:status :ready :outcome outcome :prepare-ns prep}
@@ -83,7 +83,7 @@
                    (:specializer ctx) (assoc :attached (:specializer ctx)))
             names (vec (keys alts))
             ;; explore in parallel: preparing is checking, independent per alternative
-            prepared (job/run-all {:budget budget} (map (fn [k] (fn [] (explore q (get alts k)))) names))
+            prepared (job/run-all {:budget budget} (map (fn [k] (fn [] (explore q k (get alts k)))) names))
             ;; measure one at a time: timing must not compete with itself
             reference (measure f args)
             tried (mapv (fn [k o]
@@ -109,9 +109,11 @@
         (cond
           (nil? reference) (assoc decision :decision :unmeasurable)
           (and best (pos? (net best)))
-          (do (compiler/install! (:outcome best))
-              (assoc decision :decision :compiled :chosen (:name best)
-                     :compiled-ns (:ns-per-call best) :expected-gain-ns (net best)))
+          (let [d (assoc decision :decision :compiled :chosen (:name best)
+                         :compiled-ns (:ns-per-call best) :expected-gain-ns (net best))]
+            ;; the decision is part of the compiled code's provenance
+            (compiler/install! (assoc-in (:outcome best) [:provenance :decision] d))
+            d)
           :else (assoc decision :decision :declined))))))
 
 (defn interpreted? [x] (= :interpreted (:kind (compiler/explain x))))

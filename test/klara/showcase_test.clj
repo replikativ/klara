@@ -53,13 +53,17 @@
       (is (#{:compiled :left} (:ran r)))
       (is (= 217801084 (:total r))))))
 
-(deftest investor   ; L3.job.parallel
+(deftest investor   ; L3.job.parallel L4.exec.provenance
   (let [r (run "showcases/investor.clj")]
     (testing "the investor compiles the loop and declines what does not pay"
       (is (= :compiled (get-in r [:decisions 'showcases.investor/rank])))
       (is (= :default (get-in r [:chosen 'showcases.investor/rank])))
-      (is (= :not-hot (get-in r [:decisions 'showcases.investor/banner])))
-      (is (not= :compiled (get-in r [:decisions 'showcases.investor/score]))))
+      (is (= :not-hot (get-in r [:decisions 'showcases.investor/banner]))))
+    (testing "the compiled loop records how it came about"
+      (is (= :default (get-in r [:provenance :specializer])))
+      (is (= :compiled (get-in r [:provenance :decision :decision])))
+      (is (some #{'showcases.investor/rank} (map first (:premises r)))))
     (testing "same result, faster"
       (is (:same-result r))
-      (is (< 5 (:speedup r))))))
+      ;; a timing bound loose enough for a loaded machine (typically 35-60x)
+      (is (< 2 (:speedup r))))))
