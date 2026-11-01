@@ -64,6 +64,7 @@
 
 (defn- job-defaults []
   {:time/now (fn [st _] (assoc st :mode :ret :ctl (System/nanoTime) :env nil))   ; L3.effect.time
+   :time/compiling (fn [st _] (assoc st :mode :ret :ctl (session/compiling-ms) :env nil))
    :io/print (fn [st [s]]
                (let [job (get-in st [:dyn :job])
                      j (swap! job update :intents conj [:io/print s])]

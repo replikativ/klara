@@ -28,6 +28,8 @@
             [klara.time :as time]
             [klara.own :as own]
             [klara.compiler :as compiler]
+            [klara.code :as code]
+            [klara.stage :refer [lift]]
             [klara.job :as job]
             [klara.world :as world]))
 
@@ -129,24 +131,28 @@
 (defn per-call
   "Nanoseconds per call of f on args, at steady state: batches of doubling
    size until a batch takes at least 10 ms and agrees with the previous one
-   within 10%, after at least 300 ms in all. The first batches are the
-   host's warm-up: fresh code (a new candidate) runs slowly until the JVM
-   has compiled it, and two cold batches can agree; measuring then would
-   favour old code. A single call that takes a second is its own estimate."
+   within 10%, after at least 300 ms in all, with the host's JIT compiler
+   idle during both batches. Fresh code (a new candidate) runs slowly, and
+   steadily so, until the JVM has compiled it, which under load can take a
+   second; measuring then would favour old code. A single call that takes a
+   second is its own estimate, and two seconds in all end the measurement."
   [f args]
   (let [start (now)]
-    (loop [n 1 previous nil]
-      (let [t0 (now)]
+    (loop [n 1 previous nil quiet? false]
+      (let [c0 (time/compiling)
+            t0 (now)]
         (dotimes [_ n] (apply f args))
         (let [t1 (now)
+              idle (= c0 (time/compiling))
               d (- t1 t0)
               per (quot d n)]
           (if (or (>= n 4000000)
                   (>= d 1000000000)
-                  (and previous (>= d 10000000) (>= (- t1 start) 300000000)
+                  (>= (- t1 start) 2000000000)
+                  (and previous idle quiet? (>= d 10000000) (>= (- t1 start) 300000000)
                        (<= (abs (- per previous)) (quot previous 10))))
             per
-            (recur (* 2 n) (when (>= d 1000000) per))))))))
+            (recur (* 2 n) (when (>= d 1000000) per) idle)))))))
 
 (defn- explore
   "Prepare q with specializer s (called name). Runs inside a job."
@@ -228,7 +234,14 @@
             net (fn [a] (let [saving (- (:ns reference) (:ns-per-call a))]
                           (if (> (* 10 saving) (:ns reference)) (* calls saving) 0)))
             ready (filter #(and (= :ready (:status %)) (:ns-per-call %)) tried)
-            best (when (and reference (seq ready)) (apply max-key net ready))
+            fastest (when (and reference (seq ready)) (apply max-key net ready))
+            ;; within the resolution of as-is, as-is: no guards, and no
+            ;; premises on callees (an inlined callee's redefinition retires it)
+            as-is (first (filter #(= :as-is (:name %)) ready))
+            best (if (and as-is fastest
+                          (<= (* 10 (- (:ns-per-call as-is) (:ns-per-call fastest))) (:ns-per-call as-is)))
+                   as-is
+                   fastest)
             decision {:name q
                       :tier :explored
                       :calls calls
@@ -254,6 +267,28 @@
           (compiler/compiled q) (assoc decision :decision :kept :why "explored: none measurably faster than its compiled code")
           :else (baseline q decision "explored: none measurably faster"))))))
 
+(defn- globals
+  "The names of the globals that Code c refers to."
+  [c]
+  (let [v (code/view c)]
+    (if (= :global (:op v)) [(:name v)] (mapcat globals (code/children c)))))
+
+(defn- visit [deps [seen out] q]
+  (if (contains? seen q)
+    [seen out]
+    (let [[seen out] (reduce (fn [acc d] (visit deps acc d)) [(conj seen q) out] (get deps q))]
+      [seen (conj out q)])))
+
+(defn callees-first
+  "Function definitions `names` ordered so that each comes after the ones it
+   calls (within a cycle, in any order): a caller is then measured with its
+   callees compiled, not entering the interpreter on every call."
+  [names]
+  (let [in (set names)
+        deps (into {} (map (fn [q] [q (filter in (distinct (some-> (code/unfold (lift (world/get (world/current) q))) globals)))]))
+                   names)]
+    (second (reduce (fn [acc q] (visit deps acc q)) [#{} []] names))))
+
 (defn consider
   "Decide about the definition named q. Returns the decision, also recorded
    in `decisions`; installs the chosen candidate. `pol` overrides `policy`."
@@ -268,7 +303,8 @@
   ([ns-sym] (invest! ns-sym {}))
   ([ns-sym pol]
   (let [round (fn [names] (mapv #(consider % pol)
-                                (filter #(and (v-fn? (world/get (world/current) %)) (nil? (compiler/compiled %))) names)))
+                                (callees-first
+                                 (filter #(and (v-fn? (world/get (world/current) %)) (nil? (compiler/compiled %))) names))))
         first-round (round (world/names (world/current) ns-sym))
         again (round (map :name (filter #(= :declined (:decision %)) first-round)))
         by-name (into {} (map (juxt :name identity)) (concat first-round again))]
@@ -284,7 +320,7 @@
    (let [pol (merge policy pol)
          w (world/current)]
      (vec (for [ns nss
-                q (world/names w ns)
+                q (callees-first (filter #(v-fn? (world/get w %)) (world/names w ns)))
                 :let [last-d (peek (get decisions q))]
                 ;; interpreted, or compiled at the baseline and so still promotable
                 :when (and (v-fn? (world/get w q))

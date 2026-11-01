@@ -69,9 +69,12 @@ and `clojure -M:bench` stay green at every commit. Progress is recorded here.
   job that does not train profiles (L3.job.profile), install the best net
   gain (as many calls again expected; savings within 10% count as none),
   account for everything; `showcases/investor.clj`. Caches are single-entry
-  so parallel jobs on different worlds cannot mix them. Open: proof-carrying
-  alternatives (needs the arithmetic certifier), decisions kept in a world,
-  automatic triggering.
+  so parallel jobs on different worlds cannot mix them. Later: tiers by
+  interpreted time spent, automatic triggering between forms, promotion of
+  baseline code (L4.jit.tiers, L4.jit.trigger); callees decided first,
+  ties to as-is, measuring after the host's JIT is idle. Open:
+  proof-carrying alternatives (needs the arithmetic certifier), decisions
+  kept in a world.
   Originally: A Klara policy over profiles and measured
   costs: threshold and cost table first, parallel exploration in forks,
   honest accounting, declining when it does not pay.

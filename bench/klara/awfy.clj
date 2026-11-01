@@ -68,13 +68,31 @@
         {:ok (and ok ok-after) :interpreted-ms interpreted :ms compiled
          :decisions (into {} (map (fn [[q d c]] [(name q) (if c (str (name d) " " (name c)) (name d))]) decisions))}))))
 
-(defn -main [& names]
-  (let [node (try (json/read-str (:out (sh/sh "node" "bench/awfy/js/benchmarks.js")) :key-fn keyword)
-                  (catch Throwable _ nil))
-        rows (for [b (or (seq names) benchmarks)]
-               (let [c (clojure-run b) kl (klara-run b) js (get node (keyword b))]
-                 {:benchmark b :node-ms (:ms js) :clojure-ms (:ms c)
-                  :klara-interpreted-ms (:interpreted-ms kl) :klara-ms (:ms kl)
-                  :ok (and (:ok js) (:ok c) (true? (:ok kl))) :klara (:ok kl) :decisions (:decisions kl)}))]
-    (doseq [r rows] (prn r))
-    (shutdown-agents)))
+(defn- row [b]
+  (let [c (clojure-run b) kl (klara-run b)]
+    {:benchmark b :clojure-ms (:ms c)
+     :klara-interpreted-ms (:interpreted-ms kl) :klara-ms (:ms kl)
+     :ok (and (:ok c) (true? (:ok kl))) :klara (:ok kl) :decisions (:decisions kl)}))
+
+(defn- in-own-jvm
+  "Run benchmark b in a JVM of its own: HotSpot's profiles of the runtime's
+   shared code (dispatch, the machine) would otherwise carry over from one
+   benchmark, or one session, to the next."
+  [b]
+  (let [java (str (System/getProperty "java.home") "/bin/java")
+        r (sh/sh java "-Xss16m" "-Xmx2g" "-cp" (System/getProperty "java.class.path")
+                 "clojure.main" "-m" "klara.awfy" "--one" b)]
+    (if (zero? (:exit r))
+      (read-string (last (str/split-lines (:out r))))
+      {:benchmark b :ok false :error (:err r)})))
+
+(defn -main [& args]
+  (if (= "--one" (first args))
+    (do (prn (row (second args)))
+        (shutdown-agents))
+    (let [node (try (json/read-str (:out (sh/sh "node" "bench/awfy/js/benchmarks.js")) :key-fn keyword)
+                    (catch Throwable _ nil))]
+      (doseq [b (or (seq args) benchmarks)]
+        (let [r (in-own-jvm b) js (get node (keyword b))]
+          (prn (assoc r :node-ms (:ms js) :ok (boolean (and (:ok r) (:ok js)))))))
+      (shutdown-agents))))

@@ -210,3 +210,13 @@
         (is (<= 1000 counted))
         (is (= [['promo/sq :explored]] (mapv (fn [[q t]] [q (if (= t :baseline) :baseline :explored)]) promoted)))))))
 
+
+(deftest the-investor-decides-callees-first   ; L4.jit.tiers
+  (testing "definitions are decided after the ones they call, so a caller is measured with its callees compiled"
+    (is (= '[adv/leaf adv/mid adv/top adv/loner]
+           (run (str header "(require '[klara.investor :as investor])
+                 (defn leaf [x] (* x x))
+                 (defn mid [x] (leaf (inc x)))
+                 (defn top [x] (mid x))
+                 (defn loner [x] x)
+                 (investor/callees-first '[adv/top adv/mid adv/leaf adv/loner])"))))))

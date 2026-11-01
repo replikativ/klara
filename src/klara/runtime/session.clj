@@ -60,10 +60,18 @@
   (let [^java.io.Writer out (:out @session)]
     (.write out ^String s) (.flush out)))
 
+(defn compiling-ms
+  "Milliseconds the host's JIT compiler has spent so far, or nil where the
+   host does not say (L3.effect.time)."
+  []
+  (let [b (java.lang.management.ManagementFactory/getCompilationMXBean)]
+    (when (and b (.isCompilationTimeMonitoringSupported b)) (.getTotalCompilationTime b))))
+
 (defn session-defaults [session]
   {:io/print (fn [st [s]] (out-write session s) (assoc st :mode :ret :ctl nil :env nil))
    ;; L3.effect.time: the host's monotonic clock, in nanoseconds
    :time/now (fn [st _] (assoc st :mode :ret :ctl (System/nanoTime) :env nil))
+   :time/compiling (fn [st _] (assoc st :mode :ret :ctl (compiling-ms) :env nil))
    :world/define (fn [st [q info]]
                    (let [base (:world st)
                          changed (w/put-definition base q (w/definition q info))

@@ -8,3 +8,9 @@
   "Nanoseconds of a monotonic clock."
   []
   (perform :time/now))
+
+(defn compiling
+  "Milliseconds the host's JIT compiler has spent so far, or nil: code that
+   measures waits until the host has finished compiling what it measures."
+  []
+  (perform :time/compiling))

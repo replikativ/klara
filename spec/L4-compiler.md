@@ -338,8 +338,12 @@ for a pure definition with a plain-data sample, it prepares and measures
 its alternatives and installs the one with the best expected gain (preparing
 is paid by then, so it decides whether to explore, not what to install), if
 any is measurably faster than the interpreter, and otherwise compiles the
-definition as it is (it is past the baseline). Measuring
-never runs an impure definition (L4.facts.pure).
+definition as it is (it is past the baseline). An alternative within the
+measurement's resolution (10%) of the definition as it is loses to it: it
+has no guards and no premises on its callees. Definitions are decided after
+the ones they call (within a cycle in any order), so a caller is measured
+with its callees compiled. Measuring never runs an impure definition
+(L4.facts.pure).
 
 `L4.jit.trigger` With `(klara.host.api/automatic-investor! session pol)`,
 profiles that cross a power of two of entries (from 64) or branch counts

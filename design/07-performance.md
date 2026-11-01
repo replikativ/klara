@@ -127,6 +127,32 @@ with the automatic investor and stops it before timing:
 Towers and List vary between runs with the investor's choices (whether the
 default specializer's inlining of a small callee measures as faster).
 
+**Why they varied (2026-11-01).** Three causes, none of them the choices
+themselves: installed by hand and alternated in one JVM, as-is and the
+default are within 4% on List, and the default is 5–12% slower on Towers.
+
+- *Order.* Definitions were decided in namespace order, so a caller was
+  measured while its callees were interpreted (compiled `move-top-disk` 2x
+  its interpreted time, because `push-disk` was not compiled yet). The
+  investor now decides callees first (`investor/callees-first`).
+- *Noise between alternatives.* Savings were compared with the
+  interpreter, so between two alternatives within 10% of each other the
+  faster measurement won. Within the resolution of as-is, as-is now wins:
+  no guards, no premises on callees.
+- *Measuring before HotSpot has compiled.* A fresh candidate of the
+  investor showcase's `rank` runs at 300 µs per call, steadily, until C2
+  has compiled it (half a second to a second under load), then at 20 µs.
+  Two batches on that plateau agreed, so the default was sometimes
+  measured at 290 µs and lost. Measuring now also waits until the JVM's
+  JIT compiler has been idle for two batches (`(klara.time/compiling)`,
+  L3.effect.time), bounded by two seconds.
+
+The harness also runs each benchmark in a JVM of its own: HotSpot's
+profiles of the runtime's shared code carried over between sessions (the
+same List decisions measured 0.077 and 0.13 ms in consecutive sessions of
+one JVM). What remains between Klara and Clojure on Towers and List is the
+per-call cost of compiled code (the context fetch, the meter), not a choice.
+
 All results agree. The interpreter is 500–1300× slower than V8; compiled
 Mandelbrot is at Clojure's speed and within 1.3× of V8, the others 12–40×
 behind V8. What the benchmarks taught the backend:
@@ -139,7 +165,8 @@ behind V8. What the benchmarks taught the backend:
 - **Calls between compiled definitions go direct** to the host function,
   with the context fetched once per function entry.
 - **Measure at steady state.** Two cold batches of a fresh candidate can
-  agree; the investor now warms up for 300 ms before trusting agreement.
+  agree; the investor warms up for 300 ms and waits until the host's JIT
+  compiler is idle before trusting agreement.
 - **Clojure forms are a leaky host IR.** A `loop` outside return position
   (after A-normal form, every loop in a `let` initializer) also becomes a
   closure per evaluation; Sieve's inner loop pays it per outer iteration.

@@ -140,3 +140,7 @@ The backend needs to emit Vector API calls, which the bytecode backend
 3. Effect classes in L4.facts (section 3), replacing the purity bit.
 4. The regex showcase as a user rule.
 5. Primitive loops; then vectorization with the bytecode backend.
+
+Before step 2: whether a rule pays is the investor's measurement, so that
+came first. Towers and List varied with how the investor measured, not
+with its choices (07-performance.md, "Why they varied"); fixed.

@@ -34,8 +34,10 @@ handlers of the current context. Operations that only a handler outside the
 host call could handle raise this rule.
 
 `L3.effect.time` `(klara.time/now)` performs `:time/now`; the session and
-jobs handle it with the host's monotonic clock in nanoseconds. A handler
-may answer it instead.
+jobs handle it with the host's monotonic clock in nanoseconds.
+`(klara.time/compiling)` performs `:time/compiling`, answered with the
+milliseconds the host's JIT compiler has spent so far (nil where the host
+does not say). A handler may answer either instead.
 
 ## Jobs
 
