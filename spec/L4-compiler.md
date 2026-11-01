@@ -323,7 +323,9 @@ interpreter's measured cost per event. Below the policy's `:baseline-ns`
 it leaves the definition alone; past it, it compiles the definition as it
 is, without running it (any definition, pure or not); past `:explore-ns`,
 for a pure definition with a plain-data sample, it prepares and measures
-its alternatives and installs the one with the best net gain. Measuring
+its alternatives and installs the one with the best expected gain (preparing
+is paid by then, so it decides whether to explore, not what to install), if
+any is measurably faster than the interpreter. Measuring
 never runs an impure definition (L4.facts.pure).
 
 `L4.jit.attach` `^{:klara/specialize f}` on a definition names its

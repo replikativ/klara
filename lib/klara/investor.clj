@@ -15,9 +15,10 @@
      profile;
   2. explores its alternatives (specializers), each prepared and measured on
      the same argument in its own job, all at the same time;
-  3. installs the alternative with the best net gain, expecting as many
-     calls again as there were so far, when the gain covers what preparing
-     it cost; otherwise it declines;
+  3. installs the alternative with the best expected gain, expecting as many
+     calls again as there were so far (what preparing cost is spent by then,
+     so it does not count against installing), or declines when none is
+     measurably faster than the interpreter;
   4. accounts for everything it spent, chosen or not.
 
   Running a function on a real argument to measure it is safe because only
@@ -202,10 +203,11 @@
                               (and (= :ready (:status a)) (nil? m)) (assoc :status :unmeasured))))
                         names prepared)
             ;; expect as many calls again as so far; a saving within the
-            ;; measurement's resolution (10%, see per-call) is no saving
+            ;; measurement's resolution (10%, see per-call) is no saving.
+            ;; What preparing cost is spent now, whatever is chosen: it decided
+            ;; whether to explore (L4.jit.tiers), not what to install
             net (fn [a] (let [saving (- (:ns reference) (:ns-per-call a))]
-                          (- (if (> (* 10 saving) (:ns reference)) (* calls saving) 0)
-                             (:prepare-ns a))))
+                          (if (> (* 10 saving) (:ns reference)) (* calls saving) 0)))
             ready (filter #(and (= :ready (:status %)) (:ns-per-call %)) tried)
             best (when (and reference (seq ready)) (apply max-key net ready))
             decision {:name q
