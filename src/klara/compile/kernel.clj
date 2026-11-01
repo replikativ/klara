@@ -51,10 +51,8 @@
 
 (defn register-certifier! [kind f] (swap! certifiers assoc kind f))
 
-(defn- abandoning
-  "Default handlers that abandon the compiled call (L4.exec.deopt)."
-  [defaults]
-  (into {} (map (fn [[op _]] [op (fn [_ _] (m/abandon! :effect))])) defaults))
+;; Compiled code left (L4.exec.leave); carries the leave state.
+(deftype Left [leave])
 
 (v/deftype-callable Executable [cand ^:volatile-mutable last-world ^:volatile-mutable last-valid
                                 ^:volatile-mutable last-path]
@@ -67,17 +65,20 @@
                     (let [r (valid? cand world)] (set! last-world world) (set! last-valid r) r))
                   (guards-hold? cand args))
           r (if ok
-              (let [inner (update (:dyn st) :defaults abandoning)]
-                (try (m/set-context! world (:mint st) inner)
-                     (apply (:host-fn cand) args)
-                     (catch Throwable ex
-                       (if (= :effect (m/abandoned ex)) ::deopt (throw ex)))))
+              (try (m/set-context! world (:mint st) (:dyn st))
+                   (apply (:host-fn cand) args)
+                   (catch clojure.lang.ExceptionInfo ex
+                     (if-let [l (lower/leave? ex)] (Left. @l) (throw ex))))
               ::invalid)]
-      (if (or (= ::deopt r) (= ::invalid r))
-        (do (set! last-path :reference)                           ; L4.exec.executable, L4.exec.deopt
+      (cond
+        (= ::invalid r)
+        (do (set! last-path :reference)                           ; L4.exec.executable
             (assoc st :mode :apply
                    :ctl [(m/closure-of (.-term ^Code (:reference cand)) (:mint st)) (vec args)]))
-        (do (set! last-path :compiled) (ret st r)))))
+        (instance? Left r)
+        (do (set! last-path :left)                                 ; L4.exec.leave
+            (lower/resume st (.-leave ^Left r)))
+        :else (do (set! last-path :compiled) (ret st r)))))
   (-call [this world mint dyn args]
     (if (and (nil? mint)
              (if (identical? world last-world)
@@ -245,3 +246,14 @@
          (if-let [n (check/normalize (.-term ^Code c) (:world st) (get-in st [:dyn :meter]))]
            (ret st (Code. n))
            (m/abandon! :exhausted)))})
+
+;; ---------------------------------------------------------------------------
+;; klara.jit: building speculations (L4.check.speculate, L4.exec.leave)
+
+(b/register! 'klara.jit/guard
+  {:kind :host
+   :fn (fn [guard specialized reference]
+         (Code. (t/refresh-free {:op :if :speculate true
+                                 :test (.-term ^Code guard)
+                                 :then (.-term ^Code specialized)
+                                 :else (.-term ^Code reference)})))})

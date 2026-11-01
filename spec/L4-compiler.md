@@ -82,7 +82,7 @@ time of the call.
 
 `L4.lower.calls` Calls to closures go through the runtime: a closure with an
 installed candidate valid in `E` runs compiled; any other closure runs in a
-nested machine.
+nested machine whose unhandled effects leave (L4.exec.leave).
 
 `L4.lower.steps` Compiled code charges one step per function entry and loop
 iteration when it runs under a finite budget.
@@ -100,10 +100,25 @@ evaluates `reference` in `E`.
 `(compiler/reference q)` makes calls to `q`, in worlds where the candidate
 is valid, use the compiled body. It does not change any world.
 
-`L4.exec.deopt` If a nested callee of compiled code performs an operation it
-does not handle, or the budget runs out inside compiled code, the compiled
-call is abandoned and the call is evaluated again by the machine from its
-start.
+`L4.exec.leave` Compiled code leaves to the interpreter, without re-running
+anything, when a speculation fails (the else branch of
+`(if guard specialized reference)` marked as a speculation), when a callee
+it runs in a nested machine performs an operation that callee does not
+handle, and when the budget runs out (inside compiled code or in such a
+callee). The machine continues from the rebuilt state; the executable
+reports `:last-path :left`.
+
+`L4.exec.frame-state` Every point where compiled code can leave records a
+frame state: the interpreter node to continue at, the environment built from
+the compiled locals, and the `let` frames around the point; compiled call
+sites add their frames as a leave passes through. The rebuilt state is one
+the interpreter reaches by evaluating the candidate from the same input.
+Compiled code is normalized to A-normal form first, so all enclosing
+contexts are `let` frames.
+
+`L4.check.speculate` A speculation `(if g a b)` is equivalent to `r` if `g`
+is a guard (a pure host predicate on locals and constants, which cannot fail),
+`a` is equivalent to `r` and `b` is equivalent to `r`.
 
 `L4.exec.explain` `(compiler/explain f)` returns data on an executable:
 reference, premises, validity in `E`, and `:last-path` (`:compiled` or

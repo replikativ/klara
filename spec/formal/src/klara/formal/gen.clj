@@ -57,7 +57,7 @@
   (let [ctx (update ctx :depth (fnil inc 0))]
     (if (or (zero? d) (chance r 0.15))
       (leaf r ctx)
-      (case (.nextInt r 14)
+      (case (if (and (:call-bias ctx) (chance r 0.25)) 7 (.nextInt r 14))
         0 (list (pick r '[+ - * + -]) (expr r ctx (dec d)) (expr r ctx (dec d)))
         1 (list (pick r '[= < > <= >=]) (expr r ctx (dec d)) (expr r ctx (dec d)))
         2 (list (pick r '[inc dec zero? not]) (expr r ctx (dec d)))
@@ -70,7 +70,10 @@
             (list (list 'fn [x y] (expr r (bind (bind ctx x) y) (dec d)))
                   (expr r ctx (dec d)) (expr r ctx (dec d))))
         7 (cond (chance r 0.1) (list (leaf r ctx) (expr r ctx (dec d)))   ; apply a non-function
-                (seq (:fns ctx)) (list (pick r (vec (:fns ctx))) (expr r ctx (dec d)))
+                (seq (:fns ctx)) (let [f (pick r (vec (:fns ctx)))]
+                                   (if (= f 'rec)
+                                     (list f (expr r ctx (dec d)) (expr r ctx (dec d)))
+                                     (list f (expr r ctx (dec d)))))
                 :else (leaf r ctx))
         8 (list 'perform (pick r ops) (expr r ctx (dec d)))
         9 (let [op (pick r ops) k (fresh ctx "k") v (fresh ctx "v")
@@ -96,12 +99,20 @@
   "A program as Klara source text: a few definitions, then expressions."
   [seed]
   (let [r (Random. seed)
-        defs (vec (for [i (range (.nextInt r 3))]
-                    (let [f (symbol (str "f" i)) x (symbol (str "a" i))]
-                      [f (list 'defn f [x] (expr r {:locals [x]} 3))])))
+        ;; each definition may call the earlier ones
+        defs (reduce (fn [defs i]
+                       (let [f (symbol (str "f" i)) x (symbol (str "a" i))]
+                         (conj defs [f (list 'defn f [x] (expr r {:locals [x] :fns (map first defs)} 3))])))
+                     [] (range (inc (.nextInt r 3))))
+        ;; a bounded, non-tail recursive definition over them
+        rec ['rec (list 'defn 'rec '[n acc]
+                        (list 'if '(< (mod* n) 1) 'acc
+                              (list '+ (expr r {:locals '[n acc] :fns (map first defs)} 2)
+                                    '(rec (dec (mod* n)) acc))))]
+        defs (conj defs rec)
         fns (map first defs)
         exprs (for [_ (range (inc (.nextInt r 3)))]
-                (expr r {:fns fns} 4))]
+                (expr r {:fns fns :call-bias true} 4))]
     (str "(ns gen (:require [klara.stage :refer [code esc lift run]] [klara.effect :refer [perform handle]]))\n"
          ;; a bounded counter for loops, so generated loops terminate
          "(defn mod* [n] (if (< n 0) 0 (if (< 5 n) 5 n)))\n"

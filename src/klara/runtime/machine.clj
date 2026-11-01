@@ -34,7 +34,7 @@
   (throw (ex-info msg (merge {:rule rule :message msg} data))))
 
 ;; Raised inside nested machines and compiled code to abandon them without
-;; observable effects (L4.exec.deopt): exhaustion and boundary-crossing effects.
+;; observable effects (L4.exec.leave): exhaustion and boundary-crossing effects.
 (defrecord Abandon [reason])
 (defn abandon! [reason] (throw (ex-info "abandon" {::abandon reason})))
 (defn abandoned [^Throwable e] (when (instance? clojure.lang.ExceptionInfo e) (::abandon (ex-data e))))
@@ -267,7 +267,8 @@
       (if-let [d (and (not (and (= kind :stop) (:deopt (nth k i)))) (get-in st [:dyn :defaults op]))]
         (d st args)
         (if (and (= kind :stop) (:deopt (nth k i)))
-          (abandon! :effect)                                      ; L4.exec.deopt
+          ;; L4.exec.leave: hand the whole state to the compiled caller
+          (throw (ex-info "leave nested machine" {::abandon :effect ::state st}))
           (fail (if (and (= kind :stop) (= :boundary (:f (nth k i)))) :L3.effect.host-boundary :L3.effect.unhandled)
                 (str "unhandled effect " op) :op op))))))
 
@@ -297,9 +298,13 @@
    the host call is abandoned; the job that owns the budget then suspends
    at that call."
   [st]
-  (if (= :job (stop-frame (:k st)))
-    ((get-in st [:dyn :on-exhausted]) st)
-    (abandon! :exhausted)))
+  (let [stop (some #(when (#{:job :boundary} (:f %)) %) (:k st))]
+    (cond
+      (= :job (:f stop)) ((get-in st [:dyn :on-exhausted]) st)
+      ;; inside a nested machine of compiled code: leave with the state, so the
+      ;; job suspends exactly here (L4.exec.leave)
+      (:deopt stop) (throw (ex-info "leave nested machine" {::abandon :exhausted ::state st}))
+      :else (abandon! :exhausted))))
 
 (defn- job-snapshot [dyn] (when-let [j (:job dyn)] @j))
 
@@ -600,7 +605,7 @@
                 r (try (set-context! world mint dyn) (invoke-host fv args)
                        (catch Throwable ex
                          (when (abandoned ex)
-                           ;; nothing the abandoned host call did may survive (L4.exec.deopt)
+                           ;; nothing the abandoned host call did may survive (L4.exec.leave)
                            (when snapshot (reset! (:job dyn) snapshot))
                            (throw ex))
                          (reduced ex)))]
@@ -654,7 +659,7 @@
   "Call function value `f` with `args` from host code, in the context of the
    innermost running machine (L3.effect.host-boundary). With `deopt?` (calls
    from compiled code) any effect the callee does not handle itself abandons
-   the compiled call (L4.exec.deopt)."
+   the compiled call (L4.exec.leave)."
   [[world mint dyn] f args & [deopt?]]
   (:ctl (run-state (state :apply [f (vec args)] nil (list {:f :boundary :deopt deopt?}) world mint dyn))))
 

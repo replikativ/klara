@@ -187,11 +187,31 @@
                           (:arities a) (:arities b))))
     false))
 
+(defn- guard?
+  "A guard cannot fail or perform an effect: a local, a constant, or a pure
+   host predicate applied to locals and constants (L4.check.speculate)."
+  [t]
+  (or (contains? #{:local :const} (:op t))
+      (and (= :app (:op t))
+           (= :host (get-in t [:fn :op]))
+           (let [q (get-in t [:fn :name])]
+             (or (and (= "clojure.core" (namespace q)) (contains? b/pure-host (symbol (name q))))
+                 (:pure (b/lookup q))))
+           (every? #(contains? #{:local :const} (:op %)) (:args t)))))
+
+(defn- speculation? [t] (and (= :if (:op t)) (:speculate t)))
+
 (defn equal?
   "Is `a` equivalent to `b` under the checker's rules?"
   [ctx a b]
   (let [a (whnf ctx a) b (whnf ctx b)]
-    (or (and (= (:op a) (:op b)) (same-shape ctx a b))
+    (or (cond
+          ;; L4.check.speculate: both branches must mean the other side
+          (and (speculation? b) (not (speculation? a)))
+          (and (guard? (:test b)) (equal? ctx a (:then b)) (equal? ctx a (:else b)))
+          (and (speculation? a) (not (speculation? b)))
+          (and (guard? (:test a)) (equal? ctx (:then a) b) (equal? ctx (:else a) b)))
+        (and (= (:op a) (:op b)) (same-shape ctx a b))
         (if-let [a' (unfold-head ctx a)]
           (equal? ctx a' b)
           (when-let [b' (unfold-head ctx b)]

@@ -2,14 +2,34 @@
   "The backend (spec/L4-compiler.md#lowering): checked Core terms to JVM
   classes through the Clojure compiler.
 
-  A lowered function is a host fn. Late links are looked up in the
-  effective world of the call (L4.lower.links), read from the machine's
-  current context (klara.runtime.machine/current-context). Calls to Klara closures run in a
-  nested machine whose effects abandon the compiled call (L4.lower.calls,
-  L4.exec.deopt). Each lowering is compiled by `eval`, which uses a fresh
-  class loader (L4.retain.classes)."
-  (:require [klara.lang.term :as t]
+  A lowered function is a host fn. Late links are looked up in the effective
+  world of the call (L4.lower.links), read from the machine's current
+  context. Each lowering is compiled by `eval`, which uses a fresh class
+  loader (L4.retain.classes).
+
+  Leaving compiled code (L4.exec.frame-state). The candidate is put in
+  A-normal form (klara.compile.anf) and prepared like any term
+  (klara.runtime.prepare). Lowering walks the term and its prepared nodes
+  together, so at every point where compiled code may leave it knows the
+  interpreter node to continue at, which compiled locals fill which
+  environment slots, and the `let` frames around the point. It leaves by
+  throwing a Leave that carries this state:
+
+  - a failed speculation, `(if guard specialized reference)`, continues at
+    the reference node (L4.exec.leave);
+  - a callee that performs an effect, or whose budget runs out, in a nested
+    machine: the nested machine's state is carried along;
+  - the budget running out at a function entry: the call is applied again by
+    the interpreter.
+
+  Each compiled call site in a non-tail position adds its own frames as the
+  Leave passes through, so the receiving executable rebuilds the whole
+  continuation and the machine goes on from there: nothing is re-executed."
+  (:require [klara.compile.anf :as anf]
+            [klara.lang.builtins :as b]
+            [klara.lang.term :as t]
             [klara.runtime.machine :as m]
+            [klara.runtime.prepare :as prep]
             [klara.runtime.value :as v])
   (:import [klara.runtime.value Closure]))
 
@@ -19,15 +39,70 @@
   (throw (ex-info msg (merge {:rule rule :message msg} data))))
 
 ;; ---------------------------------------------------------------------------
-;; Runtime support called from lowered code
+;; Leaving
+
+(defn leave?
+  "The leave state carried by exception `e`, or nil."
+  [e]
+  (when (instance? clojure.lang.ExceptionInfo e) (::leave (ex-data e))))
+
+(defn- leave!
+  "Leave compiled code: `state` is one of
+     {:mode :eval :node n :env env}      continue at node n
+     {:mode :apply :f f :args args}      apply f to args
+     {:mode :nested :state st}           continue a nested machine's state
+   `frames` are the let frames around the leaving point, innermost first."
+  [state frames]
+  (throw (ex-info "leave compiled code" {::leave (volatile! (assoc state :frames frames))})))
+
+(defn push-frames!
+  "A Leave passing through a compiled call site: add the site's frames
+   (outside the frames already collected) and pass it on."
+  [e frames]
+  (when-let [l (leave? e)]
+    (vswap! l update :frames into frames))
+  (throw e))
+
+(defn leave-eval! [node env frames] (leave! {:mode :eval :node node :env env} frames))
+
+(defn let-frame [body-node env] {:f :let :body body-node :env env})
+
+;; Stress testing: leave at function entries with probability `stress`, to
+;; exercise frame states everywhere (as V8's --deopt-every-n-times does).
+(defonce stress (atom nil))
 
 (defn tick!
-  "L4.lower.steps: one step per function entry and loop iteration."
+  "L4.lower.steps: one step per function entry and loop iteration. True when
+   compiled code must leave here: the budget ran out, or stress testing."
   []
-  (let [^objects c (m/current-context)]
-    (when-let [^longs meter (:meter (aget c 2))]
-      (aset meter 0 (dec (aget meter 0)))
-      (when (neg? (aget meter 0)) (m/abandon! :exhausted)))))
+  (let [^objects c (m/current-context)
+        ^longs meter (:meter (aget c 2))]
+    (or (when meter
+          (aset meter 0 (dec (aget meter 0)))
+          (neg? (aget meter 0)))
+        (when-let [p @stress] (< (Math/random) (double p))))))
+
+(defn leave-apply!
+  "Leave at a function entry: the interpreter applies the function again."
+  [fn-node captured args]
+  (leave! {:mode :apply :f (Closure. (.-term ^klara.runtime.prepare.Fn fn-node) fn-node captured nil) :args args} []))
+
+(defn resume
+  "The machine state that continues `st`, the state in which an executable
+   was entered, after compiled code left with `leave` (L4.exec.frame-state)."
+  [st leave]
+  (let [{:keys [mode frames]} leave
+        k (reduce conj (:k st) (rseq (vec frames)))]
+    (case mode
+      :eval (assoc st :mode :eval :ctl (:node leave) :env (:env leave) :k k)
+      :apply (assoc st :mode :apply :ctl [(:f leave) (vec (:args leave)) nil] :env nil :k k)
+      :nested (let [n (:state leave)
+                    inner (take-while #(not= :boundary (:f %)) (:k n))]
+                (assoc st :mode (:mode n) :ctl (:ctl n) :env (:env n)
+                       :k (reduce conj k (reverse inner)) :world (:world n) :mint (:mint n))))))
+
+;; ---------------------------------------------------------------------------
+;; Calls
 
 ;; A call site of a late link: the world id, dispatch epoch and value of its
 ;; last resolution, as in the interpreter's globals (klara.runtime.prepare).
@@ -48,16 +123,16 @@
 
 (defn late [^ISite site q] (.lookup site q))
 
-(defn- deopt-dyn
-  "A nested machine started from compiled code handles no effects itself:
-   every operation abandons the compiled call (L4.exec.deopt)."
-  [dyn]
-  (assoc dyn :defaults (into {} (map (fn [[op _]] [op (fn [_ _] (m/abandon! :effect))]))
-                             (:defaults dyn))))
-
-(defn- nested [f args]
+(defn- nested
+  "Run a Klara function in a nested machine. If it performs an effect it
+   does not handle, or its budget runs out, its state leaves with it."
+  [f args]
   (let [^objects c (m/current-context)]
-    (m/call-in [(aget c 0) (aget c 1) (deopt-dyn (aget c 2))] f args true)))
+    (try (m/call-in [(aget c 0) (aget c 1) (aget c 2)] f args true)
+         (catch clojure.lang.ExceptionInfo e
+           (if-let [st (::m/state (ex-data e))]
+             (leave! {:mode :nested :state st} [])
+             (throw e))))))
 
 (defn call
   "Call any function value from compiled code (L4.lower.calls): compiled
@@ -71,6 +146,9 @@
       (if (identical? r v/fallback) (nested f args) r))
     (or (instance? Closure f) (instance? klara.runtime.value.Continuation f) (m/intrinsic? f))
     (nested f args)
+    ;; the same rule as the interpreter (L0.eval.not-fn)
+    (not (instance? clojure.lang.IFn f))
+    (fail :L0.eval.not-fn (str "cannot call " (pr-str f) ": not a function") :value (pr-str f))
     :else (apply f args)))
 
 ;; ---------------------------------------------------------------------------
@@ -84,10 +162,26 @@
     :guarded (:value link)
     nil))
 
-(defn- lower* [t consts self-name self-sym]
+(defn- lower*
+  "Lower term `t` with prepared node `n`. `scope` is the environment layout
+   (names, as in klara.runtime.prepare); `frames` are the let contexts of the
+   current function around this point, innermost first, each [body-node scope]."
+  [t n scope frames consts self-name self-sym]
   (letfn [(constant [x]
             (let [i (count @consts)] (swap! consts conj x) (list 'clojure.core/nth 'consts i)))
-          (go [t]
+          (env-form [scope] (vec scope))
+          (frames-form [frames]
+            (mapv (fn [[body-node sc]] (list 'klara.compile.lower/let-frame (constant body-node) (env-form sc)))
+                  frames))
+          (protect
+            ;; a call in a non-tail position: add this point's frames to a passing Leave
+            [form frames]
+            (if (empty? frames)
+              form
+              (list 'try form
+                    (list 'catch 'clojure.lang.ExceptionInfo 'e
+                          (list 'klara.compile.lower/push-frames! 'e (frames-form frames))))))
+          (go [t n scope frames]
             (case (:op t)
               :const (let [x (:value t)]
                        (if (or (nil? x) (number? x) (string? x) (keyword? x) (boolean? x) (char? x))
@@ -95,7 +189,7 @@
               :local (:name t)
               :host (let [q (:name t)]
                       (cond (and (= "clojure.core" (namespace q)) (not (m/intrinsic? (m/host-value q)))) q
-                            (:symbol (klara.lang.builtins/lookup q)) (:symbol (klara.lang.builtins/lookup q))
+                            (:symbol (b/lookup q)) (:symbol (b/lookup q))
                             :else (constant (m/host-value q))))
               :global (let [l (:link t)]
                         (cond
@@ -105,30 +199,50 @@
                           (= :late (:kind l))
                           (list 'klara.compile.lower/late (constant (Site. nil -1 nil)) (list 'quote (:name l)))
                           :else (constant (link-value l))))
-              :fn (let [self (or (:self t) (t/fresh "fn"))]
+              :fn (let [^klara.runtime.prepare.Fn fnode n
+                        self (or (:self t) (t/fresh "fn"))
+                        free (:free t)]
                     (list* 'fn* self
-                           (for [{:keys [params rest body]} (:arities t)]
-                             (list (cond-> (vec params) rest (conj '& rest))
-                                   (list 'klara.compile.lower/tick!)
-                                   (go body)))))
-              :app (let [f (:fn t) args (map go (:args t))]
+                           (map (fn [{:keys [params rest body]} ^klara.runtime.prepare.Arity a]
+                                  (let [inner (cond-> (vec free)
+                                                (.-self? a) (conj self)
+                                                true (into params)
+                                                rest (conj rest))]
+                                    (list (cond-> (vec params) rest (conj '& rest))
+                                          (list 'when (list 'klara.compile.lower/tick!)
+                                                (list 'klara.compile.lower/leave-apply! (constant fnode) (vec free)
+                                                      (if rest (list 'clojure.core/into (vec params) rest) (vec params))))
+                                          (go body (.-body a) inner []))))
+                                (:arities t) (.-arities fnode))))
+              :app (let [^klara.runtime.prepare.App an n
+                         f (:fn t)
+                         args (map (fn [x xn] (go x xn scope frames)) (:args t) (.-args an))]
                      (cond
                        (:recur t) (list* 'recur args)
                        (and (= :host (:op f)) (= "clojure.core" (namespace (:name f)))
                             (not (m/intrinsic? (m/host-value (:name f)))))
                        (list* (:name f) args)
-                       (and (= :host (:op f)) (:symbol (klara.lang.builtins/lookup (:name f))))
-                       (list* (:symbol (klara.lang.builtins/lookup (:name f))) args)
+                       (and (= :host (:op f)) (:symbol (b/lookup (:name f))))
+                       (list* (:symbol (b/lookup (:name f))) args)
                        (and self-name (= :global (:op f)) (= :late (get-in f [:link :kind])) (= self-name (get-in f [:link :name])))
-                       (list* self-sym args)
-                       :else (list 'klara.compile.lower/call (go f) (vec args))))
-              :recur (list* 'recur (map go (:args t)))
-              :let (list 'let* [(:name t) (go (:init t))] (go (:body t)))
-              :if (list 'if (go (:test t)) (go (:then t)) (go (:else t)))
-              :do (list* 'do (map go (:body t)))
-              :throw (list 'throw (go (:ex t)))
+                       (protect (list* self-sym args) frames)
+                       :else (protect (list 'klara.compile.lower/call (go f (.-f an) scope frames) (vec args)) frames)))
+              :recur (let [^klara.runtime.prepare.Recur rn n]
+                       (list* 'recur (map (fn [x xn] (go x xn scope frames)) (:args t) (.-args rn))))
+              :let (let [^klara.runtime.prepare.Let ln n
+                         inner (conj scope (:name t))]
+                     (list 'let* [(:name t) (go (:init t) (.-init ln) scope (cons [(.-body ln) scope] frames))]
+                           (go (:body t) (.-body ln) inner frames)))
+              :if (let [^klara.runtime.prepare.If in n]
+                    (list 'if (go (:test t) (.-test in) scope frames)
+                          (go (:then t) (.-then in) scope frames)
+                          (if (:speculate t)
+                            ;; L4.exec.leave: the else branch of a speculation is the reference
+                            (list 'klara.compile.lower/leave-eval! (constant (.-else in)) (env-form scope) (frames-form frames))
+                            (go (:else t) (.-else in) scope frames))))
+              :throw (list 'throw (go (:ex t) (.-ex ^klara.runtime.prepare.Throw n) scope frames))
               (fail :L4.lower.subset (str "the backend does not compile " (:op t)))))]
-    (go t)))
+    (go t n scope frames)))
 
 (defn subset-violation
   "The first construct outside the compilable subset (L4.lower.subset), or nil."
@@ -143,13 +257,15 @@
    to that definition call the compiled function itself."
   ([term] (lower term {}))
   ([term {:keys [self-name]}]
-  (when-not (= :fn (:op term)) (fail :L4.lower.subset "only functions are compiled"))
-  (when-let [x (subset-violation term)]
-    (fail :L4.lower.subset (str "the backend does not compile " x)))
-  (let [consts (atom [])
-        self-sym (or (:self term) (t/fresh "self"))
-        term (assoc term :self self-sym)
-        form (lower* term consts self-name self-sym)
-        wrapper (list 'fn* ['consts] form)]
-    {:form form
-     :fn ((binding [*ns* (the-ns 'klara.compile.lower)] (eval wrapper)) @consts)})))
+   (when-not (= :fn (:op term)) (fail :L4.lower.subset "only functions are compiled"))
+   (when-let [x (subset-violation term)]
+     (fail :L4.lower.subset (str "the backend does not compile " x)))
+   (let [consts (atom [])
+         self-sym (or (:self term) (t/fresh "self"))
+         term (anf/anf (assoc term :self self-sym))
+         node (m/prepare-term term)
+         form (lower* term node [] () consts self-name self-sym)
+         wrapper (list 'fn* ['consts] form)]
+     {:form form
+      :anf term
+      :fn ((binding [*ns* (the-ns 'klara.compile.lower)] (eval wrapper)) @consts)})))

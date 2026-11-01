@@ -15,7 +15,7 @@
 (defn lookup [q] (get @registry q))
 
 (defn runtime-ns? [ns-sym]
-  (contains? #{"klara.stage" "klara.world" "klara.effect" "klara.job" "klara.code" "klara.proof"
+  (contains? #{"klara.stage" "klara.world" "klara.effect" "klara.job" "klara.code" "klara.proof" "klara.jit"
                "klara.compiler.kernel" "klara.kernel"}
              (str ns-sym)))
 
@@ -37,7 +37,7 @@
      list vector hash-map hash-set cons first second rest next seq empty? count nth get
      assoc dissoc conj concat vec str keyword symbol name namespace subs
      contains? keys vals peek pop into merge select-keys update get-in assoc-in
-     nil? some? true? false? number? integer? string? keyword? symbol? map? vector?
+     nil? some? true? false? number? integer? int? double? float? ratio? string? keyword? symbol? map? vector?
      seq? coll? fn? boolean? set? sequential? distinct? reverse
      inc' dec' +' -' *' bit-and bit-or bit-xor bit-shift-left bit-shift-right})
 
