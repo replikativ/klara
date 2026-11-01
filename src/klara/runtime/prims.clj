@@ -31,3 +31,33 @@
            (Math/subtractExact (long x) (long y))
            (clojure.core/- x y)))
   ([x y & more] (reduce - (- x y) more)))
+
+;; Subtraction for compiled code. Clojure's boxed subtraction of two Longs
+;; overflows wrongly near Long/MIN_VALUE; its primitive overloads are right.
+;; Compiled code calls (.sub SUB a b), and the host compiler picks the
+;; overload from what it knows of a and b statically: primitive arithmetic
+;; for primitive locals, this namespace's `-` for objects.
+(definterface ISub
+  (^long sub [^long x ^long y])
+  (^double sub [^double x ^double y])
+  (^double sub [^long x ^double y])
+  (^double sub [^double x ^long y])
+  (^Object sub [^Object x ^long y])
+  (^Object sub [^long x ^Object y])
+  (^Object sub [^Object x ^double y])
+  (^Object sub [^double x ^Object y])
+  (^Object sub [^Object x ^Object y]))
+
+(deftype Sub []
+  ISub
+  (^long sub [_ ^long x ^long y] (Math/subtractExact x y))
+  (^double sub [_ ^double x ^double y] (clojure.core/- x y))
+  (^double sub [_ ^long x ^double y] (clojure.core/- x y))
+  (^double sub [_ ^double x ^long y] (clojure.core/- x y))
+  (^Object sub [this ^Object x ^long y] (- x (Long/valueOf y)))
+  (^Object sub [this ^long x ^Object y] (- (Long/valueOf x) y))
+  (^Object sub [_ ^Object x ^double y] (clojure.core/- x y))
+  (^Object sub [_ ^double x ^Object y] (clojure.core/- x y))
+  (^Object sub [_ ^Object x ^Object y] (- x y)))
+
+(def ^ISub SUB (Sub.))

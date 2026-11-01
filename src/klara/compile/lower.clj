@@ -166,6 +166,17 @@
     :guarded (:value link)
     nil))
 
+(defn- loop-redex?
+  "A call of a literal one-arity function, applied where it is made, whose
+   body refers to itself only by recur: a loop."
+  [t]
+  (let [f (:fn t)]
+    (and (= :fn (:op f)) (not (:recur t)) (:self f)
+         (let [[a & more] (:arities f)]
+           (and a (nil? more) (nil? (:rest a)) (= (count (:params a)) (count (:args t)))
+                (not (contains? (t/free-locals (:body a)) (:self f)))
+                (some #(and (= :recur (:op %)) (= (:self f) (:target %))) (t/nodes (:body a))))))))
+
 (defn- inline-redex?
   "A call of a literal function with one fixed arity that does not refer to
    itself, applied to as many arguments."
@@ -253,6 +264,30 @@
                          args (mapv (fn [x xn] (go x xn scope frames)) (:args t) (.-args an))]
                      (at (cond
                        (:recur t) (list* 'recur args)
+                       ;; two-argument subtraction: the host picks a primitive overload
+                       (and (= :host (:op f)) (= 'klara.core/- (:name f)) (= 2 (count args)))
+                       (list* '.sub 'klara.runtime.prims/SUB args)
+                       ;; ((fn loop [p ..] body) a ..) with recur: a host loop, so the
+                       ;; host can keep its locals primitive (L4.lower.steps: one step
+                       ;; per iteration, as before)
+                       (loop-redex? t)
+                       (let [^klara.runtime.prepare.Fn fnode (.-f an)
+                             self (:self f)
+                             {:keys [params body]} (first (:arities f))
+                             ^klara.runtime.prepare.Arity a (first (.-arities fnode))
+                             free (:free f)
+                             _ (swap! selves assoc self [fnode free])
+                             inner (cond-> (vec free) (.-self? a) (conj self) true (into params))
+                             tick (list 'when (list 'klara.compile.lower/tick!)
+                                        (list 'klara.compile.lower/leave-apply! (constant fnode) (vec free) (vec params)))
+                             body-form (go body (.-body a) inner [])
+                             tmps (mapv (fn [_] (t/fresh "arg")) params)]
+                         ;; L4.exec.osr: the same loop as a function, for re-entry
+                         (when-not (some #{self-sym} (filter symbol? (tree-seq coll? seq body-form)))
+                           (swap! osr conj [fnode (list 'fn* (vec free) (list 'fn* self (list (vec params) tick body-form)))]))
+                         (protect (list 'let* (vec (interleave tmps args))
+                                        (list 'loop* (vec (interleave params tmps)) tick body-form))
+                                  frames))
                        ;; ((fn [p ..] body) a ..): the call happens in place, as a let
                        ;; with the function's entry step and frame state (L4.lower.steps)
                        (inline-redex? t)
@@ -260,7 +295,11 @@
                              {:keys [params body]} (first (:arities f))
                              ^klara.runtime.prepare.Arity a (first (.-arities fnode))
                              free (:free f)]
-                         (protect (list 'let* (vec (interleave params args))
+                         ;; application binds in parallel: arguments go to fresh
+                         ;; temporaries first, since they may mention the parameter
+                         ;; names (an inlined function called with its own locals)
+                         (protect (list 'let* (let [tmps (mapv (fn [_] (t/fresh "arg")) params)]
+                                                (into (vec (interleave tmps args)) (interleave params tmps)))
                                         (list 'when (list 'klara.compile.lower/tick!)
                                               (list 'klara.compile.lower/leave-apply! (constant fnode) (vec free) (vec params)))
                                         (go body (.-body a) (into (vec free) params) []))

@@ -70,26 +70,33 @@
   "A branch taken at most once in this many observations counts as cold."
   10000)
 
-(defn- cold? [taken other]
-  (and (>= other hot) (<= (* taken rare) other)))
+(defn- policy
+  "Thresholds of the default specializer; (:policy opts) of prepare overrides them."
+  [p]
+  (merge {:hot hot :rare rare :small 40 :large 400} p))
+
+(defn- cold? [p taken other]
+  (and (>= other (:hot p)) (<= (* taken (:rare p)) other)))
 
 (defn speculate-branches
   "Speculate that branches the profile (almost) never saw taken stay cold. The hot
    path compiles; reaching a cold branch leaves to the interpreter at that
    point (L4.exec.leave), which may then do anything the reference does:
    perform effects, call host code, run uncompilable constructs."
-  [c]
-  (let [rebuilt (code/with-children c (mapv speculate-branches (code/children c)))
+  ([c] (speculate-branches c {}))
+  ([c pol]
+  (let [pol (policy pol)
+        rebuilt (code/with-children c (mapv #(speculate-branches % pol) (code/children c)))
         v (code/view c)
         p (when (= :if (:op v)) (:profile v))]
     (if p
       (let [[_ then' else'] (code/children rebuilt)]
-        (cond (and (cold? (:else p) (:then p)) (admissible? (:test v) c))
+        (cond (and (cold? pol (:else p) (:then p)) (admissible? (:test v) c))
               (guard (:test v) then' c)
-              (and (cold? (:then p) (:else p)) (admissible? (negate (:test v)) c))
+              (and (cold? pol (:then p) (:else p)) (admissible? (negate (:test v)) c))
               (guard (negate (:test v)) else' c)
               :else rebuilt))
-      rebuilt)))
+      rebuilt))))
 
 (defn size [c] (inc (reduce + 0 (map size (code/children c)))))
 
@@ -98,21 +105,24 @@
   40)
 
 (defn inline-calls
-  "Inline hot calls of small function definitions: (f x) becomes
-   ((fn [p] body) x). The checker accepts it by unfolding f, which makes f's
-   generation a premise: redefining f retires the compiled code."
-  [c]
-  (let [rebuilt (code/with-children c (mapv inline-calls (code/children c)))
+  "Inline hot calls of small function definitions other than `self` (whose
+   own calls are direct): (f x) becomes ((fn [p] body) x). The checker
+   accepts it by unfolding f, which makes f's generation a premise:
+   redefining f retires the compiled code."
+  ([c self] (inline-calls c self {}))
+  ([c self pol]
+  (let [pol (policy pol)
+        rebuilt (code/with-children c (mapv #(inline-calls % self pol) (code/children c)))
         v (code/view c)]
     (if (= :app (:op v))
       (let [f (code/view (:fn v))
-            callee (when (and (= :global (:op f)) (= :late (:kind f))
-                              (>= (or (:count (:profile v)) 0) hot))
+            callee (when (and (= :global (:op f)) (= :late (:kind f)) (not= self (:name f))
+                              (>= (or (:count (:profile v)) 0) (:hot pol)))
                      (callee-code (:name f)))]
-        (if (and callee (<= (size callee) small))
+        (if (and callee (<= (size callee) (:small pol)))
           (code/make {:op :app :fn callee :args (rest (code/children rebuilt))})
           rebuilt))
-      rebuilt)))
+      rebuilt))))
 
 (def large
   "Nodes a call specialized to its known arguments may grow to."
@@ -130,22 +140,28 @@
    residual by unfolding the callee and the data, whose generations become
    premises (L4.check.delta-data). Kept only when the call is gone and the
    residual is not large."
-  [c]
-  (let [rebuilt (code/with-children c (mapv specialize-known-calls (code/children c)))
+  ([c] (specialize-known-calls c {}))
+  ([c pol]
+  (let [pol (policy pol)
+        rebuilt (code/with-children c (mapv #(specialize-known-calls % pol) (code/children c)))
         v (code/view c)
         f (when (= :app (:op v)) (code/view (:fn v)))]
-    (if (and f (= :global (:op f)) (>= (or (:count (:profile v)) 0) hot)
-             (some known? (:args v)))
+    (if (and f (= :global (:op f)) (>= (or (:count (:profile v)) 0) (:hot pol))
+             (some #(known? %) (:args v)))
       (let [s (simplify rebuilt)]
-        (if (and (not (calls? s (:name f))) (<= (size s) large)) s rebuilt))
-      rebuilt)))
+        (if (and (not (calls? s (:name f))) (<= (size s) (:large pol))) s rebuilt))
+      rebuilt))))
 
 (defn default
   "The default specializer: speculate on cold branches, specialize calls to
    their known arguments, inline hot calls of small definitions
    (design/06-speculation.md#4)."
   [ctx]
-  (-> (:reference ctx) speculate-branches specialize-known-calls inline-calls))
+  (let [p (:policy ctx)]
+    (-> (:reference ctx)
+        (speculate-branches p)
+        (specialize-known-calls p)
+        (inline-calls (:name ctx) p))))
 
 (defn specialize
   "Run the definition's specializer, or the default."
@@ -160,11 +176,12 @@
    saved :profile; other options go to compiler/prepare."
   ([q] (prepare q {}))
   ([q opts]
-   (let [ctx (cond-> (context q (:profile opts)) (:specializer opts) (assoc :specializer (:specializer opts)))
+   (let [ctx (cond-> (assoc (context q (:profile opts)) :policy (:policy opts))
+               (:specializer opts) (assoc :specializer (:specializer opts)))
          candidate (specialize ctx)
          outcome (compiler/prepare (:reference ctx)
                                    (merge {:recipe (fn [_] candidate) :name q}
-                                          (dissoc opts :specializer :profile :specializer-name)))]
+                                          (dissoc opts :specializer :profile :specializer-name :policy)))]
      ;; L4.exec.provenance: how this candidate came about
      (assoc outcome :provenance
             {:specializer (or (:specializer-name opts)

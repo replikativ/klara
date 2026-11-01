@@ -97,6 +97,11 @@ front of its host stack trace; compiled code reports Klara source lines.
 
 ## Surface
 
+`L0.surface.defrecord` `(defrecord Name [f ..])` defines `Name` (its type
+tag, a symbol), `->Name` and `map->Name`. A record is a map with exactly its
+fields, tagged `{:klara/record ns/Name}` in its metadata; equality is map
+equality. Protocol implementations inside `defrecord` raise this rule.
+
 `L0.surface.read` Source is read by the Clojure reader with reader
 conditionals enabled for the feature `:klara`. `*read-eval*` is false.
 

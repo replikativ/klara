@@ -27,6 +27,11 @@
           :extra-deps {org.babashka/sci {:mvn/version "0.10.49"}}
           :jvm-opts ["-Xss16m" "-Xmx1g"]
           :main-opts ["-m" "klara.bench"]}
+  ;; clojure -M:awfy  Are We Fast Yet? benchmarks: node, Clojure, Klara (design/07-performance.md)
+  :awfy {:extra-paths ["bench"]
+         :extra-deps {org.clojure/data.json {:mvn/version "2.5.0"}}
+         :jvm-opts ["-Xss16m" "-Xmx2g"]
+         :main-opts ["-m" "klara.awfy"]}
   :dev {:extra-paths ["test" "examples" "spec" "bench" "spec/formal/src"]
         :extra-deps {nrepl/nrepl {:mvn/version "1.3.0"}
                      org.babashka/sci {:mvn/version "0.10.49"}

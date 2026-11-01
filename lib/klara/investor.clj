@@ -31,7 +31,13 @@
   "Below this much work (jit/work) the investor does not look at a definition."
   1000)
 
-(def budget {:steps 50000000})
+(def budget
+  "Steps for preparing an alternative."
+  {:steps 50000000})
+
+(def measure-budget
+  "Steps for measuring: compiled loops count one step per iteration."
+  {:steps 100000000000})
 
 (defn- now [] (System/nanoTime))
 
@@ -48,6 +54,7 @@
       (let [d (- (now) t0)
             per (quot d n)]
         (if (or (>= n 4000000)
+                (>= d 1000000000)                     ; one batch took a second: that is the estimate
                 (and previous (>= d 10000000) (<= (abs (- per previous)) (quot previous 10))))
           per
           (recur (* 2 n) (when (>= d 1000000) per)))))))
@@ -66,7 +73,7 @@
   "Nanoseconds per call of f on args, in a job of its own: a measurement
    that would perform an effect or mutate anything outside fails instead."
   [f args]
-  (let [o (job/run {:budget budget :profile false} (fn [] (per-call f args)))]
+  (let [o (job/run {:budget measure-budget :profile false} (fn [] (per-call f args)))]
     (when (= :done (:status o)) {:ns (:value o) :steps (get-in o [:spent :steps])})))
 
 (defn consider

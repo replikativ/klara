@@ -24,7 +24,7 @@
 
 (def unsupported
   "Clojure names rejected with L0.surface.unsupported."
-  '#{binding set! var alter-var-root intern eval deftype defrecord defprotocol
+  '#{binding set! var alter-var-root intern eval deftype defprotocol
      extend-type extend-protocol reify gen-class case* monitor-enter monitor-exit
      with-redefs with-redefs-fn definterface proxy load load-file require use
      import refer find-var resolve ns-resolve future pmap agent send send-off})
