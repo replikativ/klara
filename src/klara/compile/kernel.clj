@@ -158,7 +158,10 @@
                    {:status :ready
                     :candidate (->Candidate (:name opts) reference cand-term premises fn form
                                             (:guards r) (:evidence r))
-                    :premises (vec (sort-by (comp str first) premises))}))))))
+                    :premises (vec (sort-by (comp str first) premises))
+                    ;; how equivalence was established (design/05-specialization.md)
+                    :evidence (or (:evidence r) :definitional)
+                    :speculations (count (filter #(and (= :if (:op %)) (:speculate %)) (t/nodes cand-term)))}))))))
 
 (defn- settle
   "Turn the job outcome around preparation into a preparation outcome."
@@ -257,3 +260,46 @@
                                  :test (.-term ^Code guard)
                                  :then (.-term ^Code specialized)
                                  :else (.-term ^Code reference)})))})
+
+(defn- runtime-info
+  "Host facts a specializer may use (design/06-speculation.md#6-specializers)."
+  []
+  {:host :jvm
+   :java (System/getProperty "java.version")
+   :processors (.availableProcessors (Runtime/getRuntime))})
+
+(b/register! 'klara.jit/context                                       ; L4.jit.context
+  {:kind :intrinsic
+   :fn (fn [st [q]]
+         (let [world (:world st)
+               d (w/lookup world q)
+               f (:value d)]
+           (when-not (and d (v/closure? f))
+             (fail :L4.jit.context (str q " is not a function definition")))
+           (let [s (get-in d [:meta :klara/specialize])
+                 sq (when s (if (namespace s) s (symbol (namespace q) (name s))))
+                 specializer (when sq
+                               (or (:value (w/lookup world sq))
+                                   (fail :L4.jit.attach (str "specializer " sq " is not defined"))))]
+             (ret st {:name q
+                      :reference (intr/reify-closure f)
+                      :profile (intr/profile-snapshot f)
+                      :runtime (runtime-info)
+                      :specializer specializer}))))})
+
+(b/register! 'klara.jit/function                                      ; L4.jit.function
+  {:kind :intrinsic
+   :fn (fn [st [ctx f]]
+         ;; (fn [p..] (f p..)) with fresh parameters, for the definition's arity;
+         ;; the parameters count as bound while f builds the body (L2.code.extrusion)
+         (let [params (:params (intr/view (:reference ctx)))
+               fresh (mapv #(t/fresh (t/base-name %)) params)
+               build (fn [st body]
+                       (when-not (v/code? body)
+                         (fail :L4.jit.function (str "the body function returned " (pr-str body) ", not code")))
+                       (ret st (Code. (t/refresh-free (t/fn-term nil [(t/arity fresh nil (.-term ^Code body))])))))
+               k (:k st)]
+           (assoc st :mode :apply
+                  :ctl [f (mapv #(Code. (t/local %)) fresh)]
+                  :k (conj k {:f :frame-fn :fn build}
+                             {:f :binders :bound (into (m/constructing k) fresh)}))))})

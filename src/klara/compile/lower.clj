@@ -246,13 +246,21 @@
               (fail :L4.lower.subset (str "the backend does not compile " (:op t)))))]
     (go t n scope frames)))
 
+(defn- compiled-nodes
+  "The nodes lowering compiles: the else branch of a speculation is left to
+   the interpreter (L4.exec.leave), so it need not be compilable."
+  [term]
+  (tree-seq (comp seq t/children)
+            (fn [n] (if (and (= :if (:op n)) (:speculate n)) [(:test n) (:then n)] (t/children n)))
+            term))
+
 (defn subset-violation
   "The first construct outside the compilable subset (L4.lower.subset), or nil."
   [term]
   (some (fn [n]
           (cond (contains? unsupported (:op n)) (:op n)
                 (and (= :host (:op n)) (m/intrinsic? (m/host-value (:name n)))) (:name n)))
-        (t/nodes term)))
+        (compiled-nodes term)))
 
 (defn lower
   "Compile a :fn term to a host function. With :self-name, late references

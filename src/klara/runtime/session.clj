@@ -136,9 +136,12 @@
            (with-open [r (io/reader src)] (eval-reader session r)))
          (finally (swap! session assoc :ns saved)))))
 
-(defn loaded? [session ns-sym]
-  (or (b/runtime-ns? ns-sym)
-      (some? (w/ns-info (current-world session) ns-sym))))
+(defn loaded?
+  "Runtime namespaces need no file, but a library file of the same name may
+   extend one (klara.jit is runtime functions plus Klara code)."
+  [session ns-sym]
+  (or (some? (w/ns-info (current-world session) ns-sym))
+      (and (b/runtime-ns? ns-sym) (nil? (find-source session ns-sym)))))
 
 (defn- ensure-ns [world ns-sym]
   (if (w/ns-info world ns-sym)

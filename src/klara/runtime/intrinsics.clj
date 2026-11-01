@@ -200,6 +200,7 @@
   (let [m code-or-view]
     (case (:op m)
       :const (t/const (:value m))
+      :local (t/local (:name m))
       :app (t/app (term-of (:fn m)) (map term-of (:args m)))
       :let (t/let1 (:name m) (term-of (:init m)) (term-of (:body m)))
       :if (t/if* (term-of (:test m)) (term-of (:then m)) (term-of (:else m)))
@@ -231,6 +232,7 @@
 ;; Primitives that correct host behaviour (klara.runtime.prims)
 
 (b/register! 'klara.core/- {:kind :host :fn prims/- :symbol 'klara.runtime.prims/- :pure true})
+(b/register! 'klara.jit/same? {:kind :host :fn prims/same? :symbol 'klara.runtime.prims/same? :pure true})
 
 ;; ---------------------------------------------------------------------------
 ;; klara.profile: the interpreter's feedback as data (L4.profile.snapshot)

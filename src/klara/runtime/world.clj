@@ -56,9 +56,10 @@
           (note (.-delta w) :defs q (get (.-defs w) q))))
 
 (defn definition
-  [q {:keys [form term value macro?]}]
-  (Definition. q form term value (next-generation)
-               (when term (t/globals term)) (boolean macro?)))
+  [q {:keys [form term value macro? meta]}]
+  (cond-> (Definition. q form term value (next-generation)
+                       (when term (t/globals term)) (boolean macro?))
+    meta (assoc :meta meta)))
 
 (defn update-namespace
   "A new world whose namespace record for `ns` is (f record)."

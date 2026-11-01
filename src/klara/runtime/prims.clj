@@ -9,6 +9,22 @@
   differential test against the formal semantics (spec/formal)."
   (:refer-clojure :exclude [-]))
 
+(defn same?
+  "Value speculation guard (L4.check.speculate-value): equal and of the same
+   class, so that the speculated value cannot be told apart from the real one.
+   Only simple immutable values qualify."
+  [x c]
+  (or (identical? x c)
+      (and (= (class x) (class c))
+           (cond
+             (or (nil? c) (keyword? c) (string? c) (boolean? c) (symbol? c) (char? c)
+                 (instance? Long c) (instance? Double c)) (= x c)
+             (or (vector? c) (seq? c)) (and (= (count x) (count c)) (every? true? (map same? x c)))
+             (map? c) (and (= (count x) (count c))
+                           (every? (fn [[k v]] (and (contains? x k) (same? (get x k) v))) c))
+             (set? c) (= x c)
+             :else false))))
+
 (defn -
   ([x] (clojure.core/- x))
   ([x y] (if (and (instance? Long x) (instance? Long y))

@@ -149,3 +149,23 @@ reachable only from that candidate.
 
 `L4.retain.dispatch` The dispatch table holds at most `:candidates-per-name`
 candidates per name (default 4), evicting the oldest installed.
+
+## Specializers
+
+`L4.jit.context` `(klara.jit/context q)` returns a map: `:name`,
+`:reference` (Code of the definition), `:profile` (its profile snapshot),
+`:runtime` (host facts) and `:specializer`.
+
+`L4.jit.function` `(klara.jit/function ctx f)` builds a candidate function
+with fresh parameters for the definition's arity, calling `f` with them as
+Code; `f` must return Code for the body. The parameters count as bound while
+`f` runs (L2.code.extrusion).
+
+`L4.jit.attach` `^{:klara/specialize f}` on a definition names its
+specializer, resolved in the definition's namespace when the JIT runs.
+
+`L4.check.speculate-value` In a speculation whose guard is
+`(klara.jit/same? x c)` for a local `x` and a constant `c`, the specialized
+branch must mean the reference with `x` replaced by `c`. `same?` holds only
+when `x` is equal to `c` and of the same class, recursively for collections,
+so `x` and `c` cannot be told apart.

@@ -30,7 +30,13 @@ and `clojure -M:bench` stay green at every commit. Progress is recorded here.
   values, call targets, branch counts, collection shapes;
   `klara.profile/snapshot` returns them as data. Overhead under 10% on the
   benchmark.
-- [ ] **P3a. Specializers.** The extension point of the JIT: a pure Klara
+- [ ] **P3a. Specializers.** Done: `klara.jit` (a Klara library over a few
+  runtime functions): `context` (`:reference`, `:profile`, `:runtime`,
+  `:specializer`), `function`, `guard`, `same?`, `stable?`/`stable-value`,
+  `compile!`; `^{:klara/specialize f}`; value speculation in the checker
+  (L4.check.speculate-value); showcase 1. Open: `:facts`, `:budget` and
+  accounting, representation hints, specializers composing.
+  Originally: The extension point of the JIT: a pure Klara
   function of a context (`:reference`, `:profile`, `:facts`, `:runtime`,
   `:budget`) and the default specializer, returning Code or declining.
   `jit/guard`, `jit/arg`, representation hints; checking; accounting;
@@ -53,7 +59,10 @@ Each is a short Klara program in `showcases/`, run with
 `clojure -M:klara run showcases/...`, printing a short report (outcome,
 evidence, guards, time, allocation), and run as a test.
 
-1. **An interpreter becomes a compiler at run time** (P1–P3a). A regex
+1. **An interpreter becomes a compiler at run time** (P1–P3a). Done as
+   `showcases/interpreter_to_compiler.clj` with an arithmetic interpreter
+   (30× once its driver is compiled; the unguarded variant is rejected); a
+   regex matcher is the next instance. A regex
    matcher written as an interpreter, with a user-written specializer: once
    the profile shows a stable pattern, the JIT stages the matcher for it,
    guarded on the pattern; checked by the kernel.

@@ -103,6 +103,8 @@
                       (when (class? c) {:kind :static :class c :member (name sym)})))))
       (let [q (symbol (str cur) (name sym))]
         (or (klara q)
+            ;; runtime functions of the current namespace (a library extending one)
+            (builtin q)
             (when-let [r (get (:refers info) sym)] (or (klara r) (builtin r) {:kind :klara :name r}))
             (when (= q (:self env)) {:kind :klara :name q})
             (when-not (contains? (:exclude info) sym) (core sym))
@@ -209,6 +211,8 @@
     (when (namespace sym) (fail :L0.term.wf "def of a qualified name"))
     (when (pos? (:level env)) (fail :L2.stage.level "def inside code"))
     {:op :def :name q :macro? (boolean (:macro (meta sym))) :doc doc
+     ;; klara-namespaced metadata, e.g. :klara/specialize (L4.jit.attach)
+     :meta (not-empty (into {} (filter #(= "klara" (namespace (key %)))) (meta sym)))
      :init (expand (assoc env :self q) init)}))
 
 ;; ---------------------------------------------------------------------------
@@ -295,7 +299,9 @@
         (case (:kind r)
           :klara (if (get-in r [:def :macro?])
                    (expand env ((:run-macro env) (:def r) form))
-                   (t/app (t/late (:name r)) (map #(expand env %) (rest form))))
+                   (cond-> (t/app (t/late (:name r)) (map #(expand env %) (rest form)))
+                     ;; a definition calling itself (profiles keep these apart, L4.profile.record)
+                     (= (:name r) (:self env)) (assoc :self-call true)))
           :builtin (let [e (:entry r)]
                      (case (:kind e)
                        :special (case (name (:name r))

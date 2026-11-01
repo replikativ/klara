@@ -44,9 +44,14 @@
   [t]
   (contains? #{:const :local :fn :host} (:op t)))
 
-(defn- data? [x]
-  (not (or (fn? x) (v/closure? x) (instance? clojure.lang.IFn x) (v/mutable? x)
-           (instance? clojure.lang.LazySeq x))))
+(defn- data?
+  "Immutable data the checker may compute with: collections of data,
+   keywords and symbols (which are IFn on the JVM, but values in Klara)."
+  [x]
+  (cond (or (keyword? x) (symbol? x)) true
+        (coll? x) (and (not (instance? clojure.lang.LazySeq x)) (not (record? x))
+                       (every? data? (if (map? x) (mapcat identity x) x)))
+        :else (not (or (fn? x) (v/closure? x) (instance? clojure.lang.IFn x) (v/mutable? x)))))
 
 (defn- fold-prim
   "L4.check.prim: a pure host function applied to constant data."
@@ -175,6 +180,9 @@
     :if (and (equal? ctx (:test a) (:test b)) (equal? ctx (:then a) (:then b)) (equal? ctx (:else a) (:else b)))
     :do (and (= (count (:body a)) (count (:body b))) (every? true? (map #(equal? ctx %1 %2) (:body a) (:body b))))
     :throw (equal? ctx (:ex a) (:ex b))
+    :interop (and (= (select-keys a [:static? :new? :target :member]) (select-keys b [:static? :new? :target :member]))
+                  (= (count (t/children a)) (count (t/children b)))
+                  (every? true? (map #(equal? ctx %1 %2) (t/children a) (t/children b))))
     :fn (and (= (count (:arities a)) (count (:arities b)))
              (every? true?
                      (map (fn [x y]
@@ -201,14 +209,27 @@
 
 (defn- speculation? [t] (and (= :if (:op t)) (:speculate t)))
 
+(defn- value-guard
+  "[local-name constant-term] for a guard (klara.jit/same? x c), else nil."
+  [t]
+  (when (and (= :app (:op t)) (= 'klara.jit/same? (get-in t [:fn :name])))
+    (let [[x c] (:args t)]
+      (when (and (= :local (:op x)) (= :const (:op c))) [(:name x) c]))))
+
 (defn equal?
   "Is `a` equivalent to `b` under the checker's rules?"
   [ctx a b]
   (let [a (whnf ctx a) b (whnf ctx b)]
-    (or (cond
+    (or (identical? a b) (= a b)                     ; the same term means the same
+        (cond
           ;; L4.check.speculate: both branches must mean the other side
           (and (speculation? b) (not (speculation? a)))
-          (and (guard? (:test b)) (equal? ctx a (:then b)) (equal? ctx a (:else b)))
+          (and (guard? (:test b))
+               (if-let [[x c] (value-guard (:test b))]
+                 ;; L4.check.speculate-value: under (same? x c) the branch means a with x := c
+                 (equal? ctx (t/substitute a {x c}) (:then b))
+                 (equal? ctx a (:then b)))
+               (equal? ctx a (:else b)))
           (and (speculation? a) (not (speculation? b)))
           (and (guard? (:test a)) (equal? ctx (:then a) b) (equal? ctx (:else a) b)))
         (and (= (:op a) (:op b)) (same-shape ctx a b))

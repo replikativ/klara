@@ -55,7 +55,7 @@
 (defnode Host 3 [value name])
 ;; arities: vector of Arity; captured: slots of the free locals in the enclosing scope
 (defnode Fn 4 [arities captured profile])
-(defnode App 5 [f args flat recur-arity all-imm profile])
+(defnode App 5 [f args flat recur-arity all-imm profile self-call])
 (defnode Let 6 [init body])
 (defnode Letrec 7 [fns body])
 (defnode If 8 [test then else profile])
@@ -81,7 +81,7 @@
 ;; nothing, so a monomorphic program pays only a comparison.
 
 (definterface IProfile
-  (enter [args])          ; a function entry with its argument vector
+  (enter [args external]) ; a function entry with its arguments; external: not a self call
   (call [callee])         ; a call node evaluated with this callee
   (branch [taken])        ; an if node took its then (true) or else branch
   (snapshot []))
@@ -90,9 +90,21 @@
 (def ^:private unstable ::unstable)
 
 (defn- cheap-value?
-  "Values whose stability is worth tracking and cheap to compare."
+  "Values compared by equality; others are tracked by identity, weakly, so a
+   profile never keeps a large argument alive (L1.retain.roots)."
   [x]
   (or (nil? x) (keyword? x) (string? x) (number? x) (boolean? x) (symbol? x) (char? x)))
+
+(defn- observe-value [x]
+  (if (cheap-value? x) x (java.lang.ref.WeakReference. x)))
+
+(defn- observed [v]
+  (if (instance? java.lang.ref.WeakReference v) (.get ^java.lang.ref.WeakReference v) v))
+
+(defn- same-observation? [v x]
+  (if (instance? java.lang.ref.WeakReference v)
+    (identical? (.get ^java.lang.ref.WeakReference v) x)
+    (and (cheap-value? x) (= v x) (= (class v) (class x)))))
 
 (deftype Profile [^:volatile-mutable ^long n
                   ^:volatile-mutable ^objects classes   ; per argument: a class, or poly
@@ -101,20 +113,21 @@
                   ^:volatile-mutable ^long taken
                   ^:volatile-mutable ^long not-taken]
   IProfile
-  (enter [_ args]
+  (enter [_ args external]
     (set! n (inc n))
     (let [cnt (count args)]
+     (when external
       (if (nil? classes)
         (do (set! classes (object-array (map class args)))
-            (set! values (object-array (map #(if (cheap-value? %) % unstable) args))))
+            (set! values (object-array (map observe-value args))))
         (when (== cnt (alength classes))
           (dotimes [i cnt]
             (let [x (nth args i) c (aget classes i)]
               (when (and (not (identical? c poly)) (not (identical? c (class x))))
                 (aset classes i poly))
               (let [v (aget values i)]
-                (when (and (not (identical? v unstable)) (not (identical? v x)) (not= v x))
-                  (aset values i unstable)))))))))
+                (when-not (or (identical? v unstable) (same-observation? v x))
+                  (aset values i unstable))))))))))
   (call [_ f]
     (set! n (inc n))
     (cond (nil? callee) (set! callee f)
@@ -124,7 +137,7 @@
   (snapshot [_]
     {:count n
      :classes (when classes (mapv #(if (identical? % poly) :polymorphic %) classes))
-     :stable (when values (mapv #(if (identical? % unstable) :unstable [:value %]) values))
+     :stable (when values (mapv #(if (identical? % unstable) :unstable [:value (observed %)]) values))
      :callee (cond (nil? callee) nil (identical? callee poly) :polymorphic :else callee)
      :branches [taken not-taken]}))
 
@@ -191,7 +204,7 @@
                            (not (instance? clojure.lang.IRecord hv)) ; intrinsics are records
                            (every? immediate? (:args t)))]
              (let [args (mapv go (:args t))]
-               (App. t (go f) args flat (:recur t) (every? imm-node? args) (new-profile))))
+               (App. t (go f) args flat (:recur t) (every? imm-node? args) (new-profile) (boolean (:self-call t)))))
       :let (Let. t (go (:init t)) (prep (conj scope (:name t)) (:body t) host-value))
       :letrec (let [names (mapv first (:bindings t))
                     inner (into scope names)]
