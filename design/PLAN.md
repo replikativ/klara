@@ -51,7 +51,14 @@ and `clojure -M:bench` stay green at every commit. Progress is recorded here.
   Originally: A stage-polymorphic interpreter for
   Core written in Klara: inlining of monomorphic calls, speculation on long
   arithmetic, specialization on stable values, loops.
-- [ ] **P4. Facts and guard discharge.** The facts interface; a built-in
+- [ ] **P4. Facts and guard discharge.** Done: guard discharge at call
+  sites by specializing calls to known arguments (`specialize-known-calls`
+  in the default, `jit/simplify`); data definitions as premises
+  (L4.check.delta-data); the checker no longer unrolls loops when
+  beta-reducing; intrinsics callable from host code. Showcase 1's driver
+  specializes its call away. Open: facts from type systems, AOT given a
+  saved profile.
+  Originally: The facts interface; a built-in
   checker for literal and checked-arithmetic types; ansatz certificates;
   discharge at call sites; AOT given a saved profile.
 - [ ] **P5. The investor.** A Klara policy over profiles and measured

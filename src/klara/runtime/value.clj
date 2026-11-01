@@ -38,6 +38,20 @@
        (~'applyTo [~this ~rest-sym] (@host-invoke ~this (vec ~rest-sym)))
        ~@specs)))
 
+(defmacro defrecord-callable
+  "defrecord whose IFn methods delegate to host-invoke, as deftype-callable."
+  [name fields & specs]
+  (let [this (gensym "this")
+        sigs (for [n (range 21)]
+               (let [args (vec (repeatedly n #(gensym "a")))]
+                 `(~'invoke [~this ~@args] (@host-invoke ~this ~args))))
+        rest-sym (gensym "args")]
+    `(defrecord ~name ~fields
+       clojure.lang.IFn
+       ~@sigs
+       (~'applyTo [~this ~rest-sym] (@host-invoke ~this (vec ~rest-sym)))
+       ~@specs)))
+
 ;; ---------------------------------------------------------------------------
 ;; World and definitions (spec/L1-worlds.md)
 

@@ -96,12 +96,38 @@
           rebuilt))
       rebuilt)))
 
+(def large
+  "Nodes a call specialized to its known arguments may grow to."
+  400)
+
+(defn- calls? [c q]
+  (let [v (code/view c)]
+    (or (and (= :global (:op v)) (= q (:name v)))
+        (boolean (some #(calls? % q) (code/children c))))))
+
+(defn specialize-known-calls
+  "Specialize hot calls whose arguments include constants or data
+   definitions, by partial evaluation (simplify). The caller then needs none
+   of the callee's guards on those arguments: the checker accepts the
+   residual by unfolding the callee and the data, whose generations become
+   premises (L4.check.delta-data). Kept only when the call is gone and the
+   residual is not large."
+  [c]
+  (let [rebuilt (code/with-children c (mapv specialize-known-calls (code/children c)))
+        v (code/view c)
+        f (when (= :app (:op v)) (code/view (:fn v)))]
+    (if (and f (= :global (:op f)) (>= (or (:count (:profile v)) 0) hot)
+             (some known? (:args v)))
+      (let [s (simplify rebuilt)]
+        (if (and (not (calls? s (:name f))) (<= (size s) large)) s rebuilt))
+      rebuilt)))
+
 (defn default
-  "The default specializer: speculate on cold branches, inline hot calls of
-   small definitions. Specialization on stable values comes next
+  "The default specializer: speculate on cold branches, specialize calls to
+   their known arguments, inline hot calls of small definitions
    (design/06-speculation.md#4)."
   [ctx]
-  (-> (:reference ctx) speculate-branches inline-calls))
+  (-> (:reference ctx) speculate-branches specialize-known-calls inline-calls))
 
 (defn specialize
   "Run the definition's specializer, or the default."

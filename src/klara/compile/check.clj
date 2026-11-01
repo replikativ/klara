@@ -100,6 +100,25 @@
     :const (when (v/closure? (:value t)) (closure-term (:value t)))
     nil))
 
+;; Data definitions (L4.check.delta-data): a global whose definition is
+;; immutable data means that data, with its generation as a premise.
+
+(defn- data-definition
+  "The value of global term `t` if it is defined as immutable data, as [v]."
+  [ctx t]
+  (let [{:keys [kind name world generation]} (:link t)]
+    (case kind
+      :pinned (let [x (w/pin world name)]
+                (when (and (not (v/closure? x)) (data? x)) [x]))
+      (:late :guarded)
+      (let [d (w/lookup (:world ctx) name)
+            x (:value d)]
+        (when (and d (not (:macro? d)) (not (v/closure? x)) (data? x)
+                   (or (= kind :late) (= generation (:generation d))))
+          (vswap! (:premises ctx) conj [name (:generation d)])
+          [x]))
+      nil)))
+
 ;; ---------------------------------------------------------------------------
 ;; Weak head normal form
 
@@ -107,7 +126,11 @@
   "((fn [x..] b) e..) => (let [x e ..] b) (L4.check.let-app), when a fixed
    arity matches. Self references are replaced by the function itself."
   [f args]
-  (when-let [a (first (filter #(and (nil? (:rest %)) (= (count args) (count (:params %)))) (:arities f)))]
+  (when-let [a (first (filter #(and (nil? (:rest %)) (= (count args) (count (:params %)))
+                                    ;; a loop is not unrolled: its recur needs the function
+                                    (not-any? (fn [n] (and (= :recur (:op n)) (= (:self f) (:target n))))
+                                              (t/nodes (:body %))))
+                              (:arities f)))]
     (let [[f a] (let [[f' m] (t/freshen f)]
                   [f' (first (filter #(and (nil? (:rest %)) (= (count args) (count (:params %)))) (:arities f')))])
           body (cond-> (:body a) (:self f) (t/substitute {(:self f) (dissoc f :self)}))]
@@ -149,6 +172,7 @@
                 (value-term? (whnf ctx x)) (recur ctx (t/do* more))
                 :else t))
     :recur (assoc t :args (mapv #(whnf ctx %) (:args t)))
+    :global (if-let [[x] (data-definition ctx t)] (t/const x) t)      ; L4.check.delta-data
     :app (let [f (whnf ctx (:fn t))
                args (mapv #(whnf ctx %) (:args t))
                t (assoc t :fn f :args args)]

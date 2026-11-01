@@ -55,6 +55,7 @@
 
 (defn ms [f] (let [t (System/nanoTime) r (f)] [(/ (- (System/nanoTime) t) 1000000.0) r]))
 
+(run 200)                                                      ; the driver's profile: a few iterations
 (compiler/optimize! 'showcases.interpreter-to-compiler/run)   ; the driver loop is compiled in both runs
 (dotimes [_ 3] (run 20000))
 (def interpreted (ms #(run 20000)))
@@ -63,6 +64,13 @@
 (dotimes [_ 3] (run 20000))
 (def compiled (ms #(run 20000)))
 (def other (calc [:+ :x 1] {:x 41}))       ; a different expression: the guard fails, the interpreter answers
+
+;; Static where we can: `run` always passes the definition `model`, so
+;; compiling `run` specializes the call to it. No guard, no call; `model`'s
+;; generation is a premise of the compiled `run`.
+(def driver (jit/compile! 'showcases.interpreter-to-compiler/run))
+(dotimes [_ 3] (run 20000))
+(def specialized (ms #(run 20000)))
 
 (def report
  {:status (:status outcome)
@@ -74,10 +82,15 @@
  :compiled-ms (first compiled)
  :other-expression other
  :speedup (Math/round (/ (first interpreted) (first compiled)))
- :unguarded (:status unguarded)})
+ :unguarded (:status unguarded)
+ :driver (:status driver)
+ :driver-premises (mapv first (:premises driver))
+ :specialized-ms (first specialized)
+ :same-specialized (= (second interpreted) (second specialized))})
 
 (doseq [k [:status :evidence :speculations :checked-in-steps :same-result
-           :interpreted-ms :compiled-ms :speedup :other-expression :unguarded]]
+           :interpreted-ms :compiled-ms :speedup :other-expression :unguarded
+           :driver :driver-premises :specialized-ms :same-specialized]]
   (println (str (name k) ":") (get report k)))
 
 report

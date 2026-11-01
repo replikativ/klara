@@ -333,3 +333,26 @@
          ;; Code of the function definition q in the current world, or nil
          (let [f (:value (w/lookup (:world st) q))]
            (ret st (when (v/closure? f) (intr/reify-closure f)))))})
+
+(b/register! 'klara.jit/simplify                                      ; L4.jit.simplify
+  {:kind :intrinsic
+   :fn (fn [st [code opts]]
+         ;; online partial evaluation (check/normalize); its result is a
+         ;; candidate like any other, checked by the kernel. Budget: the job's.
+         (let [meter (get-in st [:dyn :meter])
+               r (check/normalize (intr/strip-annotations (.-term ^Code code)) (:world st) meter
+                                  :depth (or (:depth opts) 64))]
+           (ret st (if r (Code. r) code))))})
+
+(b/register! 'klara.jit/known?                                        ; L4.check.delta-data
+  {:kind :intrinsic
+   :fn (fn [st [code]]
+         ;; a constant, or a global defined as immutable data
+         (let [t (.-term ^Code code)]
+           (ret st (boolean
+                    (case (:op t)
+                      :const true
+                      :global (let [d (w/lookup (:world st) (get-in t [:link :name]))]
+                                (and d (not (:macro? d)) (not (v/closure? (:value d)))
+                                     (not (v/mutable? (:value d)))))
+                      false)))))})

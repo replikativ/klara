@@ -50,7 +50,9 @@
 ;; ---------------------------------------------------------------------------
 ;; Intrinsic values
 
-(defrecord Intrinsic [name f])
+;; Callable from host code (a host higher-order function given an intrinsic),
+;; like closures (L3.effect.host-boundary).
+(v/defrecord-callable Intrinsic [name f])
 
 ;; A letrec binding: siblings refer to each other through a cell that is
 ;; filled once all closures exist.

@@ -167,8 +167,18 @@ definition `q` in the current world, or nil. Inlining a call as
 `((fn [p ..] body) args ..)` is accepted by unfolding `q`, so `q`'s
 generation becomes a premise of the candidate.
 
+`L4.jit.simplify` `(klara.jit/simplify c)` partially evaluates Code `c`:
+it unfolds calls with known arguments, folds pure functions on constants
+and selects branches on known tests, within the job's budget. Its result
+is a candidate like any other; nothing it does is trusted.
+
 `L4.jit.attach` `^{:klara/specialize f}` on a definition names its
 specializer, resolved in the definition's namespace when the JIT runs.
+
+`L4.check.delta-data` A global whose definition is immutable data (not a
+function, macro or mutable object) means its value; its generation is a
+premise. `(klara.jit/known? c)` tells whether Code `c` is a constant or
+such a global.
 
 `L4.check.speculate-value` In a speculation whose guard is
 `(klara.jit/same? x c)` for a local `x` and a constant `c`, the specialized
