@@ -84,7 +84,13 @@
   "What is known is computed, the rest generated."
   {:const (fn [v] (static v))
    :host (fn [c] (static (run c) c))
-   :global (fn [c] (if-let [k (code/known c)] (static (:value (code/view k)) c) (dynamic c)))
+   ;; a data definition is static; a function definition stays a call but
+   ;; carries its code, so a call with known arguments can unfold it
+   :global (fn [c] (if-let [k (code/known c)]
+                     (static (:value (code/view k)) c)
+                     (if-let [u (code/unfold c)]
+                       (assoc (dynamic c) ::unfold u)
+                       (dynamic c))))
    :if (fn [t then else]
          (if (static? t)
            (if (value t) (then) (else))
@@ -126,6 +132,41 @@
     (when (and (= :fn (:op f)) (:self f) (:body f) (recurs-to? (:body f) (:self f)))
       f)))
 
+(defn- trivial?
+  "Dynamic code that may be used several times without repeating work: a
+   local, a constant or a global."
+  [x]
+  (contains? #{:local :const :global} (:op (code/view (->code x)))))
+
+(declare gen)
+
+(defn- apply-known
+  "Unfold known function f (its code in ::unfold) on args: its body generated
+   with the parameters bound to the arguments in order; an argument that is
+   dynamic and not trivial is bound by a let first, so it runs once."
+  [dom f args env]
+  (let [fv (code/view (::unfold f))]
+    (letfn [(bind [ps as env]
+              (if (empty? ps)
+                (gen dom (:body fv) env)
+                (let [a (first as)]
+                  (if (or (static? a) (trivial? a))
+                    (bind (rest ps) (rest as) (assoc env (first ps) a))
+                    ((:let dom) a (fn [x] (bind (rest ps) (rest as) (assoc env (first ps) x))))))))]
+      ;; the function's own name means the same known function
+      (bind (:params fv) args (cond-> env (:self fv) (assoc (:self fv) f))))))
+
+(defn- unfold?
+  "Unfold a call of f on args: f is known with one fixed arity, some
+   argument is known, and the generation's fuel is not spent."
+  [env f args]
+  (let [fuel (::fuel env)
+        fv (when (::unfold f) (code/view (::unfold f)))]
+    (when (and fuel fv (:body fv) (= (count (:params fv)) (count args))
+               (some static? args) (pos? @fuel))
+      (swap! fuel dec)
+      true)))
+
 (defn gen
   "Interpret Code c with domain dom in env (local name -> domain value)."
   [dom c env]
@@ -154,7 +195,11 @@
                           (fn [ps recur-to]
                             (gen dom (:body f) (assoc (merge env (zipmap (:params f) ps))
                                                       [::recur (:self f)] recur-to))))
-             ((:app dom) (gen dom (:fn v) env) (mapv (fn [a] (gen dom a env)) (:args v))))
+             (let [f (gen dom (:fn v) env)
+                   args (mapv (fn [a] (gen dom a env)) (:args v))]
+               (if (unfold? env f args)
+                 (apply-known dom f args env)
+                 ((:app dom) f args))))
       :recur (apply (get env [::recur (:target v)]) (mapv (fn [a] (gen dom a env)) (:args v)))
       (throw (ex-info (str "not interpreted yet: " (:op v)) {:op (:op v)})))))
 
@@ -163,8 +208,15 @@
   [c & args]
   (apply (gen values c {}) args))
 
+(def fuel
+  "Unfoldings of known functions one generation may do."
+  64)
+
 (defn residual
-  "Code for function Code c generated with everything it does not know
-   dynamic: the same function, rebuilt with fresh names."
-  [c]
-  (->code (gen staged c {})))
+  "Code for function Code c generated with what it does not know dynamic:
+   constants, data definitions and pure host functions on them are
+   computed, known functions called with known arguments unfolded (up to
+   `fuel` times). With nothing known it is the same function, rebuilt with
+   fresh names."
+  ([c] (residual c fuel))
+  ([c n] (->code (gen staged c {::fuel (atom n)}))))

@@ -54,3 +54,22 @@
           bad (remove #(or (= :ready (:status %)) (= :L4.lower.subset (:rule %)) (pending? %)) results)]
       (is (empty? (take 3 bad)) (pr-str (take 3 bad)))
       (is (< (count (filter pending? results)) (count results))))))
+
+(deftest known-calls-are-unfolded   ; L4.jit.staged
+  (testing "an interpreter called on a known program: the residual is the program's code, admitted by the kernel"
+    (let [s (session)]
+      (is (= [:ready false true 5]
+             (k/eval-string s "(ns kc (:require [klara.jit.staged :as staged] [klara.compiler :as compiler] [klara.stage :refer [run]]))
+               (defn calc [expr env]
+                 (cond (number? expr) expr
+                       (keyword? expr) (get env expr)
+                       :else (let [[op a b] expr]
+                               (case op :+ (+ (calc a env) (calc b env)) :* (* (calc a env) (calc b env))))))
+               (def model [:+ [:* :x :x] 1])
+               (defn drive [env] (calc model env))
+               (def r (staged/residual (compiler/reference 'kc/drive)))
+               (def o (compiler/prepare (compiler/reference 'kc/drive) {:recipe (fn [_] r) :name 'kc/drive}))
+               [(:status o)
+                (.contains (pr-str r) \"calc\")                  ; no call of the interpreter is left
+                (contains? (set (map first (:premises o))) 'kc/model)
+                ((run r) {:x 2})]"))))))

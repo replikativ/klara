@@ -34,7 +34,9 @@ under a step budget.
 without basis may be replaced by the closure's term with its globals pinned
 to the same world. A late link may be replaced likewise, using the
 preparation world, and records the premise `(name, generation)`. A lifted
-closure constant may be replaced by its `reify`.
+closure constant may be replaced by its `reify`. The replacement may happen
+at the head of a term, in a call's function position, or in the term a
+`let` or an `if` evaluates first.
 
 `L4.check.beta` `((fn [x...] b) v...)` with values `v` and a fixed arity
 matching the arguments may be replaced by `b` with `x := v`.

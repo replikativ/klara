@@ -99,7 +99,7 @@ and `clojure -M:bench` stay green at every commit. Progress is recorded here.
      environment, the domain interface; the generator instantiated with
      values is an interpreter, tested against the machine on the
      conformance corpus and generated programs.
-  3. **Core constructs.** const, local, global (data definitions static),
+  3. [x] **Core constructs.** const, local, global (data definitions static),
      if, let, do, fn (fresh binders through templates), app (pure host
      functions computed, known functions unfolded within the budget), loops
      and recur; residuals checked by the kernel.

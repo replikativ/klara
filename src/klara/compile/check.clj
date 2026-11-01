@@ -228,6 +228,10 @@
   [ctx t side]
   (case (:op t)
     :app (when-let [f (unfold ctx (:fn t) side)] (assoc t :fn f))
+    ;; the term evaluated first: a definition there may be unfolded too
+    ;; (unfolding is a congruence; L4.check.delta)
+    :let (when-let [i (unfold-head ctx (:init t) side)] (assoc t :init i))
+    :if (when-let [c (unfold-head ctx (:test t) side)] (assoc t :test c))
     (unfold ctx t side)))
 
 (defn- bind-pairs
