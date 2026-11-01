@@ -28,7 +28,7 @@ through views and build code with templates, so hygiene and the extrusion
 check hold, and everything they produce is checked by the kernel. A rule
 that wants a guard uses `klara.jit/guard` with an admissible guard
 (L4.check.speculate); whatever it cannot justify definitionally needs a
-certificate (L4.check.cert).
+certificate (L4.check.certificate).
 
 Rules compose inside one generation, not as ordered passes: at each point
 the generator tries the rules in order and falls back to its own case. A
