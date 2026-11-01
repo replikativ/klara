@@ -341,23 +341,6 @@
                       ;; the definition's own function, unpinned (for measuring it)
                       :function f}))))})
 
-(b/register! 'klara.jit/function                                      ; L4.jit.function
-  {:kind :intrinsic
-   :fn (fn [st [ctx f]]
-         ;; (fn [p..] (f p..)) with fresh parameters, for the definition's arity;
-         ;; the parameters count as bound while f builds the body (L2.code.extrusion)
-         (let [params (:params (intr/view (:reference ctx)))
-               fresh (mapv #(t/fresh (t/base-name %)) params)
-               build (fn [st body]
-                       (when-not (v/code? body)
-                         (fail :L4.jit.function (str "the body function returned " (pr-str body) ", not code")))
-                       (ret st (Code. (t/refresh-free (t/fn-term nil [(t/arity fresh nil (.-term ^Code body))])))))
-               k (:k st)]
-           (assoc st :mode :apply
-                  :ctl [f (mapv #(Code. (t/local %)) fresh)]
-                  :k (conj k {:f :frame-fn :fn build}
-                             {:f :binders :bound (into (m/constructing k) fresh)}))))})
-
 (b/register! 'klara.jit/admissible?                                   ; L4.check.speculate
   {:kind :host
    :pure true

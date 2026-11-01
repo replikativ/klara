@@ -159,9 +159,17 @@
 (defn constructing
   "Fresh names bound by code constructions still in progress on `k`
    (L2.code.extrusion is checked against the dynamic extent of construction).
-   A :binders frame (klara.jit/function) binds names the same way."
+   A :binders frame (code/fn*, code/loop*) binds names the same way. A host
+   callback is part of that extent: at its boundary the search goes on in
+   the continuation of the host call."
   [k]
-  (or (some #(when (#{:code :binders} (:f %)) (:bound %)) k) #{}))
+  (or (some (fn [f]
+              (case (:f f)
+                (:code :binders) (:bound f)
+                :boundary (when-let [ok (:outer-k f)] (constructing ok))
+                nil))
+            k)
+      #{}))
 
 (defn- instantiate
   "Finish a code node: holes have been evaluated to Code values. `allowed`
@@ -685,7 +693,9 @@
 
           :else
           (let [snapshot (job-snapshot dyn)
-                ctx (set-context! world mint dyn)
+                ctx (doto (set-context! world mint dyn)
+                      ;; callbacks see the construction they are part of (constructing)
+                      (aset 5 k))
                 r (try (invoke-host fv args)
                        (catch Throwable ex
                          (when (abandoned ex)
@@ -719,7 +729,9 @@
   [st]
   (let [saved (.get context)
         regs (object-array 7)]
-    (.set context (object-array 5))   ; world mint dyn, and the meter cached per dyn (see meter-of)
+    ;; world mint dyn, the meter cached per dyn (see meter-of), and the
+    ;; continuation of the host call in progress (see constructing)
+    (.set context (object-array 6))
     (try
       (loop [st st]
         (let [r (try (drive st regs)
@@ -746,8 +758,9 @@
    innermost running machine (L3.effect.host-boundary). With `deopt?` (calls
    from compiled code) any effect the callee does not handle itself abandons
    the compiled call (L4.exec.leave)."
-  [[world mint dyn] f args & [deopt?]]
-  (let [r (run-state (state :apply [f (vec args)] nil (list {:f :boundary :deopt deopt?}) world mint dyn))]
+  [[world mint dyn _ _ outer-k] f args & [deopt?]]
+  (let [r (run-state (state :apply [f (vec args)] nil
+                            (list {:f :boundary :deopt deopt? :outer-k outer-k}) world mint dyn))]
     ;; the caller goes on in the world the callback left (L1.def.read-your-writes)
     (when-let [^objects c (.get context)] (aset c 0 (:world r)))
     (:ctl r)))

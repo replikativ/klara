@@ -326,3 +326,41 @@
   (b/register! (symbol "klara.core" (name s))
                {:kind :host :fn @(ns-resolve 'klara.runtime.prims s) :symbol (symbol "klara.runtime.prims" (name s))}))
 (b/register! 'klara.jit/same? {:kind :host :fn prims/same? :symbol 'klara.runtime.prims/same? :pure true})
+
+;; ---------------------------------------------------------------------------
+;; Binder constructors (L2.code.binders): code for a function or a loop with
+;; any number of fresh binders. A template has a fixed shape; these create
+;; the names themselves, so generated code is hygienic, and the names count
+;; as bound while the body is built (L2.code.extrusion).
+
+(defn- build-under
+  "Apply f to args with `fresh` counting as bound; then call (k st body-code)."
+  [st f args fresh k]
+  (let [stack (:k st)]
+    (assoc st :mode :apply :ctl [f (vec args)]
+           :k (conj stack {:f :frame-fn :fn (fn [st body]
+                                              (when-not (v/code? body)
+                                                (fail :L2.code.binders (str "the body function returned " (pr-str body) ", not code")))
+                                              (k st (.-term ^Code body)))}
+                    {:f :binders :bound (into (m/constructing stack) fresh)}))))
+
+(defintrinsic klara.code/fn* [st [n f]]                        ; L2.code.binders
+  ;; (fn self [p1 .. pn] body), body = (f self p1 .. pn) with each as Code
+  (let [self (t/fresh "self")
+        ps (mapv (fn [i] (t/fresh (str "p" i))) (range n))]
+    (build-under st f (cons (Code. (t/local self)) (map #(Code. (t/local %)) ps)) (cons self ps)
+                 (fn [st body] (ret st (Code. (t/refresh-free (t/fn-term self [(t/arity ps nil body)]))))))))
+
+(defintrinsic klara.code/loop* [st [inits f]]                  ; L2.code.binders
+  ;; ((fn loop [p1 .. pn] body) init1 .. initn), body = (f [p1 .. pn] recur),
+  ;; where (recur a1 .. an) is code that recurs to this loop
+  (let [self (t/fresh "loop")
+        ps (mapv (fn [i] (t/fresh (str "v" i))) (range (count inits)))
+        recur-to (fn [& args]
+                   (when-not (= (count args) (count ps))
+                     (fail :L2.code.binders (str "recur to a loop of " (count ps) " variables with " (count args))))
+                   (Code. {:op :recur :target self :arity 0 :args (mapv term-of args)}))]
+    (build-under st f [(mapv #(Code. (t/local %)) ps) recur-to] (cons self ps)
+                 (fn [st body]
+                   (ret st (Code. (t/refresh-free (t/app (t/fn-term self [(t/arity ps nil body)])
+                                                         (mapv term-of inits)))))))))

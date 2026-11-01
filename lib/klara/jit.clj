@@ -12,7 +12,6 @@
 
   Runtime functions of this namespace (the rest is Klara code):
     context      the context of a definition (L4.jit.context)
-    function     a candidate function with fresh parameters (L4.jit.function)
     guard        a speculation (if guard specialized reference) (L4.check.speculate)
     same?        the value-speculation guard (L4.check.speculate-value)
     admissible?  whether a guard is admissible for a reference (L4.check.speculate)
@@ -60,9 +59,12 @@
   [ctx & args]
   (code/subst (body ctx) (zipmap (params ctx) args)))
 
-;; (jit/function ctx (fn [x y] body)) builds the candidate function: fresh
-;; parameters, passed to the body function as code. It is a runtime function
-;; of this namespace.
+(defn function
+  "The candidate function for the definition: fresh parameters for its
+   arity, passed to `f` as code; `f` returns the body (L4.jit.function,
+   built with code/fn*, L2.code.binders)."
+  [ctx f]
+  (code/fn* (count (params ctx)) (fn [self & ps] (apply f ps))))
 
 ;; ---------------------------------------------------------------------------
 ;; Specializing and compiling

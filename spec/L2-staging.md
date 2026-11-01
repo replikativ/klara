@@ -40,7 +40,10 @@ the present stage, for example directly inside an `esc` without an inner
 
 `L2.code.extrusion` When `(code e)` completes, every free local of its result
 must be bound by a `code` construction that is still in progress on the
-continuation (its dynamic extent), or be a future-stage variable in scope.
+continuation (its dynamic extent), or by a binder constructor in progress
+(L2.code.binders), or be a future-stage variable in scope. The extent
+includes host code: a Klara function that host code calls back (through
+`apply`, `mapv`, ...) is inside the construction its host call is inside.
 Otherwise construction fails: some future-stage local escaped its binder.
 Code that escapes through a mutable cell and is run later is caught by
 `L2.run.closed`. This is a dynamic check in the sense of Lee et al.,
@@ -84,6 +87,15 @@ fixed arity also shows `:params` and `:body`), `:letrec` (`:bindings` of
 name and function), `:throw`, `:try` (`:body`, `:catches` of class, name
 and body, `:finally`), `:interop`, `:def`, `:code` (`:template`, `:holes`)
 and `:hole`. `code/make` builds each back from its view.
+
+`L2.code.binders` `(code/fn* n f)` returns code for `(fn self [p1 .. pn]
+body)` with fresh names, where `body` is `(f self p1 .. pn)` called with
+each as Code. `(code/loop* inits f)` returns code for a loop with fresh
+variables, one per initial value, whose body is `(f [v1 .. vn] recur)`;
+`(recur a1 .. an)` returns code that recurs to that loop. While `f` runs its
+names count as bound (L2.code.extrusion). A body function that returns
+something other than Code, or a recur with the wrong number of arguments,
+raises this rule.
 
 `L2.view.unfold` `(code/unfold c)` for Code of a global link (or a lifted
 closure) returns Code for the function it denotes, with fresh binders: for
