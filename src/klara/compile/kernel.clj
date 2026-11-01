@@ -312,7 +312,11 @@
   []
   {:host :jvm
    :java (System/getProperty "java.version")
-   :processors (.availableProcessors (Runtime/getRuntime))})
+   :processors (.availableProcessors (Runtime/getRuntime))
+   ;; what the backend makes of code shapes (design/07-performance.md): the
+   ;; Clojure-forms backend compiles a loop outside return position into a
+   ;; closure per evaluation
+   :backend {:loop-outside-return :closure}})
 
 (b/register! 'klara.jit/context                                       ; L4.jit.context
   {:kind :intrinsic

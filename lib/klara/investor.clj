@@ -40,6 +40,18 @@
         (coll? x) (every? data? x)
         :else false))
 
+(def decisions
+  "Every decision so far, by definition name, oldest first. A definition in
+   the world like any other: forks have their own, and a decision made inside
+   a job is the job's until it is adopted."
+  {})
+
+(defn- remember!
+  "Record decision d in the world (def is an effect: L1.def.effect)."
+  [d]
+  (def decisions (update decisions (:name d) (fnil conj []) d))
+  d)
+
 (def min-work
   "Below this much work (jit/work) the investor does not look at a definition."
   1000)
@@ -97,9 +109,7 @@
     (when (= :done (:status o))
       {:ns (:value o) :steps (get-in o [:spent :steps]) :measure-ns (- (now) t0)})))
 
-(defn consider
-  "Decide about the definition named q. Returns the decision; installs the
-   chosen candidate."
+(defn- decide
   [q]
   (let [ctx (jit/context q)
         ;; calls from outside: a recursive function's own calls run compiled
@@ -156,6 +166,12 @@
             (compiler/install! (assoc-in (:outcome best) [:provenance :decision] d))
             d)
           :else (assoc decision :decision :declined))))))
+
+(defn consider
+  "Decide about the definition named q. Returns the decision, also recorded
+   in `decisions`; installs the chosen candidate."
+  [q]
+  (remember! (decide q)))
 
 (defn interpreted? [x] (= :interpreted (:kind (compiler/explain x))))
 

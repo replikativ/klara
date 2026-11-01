@@ -220,6 +220,19 @@
     (when (neg? i) (throw (ex-info (str "unbound local " name) {:rule :L0.term.wf :name name})))
     i))
 
+;; A flat call runs inside a step, which cannot go on in another world. So
+;; only host functions that cannot call Klara code back are flat: the pure
+;; first-order ones (L4.check.prim's table without its higher-order
+;; members). Other host calls take the general path, which continues in the
+;; world a callback left (L1.def.read-your-writes).
+(def ^:private higher-order '#{update})
+
+(defn- first-order-host? [q]
+  (or (and (= "clojure.core" (namespace q))
+           (contains? b/pure-host (symbol (name q)))
+           (not (contains? higher-order (symbol (name q)))))
+      (boolean (:pure (b/lookup q)))))
+
 (defn- immediate? [t]
   (contains? #{:const :local :global :host} (:op t)))
 
@@ -264,6 +277,7 @@
                  hv (when (= :host (:op f)) (host-value (:name f)))
                  flat (and (= :host (:op f)) (not (:recur t))
                            (not (instance? clojure.lang.IRecord hv)) ; intrinsics are records
+                           (first-order-host? (:name f))
                            (every? immediate? (:args t)))]
              (let [args (mapv go (:args t))]
                (App. t (go f) args flat (:recur t) (every? imm-node? args) (new-profile) (boolean (:self-call t)))))

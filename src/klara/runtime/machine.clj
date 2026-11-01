@@ -225,9 +225,13 @@
   (.get context))
 
 (defn set-context!
-  "Set the context host code observes (compiled code, host callbacks)."
-  [world mint dyn]
-  (let [^objects h (.get context)] (aset h 0 world) (aset h 1 mint) (aset h 2 dyn)))
+  "Set the context host code observes (compiled code, host callbacks).
+   Returns the context array: a Klara callback that changes the world writes
+   the new world back into it (see call-in)."
+  ^objects [world mint dyn]
+  (let [^objects h (.get context)] (aset h 0 world) (aset h 1 mint) (aset h 2 dyn) h))
+
+
 
 (defn meter-of
   "The step meter of the context `c`, cached by the identity of its dyn."
@@ -681,7 +685,8 @@
 
           :else
           (let [snapshot (job-snapshot dyn)
-                r (try (set-context! world mint dyn) (invoke-host fv args)
+                ctx (set-context! world mint dyn)
+                r (try (invoke-host fv args)
                        (catch Throwable ex
                          (when (abandoned ex)
                            ;; nothing the abandoned host call did may survive (L4.exec.leave)
@@ -690,7 +695,9 @@
                          (reduced ex)))]
             (if (reduced? r)
               (raise (state :apply ctl env k world mint dyn) @r)
-              (next! regs :ret r nil k world mint dyn)))))))
+              ;; a callback may have changed the world (read-your-writes across
+              ;; host code, L1.def.read-your-writes)
+              (next! regs :ret r nil k (aget ctx 0) mint dyn)))))))
 
 (defn- drive
   "The fast path: run steps until one returns a state map (a slow path:
@@ -740,7 +747,10 @@
    from compiled code) any effect the callee does not handle itself abandons
    the compiled call (L4.exec.leave)."
   [[world mint dyn] f args & [deopt?]]
-  (:ctl (run-state (state :apply [f (vec args)] nil (list {:f :boundary :deopt deopt?}) world mint dyn))))
+  (let [r (run-state (state :apply [f (vec args)] nil (list {:f :boundary :deopt deopt?}) world mint dyn))]
+    ;; the caller goes on in the world the callback left (L1.def.read-your-writes)
+    (when-let [^objects c (.get context)] (aset c 0 (:world r)))
+    (:ctl r)))
 
 (reset! v/host-invoke
         (fn [f args]

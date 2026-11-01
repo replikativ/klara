@@ -83,17 +83,19 @@ A native host needs its own code emission.
 
 ## Measured (Are We Fast Yet?, ms per iteration)
 
-`clojure -M:awfy`, same machine, after the investor has run (2026-11-01):
+`clojure -M:awfy`, same machine, after the investor has run (2026-11-01, after
+the review fixes):
 
 | benchmark | node (V8) | Clojure (HotSpot) | Klara interpreted | Klara compiled |
 |---|---|---|---|---|
-| Mandelbrot | 24 | 27 | 10,700 | 79 |
-| Sieve | 0.010 | 0.008 | 6.5 | 0.33 |
-| Towers | 0.065 | 0.25 | 18.7 | 0.77 |
-| List | 0.013 | 0.033 | 18.3 | 0.51 |
+| Mandelbrot | 24 | 29 | 13,000 | 30 |
+| Sieve | 0.010 | 0.009 | 6.9 | 0.35 |
+| Towers | 0.068 | 0.26 | 23 | 0.83 |
+| List | 0.015 | 0.037 | 19 | 0.52 |
 
-All results agree. The interpreter is 400–1000× slower than V8, the
-compiled code 3–40×. What the benchmarks taught the backend:
+All results agree. The interpreter is 500–1300× slower than V8; compiled
+Mandelbrot is at Clojure's speed and within 1.3× of V8, the others 12–40×
+behind V8. What the benchmarks taught the backend:
 
 - **Loops must be host loops** (not self-applied functions) so the host
   keeps their locals primitive: Mandelbrot 390 → 79 ms.

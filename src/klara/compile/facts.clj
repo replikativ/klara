@@ -47,7 +47,9 @@
       :global (let [q (get-in t [:link :name])
                     d (w/lookup (:world ctx) q)]
                 (when (v/closure? (:value d)) (definition-pure ctx q)))
-      :fn (some (fn [a] (term-impurity ctx (:body a) #{})) (:arities t))
+      ;; an inner function (a loop) may write arrays this call allocated: they
+      ;; did not exist before the call either
+      :fn (some (fn [a] (term-impurity ctx (:body a) fresh)) (:arities t))
       :let (or (go (:init t))
                (term-impurity ctx (:body t)
                               (cond-> fresh

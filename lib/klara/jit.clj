@@ -137,9 +137,10 @@
             callee (when (and (= :global (:op f)) (= :late (:kind f)) (not= self (:name f))
                               (>= (or (:count (:profile v)) 0) (:hot pol)))
                      (code/unfold (:fn v)))]
-        ;; a callee with a loop stays a call: on the JVM a loop that is not in
-        ;; return position costs a closure per evaluation (design/07-performance.md)
-        (if (and callee (<= (size callee) (:small pol)) (not (loops? callee)))
+        ;; a callee with a loop stays a call where the backend says an inlined
+        ;; loop (no longer in return position) costs more (:inline-loops? of
+        ;; the policy, from the context's :runtime :backend)
+        (if (and callee (<= (size callee) (:small pol)) (or (:inline-loops? pol) (not (loops? callee))))
           (code/make {:op :app :fn callee :args (rest (code/children rebuilt))})
           rebuilt))
       rebuilt))))
@@ -173,7 +174,8 @@
    their known arguments, inline hot calls of small definitions
    (design/06-speculation.md#4)."
   [ctx]
-  (let [p (:policy ctx)]
+  (let [p (merge {:inline-loops? (not= :closure (get-in ctx [:runtime :backend :loop-outside-return]))}
+                 (:policy ctx))]
     (-> (:reference ctx)
         (speculate-branches p)
         (specialize-known-calls p)

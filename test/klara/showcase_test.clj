@@ -62,6 +62,8 @@
       (is (= :compiled (get-in r [:decisions 'showcases.investor/rank])))
       (is (= :default (get-in r [:chosen 'showcases.investor/rank])))
       (is (= :not-hot (get-in r [:decisions 'showcases.investor/banner]))))
+    (testing "decisions are kept in the world"
+      (is (pos? (:recorded r))))
     (testing "the compiled loop records how it came about"
       (is (= :default (get-in r [:provenance :specializer])))
       (is (= :compiled (get-in r [:provenance :decision :decision])))

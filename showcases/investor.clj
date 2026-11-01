@@ -63,5 +63,6 @@
  :chosen (into {} (keep #(when (:chosen %) [(:name %) (:chosen %)]) decisions))
  :same-result (= (second before) (second after))
  :speedup (/ (first before) (first after))
+ :recorded (count (get investor/decisions 'showcases.investor/rank))
  :provenance (:provenance (compiler/explain rank))
  :premises (:premises (compiler/explain rank))}
