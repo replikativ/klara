@@ -28,15 +28,22 @@ is not tested.
 
 | Layer | Host code | Guest code |
 |---|---|---|
-| L0 Core | `src/klara/lang/`, `runtime/machine.clj`, `runtime/value.clj` | |
-| L1 Worlds | `runtime/world.clj`, `runtime/session.clj` | |
-| L2 Staging | `runtime/machine.clj` (code construction), `runtime/intrinsics.clj` | |
+| L0 Core | `src/klara/lang/` (`surface.clj`: Clojure forms as macros), `runtime/machine.clj`, `runtime/value.clj`, `runtime/prims.clj` | |
+| L1 Worlds | `runtime/world.clj`, `runtime/session.clj` | `lib/klara/time.clj` |
+| L2 Staging | `runtime/machine.clj` (code construction), `runtime/intrinsics.clj` (code views) | |
 | L3 Effects and jobs | `runtime/machine.clj` (handlers), `runtime/job.clj` | |
-| L4 Compilation | `src/klara/compile/` | `lib/klara/compiler.clj` |
-| L5 Guest compiler | | `lib/klara/compiler/recipes.clj` |
+| L4 Compilation | `src/klara/compile/` (trusted: `check.clj`, `own.clj`, `facts.clj`, `kernel.clj`; tested: `anf.clj`, `lower.clj`), `runtime/profile.clj`, `runtime/prepare.clj` (profiles) | `lib/klara/compiler.clj` |
+| L5 Guest compiler | `src/klara/host/precompile.clj` | `lib/klara/jit.clj` (specializers), `lib/klara/own.clj`, `lib/klara/investor.clj`, `lib/klara/compiler/recipes.clj` |
 
 A lower layer never requires a higher one. Higher layers extend lower ones
-through the hooks in `machine.clj` (`resolve-hook`, `IExecutable`).
+through hooks: `resolve-hook` and `IExecutable` (with `-direct`) in
+`machine.clj` and `value.clj`, `IOsr` on function nodes in `prepare.clj`
+(compiled loops entered from the interpreter), and the session's
+`:after-form` hooks. The trusted base is the machine, the checker
+(`check.clj`), the ownership judgment (`own.clj`), the facts (`facts.clj`)
+and the kernel; lowering is trusted and tested differentially (stress and
+adversarial tests); everything in `lib/` is untrusted: its output is
+checked.
 
 ## Working loop
 

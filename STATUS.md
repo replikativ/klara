@@ -13,7 +13,7 @@ by the [conformance cases](spec/cases/), the [examples](examples/) or the
 | L1 Worlds | Immutable worlds, late binding, pinned functions, `world/in`/`get`/`define`/`publish!`/`advance`, deltas and conflict detection, footprint slices, bounded history, `ns`/`require` with aliases and refers | No durable storage; reload of an already loaded namespace is not supported |
 | L2 Staging | `code`/`esc`/`lift`/`run`/`reify`, fresh names, implicit cross-stage persistence, late and pinned links, dynamic extrusion check, Code views | No let-insertion; guarded links exist in the semantics but are not yet produced by the compiler |
 | L3 Effects and jobs | Deep multi-shot handlers, default handlers, jobs with forked worlds, step budgets, nested reservation, deferred printing, adopt, resume, host-mutation refusal, parallel jobs (`run-all`), jobs without profiling | No first-class affine resources; only printing and definitions are isolated effects |
-| L4 Compilation | Profiles; preparation as a job; the definitional checker with premises, speculation (assumptions, value guards), data definitions; certificates (ansatz, in-place ownership); lowering to JVM code with frame states, leaves as values, OSR, direct calls, host loops, hints as guards; compiled code in the world with provenance; AOT from saved profiles | Lowering excludes `try`, interop, `letrec` and effects outside speculation; Clojure forms as host IR (loops outside return position cost a closure) |
+| L4 Compilation | Profiles; preparation as a job; the definitional checker with premises, speculation (assumptions, value guards), data definitions; certificates (ansatz, in-place ownership); lowering to JVM code with frame states, leaves as values, OSR, direct calls, host loops, hints as guards; compiled code in the world with provenance; precompilation from saved profiles; a purity fact | Lowering excludes `try`, interop, `letrec` and effects outside speculation; Clojure forms as host IR (loops outside return position cost a closure) |
 | L5 Guest compiler | Klara code: `klara.jit` (specializers, the default specializer: cold-branch speculation, known-call specialization, inlining), `klara.own` (in-place), `klara.investor` (parallel exploration, steady-state measurement, net-gain decisions) | No automatic triggering; decisions are not kept in a world yet |
 | Lifetimes | Named roots, footprint slices, deltas instead of parent references, per-candidate class loaders, retention report; collectability tests and a soak test | Retention is reported, not charged |
 
@@ -21,9 +21,19 @@ by the [conformance cases](spec/cases/), the [examples](examples/) or the
 
 - **Host functions are trusted.** A `clojure.core` function the prelude does
   not override (for example `spit` or `rand`) runs directly: inside a job it
-  is not deferred, and if a compiled call is abandoned and re-executed it
-  runs twice. Printing, atoms and volatiles are overridden. Classifying host
-  functions as pure, effectful or refused is open work.
+  is not deferred. Printing, atoms and volatiles are overridden. Interop
+  calls and array writes on objects from outside a job are not refused
+  (`L3.job.host-mutation`), so jobs isolate only code that avoids them; the
+  investor therefore measures only pure definitions (`L4.facts.pure`).
+- **Unproved checker rules.** The definitional rules added for speculation
+  (`speculate-assume`, `speculate-value`), data definitions, `self` and the
+  ownership judgment (`L4.check.in-place`) are specified and tested,
+  including adversarially (`test/klara/adversarial_test.clj`), but only
+  `speculate-sound` is proved in the formal semantics. The erasure theorem
+  for ownership is open.
+- **Lowering is trusted.** It is tested differentially (generated programs
+  under stress, with the default specializer) and adversarially, not
+  proved.
 - **Class unloading depends on soft references.** Clojure's compiler caches
   generated classes softly; candidates' classes are reclaimed promptly only
   with `-XX:SoftRefLRUPolicyMSPerMB=0` (set for the test alias).

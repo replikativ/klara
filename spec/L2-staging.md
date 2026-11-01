@@ -77,6 +77,16 @@ links pinned to `w`.
 
 ## Views and printing
 
+`L2.view.unfold` `(code/unfold c)` for Code of a global link (or a lifted
+closure) returns Code for the function it denotes, with fresh binders: for
+a late link the definition's function, also when compiled code is
+installed for it; otherwise nil.
+
+`L2.view.known` `(code/known c)` returns Code for the value of a constant
+or of a global defined as immutable data (L4.check.delta-data), else nil.
+`(code/pure-host? c)` tells whether `c` is a host function the checker may
+evaluate on constants (L4.check.prim).
+
 `L2.view.children` `(code/children c)` returns the direct subterms of `c`
 as Code, in evaluation order; `(code/with-children c cs)` returns `c` with
 them replaced (same count), keeping what `c` binds. Together they let Klara

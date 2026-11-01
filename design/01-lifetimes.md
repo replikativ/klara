@@ -34,7 +34,7 @@ Only these hold Klara memory alive (`L1.retain.roots`):
 | Session current world | the session cell | the definitions of the current world |
 | Live activations | the running machine state | their world `E`, environments, continuations |
 | Values in definitions | the current world | whatever the program stored, including worlds it holds on purpose |
-| Installed candidates | the session's dispatch table (bounded) | their executable and their footprint |
+| Installed candidates | the definitions in the worlds that hold them (bounded per definition) | their executable and their footprint |
 | In-flight jobs | the parent activation | the job's world, intents, continuation |
 
 Everything else must be reachable only through these. In particular, the
@@ -105,10 +105,13 @@ frames, dropping it frees them.
   unreachable. Each candidate is compiled in its own class loader, owned by
   the candidate, so an unreachable candidate frees its classes
   (`L4.retain.classes`).
-- The **dispatch table** keeps a bounded number of candidates per name. A
-  candidate whose premises fail in the session's current world is kept only
-  while capacity allows; eviction drops it, and activations still using it
-  keep it alive until they finish.
+- **Installed candidates** live on their definitions in worlds
+  (`L4.exec.provenance`), a bounded number per definition
+  (`L4.retain.dispatch`). A world that becomes unreachable takes its
+  compiled code with it; activations still using a candidate keep it alive
+  until they finish. Profiles hold samples only as bounded plain data, and
+  stored candidates keep no profile annotations, so neither keeps worlds or
+  arguments alive (lifetime tests).
 
 ## Jobs, intents and receipts
 

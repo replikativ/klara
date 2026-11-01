@@ -474,7 +474,7 @@
             (fn [n] (if (and (= :if (:op n)) (:speculate n)) [(:test n) (:then n)] (t/children n)))
             term))
 
-(defn mint-safe?
+(defn mint-safe?                                         ; L4.exec.mint-safe
   "Does compiled code for `term` create no closures that outlive the call?
    Then it may run under a mint (L1.context.mint): its only inner functions
    are applied where they are made (loops, inlined calls)."
