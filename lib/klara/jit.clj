@@ -48,11 +48,60 @@
 ;; ---------------------------------------------------------------------------
 ;; Specializing and compiling
 
+(defn negate [test]
+  (code/make {:op :app :fn (code/make {:op :host :name 'clojure.core/not}) :args [test]}))
+
+(def hot
+  "Observations of an if before its profile counts as evidence."
+  100)
+
+(defn speculate-branches
+  "Speculate that branches the profile never saw taken stay cold. The hot
+   path compiles; reaching a cold branch leaves to the interpreter at that
+   point (L4.exec.leave), which may then do anything the reference does:
+   perform effects, call host code, run uncompilable constructs."
+  [c]
+  (let [rebuilt (code/with-children c (mapv speculate-branches (code/children c)))
+        v (code/view c)
+        p (when (= :if (:op v)) (:profile v))]
+    (if p
+      (let [[_ then' else'] (code/children rebuilt)]
+        (cond (and (zero? (:else p)) (>= (:then p) hot) (admissible? (:test v) c))
+              (guard (:test v) then' c)
+              (and (zero? (:then p)) (>= (:else p) hot) (admissible? (negate (:test v)) c))
+              (guard (negate (:test v)) else' c)
+              :else rebuilt))
+      rebuilt)))
+
+(defn size [c] (inc (reduce + 0 (map size (code/children c)))))
+
+(def small
+  "Nodes in a function small enough to inline."
+  40)
+
+(defn inline-calls
+  "Inline hot calls of small function definitions: (f x) becomes
+   ((fn [p] body) x). The checker accepts it by unfolding f, which makes f's
+   generation a premise: redefining f retires the compiled code."
+  [c]
+  (let [rebuilt (code/with-children c (mapv inline-calls (code/children c)))
+        v (code/view c)]
+    (if (= :app (:op v))
+      (let [f (code/view (:fn v))
+            callee (when (and (= :global (:op f)) (= :late (:kind f))
+                              (>= (or (:count (:profile v)) 0) hot))
+                     (callee-code (:name f)))]
+        (if (and callee (<= (size callee) small))
+          (code/make {:op :app :fn callee :args (rest (code/children rebuilt))})
+          rebuilt))
+      rebuilt)))
+
 (defn default
-  "The default specializer: the definition as it is. (The staged default of
-   design/06-speculation.md#4 replaces it.)"
+  "The default specializer: speculate on cold branches, inline hot calls of
+   small definitions. Specialization on stable values comes next
+   (design/06-speculation.md#4)."
   [ctx]
-  (:reference ctx))
+  (-> (:reference ctx) speculate-branches inline-calls))
 
 (defn specialize
   "Run the definition's specializer, or the default."

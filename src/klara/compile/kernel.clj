@@ -27,7 +27,7 @@
 ;; ---------------------------------------------------------------------------
 ;; Candidates and executables
 
-(defrecord Candidate [name reference term premises host-fn form guards evidence])
+(defrecord Candidate [name reference term premises host-fn form guards evidence mint-safe])
 
 (defn valid?
   "L4.exec.valid: every premise holds in `world`."
@@ -59,7 +59,7 @@
   v/IExecutable
   (-execute [this st args]
     (let [world (:world st)
-          ok (and (nil? (:mint st))
+          ok (and (or (nil? (:mint st)) (:mint-safe cand))
                   (if (identical? world last-world)
                     last-valid
                     (let [r (valid? cand world)] (set! last-world world) (set! last-valid r) r))
@@ -80,7 +80,7 @@
             (lower/resume st (.-leave ^Left r)))
         :else (do (set! last-path :compiled) (ret st r)))))
   (-call [this world mint dyn args]
-    (if (and (nil? mint)
+    (if (and (or (nil? mint) (:mint-safe cand))
              (if (identical? world last-world)
                last-valid
                (let [r (valid? cand world)] (set! last-world world) (set! last-valid r) r))
@@ -90,7 +90,8 @@
   (-describe [this]
     {:name (:name cand) :reference (:reference cand) :premises (:premises cand)
      :guards (:guards cand) :evidence (:evidence cand)
-     :compiled (:form cand) :last-path last-path})
+     :compiled (:form cand) :last-path last-path
+     :reentries (some-> ^java.util.concurrent.atomic.AtomicLong (:reentries cand) .get)})
   Object
   (toString [_] (str "#klara/executable[" (or (:name cand) "anonymous") "]")))
 
@@ -99,6 +100,18 @@
 (defn executable [cand] (Executable. cand nil false nil))
 
 (defn- candidate-of [^Executable e] (.-cand e))
+
+(defn- attach-osr!
+  "L4.exec.osr: the candidate's inner functions (loops) can be entered from
+   the interpreter, where the candidate's leaves continue, when the
+   candidate holds in that world."
+  [cand entries]
+  (doseq [[fnode factory] entries]
+    (.setOsr ^klara.runtime.prepare.IOsr fnode
+             (fn [^klara.runtime.value.Closure self world mint]
+               (when (and (or (nil? mint) (:mint-safe cand)) (valid? cand world))
+                 (.incrementAndGet ^java.util.concurrent.atomic.AtomicLong (:reentries cand))
+                 (executable (assoc cand :host-fn (apply factory (.-env self)) :guards nil)))))))
 
 ;; ---------------------------------------------------------------------------
 ;; Dispatch table (L4.exec.install, L4.retain.dispatch)
@@ -130,8 +143,8 @@
   [st reference candidate opts]
   (if-not (v/code? candidate)
     (reject :L4.prepare.recipe-failed (str "the recipe returned " (pr-str candidate) ", not code"))
-    (let [ref-term (.-term ^Code reference)
-          cand-term (.-term ^Code candidate)
+    (let [ref-term (intr/strip-annotations (.-term ^Code reference))
+          cand-term (intr/strip-annotations (.-term ^Code candidate))
           r (check/check ref-term cand-term (:world st) (get-in st [:dyn :meter]))
           r (if-let [cert (and (= :different (:result r)) (:certificate opts))]
               (if-let [certify (get @certifiers (:kind cert))]
@@ -154,10 +167,13 @@
                  (reject :L4.lower.subset (str "the backend does not compile " x))
                  (let [premises (cond-> (:premises r)
                                   (:name opts) (conj [(:name opts) (w/generation (:world st) (:name opts))]))
-                       {:keys [fn form]} (lower/lower cand-term {:self-name (:name opts)})]
+                       {:keys [fn form osr]} (lower/lower cand-term {:self-name (:name opts)})
+                       cand (assoc (->Candidate (:name opts) reference cand-term premises fn form
+                                                (:guards r) (:evidence r) (lower/mint-safe? cand-term))
+                                   :reentries (java.util.concurrent.atomic.AtomicLong.))]
+                   (attach-osr! cand osr)
                    {:status :ready
-                    :candidate (->Candidate (:name opts) reference cand-term premises fn form
-                                            (:guards r) (:evidence r))
+                    :candidate cand
                     :premises (vec (sort-by (comp str first) premises))
                     ;; how equivalence was established (design/05-specialization.md)
                     :evidence (or (:evidence r) :definitional)
@@ -282,7 +298,7 @@
                                (or (:value (w/lookup world sq))
                                    (fail :L4.jit.attach (str "specializer " sq " is not defined"))))]
              (ret st {:name q
-                      :reference (intr/reify-closure f)
+                      :reference (intr/annotated-reference f)
                       :profile (intr/profile-snapshot f)
                       :runtime (runtime-info)
                       :specializer specializer}))))})
@@ -303,3 +319,17 @@
                   :ctl [f (mapv #(Code. (t/local %)) fresh)]
                   :k (conj k {:f :frame-fn :fn build}
                              {:f :binders :bound (into (m/constructing k) fresh)}))))})
+
+(b/register! 'klara.jit/admissible?                                   ; L4.check.speculate
+  {:kind :host
+   :pure true
+   :fn (fn [guard reference]
+         (check/guard? (intr/strip-annotations (.-term ^Code guard))
+                       (intr/strip-annotations (.-term ^Code reference))))})
+
+(b/register! 'klara.jit/callee-code                                   ; L4.jit.inline
+  {:kind :intrinsic
+   :fn (fn [st [q]]
+         ;; Code of the function definition q in the current world, or nil
+         (let [f (:value (w/lookup (:world st) q))]
+           (ret st (when (v/closure? f) (intr/reify-closure f)))))})

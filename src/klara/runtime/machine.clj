@@ -527,10 +527,16 @@
                  (if (and (.-all-imm c) (nil? (.-basis ^Closure self)) (not (charge! (:meter dyn))))
                    ;; a loop iteration: re-enter the arity directly (L0.eval.tail)
                    (let [^Closure self self
-                         ^klara.runtime.prepare.Arity a (nth (.-arities ^klara.runtime.prepare.Fn (.-node self)) (.-arity c))
-                         args (imm-all (.-args c) env world mint dyn)]
-                     (record-entry! self args true)
-                     (next! regs :eval (.-body a) (bind-args self a args true) k world mint dyn))
+                         fnode (.-node self)
+                         ^klara.runtime.prepare.Arity a (nth (.-arities ^klara.runtime.prepare.Fn fnode) (.-arity c))
+                         args (imm-all (.-args c) env world mint dyn)
+                         osr (.osr ^klara.runtime.prepare.IOsr fnode)
+                         compiled (when osr (osr self world mint))]
+                     (if compiled
+                       ;; L4.exec.osr: compiled code for this loop exists and holds here
+                       (next! regs :apply [compiled args nil] env k world mint dyn)
+                       (do (record-entry! self args true)
+                           (next! regs :eval (.-body a) (bind-args self a args true) k world mint dyn))))
                  (let [[vals remaining] (if (.-all-imm c)
                                         [(imm-all (.-args c) env world mint dyn) nil]
                                         (imm-prefix (.-args c) env world mint dyn))]

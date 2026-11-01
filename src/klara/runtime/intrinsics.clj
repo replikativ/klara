@@ -97,14 +97,15 @@
 
 (defn reify-closure
   "Code with the structure of closure `f` (L2.reify.fn): captured locals are
-   lifted, globals linked according to the closure's basis."
-  [^Closure f]
-  (let [term (.-term f)
-        env (v/captured f)
+   lifted, globals linked according to the closure's basis. `term` may be
+   the closure's term with annotations (see annotated-reference)."
+  ([f] (reify-closure f (.-term ^Closure f)))
+  ([^Closure f term]
+  (let [env (v/captured f)
         rec (fn [x] (if (instance? clojure.lang.IDeref x) (if (v/closure? @x) @x x) x))
         body (t/substitute term (into {} (map (fn [[n x]] [n (m/lift-term (rec x))])) env))
         body (if-let [b (.-basis f)] (pin-links body b) body)]
-    (Code. (t/refresh-free body))))
+    (Code. (t/refresh-free body)))))
 
 (defintrinsic klara.stage/reify [st [f]]                        ; L2.reify.*
   (ret st (cond
@@ -179,8 +180,16 @@
 (defn- c [term] (Code. term))
 (defn- term-of [x] (if (v/code? x) (.-term ^Code x) (fail :L2.view.make (str "expected code, got " (pr-str x)))))
 
-(defn view [^Code code]
+(declare view*)
+
+(defn view
+  "The view of `code`; a term annotated with its profile (L4.jit.context)
+   shows it under :profile."
+  [^Code code]
   (let [t (.-term code)]
+    (cond-> (view* code t) (:profile t) (assoc :profile (:profile t)))))
+
+(defn- view* [^Code code t]
     (case (:op t)
       :const {:op :const :value (:value t)}
       :local {:op :local :name (:name t)}
@@ -193,14 +202,27 @@
       :fn (let [[a & more] (:arities t)]
             (if (and (nil? more) (nil? (:rest a)))
               {:op :fn :self (:self t) :params (:params a) :body (c (:body a))}
-              {:op :other}))
-      {:op :other})))
+              {:op :other :code code}))
+      {:op :other :code code}))
+
+(defintrinsic klara.code/children [st [code]]                  ; L2.view.children
+  (ret st (mapv c (t/children (term-of code)))))
+
+(defintrinsic klara.code/with-children [st [code cs]]          ; L2.view.children
+  (let [t (term-of code)]
+    (when-not (= (count cs) (count (t/children t)))
+      (fail :L2.view.children (str "expected " (count (t/children t)) " children, got " (count cs))))
+    (ret st (Code. (t/refresh-free (t/with-children t (mapv term-of cs)))))))
 
 (defn make [code-or-view original]
   (let [m code-or-view]
     (case (:op m)
       :const (t/const (:value m))
       :local (t/local (:name m))
+      :host (let [q (:name m)]
+              (if (or (b/lookup q) (and (= "clojure.core" (namespace q)) (resolve q)))
+                (t/host q)
+                (fail :L2.view.make (str "unknown host function " q))))
       :app (t/app (term-of (:fn m)) (map term-of (:args m)))
       :let (t/let1 (:name m) (term-of (:init m)) (term-of (:body m)))
       :if (t/if* (term-of (:test m)) (term-of (:then m)) (term-of (:else m)))
@@ -277,6 +299,37 @@
                           :when (pos? (+ t e))]
                       {:pos (pos n) :then t :else e}))}))
 
+(defn annotated-reference
+  "Code of closure `f` whose terms carry their profiles under :profile
+   (L4.jit.context): a function its entries, a call its count and callee,
+   an if its branch counts. Prepared nodes share their terms, so the
+   profiles are found by identity."
+  [^Closure f]
+  (let [root (.-node f)
+        by-term (java.util.IdentityHashMap.)
+        snap #(.snapshot ^klara.runtime.prepare.IProfile %)]
+    (doseq [n (tree-seq (comp seq node-children) node-children root)]
+      (case (prep/tag n)
+        4 (.put by-term (.sourceTerm ^klara.runtime.prepare.INode n) (snap (.-profile ^klara.runtime.prepare.Fn n)))
+        5 (let [p (snap (.-profile ^klara.runtime.prepare.App n))]
+            (.put by-term (.sourceTerm ^klara.runtime.prepare.INode n)
+                  {:count (:count p) :callee (describe-callee (:callee p))}))
+        8 (let [[a b] (:branches (snap (.-profile ^klara.runtime.prepare.If n)))]
+            (.put by-term (.sourceTerm ^klara.runtime.prepare.INode n) {:then a :else b}))
+        nil))
+    (letfn [(annotate [term]
+              (let [cs (t/children term)
+                    t' (if (seq cs) (t/with-children term (mapv annotate cs)) term)]
+                (if-let [p (.get by-term term)] (assoc t' :profile p) t')))]
+      (reify-closure f (annotate (.-term f))))))
+
+(defn strip-annotations
+  "The term without profile annotations."
+  [term]
+  (let [cs (t/children term)]
+    (cond-> (dissoc term :profile)
+      (seq cs) (t/with-children (mapv strip-annotations cs)))))
+
 (defintrinsic klara.profile/snapshot [st [f]]                   ; L4.profile.snapshot
   (ret st (cond
             (v/closure? f) (profile-snapshot f)
@@ -285,6 +338,6 @@
               {:compiled true :reference r})
             :else (fail :L4.profile.snapshot (str "no profile for " (pr-str f))))))
 
-(defintrinsic klara.profile/reset! [st [on?]]
+(defintrinsic klara.profile/record! [st [on?]]                 ; L4.profile.record
   (reset! prep/profiling (boolean on?))
   (ret st on?))

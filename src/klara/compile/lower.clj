@@ -82,10 +82,15 @@
           (neg? (aget meter 0)))
         (when-let [p @stress] (< (Math/random) (double p))))))
 
+(defn interpreted
+  "The interpreter's closure for a compiled function: its node and captured values."
+  [fn-node captured]
+  (Closure. (.-term ^klara.runtime.prepare.Fn fn-node) fn-node captured nil))
+
 (defn leave-apply!
   "Leave at a function entry: the interpreter applies the function again."
   [fn-node captured args]
-  (leave! {:mode :apply :f (Closure. (.-term ^klara.runtime.prepare.Fn fn-node) fn-node captured nil) :args args} []))
+  (leave! {:mode :apply :f (interpreted fn-node captured) :args args} []))
 
 (defn resume
   "The machine state that continues `st`, the state in which an executable
@@ -162,14 +167,34 @@
     :guarded (:value link)
     nil))
 
+(defn- inline-redex?
+  "A call of a literal function with one fixed arity that does not refer to
+   itself, applied to as many arguments."
+  [t]
+  (let [f (:fn t)]
+    (and (= :fn (:op f)) (not (:recur t))
+         (let [[a & more] (:arities f)]
+           (and a (nil? more) (nil? (:rest a)) (= (count (:params a)) (count (:args t)))
+                (not (contains? (t/free-locals (:body a)) (:self f)))
+                (not (some #(= :recur (:op %)) (t/nodes (:body a)))))))))
+
 (defn- lower*
   "Lower term `t` with prepared node `n`. `scope` is the environment layout
    (names, as in klara.runtime.prepare); `frames` are the let contexts of the
    current function around this point, innermost first, each [body-node scope]."
-  [t n scope frames consts self-name self-sym]
+  [t n scope frames consts self-name self-sym osr]
+  (let [selves (atom {})                 ; self name -> [fn node, free names]
+        top t]
   (letfn [(constant [x]
             (let [i (count @consts)] (swap! consts conj x) (list 'clojure.core/nth 'consts i)))
-          (env-form [scope] (vec scope))
+          ;; a frame state's environment; a function's own name stands for the
+          ;; interpreter's closure of it, so that the interpreter can recur
+          (env-form [scope]
+            (mapv (fn [nm]
+                    (if-let [[fnode free] (get @selves nm)]
+                      (list 'klara.compile.lower/interpreted (constant fnode) (vec free))
+                      nm))
+                  scope))
           (frames-form [frames]
             (mapv (fn [[body-node sc]] (list 'klara.compile.lower/let-frame (constant body-node) (env-form sc)))
                   frames))
@@ -201,9 +226,10 @@
                           :else (constant (link-value l))))
               :fn (let [^klara.runtime.prepare.Fn fnode n
                         self (or (:self t) (t/fresh "fn"))
-                        free (:free t)]
-                    (list* 'fn* self
-                           (map (fn [{:keys [params rest body]} ^klara.runtime.prepare.Arity a]
+                        free (:free t)
+                        _ (swap! selves assoc self [fnode free])]
+                    (as-> (list* 'fn* self
+                           (mapv (fn [{:keys [params rest body]} ^klara.runtime.prepare.Arity a]
                                   (let [inner (cond-> (vec free)
                                                 (.-self? a) (conj self)
                                                 true (into params)
@@ -213,14 +239,33 @@
                                                 (list 'klara.compile.lower/leave-apply! (constant fnode) (vec free)
                                                       (if rest (list 'clojure.core/into (vec params) rest) (vec params))))
                                           (go body (.-body a) inner []))))
-                                (:arities t) (.-arities fnode))))
+                                (:arities t) (.-arities fnode))) form
+                      ;; L4.exec.osr: an inner function can be entered from the
+                      ;; interpreter given its captured values
+                      (do (when (and (not (identical? t top))
+                                     ;; it must not call the outer compiled function directly
+                                     (not (some #{self-sym} (filter symbol? (tree-seq coll? seq form)))))
+                            (swap! osr conj [fnode (list 'fn* (vec free) form)]))
+                          form)))
               :app (let [^klara.runtime.prepare.App an n
                          line (get-in t [:pos :line])
                          at (fn [form] (if (and line (seq? form)) (with-meta form {:line line}) form))
                          f (:fn t)
-                         args (map (fn [x xn] (go x xn scope frames)) (:args t) (.-args an))]
+                         args (mapv (fn [x xn] (go x xn scope frames)) (:args t) (.-args an))]
                      (at (cond
                        (:recur t) (list* 'recur args)
+                       ;; ((fn [p ..] body) a ..): the call happens in place, as a let
+                       ;; with the function's entry step and frame state (L4.lower.steps)
+                       (inline-redex? t)
+                       (let [^klara.runtime.prepare.Fn fnode (.-f an)
+                             {:keys [params body]} (first (:arities f))
+                             ^klara.runtime.prepare.Arity a (first (.-arities fnode))
+                             free (:free f)]
+                         (protect (list 'let* (vec (interleave params args))
+                                        (list 'when (list 'klara.compile.lower/tick!)
+                                              (list 'klara.compile.lower/leave-apply! (constant fnode) (vec free) (vec params)))
+                                        (go body (.-body a) (into (vec free) params) []))
+                                  frames))
                        (and (= :host (:op f)) (= "clojure.core" (namespace (:name f)))
                             (not (m/intrinsic? (m/host-value (:name f)))))
                        (list* (:name f) args)
@@ -230,7 +275,7 @@
                        (protect (list* self-sym args) frames)
                        :else (protect (list 'klara.compile.lower/call (go f (.-f an) scope frames) (vec args)) frames))))
               :recur (let [^klara.runtime.prepare.Recur rn n]
-                       (list* 'recur (map (fn [x xn] (go x xn scope frames)) (:args t) (.-args rn))))
+                       (list* 'recur (mapv (fn [x xn] (go x xn scope frames)) (:args t) (.-args rn))))
               :let (let [^klara.runtime.prepare.Let ln n
                          inner (conj scope (:name t))]
                      (list 'let* [(:name t) (go (:init t) (.-init ln) scope (cons [(.-body ln) scope] frames))]
@@ -244,7 +289,7 @@
                             (go (:else t) (.-else in) scope frames))))
               :throw (list 'throw (go (:ex t) (.-ex ^klara.runtime.prepare.Throw n) scope frames))
               (fail :L4.lower.subset (str "the backend does not compile " (:op t)))))]
-    (go t n scope frames)))
+    (go t n scope frames))))
 
 (defn- compiled-nodes
   "The nodes lowering compiles: the else branch of a speculation is left to
@@ -253,6 +298,16 @@
   (tree-seq (comp seq t/children)
             (fn [n] (if (and (= :if (:op n)) (:speculate n)) [(:test n) (:then n)] (t/children n)))
             term))
+
+(defn mint-safe?
+  "Does compiled code for `term` create no closures that outlive the call?
+   Then it may run under a mint (L1.context.mint): its only inner functions
+   are applied where they are made (loops, inlined calls)."
+  [term]
+  (let [applied (into #{} (comp (filter #(= :app (:op %))) (map :fn) (filter #(= :fn (:op %))) (map t/->form))
+                      (compiled-nodes term))]
+    (every? #(contains? applied (t/->form %))
+            (filter #(= :fn (:op %)) (rest (compiled-nodes term))))))
 
 (defn subset-violation
   "The first construct outside the compilable subset (L4.lower.subset), or nil."
@@ -275,13 +330,18 @@
          self-sym (or (:self term) (t/fresh "self"))
          term (anf/anf (assoc term :self self-sym))
          node (m/prepare-term term)
-         form (lower* term node [] () consts self-name self-sym)
-         wrapper (list 'fn* ['consts] form)]
+         osr (atom [])
+         form (lower* term node [] () consts self-name self-sym osr)
+         osr-entries @osr
+         wrapper (list 'fn* ['consts] (vector form (mapv second osr-entries)))
+         [f factories] ((with-bindings {#'*ns* (the-ns 'klara.compile.lower)
+                                        clojure.lang.Compiler/SOURCE_PATH (or file "klara")
+                                        clojure.lang.Compiler/SOURCE (if file (.getName (java.io.File. ^String file)) "klara")}
+                          (eval wrapper))
+                        @consts)]
      {:form form
       :anf term
       ;; compiled code reports the Klara source file and lines (L0.trace.positions)
-      :fn ((with-bindings {#'*ns* (the-ns 'klara.compile.lower)
-                           clojure.lang.Compiler/SOURCE_PATH (or file "klara")
-                           clojure.lang.Compiler/SOURCE (if file (.getName (java.io.File. ^String file)) "klara")}
-             (eval wrapper))
-           @consts)})))
+      :fn f
+      ;; [fn-node factory]: factory of captured values -> compiled function
+      :osr (mapv (fn [[fnode _] factory] [fnode factory]) osr-entries factories)})))

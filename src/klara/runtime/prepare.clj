@@ -54,7 +54,17 @@
   Object (toString [_] "#node/Global"))
 (defnode Host 3 [value name])
 ;; arities: vector of Arity; captured: slots of the free locals in the enclosing scope
-(defnode Fn 4 [arities captured profile])
+(definterface IOsr
+  (osr [])
+  (setOsr [entry]))
+
+;; A function node. `osr` is set when compiled code for this very node
+;; exists (it belongs to a candidate whose leaves continue here): an IFn of
+;; [closure world mint] returning an executable for the closure, or nil.
+(deftype Fn [term arities captured profile ^:volatile-mutable osr-entry]
+  INode (tag [_] 4) (sourceTerm [_] term)
+  IOsr (osr [_] osr-entry) (setOsr [_ e] (set! osr-entry e))
+  Object (toString [_] "#node/Fn"))
 (defnode App 5 [f args flat recur-arity all-imm profile self-call])
 (defnode Let 6 [init body])
 (defnode Letrec 7 [fns body])
@@ -185,7 +195,8 @@
                    (Arity. (count (:params a)) (boolean (:rest a)) used (prep inner (:body a) host-value))))
                (:arities term))
          (mapv #(slot-of scope %) free)
-         (new-profile))))
+         (new-profile)
+         nil)))
 
 (defn prep
   "Prepare term `t` in `scope` (a vector of local names, index = slot).

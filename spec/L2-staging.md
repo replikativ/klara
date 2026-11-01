@@ -77,6 +77,11 @@ links pinned to `w`.
 
 ## Views and printing
 
+`L2.view.children` `(code/children c)` returns the direct subterms of `c`
+as Code, in evaluation order; `(code/with-children c cs)` returns `c` with
+them replaced (same count), keeping what `c` binds. Together they let Klara
+code walk and rebuild every construct, including loops.
+
 `L2.view.make` `(code/view c)` returns the top of `c`'s term as a map with Code
 values in place of subterms; `(code/make m)` is its inverse. Guest
 recipes use these to inspect and build Code.

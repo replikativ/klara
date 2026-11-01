@@ -12,7 +12,7 @@ and `clojure -M:bench` stay green at every commit. Progress is recorded here.
   A-normal form, frame states at every leave point, leaves for speculation,
   callee effects and budgets, call sites adding frames, Klara stack traces;
   stress mode (1500 generated programs agree); `speculate-sound` proved.
-  Remaining: on-stack replacement (entering compiled loops mid-run).
+  On-stack replacement after a leave landed with P3b.
   Originally:
   Compiled code is normalized so that every point where it may leave has a
   frame state (the interpreter node to continue at, its environment, the
@@ -41,7 +41,14 @@ and `clojure -M:bench` stay green at every commit. Progress is recorded here.
   `:budget`) and the default specializer, returning Code or declining.
   `jit/guard`, `jit/arg`, representation hints; checking; accounting;
   attached with `^{:klara/specialize f}`.
-- [ ] **P3b. The default specializer.** A stage-polymorphic interpreter for
+- [ ] **P3b. The default specializer.** Done (in Klara, `klara.jit/default`):
+  cold-branch speculation, inlining of hot small definitions; lowering of
+  immediately applied functions as `let`; on-stack replacement after a
+  leave; compiled code under mints when it creates no escaping closures;
+  showcase 2. Measured: long speculation buys nothing on HotSpot (see
+  06-speculation.md §4), so it is dropped. Open: stable-value
+  specialization in the default, monomorphic higher-order callees.
+  Originally: A stage-polymorphic interpreter for
   Core written in Klara: inlining of monomorphic calls, speculation on long
   arithmetic, specialization on stable values, loops.
 - [ ] **P4. Facts and guard discharge.** The facts interface; a built-in
@@ -66,7 +73,13 @@ evidence, guards, time, allocation), and run as a test.
    matcher written as an interpreter, with a user-written specializer: once
    the profile shows a stable pattern, the JIT stages the matcher for it,
    guarded on the pattern; checked by the kernel.
-2. **Speculate, fail, keep going** (P1–P3b). A numeric kernel specialized
+2. **Speculate, fail, keep going** (P1–P3b). Done as
+   `showcases/speculate_fail_continue.clj`: a ledger loop with a rare
+   refund that performs an effect; rejected without speculation, 23× with
+   it, one leave, one review, re-entry into compiled code, retirement on a
+   helper change, old world keeps its code. (The plan said longs; measured
+   to be pointless on HotSpot, the cold effectful branch is the real case.)
+   Originally: A numeric kernel specialized
    to longs from its profile; a double halfway through a large input fails
    the guard inside the loop and the interpreter continues at that
    iteration; redefining a helper invalidates the compiled code while an old

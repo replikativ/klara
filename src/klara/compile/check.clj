@@ -113,6 +113,21 @@
           body (cond-> (:body a) (:self f) (t/substitute {(:self f) (dissoc f :self)}))]
       (reduce (fn [b [p e]] (t/let1 p e b)) body (reverse (map vector (:params a) args))))))
 
+(defn- term-key [t] (t/->form t))
+
+(defn- assumed
+  "true or false if the truth of `t` is assumed in `ctx`, else nil."
+  [ctx t]
+  (get (:assume ctx) (term-key t)))
+
+(defn- assume
+  "ctx in which guard `g` is known truthy (and the test it negates falsy)."
+  [ctx g]
+  (let [ctx (assoc-in ctx [:assume (term-key g)] true)]
+    (if (and (= :app (:op g)) (= 'clojure.core/not (get-in g [:fn :name])) (= 1 (count (:args g))))
+      (assoc-in ctx [:assume (term-key (first (:args g)))] false)
+      ctx)))
+
 (defn whnf
   "Rewrite `t` at its head until no head rule applies."
   [ctx t]
@@ -122,10 +137,13 @@
            (if (value-term? init)                                ; L4.check.let-value
              (recur ctx (t/substitute (:body t) {(:name t) init}))
              (assoc t :init init)))
-    :if (let [c (whnf ctx (:test t))]
-          (if (= :const (:op c))                                 ; L4.check.if-constant
-            (recur ctx (if (:value c) (:then t) (:else t)))
-            (assoc t :test c)))
+    :if (let [c (whnf ctx (:test t))
+              known (assumed ctx c)]
+          (cond (= :const (:op c))                               ; L4.check.if-constant
+                (recur ctx (if (:value c) (:then t) (:else t)))
+                (some? known)                                    ; L4.check.speculate-assume
+                (recur ctx (if known (:then t) (:else t)))
+                :else (assoc t :test c)))
     :do (let [[x & more] (:body t)]
           (cond (empty? more) (recur ctx x)
                 (value-term? (whnf ctx x)) (recur ctx (t/do* more))
@@ -195,9 +213,26 @@
                           (:arities a) (:arities b))))
     false))
 
-(defn- guard?
-  "A guard cannot fail or perform an effect: a local, a constant, or a pure
-   host predicate applied to locals and constants (L4.check.speculate)."
+(def ^:private total-predicates
+  "Pure host functions that return for every argument."
+  '#{clojure.core/number? clojure.core/integer? clojure.core/int? clojure.core/double?
+     clojure.core/float? clojure.core/string? clojure.core/keyword? clojure.core/symbol?
+     clojure.core/map? clojure.core/vector? clojure.core/seq? clojure.core/coll?
+     clojure.core/fn? clojure.core/boolean? clojure.core/set? clojure.core/nil?
+     clojure.core/some? clojure.core/true? clojure.core/false? clojure.core/not
+     clojure.core/= clojure.core/not= clojure.core/identical? klara.jit/same?})
+
+(defn- total-guard?
+  "Locals and constants, and total predicates applied to total guards."
+  [t]
+  (or (contains? #{:local :const} (:op t))
+      (and (= :app (:op t))
+           (= :host (get-in t [:fn :op]))
+           (contains? total-predicates (get-in t [:fn :name]))
+           (every? total-guard? (:args t)))))
+
+(defn- pure-term?
+  "Pure host functions applied to locals, constants and pure terms."
   [t]
   (or (contains? #{:local :const} (:op t))
       (and (= :app (:op t))
@@ -205,7 +240,20 @@
            (let [q (get-in t [:fn :name])]
              (or (and (= "clojure.core" (namespace q)) (contains? b/pure-host (symbol (name q))))
                  (:pure (b/lookup q))))
-           (every? #(contains? #{:local :const} (:op %)) (:args t)))))
+           (every? pure-term? (:args t)))))
+
+(defn guard?
+  "A guard cannot perform an effect, and fails only where the reference
+   fails (L4.check.speculate): it is total, or it is the reference's own
+   test (or its negation), which the reference evaluates first."
+  [g reference]
+  (or (total-guard? g)
+      (and (pure-term? g)
+           (= :if (:op reference))
+           (let [own (term-key (:test reference))]
+             (or (= (term-key g) own)
+                 (and (= :app (:op g)) (= 'clojure.core/not (get-in g [:fn :name]))
+                      (= own (term-key (first (:args g))))))))))
 
 (defn- speculation? [t] (and (= :if (:op t)) (:speculate t)))
 
@@ -224,14 +272,15 @@
         (cond
           ;; L4.check.speculate: both branches must mean the other side
           (and (speculation? b) (not (speculation? a)))
-          (and (guard? (:test b))
+          (and (guard? (:test b) (:else b))
                (if-let [[x c] (value-guard (:test b))]
                  ;; L4.check.speculate-value: under (same? x c) the branch means a with x := c
                  (equal? ctx (t/substitute a {x c}) (:then b))
-                 (equal? ctx a (:then b)))
+                 ;; L4.check.speculate-assume: the branch means a where the guard holds
+                 (equal? (assume ctx (:test b)) a (:then b)))
                (equal? ctx a (:else b)))
           (and (speculation? a) (not (speculation? b)))
-          (and (guard? (:test a)) (equal? ctx (:then a) b) (equal? ctx (:else a) b)))
+          (and (guard? (:test a) (:else a)) (equal? ctx (:then a) b) (equal? ctx (:else a) b)))
         (and (= (:op a) (:op b)) (same-shape ctx a b))
         (if-let [a' (unfold-head ctx a)]
           (equal? ctx a' b)

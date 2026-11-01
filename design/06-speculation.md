@@ -124,6 +124,24 @@ generate  : node × static-env × profile → Code  run staged: the JIT
 - Because the JIT is a Klara program, it can be read, tested and improved by
   the same mechanisms it serves, and its residuals can be verified.
 
+**What to speculate on.** Measured on HotSpot: a loop over a vector of
+longs with generic arithmetic, with a long guard per element, and with
+primitive arithmetic all run at the same speed (about 6 ns per element),
+because HotSpot already profiles types and removes the boxing. Representation
+speculation is therefore not where Klara's JIT earns its keep on the JVM. It
+speculates on what the host cannot see:
+
+- **cold branches** (the profile never saw them taken): the hot path compiles
+  even when the cold one performs effects, calls host code or uses
+  constructs the backend does not compile; reaching it leaves to the
+  interpreter, which continues and re-enters the compiled loop at the next
+  iteration (on-stack replacement);
+- **stable values** of arguments (showcase 1: an interpreter specialized to
+  its program);
+- **definitions**: inlining small hot callees makes their generations
+  premises, so redefinition retires exactly the code that depended on them;
+- later: monomorphic callees of higher-order arguments, effect-free handlers.
+
 The host prepared-node interpreter remains T0. Cheap host improvements (node
 specialization from profiles, closure compilation of flat pure subterms)
 speed up T0 without changing the architecture.

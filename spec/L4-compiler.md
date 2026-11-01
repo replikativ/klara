@@ -131,7 +131,8 @@ records, without changing any result: for each function, its entries
 (including loop iterations) with the class and, for simple values, the
 value of each argument, marked polymorphic or unstable once they vary; for
 each call of a Klara function, the count and the callee; for each `if`, how
-often each branch was taken.
+often each branch was taken. `(klara.profile/record! false)` turns recording
+off, `(klara.profile/record! true)` on again.
 
 `L4.profile.snapshot` `(klara.profile/snapshot f)` returns the profile of
 closure `f` as data: `:entries`, `:calls` and `:branches`, with source
@@ -161,6 +162,11 @@ with fresh parameters for the definition's arity, calling `f` with them as
 Code; `f` must return Code for the body. The parameters count as bound while
 `f` runs (L2.code.extrusion).
 
+`L4.jit.inline` `(klara.jit/callee-code q)` returns Code for the function
+definition `q` in the current world, or nil. Inlining a call as
+`((fn [p ..] body) args ..)` is accepted by unfolding `q`, so `q`'s
+generation becomes a premise of the candidate.
+
 `L4.jit.attach` `^{:klara/specialize f}` on a definition names its
 specializer, resolved in the definition's namespace when the JIT runs.
 
@@ -169,3 +175,22 @@ specializer, resolved in the definition's namespace when the JIT runs.
 branch must mean the reference with `x` replaced by `c`. `same?` holds only
 when `x` is equal to `c` and of the same class, recursively for collections,
 so `x` and `c` cannot be told apart.
+
+`L4.check.speculate-assume` In a speculation `(if g S R)`, `S` must mean the
+reference where `g` holds: while comparing, an `if` whose test is `g` takes
+its then branch, and one whose test `g` negates (`g` = `(not t)`) its else
+branch. A guard is admissible if it is total (locals, constants, total
+predicates such as type tests, `=`, `identical?`, `not`, `same?`) or if it
+is the reference's own test or its negation, which the reference evaluates
+first, so the guard fails only where the reference fails.
+
+`L4.exec.osr` Where compiled code left to the interpreter inside a loop,
+the interpreter enters compiled code for that loop again at its next
+iteration, if the candidate still holds in the current world and mint
+(L4.exec.valid, L4.exec.mint-safe). The compiled loop continues from the
+same arguments the interpreter would have bound, so the result is the
+same. `(compiler/explain f)` counts these entries as `:reentries`.
+
+`L4.exec.mint-safe` Compiled code may run under a mint (L1.context.mint)
+when its only inner functions are applied where they are made, so it
+creates no closure that would need the mint as basis.
