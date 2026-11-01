@@ -142,7 +142,42 @@ interpreter and read by Klara as data:
 value. Profiles can be stored in worlds and saved with builds, so an AOT
 preparation can use the profile of an earlier run.
 
-## 6. The investor
+## 6. Specializers: the JIT is programmable
+
+What the JIT does to a function is decided by a **specializer**: a pure Klara
+function called at compile time with a context, returning Code or declining.
+
+```clojure
+(defn match-specializer [ctx default]
+  (let [pattern (profile/stable-arg ctx 0)]          ; argument 0 always the same value?
+    (if pattern
+      (jit/guard (code (same? (esc (jit/arg ctx 0)) (esc (lift pattern))))
+                 (stage-matcher pattern (jit/arg ctx 1)))   ; our own code for that pattern
+      (default ctx))))
+
+(defn ^{:klara/specialize match-specializer} match [pattern s] ...)
+```
+
+| Context field | Contents |
+|---|---|
+| `:reference` | the function's Code, with its links |
+| `:profile` | argument classes, stable values, call targets, branch counts, shapes |
+| `:facts` | what type systems and analyses established |
+| `:runtime` | host and hardware data: JVM, cores, measured call and allocation costs |
+| `:budget` | what this specialization may still spend |
+
+`jit/guard` builds `(if guard specialized reference)` with its frame state;
+`jit/arg` gives the arguments as Code; representation hints mark unboxed
+values. Specializers compose like middleware: each receives the default and
+handles what it knows. The JIT's own strategy (section 4) is the default
+specializer, written against the same interface.
+
+A specializer runs inside the investor's job: in a fork, under a budget, with
+its cost charged, unable to publish or perform effects. Its output is checked
+like any candidate. Anything it learns that is worth keeping (a tile size
+for this machine) is returned as data and stored in a world by the investor.
+
+## 7. The investor
 
 Choosing what to specialize is an investment ([05-specialization.md](05-specialization.md)):
 a Klara policy compares expected benefit (calls times predicted saving, from
@@ -153,6 +188,8 @@ starts as a threshold and a cost table; the interface is ready for learned
 policies.
 
 ## What this iteration delivers
+
+See [PLAN.md](PLAN.md).
 
 See [PLAN.md](PLAN.md) for the order of work and the showcase programs that
 validate each decision.
