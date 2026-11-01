@@ -46,3 +46,14 @@
       (try
         (is (= #{328350} (set (k/eval-string s "(vec (for [_ (range 30)] (h (range 100))))"))))
         (finally (reset! lower/stress nil))))))
+
+(deftest L4-lower-hint
+  (testing "a type hint is a guard: right, it is used; wrong, the interpreter goes on"
+    (let [s (k/session {:roots ["lib"] :out (java.io.StringWriter.)})]
+      (is (= [3 3 "abc" :left]
+             (k/eval-string s "(ns lh (:require [klara.compiler :as compiler]))
+               (defn n-true [n] (let [^booleans a (boolean-array n true)] (loop [i 0 c 0] (if (< i n) (recur (inc i) (if (aget a i) (inc c) c)) c))))
+               (defn wrong [x] (let [^String s (str x)] (let [^longs v s] (str v))))
+               (compiler/optimize! 'lh/n-true)
+               (compiler/optimize! 'lh/wrong)
+               [(n-true 3) (n-true 3) (wrong \"abc\") (:last-path (compiler/explain wrong))]"))))))

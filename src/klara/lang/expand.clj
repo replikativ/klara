@@ -147,7 +147,9 @@
               (expand-body env body)
               (let [init (expand env init)
                     [n env'] (bind-local env s)]
-                (t/let1 n init (go env' more)))))]
+                (cond-> (t/let1 n init (go env' more))
+                  ;; a host type hint, kept for compiled code (L4.lower.hint)
+                  (:tag (meta s)) (assoc :tag (:tag (meta s)))))))]
     (go env (partition 2 bindings))))
 
 (defn- expand-loop

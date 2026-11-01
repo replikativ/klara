@@ -212,6 +212,12 @@ definition resolves to compiled code that holds there and has no argument
 guards; otherwise as any call. The decision is cached per call site and
 world, like the resolution itself.
 
+`L4.lower.hint` A host type hint on a let binding (`^booleans`, `^String`) is
+a guard in compiled code: where the bound value is an instance of the class,
+the body runs with the hint (so the host compiles array and method access
+without reflection); where it is not, compiled code leaves to the
+interpreter at the body. A wrong hint costs speed, never meaning.
+
 `L4.exec.osr` Where compiled code left to the interpreter inside a loop,
 the interpreter enters compiled code for that loop again at its next
 iteration, if the candidate still holds in the current world and mint

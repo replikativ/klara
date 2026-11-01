@@ -81,6 +81,35 @@ A native host needs its own code emission.
    runtime itself, with AOT given a profile.
 5. **Ownership** (P6) for in-place updates without visible mutation.
 
+## Measured (Are We Fast Yet?, ms per iteration)
+
+`clojure -M:awfy`, same machine, after the investor has run (2026-11-01):
+
+| benchmark | node (V8) | Clojure (HotSpot) | Klara interpreted | Klara compiled |
+|---|---|---|---|---|
+| Mandelbrot | 24 | 27 | 10,700 | 79 |
+| Sieve | 0.010 | 0.008 | 6.5 | 0.33 |
+| Towers | 0.065 | 0.25 | 18.7 | 0.77 |
+| List | 0.013 | 0.033 | 18.3 | 0.51 |
+
+All results agree. The interpreter is 400–1000× slower than V8, the
+compiled code 3–40×. What the benchmarks taught the backend:
+
+- **Loops must be host loops** (not self-applied functions) so the host
+  keeps their locals primitive: Mandelbrot 390 → 79 ms.
+- **No try at call sites.** Clojure compiles a `try` outside return position
+  into a closure per evaluation; leaving compiled code is therefore a
+  returned value that each let tests, not an exception.
+- **Calls between compiled definitions go direct** to the host function,
+  with the context fetched once per function entry.
+- **Measure at steady state.** Two cold batches of a fresh candidate can
+  agree; the investor now warms up for 300 ms before trusting agreement.
+- **Clojure forms are a leaky host IR.** A `loop` outside return position
+  (after A-normal form, every loop in a `let` initializer) also becomes a
+  closure per evaluation; Sieve's inner loop pays it per outer iteration.
+  A direct bytecode backend removes this and the remaining gaps (step 3
+  above): it is the next backend step.
+
 ## How we will know
 
 Port the *Are We Fast Yet?* benchmarks (Marr, Daloze, Mössenböck, DLS 2016),

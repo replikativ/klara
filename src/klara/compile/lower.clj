@@ -262,6 +262,19 @@
                 (not (contains? (t/free-locals (:body a)) (:self f)))
                 (some #(and (= :recur (:op %)) (= (:self f) (:target %))) (t/nodes (:body a))))))))
 
+(def ^:private array-hints
+  {'booleans "[Z" 'bytes "[B" 'chars "[C" 'shorts "[S" 'ints "[I" 'longs "[J"
+   'floats "[F" 'doubles "[D" 'objects "[Ljava.lang.Object;"})
+
+(defn- hint-class
+  "The class a host type hint names, or nil."
+  ^Class [tag]
+  (cond (class? tag) tag
+        (contains? array-hints tag) (Class/forName (array-hints tag))
+        (symbol? tag) (let [c (try (resolve tag) (catch Exception _ nil))] (when (class? c) c))
+        (string? tag) (try (Class/forName tag) (catch Exception _ nil))
+        :else nil))
+
 (defn- may-leave?
   "Can evaluating `t` in compiled code produce a Leave? Host calls cannot:
    host code never sees one (see complete)."
@@ -272,6 +285,7 @@
            (not (or (:recur t) (= :host (:op f))
                     (and (= :const (:op f)) (keyword? (:value f))))))
     :if (or (boolean (:speculate t)) (boolean (some may-leave? (t/children t))))
+    :let (or (some? (hint-class (:tag t))) (boolean (some may-leave? (t/children t))))
     (boolean (some may-leave? (t/children t)))))
 
 (defn- inline-redex?
@@ -419,7 +433,16 @@
               :let (let [^klara.runtime.prepare.Let ln n
                          x (:name t)
                          inner (conj scope x)
-                         body (go (:body t) (.-body ln) inner frames)]
+                         hint (hint-class (:tag t))
+                         body (go (:body t) (.-body ln) inner frames)
+                         ;; L4.lower.hint: a hint is a guard; where it does not hold the
+                         ;; interpreter goes on with the body
+                         body (if hint
+                                (list 'if (list '.isInstance (constant hint) x)
+                                      (list 'let* [(with-meta x {:tag (if (contains? array-hints (:tag t)) (:tag t) (symbol (.getName hint)))}) x]
+                                            body)
+                                      (list 'klara.compile.lower/leave-eval (constant (.-body ln)) (env-form inner)))
+                                body)]
                      (list 'let* [x (go (:init t) (.-init ln) scope (cons [(.-body ln) scope] frames))]
                            (if (may-leave? (:init t))
                              ;; L4.exec.frame-state: a Leave passing out adds this let's frame
