@@ -7,7 +7,7 @@
   primitive path returns it. Klara specifies checked 64-bit arithmetic: an
   overflow exactly when the result is out of range. Found by the
   differential test against the formal semantics (spec/formal)."
-  (:refer-clojure :exclude [-]))
+  (:refer-clojure :exclude [- conj! assoc! dissoc! disj! pop! persistent!]))
 
 (defn same?
   "Value speculation guard (L4.check.speculate-value): equal and of the same
@@ -61,3 +61,37 @@
   (^Object sub [_ ^Object x ^Object y] (- x y)))
 
 (def ^ISub SUB (Sub.))
+
+;; ---------------------------------------------------------------------------
+;; Owned updates (L4.check.in-place, design/04-ownership.md)
+;;
+;; Klara's transient operations act on a transient in place and on a
+;; persistent value persistently: what erasure says they mean. Compiled code
+;; freezes every local it hands the interpreter when it leaves (freeze), so a
+;; continuation resumed once or many times goes on with persistent values.
+
+;; A leave builds one frame per enclosing let, and the same transient is in
+;; several; it can be made persistent only once, so freezing remembers.
+;; Transients hash by identity; leaves are rare.
+(defonce ^:private frozen (java.util.Collections/synchronizedMap (java.util.WeakHashMap.)))
+
+(defn freeze [x]
+  (if (instance? clojure.lang.ITransientCollection x)
+    (or (.get ^java.util.Map frozen x)
+        (let [v (clojure.core/persistent! x)] (.put ^java.util.Map frozen x v) v))
+    x))
+
+(defn persistent! [x] (freeze x))
+
+(defn conj!
+  ([c x] (if (instance? clojure.lang.ITransientCollection c) (clojure.core/conj! c x) (conj c x))))
+
+(defn assoc!
+  ([c k v] (if (instance? clojure.lang.ITransientAssociative c) (clojure.core/assoc! c k v) (assoc c k v)))
+  ([c k v & kvs] (reduce (fn [c [k v]] (assoc! c k v)) (assoc! c k v) (partition 2 kvs))))
+
+(defn dissoc! [c k] (if (instance? clojure.lang.ITransientMap c) (clojure.core/dissoc! c k) (dissoc c k)))
+
+(defn disj! [c k] (if (instance? clojure.lang.ITransientSet c) (clojure.core/disj! c k) (disj c k)))
+
+(defn pop! [c] (if (instance? clojure.lang.ITransientVector c) (clojure.core/pop! c) (pop c)))

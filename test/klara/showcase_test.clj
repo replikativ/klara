@@ -67,3 +67,12 @@
       (is (:same-result r))
       ;; a timing bound loose enough for a loaded machine (typically 35-60x)
       (is (< 2 (:speedup r))))))
+
+(deftest in-place   ; L4.check.in-place
+  (let [r (run "showcases/in_place.clj")]
+    (testing "the investor owns the accumulator, the kernel admits it, nothing observable changes"
+      (is (= [:in-place :in-place true] [(:chosen r) (:evidence r) (:same-result r)])))
+    (testing "allocation drops by more than an order of magnitude"
+      (is (< (* 10 (:bytes-after r)) (:bytes-before r))))
+    (testing "an accumulator handed to another function is refused"
+      (is (= :rejected (:refused r))))))

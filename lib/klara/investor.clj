@@ -17,15 +17,19 @@
   outside, and a measurement that would perform an effect just fails. The
   decision is data."
   (:require [klara.jit :as jit]
+            [klara.own :as own]
             [klara.compiler :as compiler]
             [klara.job :as job]
             [klara.world :as world]))
 
 (def alternatives
-  "The specializers the investor tries, by name. A definition's own
+  "The specializers the investor tries, by name: a function, or
+   {:specializer f :opts preparation-options} when the candidate needs more
+   than the definitional checker (a certificate). A definition's own
    specializer (^{:klara/specialize f}) is tried as :attached."
   {:as-is (fn [ctx default] (:reference ctx))
-   :default (fn [ctx default] (jit/default ctx))})
+   :default (fn [ctx default] (jit/default ctx))
+   :in-place {:specializer own/in-place :opts {:certificate {:kind :in-place}}}})
 
 (def min-work
   "Below this much work (jit/work) the investor does not look at a definition."
@@ -67,7 +71,9 @@
   "Prepare q with specializer s (called name). Runs inside a job."
   [q name s]
   (let [t0 (now)
-        outcome (jit/prepare q {:specializer s :specializer-name name})
+        outcome (jit/prepare q (if (map? s)
+                                 (merge (:opts s) {:specializer (:specializer s) :specializer-name name})
+                                 {:specializer s :specializer-name name}))
         prep (- (now) t0)]
     (if (= :ready (:status outcome))
       {:status :ready :outcome outcome :prepare-ns prep}

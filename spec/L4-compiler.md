@@ -212,6 +212,18 @@ definition resolves to compiled code that holds there and has no argument
 guards; otherwise as any call. The decision is cached per call site and
 world, like the resolution itself.
 
+`L4.check.in-place` A candidate with the certificate `{:kind :in-place}` is
+admitted when (1) its erasure, which drops `transient` and `persistent!`
+and reads `conj!`, `assoc!`, `dissoc!`, `disj!`, `pop!` as their persistent
+versions, is equal to the reference by the definitional rules, and (2) the
+ownership judgment holds: every `transient` is the initial value of a loop
+parameter; in the loop that parameter is read (`get`, `count`, `contains?`,
+`nth`) only before it is updated, updated only into the `recur` at its own
+position, never captured by a function or passed elsewhere, and returned
+only through `persistent!`. Klara's owned updates act persistently on
+persistent values, and compiled code freezes the values it leaves with
+(`persistent!`), so continuations resumed any number of times stay correct.
+
 `L4.lower.hint` A host type hint on a let binding (`^booleans`, `^String`) is
 a guard in compiled code: where the bound value is an instance of the class,
 the body runs with the hint (so the host compiles array and method access

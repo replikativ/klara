@@ -75,7 +75,15 @@ and `clojure -M:bench` stay green at every commit. Progress is recorded here.
   Originally: A Klara policy over profiles and measured
   costs: threshold and cost table first, parallel exploration in forks,
   honest accounting, declining when it does not pay.
-- [ ] **P6. Ownership, functional but in-place.** Uniqueness judgment,
+- [x] **P6. Ownership, functional but in-place.** Done: the ownership
+  judgment and erasure check (`klara.compile.own`, the `:in-place`
+  certifier, L4.check.in-place); erasure-tolerant owned updates and freezing
+  at leaves, so multi-shot continuations stay correct; the recipe in Klara
+  (`klara.own/in-place`); the investor's `:in-place` alternative;
+  `showcases/in_place.clj` (17x faster, 180x less allocation; the escaping
+  variant refused). Open: the erasure theorem in ansatz, the judgment
+  verified in ansatz.
+  Originally: Uniqueness judgment,
   erasure, transient lowering, the accumulator recipe; the erasure theorem.
 
 ## Showcase programs
@@ -105,7 +113,7 @@ evidence, guards, time, allocation), and run as a test.
 3. **Proofs where they pay** (P4–P5). Polynomial scoring: the investor plans
    fusion (definitional), Horner's rule (certificate under a range guard)
    and long arithmetic (speculative); rejected without the premise.
-4. **Functional but in-place** (P6). A persistent `frequencies`-style loop;
+4. **Functional but in-place** (P6). Done as `showcases/in_place.clj`. A persistent `frequencies`-style loop;
    the investor chooses a transient accumulator, allocation drops, erasure
    checks it, and it refuses when the accumulator escapes.
 

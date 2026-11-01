@@ -34,6 +34,7 @@
             [klara.lang.term :as t]
             [klara.runtime.machine :as m]
             [klara.runtime.prepare :as prep]
+            [klara.runtime.prims :as prims]
             [klara.runtime.value :as v])
   (:import [klara.runtime.value Closure]))
 
@@ -120,12 +121,13 @@
 (defn interpreted
   "The interpreter's closure for a compiled function: its node and captured values."
   [fn-node captured]
-  (Closure. (.-term ^klara.runtime.prepare.Fn fn-node) fn-node captured nil))
+  (Closure. (.-term ^klara.runtime.prepare.Fn fn-node) fn-node (mapv prims/freeze captured) nil))
 
 (defn leave-apply
-  "Leave at a function entry: the interpreter applies the function again."
+  "Leave at a function entry: the interpreter applies the function again
+   (owned arguments frozen, L4.check.in-place)."
   [fn-node captured args]
-  (leave {:mode :apply :f (interpreted fn-node captured) :args args}))
+  (leave {:mode :apply :f (interpreted fn-node captured) :args (mapv prims/freeze args)}))
 
 (defn resume
   "The machine state that continues `st`, the state in which an executable
@@ -316,7 +318,8 @@
             (mapv (fn [nm]
                     (if-let [[fnode free] (get @selves nm)]
                       (list 'klara.compile.lower/interpreted (constant fnode) (vec free))
-                      nm))
+                      ;; owned values leave persistent (L4.check.in-place)
+                      (list 'klara.runtime.prims/freeze nm)))
                   scope))
           (go [t n scope frames]
             (case (:op t)

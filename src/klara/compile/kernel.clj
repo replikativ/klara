@@ -7,6 +7,7 @@
   backend. An executable checks its premises at entry and otherwise runs
   the reference meaning."
   (:require [klara.compile.check :as check]
+            [klara.compile.own :as own]
             [klara.compile.lower :as lower]
             [klara.lang.builtins :as b]
             [klara.lang.term :as t]
@@ -172,7 +173,7 @@
               (if-let [certify (get @certifiers (:kind cert))]
                 (let [c (certify {:reference ref-term :candidate cand-term :world (:world st) :certificate cert})]
                   (if (= :proved (:result c))
-                    {:result :equal :premises #{} :guards (:guards c) :evidence (:evidence c)}
+                    {:result :equal :premises (or (:premises c) #{}) :guards (:guards c) :evidence (:evidence c)}
                     {:result :certificate-failed :message (:message c)}))
                 {:result :certificate-failed :message (str "no certifier for " (pr-str (:kind cert)))})
               r)]
@@ -380,3 +381,15 @@
                                 (and d (not (:macro? d)) (not (v/closure? (:value d)))
                                      (not (v/mutable? (:value d)))))
                       false)))))})
+
+;; L4.check.in-place: an owned candidate is admitted by the ownership
+;; judgment and the definitional check of its erasure.
+(register-certifier! :in-place
+  (fn [{:keys [reference candidate world]}]
+    (if-let [why (own/violation candidate)]
+      {:result :failed :message why}
+      (let [r (check/check reference (own/erase candidate) world nil)]
+        (if (= :equal (:result r))
+          {:result :proved :evidence :in-place :premises (:premises r)}
+          {:result :failed :message (str "its erasure differs from the reference: "
+                                         (pr-str (:difference r)))})))))

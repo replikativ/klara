@@ -228,6 +228,7 @@
       :let {:op :let :name (:name t) :init (c (:init t)) :body (c (:body t))}
       :if {:op :if :test (c (:test t)) :then (c (:then t)) :else (c (:else t))}
       :do {:op :do :body (mapv c (:body t))}
+      :recur {:op :recur :target (:target t) :arity (:arity t) :args (mapv c (:args t))}
       :fn (let [[a & more] (:arities t)]
             (if (and (nil? more) (nil? (:rest a)))
               {:op :fn :self (:self t) :params (:params a) :body (c (:body a))}
@@ -256,6 +257,7 @@
       :let (t/let1 (:name m) (term-of (:init m)) (term-of (:body m)))
       :if (t/if* (term-of (:test m)) (term-of (:then m)) (term-of (:else m)))
       :do (t/do* (mapv term-of (:body m)))
+      :recur {:op :recur :target (:target m) :arity (:arity m) :args (mapv term-of (:args m))}
       :fn (t/fn-term (:self m) [(t/arity (:params m) nil (term-of (:body m)))])
       (fail :L2.view.make (str "cannot make code from view " (:op m))))))
 
@@ -283,6 +285,10 @@
 ;; Primitives that correct host behaviour (klara.runtime.prims)
 
 (b/register! 'klara.core/- {:kind :host :fn prims/- :symbol 'klara.runtime.prims/- :pure true})
+;; owned updates: in place on transients, persistent otherwise (L4.check.in-place)
+(doseq [s '[conj! assoc! dissoc! disj! pop! persistent!]]
+  (b/register! (symbol "klara.core" (name s))
+               {:kind :host :fn @(ns-resolve 'klara.runtime.prims s) :symbol (symbol "klara.runtime.prims" (name s))}))
 (b/register! 'klara.jit/same? {:kind :host :fn prims/same? :symbol 'klara.runtime.prims/same? :pure true})
 
 ;; ---------------------------------------------------------------------------
