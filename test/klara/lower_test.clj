@@ -57,3 +57,12 @@
                (compiler/optimize! 'lh/n-true)
                (compiler/optimize! 'lh/wrong)
                [(n-true 3) (n-true 3) (wrong \"abc\") (:last-path (compiler/explain wrong))]"))))))
+
+(deftest L4-lower-loops   ; L4.lower.steps
+  (testing "a loop is compiled to a host loop, not a call per iteration (also where code templates recur, L2.code.recur)"
+    (let [s (k/session {:roots ["lib"] :out (java.io.StringWriter.)})]
+      (is (= [4950 true]
+             (k/eval-string s "(ns lp (:require [klara.compiler :as compiler]))
+               (defn sum-to [n] (loop [i 0 s 0] (if (< i n) (recur (inc i) (+ s i)) s)))
+               (compiler/optimize! 'lp/sum-to)
+               [(sum-to 100) (.contains (str (:compiled (compiler/explain (compiler/compiled 'lp/sum-to)))) \"loop*\")]"))))))

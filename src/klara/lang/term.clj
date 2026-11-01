@@ -99,14 +99,30 @@
                     (reduce set/union #{} (map (fn [c] (disj (free-locals (:body c)) (:name c)))
                                                (:catches t)))
                     (if (:finally t) (free-locals (:finally t)) #{}))
-    ;; a recur names the function it re-enters: free in a code fragment that
-    ;; a hole splices into a loop of the enclosing template (L2.code.recur)
-    :recur (conj (reduce set/union #{} (map free-locals (children t))) (:target t))
     ;; holes see the template's binders as future-stage variables, not as free locals
     :code (let [bound (into #{} (mapcat binders) (nodes (:template t)))]
             (set/union (set (:free t))
                        (set/difference (reduce set/union #{} (map free-locals (:holes t))) bound)))
     (reduce set/union #{} (map free-locals (children t)))))
+
+(defn- free-targets
+  "Loops that a recur in `t` re-enters and `t` does not bind."
+  [t]
+  (case (:op t)
+    :recur (into #{(:target t)} (mapcat free-targets) (children t))
+    :fn (disj (into #{} (mapcat free-targets) (children t)) (:self t))
+    :code (let [selves (into #{} (keep #(when (= :fn (:op %)) (:self %))) (nodes (:template t)))
+                bound (into #{} (mapcat binders) (nodes (:template t)))]
+            (set/union (set/difference (free-targets (:template t)) selves)
+                       (set/difference (into #{} (mapcat free-targets) (:holes t)) bound)))
+    (into #{} (mapcat free-targets) (children t))))
+
+(defn free-names
+  "Free locals and the loops `t` recurs to without binding them: what a code
+   fragment refers to outside itself (L2.code.recur). Not for asking
+   whether a function uses itself as a value: a recur is not such a use."
+  [t]
+  (set/union (free-locals t) (free-targets t)))
 
 (defn globals
   "Qualified names of late, pinned and guarded links in `t`."
@@ -152,7 +168,7 @@
     :fn (fn-term (:self t) (:arities t))
     ;; as the expander computes it (L2.code.build)
     :code (let [bound (into #{} (mapcat binders) (nodes (:template t)))]
-            (assoc t :free (vec (sort (remove bound (free-locals (:template t)))))))
+            (assoc t :free (vec (sort (remove bound (free-names (:template t)))))))
     t))
 
 (defn refresh-free

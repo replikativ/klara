@@ -230,7 +230,7 @@
         inner (-> env (assoc :level level) (assoc-in [:codes level] frame))
         template (expand-body inner body)
         bound (into #{} (mapcat t/binders) (t/nodes template))
-        free (remove bound (t/free-locals template))]
+        free (remove bound (t/free-names template))]
     {:op :code :id (:id frame) :template template :holes @(:holes frame) :free (vec (sort free))}))
 
 (defn- expand-esc [env [_ g]]

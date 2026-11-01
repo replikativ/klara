@@ -190,7 +190,7 @@
         subst (into {} (keep (fn [[n x]] (when-not (instance? CodeVar x) [n (lift-term x)]))) present)
         result (t/refresh-free (t/substitute (t/rename spliced renaming) subst))
         allowed (into allowed (keep (fn [x] (when (instance? CodeVar x) (:name x)))) env)
-        free (t/free-locals result)
+        free (t/free-names result)
         extruded (remove allowed free)]
     (when (seq extruded)
       (fail :L2.code.extrusion

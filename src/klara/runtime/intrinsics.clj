@@ -84,7 +84,7 @@
 
 (defintrinsic klara.stage/run [st [c]]                          ; L2.run.*
   (when-not (v/code? c) (fail :L2.run.closed (str "run expects code, got " (pr-str c))))
-  (let [term (.-term ^Code c) free (t/free-locals term)]
+  (let [term (.-term ^Code c) free (t/free-names term)]
     (when (seq free)
       (fail :L2.run.closed (str "code has free locals " (vec free)) :locals (vec free)))
     (assoc st :mode :eval :ctl (m/prepare-term term) :env [])))
