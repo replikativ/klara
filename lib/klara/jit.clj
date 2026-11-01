@@ -15,7 +15,8 @@
     guard        a speculation (if guard specialized reference) (L4.check.speculate)
     same?        the value-speculation guard (L4.check.speculate-value)
     admissible?  whether a guard is admissible for a reference (L4.check.speculate)
-    pure?        the purity fact of a definition (L4.facts.pure)"
+    pure?        the purity fact of a definition (L4.facts.pure)
+    effect       its effect class (L4.facts.effect)"
   (:require [klara.code :as code]
             [klara.compiler :as compiler]
             [klara.jit.staged :as staged]

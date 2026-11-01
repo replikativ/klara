@@ -389,6 +389,10 @@
           {:result :failed :message (str "its erasure differs from the reference: "
                                          (pr-str (:difference r)))})))))
 
+(b/register! 'klara.jit/effect                                        ; L4.facts.effect
+  {:kind :intrinsic
+   :fn (fn [st [q]] (ret st (facts/effect (:world st) q)))})
+
 (b/register! 'klara.jit/pure?                                         ; L4.facts.pure
   {:kind :intrinsic
    :fn (fn [st [q]] (ret st (facts/pure (:world st) q)))})

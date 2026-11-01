@@ -220,3 +220,45 @@
                  (defn top [x] (mid x))
                  (defn loner [x] x)
                  (investor/callees-first '[adv/top adv/mid adv/leaf adv/loner])"))))))
+
+(deftest effects-are-classified   ; L4.facts.effect L4.facts.pure
+  (testing "each definition's effect class, and the parameters its effect is relative to"
+    (is (= [[:pure #{}] [:fresh #{}] [:world #{}] [:handled #{}] [:handled #{}] [:shared #{}] [:shared #{}]
+            [:outside #{}] [:pure #{0}] [:pure #{0}] [true true false]]
+           (run (str header "(require '[klara.time :as time])
+                 (defn sq [x] (* x x))
+                 (defn fill [n] (let [a (long-array n)] (aset a 0 1) (aget a 0)))
+                 (def n-seen 0)
+                 (defn note [x] (def n-seen (inc n-seen)) x)
+                 (defn stamp [x] [x (time/now)])
+                 (defn shout [x] (println x) x)
+                 (def counter (atom 0))
+                 (defn bump [] (swap! counter inc))
+                 (def buf (long-array 1))
+                 (defn poke [x] (aset buf 0 x))
+                 (def lst (java.util.ArrayList.))
+                 (defn log! [x] (.add lst x))
+                 (defn twice [f x] (f (f x)))
+                 (defn each [f xs] (mapv f xs))
+                 (conj (mapv #(let [e (jit/effect %)] [(:class e) (:relative e)])
+                             ['adv/sq 'adv/fill 'adv/note 'adv/stamp 'adv/shout 'adv/bump 'adv/poke 'adv/log! 'adv/twice 'adv/each])
+                       (mapv #(:pure (jit/pure? %)) ['adv/sq 'adv/fill 'adv/note]))"))))))
+
+(deftest jobs-contain-what-is-measured   ; L4.facts.effect L4.jit.tiers L3.job.run
+  (testing "a definition that redefines is measured in a job: its definitions stay there"
+    (is (= [200 true 200]
+           (run (str header "(require '[klara.investor :as investor])
+                 (def n-seen 0)
+                 (defn note [x] (def n-seen (inc n-seen)) (* x x))
+                 (dotimes [i 200] (note i))
+                 (def before n-seen)
+                 (def d (investor/consider 'adv/note {:baseline-ns 0 :explore-ns 0}))
+                 [before (some? (:interpreted-ns d)) n-seen]")))))
+  (testing "a definition that prints is run in a job, whose printing does not reach the session"
+    (let [out (java.io.StringWriter.)
+          s (k/session {:roots ["lib"] :out out})]
+      (k/eval-string s "(ns pr (:require [klara.investor :as investor])) (defn shout [x] (println x) (* x 2)) (dotimes [i 200] (shout i))")
+      (let [printed (count (str out))
+            d (k/eval-string s "(ns pr) (investor/consider 'pr/shout {:baseline-ns 0 :explore-ns 0})")]
+        (is (some? (:interpreted-ns d)))
+        (is (= printed (count (str out))))))))

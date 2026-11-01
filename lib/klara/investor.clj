@@ -7,8 +7,8 @@
   per event) covers what the tier costs, as a JIT tiers ('ski rental'):
   - baseline: compile the definition as it is, without measuring it, so any
     definition qualifies (impure ones too);
-  - explored: for pure definitions with a plain-data sample argument,
-    compare the alternatives as below.
+  - explored: for definitions whose effects a job contains, with a
+    plain-data sample argument, compare the alternatives as below.
 
   Exploring a function definition, the investor
   1. measures what an interpreted call costs, on a recent argument from the
@@ -21,9 +21,10 @@
      measurably faster than the interpreter;
   4. accounts for everything it spent, chosen or not.
 
-  Running a function on a real argument to measure it is safe because only
-  pure definitions (L4.facts.pure) on plain data are measured, in a job: a
-  fork of the world that does not train profiles. The decision is data."
+  Running a function on a real argument to measure it is safe because it
+  runs in a job, a fork of the world that does not train profiles, and only
+  definitions whose effects a job contains (L4.facts.effect: up to handled)
+  are measured, on plain data. The decision is data."
   (:require [klara.jit :as jit]
             [klara.time :as time]
             [klara.own :as own]
@@ -188,6 +189,8 @@
         d)
       (assoc d :decision :declined :rejected (:message o)))))
 
+(defn- measurable? [e] (contains? #{:pure :fresh :world :handled} (:class e)))
+
 (defn- decide
   [q pol]
   (let [ctx (jit/context q)
@@ -203,9 +206,11 @@
       {:name q :decision :not-hot :calls calls :spent-ns spent}
       (< spent (:explore-ns pol))
       (baseline q {:name q :calls calls :spent-ns spent} "not yet worth exploring")
-      ;; measuring runs the definition: only where that changes nothing but time
-      (not (:pure (jit/pure? q)))
-      (baseline q {:name q :calls calls :spent-ns spent} (str "unmeasurable: " (:why (jit/pure? q))))
+      ;; measuring runs the definition, in a job: only effects a job contains
+      ;; (L4.facts.effect: up to handled; a job discards its world, defers
+      ;; printing and fails on what it cannot handle)
+      (not (measurable? (jit/effect q)))
+      (baseline q {:name q :calls calls :spent-ns spent} (str "unmeasurable: " (:why (jit/effect q))))
       ;; samples that are not plain data are held weakly (L4.profile.record)
       (nil? args)
       (baseline q {:name q :calls calls :spent-ns spent} "unmeasurable: no sample arguments are kept")

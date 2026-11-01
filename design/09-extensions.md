@@ -106,8 +106,7 @@ is the effect of `f`. The analysis should be relative ("as `f`") and
 resolved at the call, as effect rows do in Koka. Time is already an
 effect (L3.effect.time), so it is *handled*, not *outside*. The analysis
 stays in the trusted base (facts.clj), conservative, and its results are
-premises like purity's. To do: state the classes in spec L4.facts, then
-replace the boolean.
+premises like purity's. Done: L4.facts.effect (plan step 3).
 
 ## 4. Vectorization
 
@@ -146,7 +145,17 @@ The backend needs to emit Vector API calls, which the bytecode backend
    arrays by host reflection, 2x slower than the interpreter (10 ms; now
    `java.lang.reflect.Array`, L4.lower.arrays); and a hinted let's own class
    test was reflective (Sieve 1.23x → 1.02x Clojure).
-3. Effect classes in L4.facts (section 3), replacing the purity bit.
+3. [x] Effect classes in L4.facts (section 3), replacing the purity bit
+   (`klara.jit/effect`, L4.facts.effect; `pure?` is its pure-or-fresh
+   view). The investor now measures whatever a job contains (up to
+   handled): a definition that redefines or prints is measured, and its
+   definitions and printing stay in the job. Higher-order host functions
+   (`mapv`, `reduce`, `apply`, ...) are no longer opaque: their effect is
+   their callbacks', analysed where a callback is written or recorded as
+   relative to the parameter that supplies it. Open: resolving relative
+   effects at call sites with known functions (needed by vectorization of
+   `(mapv f xs)`), handled effects under a pure handler counted as pure,
+   world reads (now world) separated from world writes.
 4. [x] The regex showcase as a user rule (`showcases/regex.clj`). The
    default alone already compiles Pike's matcher for a stable pattern once
    a pattern's sequence folds (counted sequences are plain data): no

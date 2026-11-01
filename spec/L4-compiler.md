@@ -156,6 +156,20 @@ subterms.
 
 ## Facts
 
+`L4.facts.effect` `(klara.jit/effect q)` is `{:class c :premises .. :relative
+#{i ..}}` (with `:why` when `c` is not `:pure`) for the function definition
+`q`: the most an evaluation of its body (and of the definitions it calls)
+may do, in the order of what can contain it: `:pure` (nothing), `:fresh`
+(writes to arrays or atoms allocated in the same call: the call contains
+them), `:world` (`def` and world operations: a job contains them), `:handled`
+(`perform`, printing: a handler or a job), `:shared` (writes to objects that
+existed before: `aset` on an array not allocated in the call, `swap!` and
+the other host mutations), `:outside` (interop, host functions not known or
+declared pure: nothing contains them). `:relative` are the indices of the
+parameters it calls or hands to host functions: calling `q` has their
+effects too. The analysis is conservative: what it cannot see through is
+`:outside`.
+
 `L4.facts.pure` `(klara.jit/pure? q)` is `{:pure true :premises ..}` when
 calling the function definition `q` on plain data can neither mutate
 anything that existed before the call nor perform an effect: its body and
@@ -164,7 +178,7 @@ that allocate, and writes to arrays allocated in the same call; no interop
 or intrinsics. A definition it uses holds data, a pure function definition,
 or a host function declared pure (record constructors, L0.surface.defrecord);
 any other host function in a definition makes it impure. Otherwise
-`{:pure false :why ..}`. The analysis is conservative.
+`{:pure false :why ..}`. It is L4.facts.effect's class `:pure` or `:fresh`.
 
 ## Lowering
 
@@ -382,8 +396,8 @@ measurement's resolution (10%) of the definition as it is loses to it: it
 has no guards and no premises on its callees. Definitions are decided after
 the ones they call, so a caller is measured with its callees compiled;
 definitions that call each other are all compiled as they are first, then
-each is explored. Measuring never runs an impure definition
-(L4.facts.pure).
+each is explored. Measuring runs a definition in a job, so only one whose
+effects a job contains (L4.facts.effect: up to `:handled`).
 
 `L4.jit.trigger` With `(klara.host.api/automatic-investor! session pol)`,
 profiles that cross a power of two of entries (from 64) or branch counts
