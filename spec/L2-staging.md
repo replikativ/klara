@@ -77,6 +77,14 @@ links pinned to `w`.
 
 ## Views and printing
 
+`L2.view.total` `code/view` has a view for every construct: `:const`,
+`:local`, `:host`, `:global`, `:app`, `:let`, `:if`, `:do`, `:recur`, `:fn`
+(`:self` and `:arities`, each `{:params :rest :body}`; a function with one
+fixed arity also shows `:params` and `:body`), `:letrec` (`:bindings` of
+name and function), `:throw`, `:try` (`:body`, `:catches` of class, name
+and body, `:finally`), `:interop`, `:def`, `:code` (`:template`, `:holes`)
+and `:hole`. `code/make` builds each back from its view.
+
 `L2.view.unfold` `(code/unfold c)` for Code of a global link (or a lifted
 closure) returns Code for the function it denotes, with fresh binders: for
 a late link the definition's function, also when compiled code is

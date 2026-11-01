@@ -92,7 +92,7 @@ and `clojure -M:bench` stay green at every commit. Progress is recorded here.
   Each step adds its spec rules, tests citing them, and keeps the suite,
   the stress tests (generated programs through the default specializer) and
   the benchmarks at least as good as before:
-  1. **Total views.** Every construct has a view (multi-arity and variadic
+  1. [x] **Total views.** Every construct has a view (multi-arity and variadic
      functions, letrec, throw, try, interop, def, perform, handle, code
      templates and holes); `:other` disappears (L2.view.total).
   2. **Binding times and the domain.** `static`/`dynamic`/`reify`, the

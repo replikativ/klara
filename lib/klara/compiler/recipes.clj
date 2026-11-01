@@ -54,7 +54,7 @@
       ;; beta reduction: arguments become lets, in order (L4.check.let-app),
       ;; and the let rule substitutes those that are values; a loop is not
       ;; unrolled (its recur needs the function)
-      (and (= :fn (:op fv)) (= (count (:params fv)) (count args))
+      (and (= :fn (:op fv)) (:body fv) (= (count (:params fv)) (count args))
            (not (and (:self fv) (recurs-to? (:body fv) (:self fv)))))
       (inline* (reduce (fn [body [p a]] (code/make {:op :let :name p :init a :body body}))
                        (if (:self fv) (code/subst (:body fv) {(:self fv) f}) (:body fv))

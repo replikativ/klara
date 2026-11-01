@@ -203,11 +203,24 @@
       :if {:op :if :test (c (:test t)) :then (c (:then t)) :else (c (:else t))}
       :do {:op :do :body (mapv c (:body t))}
       :recur {:op :recur :target (:target t) :arity (:arity t) :args (mapv c (:args t))}
-      :fn (let [[a & more] (:arities t)]
-            (if (and (nil? more) (nil? (:rest a)))
-              {:op :fn :self (:self t) :params (:params a) :body (c (:body a))}
-              {:op :other :code code}))
-      {:op :other :code code}))
+      ;; L2.view.total: every construct has a view
+      :fn (let [[a & more] (:arities t)
+                arities (mapv (fn [a] {:params (:params a) :rest (:rest a) :body (c (:body a))}) (:arities t))]
+            (cond-> {:op :fn :self (:self t) :arities arities}
+              ;; the common case keeps its flat shape
+              (and (nil? more) (nil? (:rest a))) (assoc :params (:params a) :body (c (:body a)))))
+      :letrec {:op :letrec :bindings (mapv (fn [[n f]] [n (c f)]) (:bindings t)) :body (c (:body t))}
+      :throw {:op :throw :ex (c (:ex t))}
+      :try {:op :try :body (c (:body t))
+            :catches (mapv (fn [k] {:class (:class k) :name (:name k) :body (c (:body k))}) (:catches t))
+            :finally (some-> (:finally t) c) :code code}
+      :interop (cond-> {:op :interop :static? (boolean (:static? t)) :new? (boolean (:new? t))
+                        :member (:member t) :args (mapv c (:args t)) :code code}
+                 (:static? t) (assoc :target (:target t))
+                 (not (:static? t)) (assoc :target (c (:target t))))
+      :def {:op :def :name (:name t) :init (c (:init t)) :code code}
+      :code {:op :code :template (c (:template t)) :holes (mapv c (:holes t)) :code code}
+      :hole {:op :hole :index (:index t) :code code}))
 
 (defintrinsic klara.code/children [st [code]]                  ; L2.view.children
   (ret st (mapv c (t/children (term-of code)))))
@@ -238,7 +251,25 @@
       :if (t/if* (term-of (:test m)) (term-of (:then m)) (term-of (:else m)))
       :do (t/do* (mapv term-of (:body m)))
       :recur {:op :recur :target (:target m) :arity (:arity m) :args (mapv term-of (:args m))}
-      :fn (t/fn-term (:self m) [(t/arity (:params m) nil (term-of (:body m)))])
+      :fn (t/fn-term (:self m)
+                     (if (:arities m)
+                       (if (and (:body m) (= 1 (count (:arities m))))
+                         [(t/arity (:params m) nil (term-of (:body m)))]   ; the flat shape wins if edited
+                         (mapv (fn [a] (t/arity (:params a) (:rest a) (term-of (:body a)))) (:arities m)))
+                       [(t/arity (:params m) nil (term-of (:body m)))]))
+      :letrec {:op :letrec :bindings (mapv (fn [[n f]] [n (term-of f)]) (:bindings m)) :body (term-of (:body m))}
+      :throw {:op :throw :ex (term-of (:ex m))}
+      ;; constructs with fields that are not children are rebuilt from the
+      ;; original they came from (:code of the view), with new children
+      :try (t/with-children (term-of (:code m))
+             (cond-> (into [(term-of (:body m))] (map (comp term-of :body) (:catches m)))
+               (:finally m) (conj (term-of (:finally m)))))
+      :interop (t/with-children (term-of (:code m))
+                 (cond->> (mapv term-of (:args m))
+                   (not (:static? m)) (cons (term-of (:target m)))))
+      :def (t/with-children (term-of (:code m)) [(term-of (:init m))])
+      :code (t/with-children (term-of (:code m)) (into [(term-of (:template m))] (map term-of (:holes m))))
+      :hole (term-of (:code m))
       (fail :L2.view.make (str "cannot make code from view " (:op m))))))
 
 (defintrinsic klara.code/view [st [code]] (ret st (view code)))
