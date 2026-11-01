@@ -244,7 +244,14 @@
                st (job/start st {:budget (or (:budget opts) {:steps 100000})})]
            (assoc st :mode :apply :ctl [recipe [reference]]
                   :k (conj (:k st) {:f :frame-fn
-                                    :fn (fn [st cand] (ret st (finish st reference cand opts)))}))))})
+                                    :fn (fn [st cand]
+                                          ;; a recipe may return {:code c :provenance m}: m is
+                                          ;; data about how c came about, carried out of the job
+                                          (let [[c m] (if (and (map? cand) (contains? cand :code))
+                                                        [(:code cand) (:provenance cand)]
+                                                        [cand nil])]
+                                            (ret st (cond-> (finish st reference c opts)
+                                                      m (assoc :recipe-provenance m)))))}))))})
 
 (b/register! 'klara.compiler.kernel/executable
   {:kind :intrinsic

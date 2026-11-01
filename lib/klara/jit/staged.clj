@@ -174,8 +174,9 @@
     :rare   a branch taken at most once in this many observations is cold
     :small  nodes in a function small enough to inline at a hot call
     :large  nodes an unfolding on known arguments may grow to
-    :inline-loops?  inline callees that loop (the backend decides; see jit/default)"
-  {:hot 100 :rare 10000 :small 40 :large 400 :inline-loops? true})
+    :inline-loops?  inline callees that loop (the backend decides; see jit/default)
+    :rules  rules consulted first at each point (design/09-extensions.md)"
+  {:hot 100 :rare 10000 :small 40 :large 400 :inline-loops? true :rules []})
 
 (defn size [c] (inc (reduce + 0 (map size (code/children c)))))
 
@@ -312,6 +313,17 @@
                           [n (get env n)])
                         (code/free c))))
 
+(defn- by-rules
+  "The first rule's answer at point m (design/09-extensions.md, L4.jit.rules),
+   or nil. A rule is {:name n :fn f}; f takes m (with :env) and returns a
+   binding-time value or nil to decline. Fired rules are recorded."
+  [env m]
+  (some (fn [r]
+          (when-let [x ((:fn r) (assoc m :env env))]
+            (some-> (::fired env) (swap! conj (:name r)))
+            x))
+        (::rules env)))
+
 (defn gen
   "Interpret Code c with domain dom in env (local name -> domain value)."
   [dom c env]
@@ -323,31 +335,41 @@
                (throw (ex-info (str "unbound local " (:name v)) {:name (:name v)})))
       :host ((:host dom) c)
       :global ((:global dom) c)
-      :if (let [t (gen dom (:test v) env)]
-            (or (and (::policy env) (not (static? t)) (spec-if dom v t env))
-                ((:if dom) t (fn [] (gen dom (:then v) env)) (fn [] (gen dom (:else v) env)))))
-      :let ((:let dom) (gen dom (:init v) env)
-                       (fn [i] (gen dom (:body v) (assoc env (:name v) i)))
-                       (:tag v))
+      :if (let [t (gen dom (:test v) env)
+                then #(gen dom (:then v) env)
+                else #(gen dom (:else v) env)]
+            (or (by-rules env {:point :if :view v :test t :then then :else else :profile (:profile v)})
+                (and (::policy env) (not (static? t)) (spec-if dom v t env))
+                ((:if dom) t then else)))
+      :let (let [i (gen dom (:init v) env)
+                 body (fn [x] (gen dom (:body v) (assoc env (:name v) x)))]
+             (or (by-rules env {:point :let :view v :init i :tag (:tag v) :body body})
+                 ((:let dom) i body (:tag v))))
       :do ((:do dom) (mapv (fn [b] (gen dom b env)) (:body v)))
       :fn (if (:body v)
-            (let [stable (when (and (::top env) (::policy env)) (stable-params v (::policy env)))
+            (let [stable? (::top env)
+                  stable (when (and stable? (::policy env)) (stable-params v (::policy env)))
                   env (dissoc env ::top)]
               ((:fn dom) (count (:params v))
                          (fn [self ps]
-                           (spec-stable (fn [ps env]
-                                          (gen dom (:body v) (cond-> (merge env (zipmap (:params v) ps))
-                                                               (:self v) (assoc (:self v) self))))
-                                        (vec ps) stable env))))
+                           (let [body (fn [ps env]
+                                        (gen dom (:body v) (cond-> (merge env (zipmap (:params v) ps))
+                                                             (:self v) (assoc (:self v) self))))]
+                             (or (when stable? (by-rules env {:point :entry :view v :params (vec ps) :profile (:profile v)
+                                                              :body (fn [ps] (body ps env))}))
+                                 (spec-stable body (vec ps) stable env))))))
             (other dom c env))
       :app (if-let [f (loop-view v)]
-             ((:loop dom) (mapv (fn [a] (gen dom a env)) (:args v))
-                          (fn [ps recur-to]
-                            (gen dom (:body f) (assoc (merge env (zipmap (:params f) ps))
-                                                      [::recur (:self f)] recur-to))))
+             (let [inits (mapv (fn [a] (gen dom a env)) (:args v))
+                   body (fn [ps recur-to]
+                          (gen dom (:body f) (assoc (merge env (zipmap (:params f) ps))
+                                                    [::recur (:self f)] recur-to)))]
+               (or (by-rules env {:point :loop :view f :inits inits :body body})
+                   ((:loop dom) inits body)))
              (let [f (gen dom (:fn v) env)
                    args (mapv (fn [a] (gen dom a env)) (:args v))]
-               (or (known-unfold dom f args env)
+               (or (by-rules env {:point :app :view v :fn f :args args :profile (:profile v)})
+                   (known-unfold dom f args env)
                    (hot-inline dom v f args env)
                    (and (::policy env) (not (static? f)) (spec-call dom v f args env))
                    ((:app dom) f args))))
@@ -373,8 +395,12 @@
    overrides `policy`."
   ([ctx] (specialize ctx {}))
   ([ctx pol]
-   (->code (gen staged (:reference ctx)
-                {::fuel (atom fuel) ::policy (merge policy (:policy ctx) pol) ::top true ::self (:name ctx)}))))
+   (let [pol (merge policy (:policy ctx) pol)
+         fired (:fired ctx)]
+     (->code (gen staged (:reference ctx)
+                  {::fuel (atom fuel) ::policy pol ::top true ::self (:name ctx)
+                   ;; rules (L4.jit.rules): consulted first at each point
+                   ::rules (vec (:rules pol)) ::fired fired})))))
 
 (defn residual
   "Code for function Code c generated with what it does not know dynamic:

@@ -31,10 +31,14 @@ that wants a guard uses `klara.jit/guard` with an admissible guard
 certificate (L4.check.certificate).
 
 Rules compose inside one generation, not as ordered passes: at each point
-the generator tries the rules in order and falls back to its own case. A
-rule's result is generated further (its code is interpreted again), so a
-record-field rule and an inlining rule meet without being told about each
-other.
+the generator tries the rules in order and falls back to its own case. The
+point's continuations (`:then`/`:else`, `:body`) generate the rest with
+all rules, so a rule that takes over an `if` or a `let` still lets the
+others act inside it.
+
+Implemented (L4.jit.rules): a rule is `{:name n :fn f}`; `f` receives a map
+with `:point`, `:view`, the binding-time values (`:fn`/`:args`, `:test`,
+`:init`, `:inits`, `:params`), the continuations and `:profile`.
 
 **Where rules come from.** A policy key, `(staged/specialize ctx {:rules [..]})`,
 and a world definition, `klara.jit/rules`, that libraries extend. Being a
@@ -129,8 +133,8 @@ The backend needs to emit Vector API calls, which the bytecode backend
 
 ## 5. Plan
 
-1. Rule interface in `klara.jit.staged` (`:app`, `:entry`, `:if`, `:loop`,
-   `:let`), provenance of fired rules, the investor's rule-set
+1. [x] Rule interface in `klara.jit.staged` (`:app`, `:entry`, `:if`,
+   `:loop`, `:let`), provenance of fired rules, the investor's rule-set
    alternatives; spec L4.jit.rules.
 2. Class speculation as the first rule; `instance?` as a total guard.
 3. Effect classes in L4.facts (section 3), replacing the purity bit.

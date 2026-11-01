@@ -38,6 +38,8 @@
    specializer (^{:klara/specialize f}) is tried as :attached."
   {:as-is (fn [ctx default] (:reference ctx))
    :default (fn [ctx default] (jit/default ctx))
+   ;; the default without the world's rules: whether they pay is measured
+   :without-rules (fn [ctx default] (jit/default ctx {:rules []}))
    :in-place {:specializer own/in-place :opts {:certificate {:kind :in-place}}}})
 
 (defn data?
@@ -205,6 +207,7 @@
       (baseline q {:name q :calls calls :spent-ns spent} "unmeasurable: its sample arguments are not plain data")
       :else
       (let [alts (cond-> alternatives
+                   (empty? jit/rules) (dissoc :without-rules)
                    (:specializer ctx) (assoc :attached (:specializer ctx)))
             names (vec (keys alts))
             ;; explore in parallel: preparing is checking, independent per alternative

@@ -76,6 +76,12 @@
 ;; ---------------------------------------------------------------------------
 ;; Specializing and compiling
 
+(def rules
+  "Rules the default specializer consults (design/09-extensions.md,
+   L4.jit.rules): a definition, so libraries extend it and redefining it
+   retires what it produced."
+  [])
+
 (defn default
   "The default specializer: the staged interpreter (klara.jit.staged,
    design/08-staged-jit.md) on the definition's reference and profile. It
@@ -83,9 +89,13 @@
    definitions and speculates on cold branches, stable arguments and single
    callees. A callee that loops is not inlined where the backend makes an
    inlined loop (no longer in return position) cost more."
-  [ctx]
-  (staged/specialize ctx (merge {:inline-loops? (not= :closure (get-in ctx [:runtime :backend :loop-outside-return]))}
-                                (:policy ctx))))
+  ([ctx] (default ctx {}))
+  ([ctx pol]
+   (staged/specialize ctx (merge {:inline-loops? (not= :closure (get-in ctx [:runtime :backend :loop-outside-return]))
+                                  ;; the world's rules, then the preparation's (L4.jit.rules)
+                                  :rules (into rules (get-in ctx [:policy :rules]))}
+                                 (dissoc (:policy ctx) :rules)
+                                 pol))))
 
 (defn specialize
   "Run the definition's specializer, or the default."
@@ -105,14 +115,21 @@
          ;; the specializer runs as the recipe, inside the preparation job:
          ;; budgeted, isolated, its work counted (L4.prepare.job)
          outcome (compiler/prepare (:reference ctx)
-                                   (merge {:recipe (fn [_] (specialize ctx)) :name q}
+                                   ;; fired rules are collected inside the job (an atom made
+                                   ;; outside may not be changed there) and carried out
+                                   (merge {:recipe (fn [_] (let [fired (atom [])
+                                                                 c (specialize (assoc ctx :fired fired))]
+                                                             {:code c :provenance {:rules (vec (distinct @fired))}}))
+                                           :name q}
                                           (dissoc opts :specializer :profile :specializer-name :policy)))]
      ;; L4.exec.provenance: how this candidate came about
      (assoc outcome :provenance
             {:specializer (or (:specializer-name opts)
                               (when (:specializer ctx) (:specializer-name ctx))
                               :default)
-             :profile {:work (work ctx) :calls (calls ctx) :saved (some? (:profile opts))}}))))
+             :profile {:work (work ctx) :calls (calls ctx) :saved (some? (:profile opts))}
+             ;; the rules that fired in generating it (L4.jit.rules)
+             :rules (get-in outcome [:recipe-provenance :rules] [])}))))
 
 (defn compile!
   "Prepare the definition named q (see prepare) and install it when ready.

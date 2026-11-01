@@ -319,6 +319,16 @@ several arities) are kept whole, their free locals replaced by the code of
 their values, which is always a local, a constant or a global, so nothing
 runs twice or out of order.
 
+`L4.jit.rules` A rule is `{:name n :fn f}`, Klara code. The staged
+interpreter consults the rules of its policy (`:rules`; the default
+specializer's are the world's `klara.jit/rules` followed by the
+preparation's) first at each point: `:app`, `:if`, `:let`, `:loop` and the
+function's `:entry`. `f` receives the point's view, its binding-time values
+and profile and returns a binding-time value, or nil to decline. What a
+rule produces is checked like any candidate. The rules that fired are in
+the candidate's provenance (`:rules`); the investor also measures the
+default without the world's rules.
+
 `L4.jit.tiers` The investor (`klara.investor`, Klara code) estimates the
 interpreted time a definition has spent from its profile's events and the
 interpreter's measured cost per event. Below the policy's `:baseline-ns`

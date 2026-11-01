@@ -149,3 +149,20 @@
                 (.contains (pr-str (:compiled (compiler/explain (do (compiler/optimize! 'ht/first-flag {:recipe staged/residual}) first-flag))))
                            \"isInstance\")]"))))))
 
+
+(deftest rules-extend-the-generator   ; L4.jit.rules
+  (testing "a rule at a call point replaces the call; a declining rule falls through; fired rules are in the provenance"
+    (let [s (session)]
+      (is (= [:ready [:add-one] 8 true]
+             (k/eval-string s "(ns rl (:require [klara.jit :as jit] [klara.jit.staged :as staged] [klara.code :as code] [klara.stage :refer [code esc]]))
+               (defn add1 [x] (+ x 1))
+               (defn f [y] (* 2 (add1 y)))
+               (def never {:name :never :fn (fn [m] nil)})
+               (def add-one {:name :add-one
+                             :fn (fn [m] (when (and (= :app (:point m))
+                                                    (= 'rl/add1 (:name (code/view (staged/->code (:fn m))))))
+                                           (staged/dynamic (code (+ (esc (staged/->code (first (:args m)))) 1)))))})
+               (dotimes [_ 3] (f 1))
+               (def o (jit/compile! 'rl/f {:policy {:rules [never add-one]}}))
+               [(:status o) (get-in o [:provenance :rules]) (f 3)
+                (not (.contains (pr-str (:candidate (klara.compiler/explain f))) \"add1\"))]"))))))
