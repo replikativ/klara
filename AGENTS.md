@@ -33,7 +33,7 @@ is not tested.
 | L2 Staging | `runtime/machine.clj` (code construction), `runtime/intrinsics.clj` (code views) | |
 | L3 Effects and jobs | `runtime/machine.clj` (handlers), `runtime/job.clj` | |
 | L4 Compilation | `src/klara/compile/` (trusted: `check.clj`, `own.clj`, `facts.clj`, `kernel.clj`; tested: `anf.clj`, `lower.clj`), `runtime/profile.clj`, `runtime/prepare.clj` (profiles) | `lib/klara/compiler.clj` |
-| L5 Guest compiler | `src/klara/host/precompile.clj` | `lib/klara/jit.clj` (specializers), `lib/klara/own.clj`, `lib/klara/investor.clj`, `lib/klara/compiler/recipes.clj` |
+| L5 Guest compiler | `src/klara/host/precompile.clj` | `lib/klara/jit.clj` (specializers), `lib/klara/own.clj`, `lib/klara/investor.clj`, `lib/klara/jit/staged.clj` (the staged interpreter, the default specializer) |
 
 A lower layer never requires a higher one. Higher layers extend lower ones
 through hooks: `resolve-hook` and `IExecutable` (with `-direct`) in

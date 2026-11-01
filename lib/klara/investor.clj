@@ -119,11 +119,14 @@
         ;; the definition's own function, as the alternatives run: not pinned
         f (:function ctx)]
     (cond
-      (or (nil? calls) (< (jit/work ctx) min-work) (nil? args))
+      (or (nil? calls) (< (jit/work ctx) min-work))
       {:name q :decision :not-hot :calls calls :work (jit/work ctx)}
       ;; measuring runs the definition: only where that changes nothing but time
       (not (:pure (jit/pure? q)))
       {:name q :decision :unmeasurable :why (:why (jit/pure? q))}
+      ;; samples that are not plain data are held weakly (L4.profile.record)
+      (nil? args)
+      {:name q :decision :unmeasurable :why "no sample arguments are kept"}
       (not (data? args))
       {:name q :decision :unmeasurable :why "its sample arguments are not plain data"}
       :else

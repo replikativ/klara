@@ -284,14 +284,18 @@ with fresh parameters for the definition's arity, calling `f` with them as
 Code; `f` must return Code for the body. The parameters count as bound while
 `f` runs (L2.code.extrusion).
 
-`L4.jit.inline` Inlining a call of the definition `q` as
-`((fn [p ..] body) args ..)`, with the body from `code/unfold`
-(L2.view.unfold), is accepted by unfolding `q`, so `q`'s generation becomes
-a premise of the candidate.
+`L4.jit.inline` Unfolding a call of the definition `q`, its body from
+`code/unfold` (L2.view.unfold) with the parameters bound to the arguments
+in order, is accepted by unfolding `q`, so `q`'s generation becomes a
+premise of the candidate. The staged interpreter unfolds a call when some
+argument is known (unless `q` is already being unfolded with the same known
+arguments, or the result grows past the policy's `:large`), and inlines a
+hot call of a small definition other than the one being compiled.
 
-`L4.jit.simplify` `(klara.compiler.recipes/inline c)`, Klara code,
-partially evaluates Code `c`: it reads data definitions, unfolds calls with
-known arguments, folds pure host functions on constants and selects
+`L4.jit.simplify` `(compiler/specialize f known)` compiles `f` with some
+arguments fixed; its default recipe is the staged interpreter's residual
+(`staged/residual`, L4.jit.staged), which reads data definitions, unfolds
+known functions, folds pure host functions on constants and selects
 branches on known tests, within the job's budget. Its result is a candidate
 like any other; nothing it does is trusted.
 

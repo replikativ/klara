@@ -18,7 +18,7 @@
     pure?        the purity fact of a definition (L4.facts.pure)"
   (:require [klara.code :as code]
             [klara.compiler :as compiler]
-            [klara.compiler.recipes :as recipes]))
+            [klara.jit.staged :as staged]))
 
 ;; ---------------------------------------------------------------------------
 ;; Reading the context
@@ -69,119 +69,16 @@
 ;; ---------------------------------------------------------------------------
 ;; Specializing and compiling
 
-(defn negate [test]
-  (code/make {:op :app :fn (code/make {:op :host :name 'clojure.core/not}) :args [test]}))
-
-(def hot
-  "Observations of an if before its profile counts as evidence."
-  100)
-
-(def rare
-  "A branch taken at most once in this many observations counts as cold."
-  10000)
-
-(def small
-  "Nodes in a function small enough to inline."
-  40)
-
-(def large
-  "Nodes a call specialized to its known arguments may grow to."
-  400)
-
-(defn- policy
-  "Thresholds of the default specializer; (:policy opts) of prepare overrides them."
-  [p]
-  (merge {:hot hot :rare rare :small small :large large} p))
-
-(defn- cold? [p taken other]
-  (and (>= other (:hot p)) (<= (* taken (:rare p)) other)))
-
-(defn speculate-branches
-  "Speculate that branches the profile (almost) never saw taken stay cold. The hot
-   path compiles; reaching a cold branch leaves to the interpreter at that
-   point (L4.exec.leave), which may then do anything the reference does:
-   perform effects, call host code, run uncompilable constructs."
-  ([c] (speculate-branches c {}))
-  ([c pol]
-  (let [pol (policy pol)
-        rebuilt (code/with-children c (mapv #(speculate-branches % pol) (code/children c)))
-        v (code/view c)
-        p (when (= :if (:op v)) (:profile v))]
-    (if p
-      (let [[_ then' else'] (code/children rebuilt)]
-        (cond (and (cold? pol (:else p) (:then p)) (admissible? (:test v) c))
-              (guard (:test v) then' c)
-              (and (cold? pol (:then p) (:else p)) (admissible? (negate (:test v)) c))
-              (guard (negate (:test v)) else' c)
-              :else rebuilt))
-      rebuilt))))
-
-(defn size [c] (inc (reduce + 0 (map size (code/children c)))))
-
-(defn- loops?
-  "Does c contain a loop (a recur)?"
-  [c]
-  (or (= :recur (:op (code/view c)))
-      (boolean (some loops? (code/children c)))))
-
-(defn inline-calls
-  "Inline hot calls of small function definitions other than `self` (whose
-   own calls are direct): (f x) becomes ((fn [p] body) x). The checker
-   accepts it by unfolding f, which makes f's generation a premise:
-   redefining f retires the compiled code."
-  ([c self] (inline-calls c self {}))
-  ([c self pol]
-  (let [pol (policy pol)
-        rebuilt (code/with-children c (mapv #(inline-calls % self pol) (code/children c)))
-        v (code/view c)]
-    (if (= :app (:op v))
-      (let [f (code/view (:fn v))
-            callee (when (and (= :global (:op f)) (= :late (:kind f)) (not= self (:name f))
-                              (>= (or (:count (:profile v)) 0) (:hot pol)))
-                     (code/unfold (:fn v)))]
-        ;; a callee with a loop stays a call where the backend says an inlined
-        ;; loop (no longer in return position) costs more (:inline-loops? of
-        ;; the policy, from the context's :runtime :backend)
-        (if (and callee (<= (size callee) (:small pol)) (or (:inline-loops? pol) (not (loops? callee))))
-          (code/make {:op :app :fn callee :args (rest (code/children rebuilt))})
-          rebuilt))
-      rebuilt))))
-
-(defn- calls? [c q]
-  (let [v (code/view c)]
-    (or (and (= :global (:op v)) (= q (:name v)))
-        (boolean (some #(calls? % q) (code/children c))))))
-
-(defn specialize-known-calls
-  "Specialize hot calls whose arguments include constants or data
-   definitions, by partial evaluation (klara.compiler.recipes/inline). The caller then needs none
-   of the callee's guards on those arguments: the checker accepts the
-   residual by unfolding the callee and the data, whose generations become
-   premises (L4.check.delta-data). Kept only when the call is gone and the
-   residual is not large."
-  ([c] (specialize-known-calls c {}))
-  ([c pol]
-  (let [pol (policy pol)
-        rebuilt (code/with-children c (mapv #(specialize-known-calls % pol) (code/children c)))
-        v (code/view c)
-        f (when (= :app (:op v)) (code/view (:fn v)))]
-    (if (and f (= :global (:op f)) (>= (or (:count (:profile v)) 0) (:hot pol))
-             (some #(some? (code/known %)) (:args v)))
-      (let [s (recipes/inline rebuilt)]
-        (if (and (not (calls? s (:name f))) (<= (size s) (:large pol))) s rebuilt))
-      rebuilt))))
-
 (defn default
-  "The default specializer: speculate on cold branches, specialize calls to
-   their known arguments, inline hot calls of small definitions
-   (design/06-speculation.md#4)."
+  "The default specializer: the staged interpreter (klara.jit.staged,
+   design/08-staged-jit.md) on the definition's reference and profile. It
+   unfolds known functions on known arguments, inlines hot calls of small
+   definitions and speculates on cold branches, stable arguments and single
+   callees. A callee that loops is not inlined where the backend makes an
+   inlined loop (no longer in return position) cost more."
   [ctx]
-  (let [p (merge {:inline-loops? (not= :closure (get-in ctx [:runtime :backend :loop-outside-return]))}
-                 (:policy ctx))]
-    (-> (:reference ctx)
-        (speculate-branches p)
-        (specialize-known-calls p)
-        (inline-calls (:name ctx) p))))
+  (staged/specialize ctx (merge {:inline-loops? (not= :closure (get-in ctx [:runtime :backend :loop-outside-return]))}
+                                (:policy ctx))))
 
 (defn specialize
   "Run the definition's specializer, or the default."

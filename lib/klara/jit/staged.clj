@@ -85,7 +85,10 @@
 
 (def staged
   "What is known is computed, the rest generated."
-  {:const (fn [v] (static v))
+  {;; a lifted closure is a known function: a call of it may unfold its code
+   :const (fn [v] (if-let [u (when (fn? v) (code/unfold (lift v)))]
+                    (assoc (static v) ::unfold u)
+                    (static v)))
    :host (fn [c] (static (run c) c))
    ;; a data definition is static; a function definition stays a call but
    ;; carries its code, so a call with known arguments can unfold it
@@ -163,16 +166,61 @@
       ;; the function's own name means the same known function
       (bind (:params fv) args (cond-> env (:self fv) (assoc (:self fv) f))))))
 
-(defn- unfold?
-  "Unfold a call of f on args: f is known with one fixed arity, some
-   argument is known, and the generation's fuel is not spent."
-  [env f args]
-  (let [fuel (::fuel env)
-        fv (when (::unfold f) (code/view (::unfold f)))]
-    (when (and fuel fv (:body fv) (= (count (:params fv)) (count args))
-               (some static? args) (pos? @fuel))
-      (swap! fuel dec)
-      true)))
+(def policy
+  "Thresholds of the specializer; (:policy ctx) overrides them.
+    :hot    observations before a profile counts as evidence
+    :rare   a branch taken at most once in this many observations is cold
+    :small  nodes in a function small enough to inline at a hot call
+    :large  nodes an unfolding on known arguments may grow to
+    :inline-loops?  inline callees that loop (the backend decides; see jit/default)"
+  {:hot 100 :rare 10000 :small 40 :large 400 :inline-loops? true})
+
+(defn size [c] (inc (reduce + 0 (map size (code/children c)))))
+
+(defn- loops? [c]
+  (or (= :recur (:op (code/view c))) (boolean (some loops? (code/children c)))))
+
+(defn- callee-name [f] (:name (code/view (->code f))))
+
+(defn- unfoldable [f args]
+  (let [fv (when (::unfold f) (code/view (::unfold f)))]
+    (when (and fv (:body fv) (= (count (:params fv)) (count args))) fv)))
+
+(defn- unfold-key
+  "What makes an unfolding of f progress: the function and its known
+   arguments. Unfolding f again under the same key would repeat the same
+   generation (a recursion its known arguments do not decide)."
+  [f args]
+  [(or (callee-name f) (::unfold f)) (mapv (fn [a] (when (static? a) [(value a)])) args)])
+
+(defn- fuel! [env]
+  (let [fuel (::fuel env)]
+    (when (and fuel (pos? @fuel)) (swap! fuel dec) true)))
+
+(defn- known-unfold
+  "Unfold a call of a known function on args of which some are known
+   (L4.jit.inline): within fuel, making progress, and not growing past
+   :large (then the call stays). nil when it does not apply."
+  [dom f args env]
+  (when (and (::fuel env) (unfoldable f args) (some static? args))
+    (let [k (unfold-key f args)]
+      (when (and (not (contains? (::unfolding env) k)) (fuel! env))
+        (let [r (apply-known dom f args (update env ::unfolding (fnil conj #{}) k))]
+          (when (or (static? r) (<= (size (->code r)) (:large (or (::policy env) policy))))
+            r))))))
+
+(defn- hot-inline
+  "Inline a hot call of a small function definition other than the one
+   being compiled (whose own calls go direct). nil when it does not apply."
+  [dom v f args env]
+  (let [pol (::policy env)
+        fv (unfoldable f args)]
+    (when (and pol fv (callee-name f) (not= (::self env) (callee-name f))
+               (>= (or (get-in v [:profile :count]) 0) (:hot pol))
+               (<= (size (::unfold f)) (:small pol))
+               (or (:inline-loops? pol) (not (loops? (::unfold f))))
+               (fuel! env))
+      (apply-known dom f args env))))
 
 ;; ---------------------------------------------------------------------------
 ;; Speculation from profiles (design/08-staged-jit.md; L4.check.speculate)
@@ -181,10 +229,6 @@
 ;; profile annotations carry become speculations (guard specialized
 ;; fallback). The fallback is generated again with speculation off, not
 ;; spliced from the reference.
-
-(def policy
-  "Observations before a profile counts, and how rare a branch is cold."
-  {:hot 100 :rare 10000})
 
 (defn- cold? [pol taken other]
   (and (>= other (:hot pol)) (<= (* taken (:rare pol)) other)))
@@ -298,10 +342,10 @@
                                                       [::recur (:self f)] recur-to))))
              (let [f (gen dom (:fn v) env)
                    args (mapv (fn [a] (gen dom a env)) (:args v))]
-               (if (unfold? env f args)
-                 (apply-known dom f args env)
-                 (or (and (::policy env) (not (static? f)) (spec-call dom v f args env))
-                     ((:app dom) f args)))))
+               (or (known-unfold dom f args env)
+                   (hot-inline dom v f args env)
+                   (and (::policy env) (not (static? f)) (spec-call dom v f args env))
+                   ((:app dom) f args))))
       :recur (apply (get env [::recur (:target v)]) (mapv (fn [a] (gen dom a env)) (:args v)))
       ;; throw, try, interop, letrec, def, code templates, functions with
       ;; several arities: residualized whole (design/08-staged-jit.md)
@@ -317,12 +361,15 @@
   64)
 
 (defn specialize
-  "The staged specializer (L4.jit.staged): the context's reference generated
-   with known functions unfolded and the facts its profile annotations carry
-   (cold branches, stable arguments, single callees) as speculations."
-  [ctx]
-  (->code (gen staged (:reference ctx)
-               {::fuel (atom fuel) ::policy (merge policy (:policy ctx)) ::top true})))
+  "The staged specializer (L4.jit.staged), the JIT's default: the context's
+   reference generated with known functions unfolded, hot calls of small
+   definitions inlined and the facts its profile annotations carry (cold
+   branches, stable arguments, single callees) as speculations. `pol`
+   overrides `policy`."
+  ([ctx] (specialize ctx {}))
+  ([ctx pol]
+   (->code (gen staged (:reference ctx)
+                {::fuel (atom fuel) ::policy (merge policy (:policy ctx) pol) ::top true ::self (:name ctx)}))))
 
 (defn residual
   "Code for function Code c generated with what it does not know dynamic:

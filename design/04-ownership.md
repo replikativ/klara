@@ -93,7 +93,7 @@ library finds them and describes each as data:
  :exits [<code> ...]}
 ```
 
-**Accumulator ownership** (`klara.compiler.recipes.owned`), a recipe the
+**Accumulator ownership** (`klara.own/in-place`), a specializer the
 investor may choose. For each loop
 binding whose updates are persistent operations on the previous value
 (`conj`, `assoc`, `update`, `disj`, `dissoc`), that is not otherwise used

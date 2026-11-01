@@ -26,7 +26,8 @@ the Code of a definition.
 anything: run a staged generator, call a partial evaluator written in Klara,
 or ask an external agent. Recipes are not trusted. The default recipe
 `compiler/as-is` returns the reference itself, which is plain compilation.
-`klara.compiler.recipes/inline` (guest code in `lib/`) unfolds and folds.
+`klara.jit.staged/residual` (guest code in `lib/`, the staged interpreter of
+[08-staged-jit.md](08-staged-jit.md)) unfolds and folds.
 
 **Job.** `prepare` runs the recipe and the checker inside a job
 ([00-model.md](00-model.md#effects-handlers-and-jobs-l3)): the recipe cannot

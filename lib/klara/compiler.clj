@@ -5,7 +5,7 @@
   (klara.compiler.kernel). Recipes and policies are untrusted guest
   functions; only the kernel's checker decides what is admitted."
   (:require [klara.compiler.kernel :as kernel]
-            [klara.compiler.recipes :as recipes]))
+            [klara.jit.staged :as staged]))
 
 (defn as-is
   "The recipe that proposes the reference itself: plain compilation."
@@ -57,13 +57,14 @@
 
 (defn specialize
   "A compiled version of `f` with the arguments in `known` (index -> value)
-   fixed, checked against `(fn [..] (f ..))`. The default recipe unfolds
-   and folds (klara.compiler.recipes/inline). Returns the executable, or
+   fixed, checked against `(fn [..] (f ..))`. The default recipe is the
+   staged interpreter's residual (klara.jit.staged/residual): it unfolds f
+   on the known arguments and computes what they decide. Returns the executable, or
    the outcome when preparation did not succeed."
   ([f known] (specialize f known {}))
   ([f known opts]
    (let [outcome (prepare (kernel/specialization f known)
-                          (merge {:recipe recipes/inline} opts))]
+                          (merge {:recipe staged/residual} opts))]
      (if (= :ready (:status outcome))
        (executable outcome)
        outcome))))

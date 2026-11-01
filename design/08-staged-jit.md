@@ -1,6 +1,7 @@
 # The staged JIT: one interpreter, two binding times
 
-Status: design for the next phase (P7). It replaces the default
+Status: implemented through P7 step 6 (the staged interpreter is
+`jit/default`); the proof (step 7) is later. It replaced the default
 specializer's tree rewrites (`speculate-branches`, `specialize-known-calls`,
 `inline-calls`) and the separate partial evaluator
 (`klara.compiler.recipes/inline`) with the design of
