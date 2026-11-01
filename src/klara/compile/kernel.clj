@@ -286,7 +286,8 @@
 
 (b/register! 'klara.jit/context                                       ; L4.jit.context
   {:kind :intrinsic
-   :fn (fn [st [q]]
+   :fn (fn [st [q saved]]
+         ;; saved: a profile saved by an earlier run (L4.profile.saved), used instead
          (let [world (:world st)
                d (w/lookup world q)
                f (:value d)]
@@ -298,7 +299,7 @@
                                (or (:value (w/lookup world sq))
                                    (fail :L4.jit.attach (str "specializer " sq " is not defined"))))]
              (ret st {:name q
-                      :reference (intr/annotated-reference f)
+                      :reference (if saved (intr/reference-with-profile f saved) (intr/annotated-reference f))
                       :profile (intr/profile-snapshot f)
                       :runtime (runtime-info)
                       :specializer specializer}))))})

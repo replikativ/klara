@@ -138,6 +138,14 @@ off, `(klara.profile/record! true)` on again.
 closure `f` as data: `:entries`, `:calls` and `:branches`, with source
 positions.
 
+`L4.profile.saved` A run can save the profiles of the program's functions
+that ran, as EDN keyed by definition, the hash of its source form and the
+path of each annotated term (`clojure -M:klara run --record FILE`). A later
+run given them (`--aot FILE`) compiles each such definition with
+`klara.jit/compile!` and the saved profile right after its definition is
+evaluated, if its source form is unchanged, so its first call can run
+compiled code. Saved stable values are small data only.
+
 ## Pinning
 
 `L4.pin.links` `(compiler/pin c w)` returns `c` with every late link replaced by a

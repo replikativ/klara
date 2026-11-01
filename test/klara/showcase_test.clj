@@ -1,6 +1,7 @@
 (ns klara.showcase-test
   "The showcase programs (design/PLAN.md#showcase-programs) run as tests."
-  (:require [clojure.test :refer [deftest is testing]]
+  (:require [clojure.edn]
+            [clojure.test :refer [deftest is testing]]
             [klara.host.api :as k]))
 
 (defn- run [path]
@@ -35,3 +36,19 @@
       (is (= :interpreted (:after-fee-change-runs r)))
       (is (:old-world-keeps r))
       (is (#{:compiled :left} (:old-world-path r))))))
+
+(deftest ahead-of-time   ; L4.profile.saved
+  (let [file "showcases/ahead_of_time.clj"
+        first-run (k/session {:roots ["lib" "."] :out (java.io.StringWriter.)})
+        _ (k/load-file first-run file)
+        saved (klara.runtime.session/saved-profiles first-run)
+        second-run (k/session {:roots ["lib" "."] :out (java.io.StringWriter.)})
+        _ (swap! second-run assoc :aot (clojure.edn/read-string (pr-str saved)))
+        r (k/load-file second-run file)]
+    (testing "the saved profile is small and names the program's functions"
+      (is (contains? saved 'showcases.ahead-of-time/settle))
+      (is (< (count (pr-str saved)) 4000)))
+    (testing "the second run compiles settle before its first call, which runs compiled"
+      (is (= :ready (get-in @second-run [:aot-outcomes 'showcases.ahead-of-time/settle])))
+      (is (#{:compiled :left} (:ran r)))
+      (is (= 217801084 (:total r))))))

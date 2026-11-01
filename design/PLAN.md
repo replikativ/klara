@@ -56,8 +56,9 @@ and `clojure -M:bench` stay green at every commit. Progress is recorded here.
   in the default, `jit/simplify`); data definitions as premises
   (L4.check.delta-data); the checker no longer unrolls loops when
   beta-reducing; intrinsics callable from host code. Showcase 1's driver
-  specializes its call away. Open: facts from type systems, AOT given a
-  saved profile.
+  specializes its call away. AOT given a saved profile (`run --record`,
+  `run --aot`, `showcases/ahead_of_time.clj`: first run 1 s interpreted,
+  0.12 s compiled ahead). Open: facts from type systems.
   Originally: The facts interface; a built-in
   checker for literal and checked-arithmetic types; ansatz certificates;
   discharge at call sites; AOT given a saved profile.

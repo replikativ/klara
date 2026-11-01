@@ -299,6 +299,11 @@
                           :when (pos? (+ t e))]
                       {:pos (pos n) :then t :else e}))}))
 
+(defn- keep-root-profile
+  "reify rebuilds the function term itself; its profile goes back on it."
+  [^Code code p]
+  (if p (Code. (assoc (.-term code) :profile p)) code))
+
 (defn annotated-reference
   "Code of closure `f` whose terms carry their profiles under :profile
    (L4.jit.context): a function its entries, a call its count and callee,
@@ -321,7 +326,58 @@
               (let [cs (t/children term)
                     t' (if (seq cs) (t/with-children term (mapv annotate cs)) term)]
                 (if-let [p (.get by-term term)] (assoc t' :profile p) t')))]
-      (reify-closure f (annotate (.-term f))))))
+      (keep-root-profile (reify-closure f (annotate (.-term f)))
+                         (.get by-term (.-term f))))))
+
+;; Saved profiles (L4.profile.saved): profiles as data keyed by the path of
+;; child indices from the function's term, for a later run (AOT).
+
+(defn- edn-data? [x]
+  (cond (or (nil? x) (boolean? x) (number? x) (string? x) (keyword? x) (symbol? x) (char? x)) true
+        (or (vector? x) (set? x) (seq? x)) (every? edn-data? x)
+        (map? x) (and (not (record? x)) (every? edn-data? (mapcat identity x)))
+        :else false))
+
+(defn- small-data?
+  "EDN data of at most 64 scalars: worth saving as a stable value."
+  [x]
+  (and (edn-data? x)
+       (<= (count (filter (complement coll?) (tree-seq coll? seq x))) 64)))
+
+(defn- export-profile [p]
+  (cond-> p
+    (:classes p) (update :classes (fn [cs] (mapv #(if (class? %) (.getName ^Class %) %) cs)))
+    (:stable p) (update :stable (fn [vs] (mapv #(if (and (vector? %) (small-data? (second %))) % :unstable) vs)))
+    (contains? p :callee) (update :callee #(if (or (string? %) (keyword? %) (nil? %)) % (str %)))))
+
+(defn- import-profile [p]
+  (cond-> p
+    (:classes p) (update :classes (fn [cs] (mapv #(if (string? %)
+                                                     (try (Class/forName ^String %) (catch Throwable _ :polymorphic))
+                                                     %) cs)))))
+
+(defn saved-profile
+  "The profile of closure `f` as EDN data: {:form-hash h :paths {path profile}}."
+  [^Closure f form]
+  (let [paths (transient {})]
+    (letfn [(walk [term path]
+              (when-let [p (:profile term)] (assoc! paths path (export-profile p)))
+              (doseq [[i c] (map-indexed vector (t/children term))] (walk c (conj path i))))]
+      (walk (.-term ^Code (annotated-reference f)) []))
+    {:form-hash (hash form) :paths (persistent! paths)}))
+
+(defn reference-with-profile
+  "Code of closure `f` annotated with a saved profile instead of its own."
+  [^Closure f saved]
+  (let [paths (:paths saved)]
+    (letfn [(annotate [term path]
+              (let [cs (t/children term)
+                    t' (if (seq cs)
+                         (t/with-children term (vec (map-indexed (fn [i c] (annotate c (conj path i))) cs)))
+                         term)]
+                (if-let [p (get paths path)] (assoc t' :profile (import-profile p)) t')))]
+      (keep-root-profile (reify-closure f (annotate (.-term f) []))
+                         (some-> (get paths []) import-profile)))))
 
 (defn strip-annotations
   "The term without profile annotations."

@@ -118,6 +118,23 @@
             (:roots @session))
       (some #(io/resource %) (ns->paths ns-sym))))
 
+(declare require-lib!)
+
+(defn- compile-ahead!
+  "L4.profile.saved: definitions that `form` just (re)defined and for which
+   the session holds a profile saved from the same source are compiled now,
+   before anything calls them."
+  [session before]
+  (when-let [saved (not-empty (:aot @session))]
+    (let [after (current-world session)]
+      (doseq [[q p] saved
+              :let [d (w/lookup after q)]
+              :when (and d (not= (:generation d) (:generation (w/lookup before q)))
+                         (= (:form-hash p) (hash (:form d))))]
+        (require-lib! session (:ns @session) 'klara.jit)
+        (let [outcome (eval-form session (list 'klara.jit/compile! (list 'quote q) {:profile p}))]
+          (swap! session update :aot-outcomes assoc q (:status outcome)))))))
+
 (defn eval-reader
   "Evaluate every form from `reader` in order, each as an activation
    (L1.module.load). Returns the last value."
@@ -125,7 +142,26 @@
   (let [r (clojure.lang.LineNumberingPushbackReader. reader)]
     (loop [last nil]
       (let [form (ex/read-all r (:ns @session))]
-        (if (ex/eof? form) last (recur (eval-form session form)))))))
+        (if (ex/eof? form)
+          last
+          (let [before (current-world session)
+                v (eval-form session form)]
+            (compile-ahead! session before)
+            (recur v)))))))
+
+(defn saved-profiles
+  "Profiles of the function definitions of the current world that ran, as
+   EDN data for a later run (L4.profile.saved)."
+  [session]
+  (let [save (requiring-resolve 'klara.runtime.intrinsics/saved-profile)]
+    (into {}
+          (for [[q d] (w/defs (current-world session))
+                :let [f (:value d)]
+                ;; the program's definitions, not Klara's own libraries
+                :when (and (v/closure? f) (not (str/starts-with? (namespace q) "klara.")))
+                :let [p (save f (:form d))]
+                :when (pos? (get-in p [:paths [] :count] 0))]
+            [q p]))))
 
 (defn eval-string [session s]
   (eval-reader session (java.io.StringReader. s)))

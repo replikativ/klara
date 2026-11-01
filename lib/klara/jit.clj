@@ -55,8 +55,15 @@
   "Observations of an if before its profile counts as evidence."
   100)
 
+(def rare
+  "A branch taken at most once in this many observations counts as cold."
+  10000)
+
+(defn- cold? [taken other]
+  (and (>= other hot) (<= (* taken rare) other)))
+
 (defn speculate-branches
-  "Speculate that branches the profile never saw taken stay cold. The hot
+  "Speculate that branches the profile (almost) never saw taken stay cold. The hot
    path compiles; reaching a cold branch leaves to the interpreter at that
    point (L4.exec.leave), which may then do anything the reference does:
    perform effects, call host code, run uncompilable constructs."
@@ -66,9 +73,9 @@
         p (when (= :if (:op v)) (:profile v))]
     (if p
       (let [[_ then' else'] (code/children rebuilt)]
-        (cond (and (zero? (:else p)) (>= (:then p) hot) (admissible? (:test v) c))
+        (cond (and (cold? (:else p) (:then p)) (admissible? (:test v) c))
               (guard (:test v) then' c)
-              (and (zero? (:then p)) (>= (:else p) hot) (admissible? (negate (:test v)) c))
+              (and (cold? (:then p) (:else p)) (admissible? (negate (:test v)) c))
               (guard (negate (:test v)) else' c)
               :else rebuilt))
       rebuilt)))
@@ -142,10 +149,10 @@
    attached one; other options go to compiler/prepare."
   ([q] (compile! q {}))
   ([q opts]
-   (let [ctx (cond-> (context q) (:specializer opts) (assoc :specializer (:specializer opts)))
+   (let [ctx (cond-> (context q (:profile opts)) (:specializer opts) (assoc :specializer (:specializer opts)))
          candidate (specialize ctx)
          outcome (compiler/prepare (:reference ctx)
-                                   (merge {:recipe (fn [_] candidate) :name q} (dissoc opts :specializer)))]
+                                   (merge {:recipe (fn [_] candidate) :name q} (dissoc opts :specializer :profile)))]
      (when (= :ready (:status outcome))
        (compiler/install! outcome))
      outcome)))
