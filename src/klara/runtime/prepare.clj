@@ -136,6 +136,7 @@
     (and (cheap-value? x) (= v x) (= (class v) (class x)))))
 
 (deftype Profile [^:volatile-mutable ^long n
+                  ^:volatile-mutable ^long external-n            ; entries other than self calls
                   ^:volatile-mutable ^objects classes   ; per argument: a class, or poly
                   ^:volatile-mutable ^objects values    ; per argument: a value, or unstable
                   ^:volatile-mutable callee
@@ -145,8 +146,10 @@
   IProfile
   (enter [_ args external]
     (set! n (inc n))
-    (when (and external (zero? (bit-and n (dec n))))     ; at counts 1, 2, 4, 8, ...
-      (set! sample (sample-of args)))
+    (when external
+      (set! external-n (inc external-n))
+      (when (zero? (bit-and external-n (dec external-n)))     ; at counts 1, 2, 4, 8, ...
+        (set! sample (sample-of args))))
     (let [cnt (count args)]
      (when external
       (if (nil? classes)
@@ -168,13 +171,14 @@
     (if t (set! taken (inc taken)) (set! not-taken (inc not-taken))))
   (snapshot [_]
     {:count n
+     :external external-n
      :classes (when classes (mapv #(if (identical? % poly) :polymorphic %) classes))
      :stable (when values (mapv #(if (identical? % unstable) :unstable [:value (observed %)]) values))
      :callee (cond (nil? callee) nil (identical? callee poly) :polymorphic :else callee)
      :branches [taken not-taken]
      :sample (observed sample)}))
 
-(defn new-profile [] (Profile. 0 nil nil nil 0 0 nil))
+(defn new-profile [] (Profile. 0 0 nil nil nil 0 0 nil))
 
 (defonce ^{:doc "Whether the interpreter records profiles (L4.profile.record)."} profiling (atom true))
 

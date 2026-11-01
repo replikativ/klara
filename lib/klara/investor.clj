@@ -81,7 +81,9 @@
    chosen candidate."
   [q]
   (let [ctx (jit/context q)
-        calls (jit/calls ctx)
+        ;; calls from outside: a recursive function's own calls run compiled
+        ;; inside the measured call, so they are not further calls
+        calls (get-in ctx [:profile :entries :external])
         args (get-in ctx [:profile :entries :sample])
         f (world/get (world/current) q)]
     (if (or (nil? calls) (< (jit/work ctx) min-work) (nil? args))
@@ -127,7 +129,12 @@
 
 (defn invest!
   "Consider every interpreted function definition in namespace ns-sym;
-   returns the decisions."
+   returns the decisions. What was declined is considered once more after
+   the first round: a caller measured while its callees were interpreted
+   pays for entering the interpreter on every call."
   [ns-sym]
-  (let [w (world/current)]
-    (mapv consider (filter #(interpreted? (world/get w %)) (world/names w ns-sym)))))
+  (let [round (fn [names] (mapv consider (filter #(interpreted? (world/get (world/current) %)) names)))
+        first-round (round (world/names (world/current) ns-sym))
+        again (round (map :name (filter #(= :declined (:decision %)) first-round)))
+        by-name (into {} (map (juxt :name identity)) (concat first-round again))]
+    (mapv #(get by-name (:name %)) first-round)))

@@ -440,6 +440,12 @@
 
 (defn- profiling? [dyn] (and @prep/profiling (nil? (:no-profile dyn))))
 
+(defn- self-call-frame?
+  "Is args frame f completing a definition's call of itself?"
+  [f]
+  (let [n (:node f)]
+    (and (instance? klara.runtime.prepare.App n) (.-self-call ^klara.runtime.prepare.App n))))
+
 (defn- record-entry!
   "L4.profile.record: a function entry (or loop iteration) with its arguments."
   [dyn ^Closure f args external]
@@ -484,7 +490,7 @@
                     _ (when-not (identical? fv none) (record-call! dyn c fv))]
                 (cond
                   (identical? fv none)
-                  (next! regs :eval (.-f c) env (conj k {:f :args :todo (.-args c) :vals [] :env env :recur (.-recur-arity c)}) world mint dyn)
+                  (next! regs :eval (.-f c) env (conj k {:f :args :node c :todo (.-args c) :vals [] :env env :recur (.-recur-arity c)}) world mint dyn)
                   (and (.-all-imm c) (instance? Closure fv) (nil? (.-basis ^Closure fv)) (not (charge! (:meter dyn))))
                   ;; the common case: an open closure on immediate arguments, entered directly
                   (let [^Closure fv fv
@@ -589,10 +595,10 @@
                       (let [[more remaining] (imm-prefix todo (:env f) world mint dyn)
                             vals (into vals more)]
                         (if (nil? remaining)
-                          (next! regs :apply [(first vals) (subvec vals 1) (:recur f)] env k world mint dyn)
+                          (next! regs :apply [(first vals) (subvec vals 1) (:recur f) (self-call-frame? f)] env k world mint dyn)
                           (next! regs :eval (first remaining) (:env f)
                                  (conj k (assoc f :todo (next remaining) :vals vals)) world mint dyn)))
-                      (next! regs :apply [(first vals) (subvec vals 1) (:recur f)] env k world mint dyn)))
+                      (next! regs :apply [(first vals) (subvec vals 1) (:recur f) (self-call-frame? f)] env k world mint dyn)))
             :let (next! regs :eval (:body f) (conj (:env f) x) k world mint dyn)
             :if (do (record-branch! dyn (:node f) x)
                     (next! regs :eval (if x (:then f) (:else f)) (:env f) k world mint dyn))

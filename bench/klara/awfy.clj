@@ -42,10 +42,10 @@
         {:ok (and ok ok-after) :interpreted-ms interpreted :ms compiled
          :decisions (into {} (map (fn [[q d c]] [(name q) (if c (str (name d) " " (name c)) (name d))]) decisions))}))))
 
-(defn -main [& _]
+(defn -main [& names]
   (let [node (try (json/read-str (:out (sh/sh "node" "bench/awfy/js/benchmarks.js")) :key-fn keyword)
                   (catch Throwable _ nil))
-        rows (for [b benchmarks]
+        rows (for [b (or (seq names) benchmarks)]
                (let [c (clojure-run b) kl (klara-run b) js (get node (keyword b))]
                  {:benchmark b :node-ms (:ms js) :clojure-ms (:ms c)
                   :klara-interpreted-ms (:interpreted-ms kl) :klara-ms (:ms kl)
