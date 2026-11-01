@@ -104,6 +104,15 @@
                 (boolean (re-find #\"\\(klara.jit/same\\? \\S+ \\[:\\+ \\[:\\* :x :x\\] 3\\]\\) \\(\\+ \\(\\* \\(get \\S+ :x\\) \\(get \\S+ :x\\)\\) 3\\)\" cand))
                 (calc model {:x 2})
                 (calc [:+ :x 1] {:x 41})]"))))
+    (testing "a hot call of a definition that loops stays a call (no guard on a definition)"
+      (is (= [:ready 10]
+             (k/eval-string s "(defrecord E [val next])
+               (defn mk [n] (when (pos? n) (->E n (mk (dec n)))))
+               (defn shorter? [x y] (loop [x x y y] (cond (nil? y) false (nil? x) true :else (recur (:next x) (:next y)))))
+               (defn tl [x y z] (if (shorter? y x) (tl (tl (:next x) y z) (tl (:next y) z x) (tl (:next z) x y)) z))
+               (defn len [x] (loop [x x n 0] (if x (recur (:next x) (inc n)) n)))
+               (dotimes [_ 20] (tl (mk 15) (mk 10) (mk 6)))
+               [(:status (jit/compile! 'pf/tl {:specializer staged-spec})) (len (tl (mk 15) (mk 10) (mk 6)))]"))))
     (testing "a call site that always called the same function: inlined under a guard"
       (is (= [:ready 1 9]
              (k/eval-string s "(defn twice [f x] (f (f x)))

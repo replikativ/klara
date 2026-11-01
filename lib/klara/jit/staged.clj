@@ -276,10 +276,12 @@
                    (gen-body ps (quiet env))))))
 
 (defn- spec-call
-  "A call of a dynamic function that the profile saw calling one closure C:
-   C unfolded under (same? f C), the plain call otherwise."
+  "A call of a function computed at run time (not a definition: those are
+   unfolded or inlined, and their redefinition is a world premise) that the
+   profile saw calling one closure C: C unfolded under (same? f C), the
+   plain call otherwise."
   [dom v f args env]
-  (let [callee (get-in v [:profile :callee])
+  (let [callee (when-not (callee-name f) (get-in v [:profile :callee]))
         u (when (fn? callee) (code/unfold (lift callee)))]
     (when (and u (>= (or (get-in v [:profile :count]) 0) (:hot (::policy env))))
       (speculation (code (klara.jit/same? (esc (->code f)) (esc (lift callee))))
