@@ -109,6 +109,24 @@ the staged interpreter as the default specializer, on a busier machine:
 So compiled Klara is at Clojure's speed on three of the four; List (calls of
 tiny functions on records) is the real gap.
 
+**After the investor and record fixes (2026-11-01, quieter machine).**
+Records are host classes (field reads were a linear search of an array map,
+22% of List); the investor tiers by interpreted time spent, compiles as is
+past the baseline (so small callees no longer leave compiled callers
+entering the interpreter), runs between forms and promotes baseline code
+from counted entries (L4.jit.tiers, L4.jit.trigger); the harness warms up
+with the automatic investor and stops it before timing:
+
+| benchmark | node (V8) | Clojure (HotSpot) | Klara interpreted | Klara compiled | Klara / Clojure | Klara / node |
+|---|---|---|---|---|---|---|
+| Mandelbrot | 24 | 27 | 9,300 | 27 | 0.98 | 1.1 |
+| Sieve | 0.0098 | 0.0086 | 7.0 | 0.011 | 1.23 | 1.1 |
+| Towers | 0.066 | 0.26 | 30 | 0.48 | 1.85 | 7.3 |
+| List | 0.013 | 0.035 | 22 | 0.063 | 1.77 | 4.7 |
+
+Towers and List vary between runs with the investor's choices (whether the
+default specializer's inlining of a small callee measures as faster).
+
 All results agree. The interpreter is 500–1300× slower than V8; compiled
 Mandelbrot is at Clojure's speed and within 1.3× of V8, the others 12–40×
 behind V8. What the benchmarks taught the backend:
