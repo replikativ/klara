@@ -141,7 +141,7 @@
     (loop [n 1 previous nil quiet? false]
       (let [c0 (time/compiling)
             t0 (now)]
-        (dotimes [_ n] (apply f args))
+        (jit/repeat-call n f args)
         (let [t1 (now)
               idle (= c0 (time/compiling))
               d (- t1 t0)
@@ -279,15 +279,33 @@
     (let [[seen out] (reduce (fn [acc d] (visit deps acc d)) [(conj seen q) out] (get deps q))]
       [seen (conj out q)])))
 
+(defn- calls-among
+  "For each of the function definitions `names`, the ones among them it calls."
+  [names]
+  (let [in (set names)]
+    (into {} (map (fn [q] [q (filter in (distinct (some-> (code/unfold (lift (world/get (world/current) q))) globals)))]))
+          names)))
+
 (defn callees-first
   "Function definitions `names` ordered so that each comes after the ones it
    calls (within a cycle, in any order): a caller is then measured with its
    callees compiled, not entering the interpreter on every call."
   [names]
-  (let [in (set names)
-        deps (into {} (map (fn [q] [q (filter in (distinct (some-> (code/unfold (lift (world/get (world/current) q))) globals)))]))
-                   names)]
-    (second (reduce (fn [acc q] (visit deps acc q)) [#{} []] names))))
+  (second (reduce (fn [acc q] (visit (calls-among names) acc q)) [#{} []] names)))
+
+(defn- reaches? [deps from to]
+  (loop [todo (vec (get deps from)) seen #{}]
+    (cond (empty? todo) false
+          (= to (peek todo)) true
+          (contains? seen (peek todo)) (recur (pop todo) seen)
+          :else (recur (into (pop todo) (get deps (peek todo))) (conj seen (peek todo))))))
+
+(defn in-cycles
+  "The definitions among `names` that call themselves through others (or
+   directly): no order puts all their callees first."
+  [names]
+  (let [deps (calls-among names)]
+    (set (filter #(reaches? deps % %) names))))
 
 (defn consider
   "Decide about the definition named q. Returns the decision, also recorded
@@ -302,10 +320,18 @@
    pays for entering the interpreter on every call."
   ([ns-sym] (invest! ns-sym {}))
   ([ns-sym pol]
-  (let [round (fn [names] (mapv #(consider % pol)
+  (let [fns (filter #(v-fn? (world/get (world/current) %)) (world/names (world/current) ns-sym))
+        cyclic (in-cycles fns)
+        ;; within a cycle, all compiled as they are first, so that each is
+        ;; then measured with the others compiled
+        _ (doseq [q (callees-first (filter cyclic fns))]
+            (when (nil? (compiler/compiled q)) (consider q (assoc (merge policy pol) :explore-ns Long/MAX_VALUE))))
+        round (fn [names] (mapv #(consider % pol)
                                 (callees-first
-                                 (filter #(and (v-fn? (world/get (world/current) %)) (nil? (compiler/compiled %))) names))))
-        first-round (round (world/names (world/current) ns-sym))
+                                 (filter #(or (nil? (compiler/compiled %))
+                                              (and (cyclic %) (= :baseline (:tier (peek (get decisions %))))))
+                                         names))))
+        first-round (round fns)
         again (round (map :name (filter #(= :declined (:decision %)) first-round)))
         by-name (into {} (map (juxt :name identity)) (concat first-round again))]
     (mapv #(get by-name (:name %)) first-round))))

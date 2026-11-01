@@ -206,16 +206,26 @@
   [ctx t]
   (charge! ctx)
   (case (:op t)
-    :let (let [init (whnf ctx (:init t))]
-           (if (value-term? init)                                ; L4.check.let-value
-             (recur ctx (t/substitute (:body t) {(:name t) init}))
-             (assoc t :init init)))
+    :let (let [init (whnf ctx (:init t))
+               x (:name t)
+               body (:body t)]
+           (cond (value-term? init)                              ; L4.check.let-value
+                 (recur ctx (t/substitute body {x init}))
+                 ;; L4.check.bool-let: x is true or false (and, or of tests)
+                 (boolean-valued? init)
+                 (recur ctx (t/if* init (t/substitute body {x (t/const true)}) (t/substitute body {x (t/const false)})))
+                 :else (assoc t :init init)))
     :if (let [c (whnf ctx (:test t))
               known (assumed ctx c)]
           (cond (= :const (:op c))                               ; L4.check.if-constant
                 (recur ctx (if (:value c) (:then t) (:else t)))
                 (some? known)                                    ; L4.check.speculate-assume
                 (recur ctx (if known (:then t) (:else t)))
+                ;; L4.check.commute: a test that binds or branches moves out
+                (and (= :let (:op c)) (not (:speculate t)))
+                (recur ctx (t/let1 (:name c) (:init c) (assoc t :test (:body c))))
+                (and (= :if (:op c)) (not (:speculate t)) (not (:speculate c)))
+                (recur ctx (t/if* (:test c) (assoc t :test (:then c)) (assoc t :test (:else c))))
                 :else (assoc t :test c)))
     :do (let [[x & more] (:body t)]
           (cond (empty? more) (recur ctx x)
@@ -236,25 +246,6 @@
 ;; Comparison
 
 (declare equal?)
-
-(defn- reshape
-  "One step of L4.check.bool-let or L4.check.commute at the head of whnf
-   term `t`, or nil. Tried only where the two sides' heads differ:
-   - (let [x e] b) with e true or false (as and and or expand) is
-     (if e b[x:=true] b[x:=false]);
-   - (if (let [x e] b) p q) is (let [x e] (if b p q));
-   - (if (if c a b) p q) is (if c (if a p q) (if b p q))."
-  [t]
-  (case (:op t)
-    :let (let [body (:body t) x (:name t)]
-           (when (boolean-valued? (:init t))
-             (t/if* (:init t) (t/substitute body {x (t/const true)}) (t/substitute body {x (t/const false)}))))
-    :if (let [c (:test t)]
-          (cond (or (:speculate t) (:speculate c)) nil
-                (= :let (:op c)) (t/let1 (:name c) (:init c) (assoc t :test (:body c)))
-                (= :if (:op c)) (t/if* (:test c) (assoc t :test (:then c)) (assoc t :test (:else c)))
-                :else nil))
-    nil))
 
 (defn- unfold-head
   "Unfold the definition at the head of `t` (its function position for a
@@ -534,9 +525,6 @@
           (and (speculation? a) (not (speculation? b)))
           (and (guard? (:test a) (:else a)) (equal? ctx (:then a) b) (equal? ctx (:else a) b)))
         (and (= (:op a) (:op b)) (same-shape ctx a b))
-        ;; L4.check.bool-let, L4.check.commute: where the heads differ
-        (when-let [a' (reshape a)] (equal? ctx a' b))
-        (when-let [b' (reshape b)] (equal? ctx a b'))
         ;; a is on the reference's side, b on the candidate's (see check)
         (if-let [a' (unfold-head ctx a :reference)]
           (equal? ctx a' b)

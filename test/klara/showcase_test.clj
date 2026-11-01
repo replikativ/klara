@@ -81,3 +81,15 @@
       (is (< (* 10 (:bytes-after r)) (:bytes-before r))))
     (testing "an accumulator handed to another function is refused"
       (is (= :rejected (:refused r))))))
+
+(deftest regex   ; L4.jit.rules L4.check.fix L2.code.recur L4.jit.attach
+  (let [r (run "showcases/regex.clj")]
+    (testing "the user rule's matcher is admitted against the interpreter, the sloppy one is not"
+      (is (= :rejected (:sloppy r)))
+      (is (= :compiled (get-in r [:decisions 'showcases.regex/matches?])))
+      (is (#{:attached :default} (get-in r [:chosen 'showcases.regex/matches?]))))
+    (testing "compiled and interpreted agree"
+      (is (:same-result r))
+      (is (:agree r)))
+    (testing "faster (typically several hundred times)"
+      (is (< 20 (:speedup r))))))

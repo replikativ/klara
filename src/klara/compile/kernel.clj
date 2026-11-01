@@ -359,6 +359,16 @@
                       ;; the definition's own function, unpinned (for measuring it)
                       :function f}))))})
 
+(b/register! 'klara.jit/repeat-call                                   ; L4.jit.tiers
+  ;; n calls of f on args from a host loop, for measuring: an interpreted
+  ;; loop costs about 2 us per call, more than the code it measures. The
+  ;; last result is returned, so the calls are not dead code.
+  {:kind :host
+   :fn (fn [n f args]
+         (let [n (long n)]
+           ;; as compiled code calls (L4.lower.calls): compiled code directly
+           (loop [i 0 r nil] (if (< i n) (recur (inc i) (lower/call f args)) r))))})
+
 (b/register! 'klara.jit/admissible?                                   ; L4.check.speculate
   {:kind :host
    :pure true

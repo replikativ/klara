@@ -59,8 +59,9 @@ This is how `and` and `or` of tests compare with the `if`s they mean.
 
 `L4.check.commute` `(if (let [x e] b) p q)` may be replaced by
 `(let [x e] (if b p q))`, and `(if (if c a b) p q)` by
-`(if c (if a p q) (if b p q))`. The checker reshapes (bool-let, commute)
-only where the two sides' heads differ.
+`(if c (if a p q) (if b p q))`. Both rewrites, and bool-let, are part of
+the head normal form both sides are compared in (not for speculations,
+whose shape the speculation rules read).
 
 `L4.check.fix` A loop in the candidate, `((fn L [x1 .. xk] B) a1 .. ak)`,
 is equivalent to a call `(g r1 .. rn)` in the reference of a function
@@ -379,8 +380,9 @@ any is measurably faster than the interpreter, and otherwise compiles the
 definition as it is (it is past the baseline). An alternative within the
 measurement's resolution (10%) of the definition as it is loses to it: it
 has no guards and no premises on its callees. Definitions are decided after
-the ones they call (within a cycle in any order), so a caller is measured
-with its callees compiled. Measuring never runs an impure definition
+the ones they call, so a caller is measured with its callees compiled;
+definitions that call each other are all compiled as they are first, then
+each is explored. Measuring never runs an impure definition
 (L4.facts.pure).
 
 `L4.jit.trigger` With `(klara.host.api/automatic-investor! session pol)`,

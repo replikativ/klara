@@ -147,7 +147,24 @@ The backend needs to emit Vector API calls, which the bytecode backend
    `java.lang.reflect.Array`, L4.lower.arrays); and a hinted let's own class
    test was reflective (Sieve 1.23x → 1.02x Clojure).
 3. Effect classes in L4.facts (section 3), replacing the purity bit.
-4. The regex showcase as a user rule.
+4. [x] The regex showcase as a user rule (`showcases/regex.clj`). The
+   default alone already compiles Pike's matcher for a stable pattern once
+   a pattern's sequence folds (counted sequences are plain data): no
+   pattern dispatch on the hot path, each `*` a call of the generic `star`.
+   The rule, the matcher staged by hand with a loop for `*`, needed the
+   checker to relate a loop to a recursive definition (L4.check.fix,
+   fixpoint induction; proof open) and `and`/`or` of tests to the `if`s
+   they mean (L4.check.bool-let, L4.check.commute), and templates to carry
+   a `recur` across holes (L2.code.recur). The checker caught a real bug in
+   the first version of the rule: it skipped the interpreter's `(inc i)`
+   where the rest of the pattern is empty, which differs for a position
+   that is not a number; the showcase keeps that variant as the rejected
+   one. Per match: interpreted ~30 µs (the investor's measurement), the
+   default ~0.8 µs, the rule ~0.6 µs (Clojure running the generic matcher
+   0.8–1.8 µs, the hand-staged one ~0.36 µs, java.util.regex ~0.15–0.3 µs,
+   all under load). Open: how a library adds to `klara.jit/rules` (a
+   definition in another namespace cannot be redefined from there; the
+   showcase attaches the rule to `matches?` instead).
 5. Primitive loops; then vectorization with the bytecode backend.
 
 Before step 2: whether a rule pays is the investor's measurement, so that

@@ -117,7 +117,9 @@ and `clojure -M:bench` stay green at every commit. Progress is recorded here.
      passes and `recipes/inline` are removed; showcases, awfy and the
      investor run on it; `code/make` is no longer used by specializers.
   7. **Proof (later).** Partial-evaluation correctness of the generator for
-     the formal fragment.
+     the formal fragment; and the checker's fixpoint rule (L4.check.fix:
+     a loop against a recursive definition, by Scott induction), trusted
+     until then.
 
 ## Showcase programs
 
@@ -127,8 +129,9 @@ evidence, guards, time, allocation), and run as a test.
 
 1. **An interpreter becomes a compiler at run time** (P1–P3a). Done as
    `showcases/interpreter_to_compiler.clj` with an arithmetic interpreter
-   (30× once its driver is compiled; the unguarded variant is rejected); a
-   regex matcher is the next instance. A regex
+   (30× once its driver is compiled; the unguarded variant is rejected); the
+   regex matcher is the second instance, `showcases/regex.clj`, with the
+   staged matcher as a user rule (design/09-extensions.md). A regex
    matcher written as an interpreter, with a user-written specializer: once
    the profile shows a stable pattern, the JIT stages the matcher for it,
    guarded on the pattern; checked by the kernel.

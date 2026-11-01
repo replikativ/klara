@@ -147,6 +147,14 @@ default are within 4% on List, and the default is 5–12% slower on Towers.
   JIT compiler has been idle for two batches (`(klara.time/compiling)`,
   L3.effect.time), bounded by two seconds.
 
+*The measuring floor.* The investor timed its batches with an
+interpreted loop, about 2 µs per call: a compiled `inc` measured 2.2 µs
+against 1.9 µs interpreted, so sub-microsecond alternatives could not be
+told apart. Batches now run in a host loop that calls as compiled code does
+(`klara.jit/repeat-call`), about 60 ns per call. Definitions that call each
+other (no order puts all callees first) are first all compiled as they are,
+then explored.
+
 The harness also runs each benchmark in a JVM of its own: HotSpot's
 profiles of the runtime's shared code carried over between sessions (the
 same List decisions measured 0.077 and 0.13 ms in consecutive sessions of
