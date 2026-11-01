@@ -44,11 +44,12 @@
 
 (defn- plain?
   "Plain data: what may become a static value by computation (no lazy
-   sequences, functions or mutable objects)."
+   sequences, functions or mutable objects). A counted sequence (a list, a
+   string's or an array's sequence) is realized: walking it runs nothing."
   [x]
   (cond (or (nil? x) (number? x) (boolean? x) (string? x) (keyword? x) (symbol? x) (char? x)) true
         (map? x) (every? (fn [[k v]] (and (plain? k) (plain? v))) x)
-        (or (vector? x) (set? x)) (every? plain? x)
+        (or (vector? x) (set? x) (and (seq? x) (counted? x))) (every? plain? x)
         :else false))
 
 ;; ---------------------------------------------------------------------------

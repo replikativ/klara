@@ -6,7 +6,9 @@
             [clojure.test :refer [deftest is testing]]
             [klara.formal.gen :as gen]
             [klara.host.api :as k]
-            [klara.lang.expand :as ex]))
+            [klara.lang.expand :as ex]
+            [klara.lang.term]
+            [klara.compile.kernel]))
 
 (defn- session [] (k/session {:roots ["lib"] :out (java.io.StringWriter.)}))
 
@@ -193,3 +195,16 @@
                 (pair (object-array [1 nil]))
                 (len (long-array 3))
                 (= (try (len \"abc\") (catch Exception e (type e))) java.lang.IllegalArgumentException)]")))))
+
+(deftest realized-sequences-are-static   ; L4.jit.staged
+  (testing "a pattern string's sequence is computed at generation: the matcher's dispatch on it folds away"
+    (let [s (session)]
+      (is (= [:ready 2 true false true]
+             (k/eval-string s "(ns ps (:require [klara.jit :as jit] [klara.compiler :as compiler]))
+               (defn head-is [p c] (let [re (seq p)] (if (= \\^ (first re)) (= c (second re)) (= c (first re)))))
+               (dotimes [_ 200] (head-is \"^ab\" \\a))
+               (def o (jit/compile! 'ps/head-is))
+               [(:status o) (:speculations o) (head-is \"^ab\" \\a) (head-is \"^ab\" \\b) (head-is \"xy\" \\x)
+                ]")))
+      ;; under the guards, no seq is left: only the fallback computes it
+      (is (= 1 (count (re-seq #"\(seq " (pr-str (klara.lang.term/->form (.-term ^klara.compile.kernel.Candidate (:candidate (k/eval-string s "(ns ps) o"))))))))))))
