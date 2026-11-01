@@ -93,6 +93,11 @@ the review fixes):
 | Towers | 0.068 | 0.26 | 23 | 0.83 |
 | List | 0.015 | 0.037 | 19 | 0.52 |
 
+With the staged interpreter as the default specializer (P7.6, 2026-11-01,
+on a busier machine: node and Clojure themselves ran about 1.5× slower), the
+ratio of compiled Klara to Clojure is unchanged within noise: Mandelbrot 1.0
+(before 1.0), Sieve 41 (39), Towers 2.4 (3.2), List 15 (14).
+
 All results agree. The interpreter is 500–1300× slower than V8; compiled
 Mandelbrot is at Clojure's speed and within 1.3× of V8, the others 12–40×
 behind V8. What the benchmarks taught the backend:

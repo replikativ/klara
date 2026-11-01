@@ -110,7 +110,7 @@ and `clojure -M:bench` stay green at every commit. Progress is recorded here.
      several arities kept whole (their free locals substituted); the checker
      relates them part by part (L4.check.alpha, L4.check.code). perform and
      handle are surface macros over host calls, so they need nothing here.
-  6. **Switch.** The staged interpreter becomes `jit/default`; the rewrite
+  6. [x] **Switch.** The staged interpreter becomes `jit/default`; the rewrite
      passes and `recipes/inline` are removed; showcases, awfy and the
      investor run on it; `code/make` is no longer used by specializers.
   7. **Proof (later).** Partial-evaluation correctness of the generator for
