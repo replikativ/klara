@@ -86,6 +86,34 @@ and `clojure -M:bench` stay green at every commit. Progress is recorded here.
   Originally: Uniqueness judgment,
   erasure, transient lowering, the accumulator recipe; the erasure theorem.
 
+- [ ] **P7. The staged JIT** ([08-staged-jit.md](08-staged-jit.md)). One
+  interpreter for Core in Klara with two binding times, replacing the
+  default specializer's tree rewrites and the separate partial evaluator.
+  Each step adds its spec rules, tests citing them, and keeps the suite,
+  the stress tests (generated programs through the default specializer) and
+  the benchmarks at least as good as before:
+  1. **Total views.** Every construct has a view (multi-arity and variadic
+     functions, letrec, throw, try, interop, def, perform, handle, code
+     templates and holes); `:other` disappears (L2.view.total).
+  2. **Binding times and the domain.** `static`/`dynamic`/`reify`, the
+     environment, the domain interface; the generator instantiated with
+     values is an interpreter, tested against the machine on the
+     conformance corpus and generated programs.
+  3. **Core constructs.** const, local, global (data definitions static),
+     if, let, do, fn (fresh binders through templates), app (pure host
+     functions computed, known functions unfolded within the budget), loops
+     and recur; residuals checked by the kernel.
+  4. **Facts from profiles.** Cold branches, stable values, monomorphic
+     call sites, each emitted as a speculation whose fallback is generated
+     with everything dynamic (no splicing of open reference code).
+  5. **Everything else dynamic.** try, interop, perform, handle, def, code,
+     generated with their parts dynamic.
+  6. **Switch.** The staged interpreter becomes `jit/default`; the rewrite
+     passes and `recipes/inline` are removed; showcases, awfy and the
+     investor run on it; `code/make` is no longer used by specializers.
+  7. **Proof (later).** Partial-evaluation correctness of the generator for
+     the formal fragment.
+
 ## Showcase programs
 
 Each is a short Klara program in `showcases/`, run with
