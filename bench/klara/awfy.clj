@@ -28,6 +28,24 @@
         expected @(resolve (symbol (str "awfy." b) "expected"))]
     {:ok (= expected (run)) :ms (measure run)}))
 
+(defn- batched
+  "ms per evaluation of Klara expression `body`, run in batches inside one
+   evaluation (an eval-string costs far more than a small benchmark), minus
+   the same loop with an empty body."
+  [call body]
+  (let [per (fn [body n]
+              (let [t (System/nanoTime)]
+                (call (str "(loop [i 0] (when (< i " n ") " body " (recur (inc i))))"))
+                (/ (- (System/nanoTime) t) 1e6 n)))
+        ;; a batch of at least 20 ms
+        n (loop [n 1] (if (or (>= (* n (per body n)) 20) (> n 1000000)) n (recur (* 2 n))))
+        series (fn [body] (let [start (System/nanoTime)]
+                            (loop [ts []]
+                              (if (< (- (System/nanoTime) start) 1000000000)
+                                (recur (conj ts (per body n)))
+                                (let [half (drop (quot (count ts) 2) ts)] (/ (reduce + half) (count half)))))))]
+    (- (series body) (series "nil"))))
+
 (defn- klara-run [b]
   (let [s (k/session {:roots ["lib" "bench"] :out (java.io.StringWriter.)})
         ns-sym (symbol (str "awfy." b))
@@ -35,10 +53,10 @@
         ok (try (= (call "(b/run)") (call "b/expected")) (catch Throwable e (str "fails: " (.getMessage e))))]
     (if (string? ok)
       {:ok ok}
-      (let [interpreted (measure #(call "(b/run)"))
+      (let [interpreted (batched call "(b/run)")
             decisions (call (str "(mapv (juxt :name :decision :chosen) (investor/invest! '" ns-sym "))"))
             ok-after (= (call "(b/run)") (call "b/expected"))
-            compiled (measure #(call "(b/run)"))]
+            compiled (batched call "(b/run)")]
         {:ok (and ok ok-after) :interpreted-ms interpreted :ms compiled
          :decisions (into {} (map (fn [[q d c]] [(name q) (if c (str (name d) " " (name c)) (name d))]) decisions))}))))
 

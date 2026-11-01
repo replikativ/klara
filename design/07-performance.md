@@ -93,10 +93,21 @@ the review fixes):
 | Towers | 0.068 | 0.26 | 23 | 0.83 |
 | List | 0.015 | 0.037 | 19 | 0.52 |
 
-With the staged interpreter as the default specializer (P7.6, 2026-11-01,
-on a busier machine: node and Clojure themselves ran about 1.5× slower), the
-ratio of compiled Klara to Clojure is unchanged within noise: Mandelbrot 1.0
-(before 1.0), Sieve 41 (39), Towers 2.4 (3.2), List 15 (14).
+**Correction (2026-11-01).** The numbers above time each Klara iteration as
+an `eval-string` of an `ns` form and the call, which costs about 0.46 ms by
+itself: more than a whole Sieve run in Clojure. The harness now runs the
+calls in batches inside one evaluation and subtracts an empty batch. With
+the staged interpreter as the default specializer, on a busier machine:
+
+| benchmark | node (V8) | Clojure (HotSpot) | Klara interpreted | Klara compiled | Klara / Clojure |
+|---|---|---|---|---|---|
+| Mandelbrot | 36 | 42 | 15,600 | 44 | 1.05 |
+| Sieve | 0.019 | 0.017 | 23 | 0.036 | 2.1 |
+| Towers | 0.10 | 0.46 | 35 | 0.49 | 1.07 |
+| List | 0.027 | 0.067 | 75 | 0.44 | 6.6 |
+
+So compiled Klara is at Clojure's speed on three of the four; List (calls of
+tiny functions on records) is the real gap.
 
 All results agree. The interpreter is 500–1300× slower than V8; compiled
 Mandelbrot is at Clojure's speed and within 1.3× of V8, the others 12–40×
