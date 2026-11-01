@@ -8,7 +8,12 @@ and `clojure -M:bench` stay green at every commit. Progress is recorded here.
 
 ## Phases
 
-- [ ] **P1. Frame states, leaving compiled code, stack traces.**
+- [x] **P1. Frame states, leaving compiled code, stack traces.** Done:
+  A-normal form, frame states at every leave point, leaves for speculation,
+  callee effects and budgets, call sites adding frames, Klara stack traces;
+  stress mode (1500 generated programs agree); `speculate-sound` proved.
+  Remaining: on-stack replacement (entering compiled loops mid-run).
+  Originally:
   Compiled code is normalized so that every point where it may leave has a
   frame state (the interpreter node to continue at, its environment, the
   enclosing frames). It leaves for: a failed speculation

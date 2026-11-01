@@ -22,13 +22,13 @@
 
 (set! *warn-on-reflection* true)
 
-(definterface INode (^long tag []))
+(definterface INode (^long tag []) (sourceTerm []))
 
 (defmacro ^:private defnode
   "A node type with a constant tag and the original term for inspection."
   [name tag fields]
   `(deftype ~name ~(into ['term] fields)
-     INode (~'tag [_#] ~tag)
+     INode (~'tag [_#] ~tag) (~'sourceTerm [_#] ~'term)
      Object (~'toString [_#] (str "#node" ~(str "/" name)))))
 
 (def ^:const CONST 0) (def ^:const LOCAL 1) (def ^:const GLOBAL 2) (def ^:const HOST 3)
@@ -47,7 +47,7 @@
   (cache [id ^long epoch value]))
 
 (deftype Global [term link ^:volatile-mutable cid ^:volatile-mutable ^long cepoch ^:volatile-mutable cvalue]
-  INode (tag [_] 2)
+  INode (tag [_] 2) (sourceTerm [_] term)
   IGlobalCache
   (cached [_ id epoch] (when (and (identical? cid id) (== cepoch epoch)) cvalue))
   (cache [_ id epoch value] (set! cid id) (set! cepoch epoch) (set! cvalue value) value)

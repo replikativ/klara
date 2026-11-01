@@ -272,9 +272,42 @@
           (fail (if (and (= kind :stop) (= :boundary (:f (nth k i)))) :L3.effect.host-boundary :L3.effect.unhandled)
                 (str "unhandled effect " op) :op op))))))
 
+;; ---------------------------------------------------------------------------
+;; Klara stack traces (L0.trace.positions)
+
+(def ^:private traced (java.util.Collections/synchronizedMap (java.util.WeakHashMap.)))
+
+(defn- node-pos [x]
+  (when (instance? klara.runtime.prepare.INode x)
+    (:pos (.sourceTerm ^klara.runtime.prepare.INode x))))
+
+(defn- frame-pos [f]
+  (some node-pos [(:body f) (:then f) (:node f) (first (:todo f)) (:term f)]))
+
+(defn klara-trace
+  "Source positions of the computation in state `st`, innermost first: the
+   current node, then the frames of the continuation."
+  [st]
+  (->> (cons (node-pos (:ctl st)) (map frame-pos (:k st)))
+       (remove nil?)
+       dedupe
+       vec))
+
+(defn- attach-trace!
+  "Prepend Klara frames to the host stack trace of `ex`, once."
+  [^Throwable ex st]
+  (when-not (.containsKey ^java.util.Map traced ex)
+    (.put ^java.util.Map traced ex true)
+    (let [elements (for [{:keys [line file in]} (klara-trace st)]
+                     (StackTraceElement. "klara" (str (or in "top-level")) (if file (.getName (java.io.File. ^String file)) "REPL") (int (or line -1))))]
+      (when (seq elements)
+        (.setStackTrace ex (into-array StackTraceElement (concat elements (.getStackTrace ex)))))))
+  ex)
+
 (defn- raise
   "Unwind `st` with exception `ex` to the nearest try or job frame (L0.eval.exception)."
   [st ^Throwable ex]
+  (attach-trace! ex st)
   (loop [k (:k st)]
     (if-let [f (first k)]
       (case (:f f)
@@ -448,7 +481,7 @@
                     (if (nil? remaining)
                       (next! regs :apply [fv vals (.-recur-arity c)] env k world mint dyn)
                       (next! regs :eval (first remaining) env
-                             (conj k {:f :args :todo (next remaining) :vals (into [fv] vals) :env env :recur (.-recur-arity c)})
+                             (conj k {:f :args :node c :todo (next remaining) :vals (into [fv] vals) :env env :recur (.-recur-arity c)})
                              world mint dyn)))))
             6 (let [^klara.runtime.prepare.Let c c
                     x (imm (.-init c) env world mint dyn)]
@@ -485,7 +518,7 @@
                  (if (nil? remaining)
                    (next! regs :apply [self vals (.-arity c)] env k world mint dyn)
                    (next! regs :eval (first remaining) env
-                          (conj k {:f :args :todo (next remaining) :vals (into [self] vals) :env env :recur (.-arity c)})
+                          (conj k {:f :args :node c :todo (next remaining) :vals (into [self] vals) :env env :recur (.-arity c)})
                           world mint dyn)))))
             11 (next! regs :eval (.-ex ^klara.runtime.prepare.Throw c) env (conj k {:f :throw}) world mint dyn)
             12 (let [^klara.runtime.prepare.Try c c]

@@ -354,12 +354,23 @@
                            :else 'clojure.core/vector))
              terms))))
 
+(def ^:dynamic *source-file*
+  "The source file being expanded, for positions (L0.trace.positions)."
+  nil)
+
+(defn- position
+  "Attach the source position of `form` to term `t`, unless it has one."
+  [t form env]
+  (if-let [line (:line (meta form))]
+    (if (:pos t) t (assoc t :pos {:line line :column (:column (meta form)) :file *source-file* :in (:self env)}))
+    t))
+
 (defn expand
   "Expand one surface form to a Core term."
   [env form]
   (cond
     (symbol? form) (expand-symbol env form)
-    (seq? form) (if (empty? form) (t/const ()) (expand-seq env form))
+    (seq? form) (if (empty? form) (t/const ()) (position (expand-seq env form) form env))
     (or (vector? form) (map? form) (set? form)) (literal-coll env form)
     :else (t/const form)))
 

@@ -8,7 +8,7 @@
 
 (def headline
   '[step-det preservation progress safety run-quote ws-subst ws-pinTm wsb-WS
-    beta-step fix-step let-value-step if-true-step if-false-step prim-step delta-step pin-step step-equiv])
+    beta-step fix-step let-value-step if-true-step if-false-step prim-step delta-step pin-step step-equiv speculate-sound])
 
 (deftest kernel-checked
   (doseq [n headline]

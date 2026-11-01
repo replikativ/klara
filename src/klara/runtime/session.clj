@@ -132,7 +132,8 @@
 
 (defn load-source! [session src]
   (let [saved (:ns @session)]
-    (try (with-open [r (io/reader src)] (eval-reader session r))
+    (try (binding [ex/*source-file* (str src)]
+           (with-open [r (io/reader src)] (eval-reader session r)))
          (finally (swap! session assoc :ns saved)))))
 
 (defn loaded? [session ns-sym]

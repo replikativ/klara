@@ -215,9 +215,11 @@
                                           (go body (.-body a) inner []))))
                                 (:arities t) (.-arities fnode))))
               :app (let [^klara.runtime.prepare.App an n
+                         line (get-in t [:pos :line])
+                         at (fn [form] (if (and line (seq? form)) (with-meta form {:line line}) form))
                          f (:fn t)
                          args (map (fn [x xn] (go x xn scope frames)) (:args t) (.-args an))]
-                     (cond
+                     (at (cond
                        (:recur t) (list* 'recur args)
                        (and (= :host (:op f)) (= "clojure.core" (namespace (:name f)))
                             (not (m/intrinsic? (m/host-value (:name f)))))
@@ -226,7 +228,7 @@
                        (list* (:symbol (b/lookup (:name f))) args)
                        (and self-name (= :global (:op f)) (= :late (get-in f [:link :kind])) (= self-name (get-in f [:link :name])))
                        (protect (list* self-sym args) frames)
-                       :else (protect (list 'klara.compile.lower/call (go f (.-f an) scope frames) (vec args)) frames)))
+                       :else (protect (list 'klara.compile.lower/call (go f (.-f an) scope frames) (vec args)) frames))))
               :recur (let [^klara.runtime.prepare.Recur rn n]
                        (list* 'recur (map (fn [x xn] (go x xn scope frames)) (:args t) (.-args rn))))
               :let (let [^klara.runtime.prepare.Let ln n
@@ -261,6 +263,7 @@
    (when-let [x (subset-violation term)]
      (fail :L4.lower.subset (str "the backend does not compile " x)))
    (let [consts (atom [])
+         file (some #(get-in % [:pos :file]) (t/nodes term))
          self-sym (or (:self term) (t/fresh "self"))
          term (anf/anf (assoc term :self self-sym))
          node (m/prepare-term term)
@@ -268,4 +271,9 @@
          wrapper (list 'fn* ['consts] form)]
      {:form form
       :anf term
-      :fn ((binding [*ns* (the-ns 'klara.compile.lower)] (eval wrapper)) @consts)})))
+      ;; compiled code reports the Klara source file and lines (L0.trace.positions)
+      :fn ((with-bindings {#'*ns* (the-ns 'klara.compile.lower)
+                           clojure.lang.Compiler/SOURCE_PATH (or file "klara")
+                           clojure.lang.Compiler/SOURCE (if file (.getName (java.io.File. ^String file)) "klara")}
+             (eval wrapper))
+           @consts)})))

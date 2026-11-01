@@ -53,6 +53,7 @@ compiler. Forms outside the fragment are reported, not compared.
 | `prim-step` | a primitive on constants steps to its result when it succeeds | L4.check.prim |
 | `delta-step`, `pin-step` | a late or pinned global steps to its definition | L4.check.delta |
 | `step-equiv` | a configuration and its step reach the same terminal configurations | composition |
+| `speculate-sound` | `(if g a r)` reaches what `r` reaches when `a` does, for any guard value | L4.check.speculate |
 
 Not yet proved: rewriting under binders (needs contextual equivalence),
 `L4.check.let-app`, that the CEK machine refines `step` (tested

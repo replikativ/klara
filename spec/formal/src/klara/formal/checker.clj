@@ -160,3 +160,28 @@
                        hm :- (Star (Config.mk w ws n (Tm.lit r)) m)]
   (Star (Config.mk w ws n (Tm.prim op (Tm.lit x) (Tm.lit y))) m)
   (exact (Star.step _ _ _ (prim-step w ws n op x y r hr) hm)))
+
+;; ---------------------------------------------------------------------------
+;; Speculation (L4.check.speculate): `(if g a r)` means `r` when `a` does,
+;; whatever the guard's value. On the implementation side the guard must be
+;; a total pure predicate, so that evaluating it reaches a literal.
+
+(a/theorem speculate-sound [w :- World, ws :- Worlds, n :- Nat, d :- Datum, sa :- Tm, r :- Tm,
+                            ha :- (forall [e :- Config] (=> (forall [f :- Config] (Not (Step e f)))
+                                    (And (=> (Star (Config.mk w ws n sa) e) (Star (Config.mk w ws n r) e))
+                                         (=> (Star (Config.mk w ws n r) e) (Star (Config.mk w ws n sa) e)))))]
+  (forall [e :- Config] (=> (forall [f :- Config] (Not (Step e f)))
+    (And (=> (Star (Config.mk w ws n (Tm.if_ (Tm.lit d) sa r)) e) (Star (Config.mk w ws n r) e))
+         (=> (Star (Config.mk w ws n r) e) (Star (Config.mk w ws n (Tm.if_ (Tm.lit d) sa r)) e)))))
+  (intro e) (intro ht)
+  (cases hb (truthy (Tm.lit d)))
+  ;; the guard is false: the speculation steps to the reference
+  (have hs (Step (Config.mk w ws n (Tm.if_ (Tm.lit d) sa r)) (Config.mk w ws n r)))
+  (exact (if-false-step w ws n d sa r hb))
+  (exact (step-equiv _ _ e hs ht))
+  ;; the guard is true: it steps to the specialized branch, which means the reference
+  (have hs (Step (Config.mk w ws n (Tm.if_ (Tm.lit d) sa r)) (Config.mk w ws n sa)))
+  (exact (if-true-step w ws n d sa r hb))
+  (constructor)
+  (intro hx) (exact (And.left (ha e ht) (And.left (step-equiv _ _ e hs ht) hx)))
+  (intro hx) (exact (And.right (step-equiv _ _ e hs ht) (And.right (ha e ht) hx))))

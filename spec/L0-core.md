@@ -90,6 +90,11 @@ machine cannot know that the continuation will never be resumed.
 `L0.space.tail` A loop expressed with tail calls or `recur` runs in bounded
 continuation size.
 
+`L0.trace.positions` Core terms carry the source position of their form
+(file, line, column, enclosing definition). An exception leaving Klara code
+carries Klara frames, from the current node and the continuation, at the
+front of its host stack trace; compiled code reports Klara source lines.
+
 ## Surface
 
 `L0.surface.read` Source is read by the Clojure reader with reader
