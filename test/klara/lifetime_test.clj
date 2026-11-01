@@ -101,3 +101,37 @@
       (k/eval-string s "(def k 2) (def k 3)")
       (is (collected? old))
       (is (= 3 (k/eval-string s "(f)"))))))
+
+;; ---------------------------------------------------------------------------
+;; Compilation artefacts (L1.retain.roots): profiles, candidates and caches
+;; do not keep worlds or arguments alive.
+
+(deftest profile-samples-do-not-retain-objects
+  (testing "a world passed to a function is not kept alive by the function's profile"
+    (let [s (session)]
+      (k/eval-string s "(ns lt1 (:require [klara.world :as world])) (defn probe [w] 1) (def k 1)")
+      (let [old (WeakReference. (:world @s))]
+        (k/eval-string s "(probe (world/current))")
+        (k/eval-string s "(def k 2) (def k 3)")
+        (is (collected? old))))))
+
+(deftest compiled-code-does-not-retain-old-worlds
+  (testing "an executable's validity cache does not keep the world it last checked"
+    (let [s (session)]
+      (k/eval-string s "(ns lt2 (:require [klara.compiler :as compiler])) (defn probe [x] (+ x 1)) (def k 1) (compiler/optimize! 'lt2/probe)")
+      (k/eval-string s "(probe 5)")
+      (let [w (WeakReference. (:world @s))]
+        (k/eval-string s "(probe 5)")
+        (k/eval-string s "(def k 2) (def k 3)")
+        (is (collected? w))))))
+
+(deftest candidates-do-not-retain-sampled-arguments
+  (testing "a large argument the profile held softly is not kept by the compiled candidate"
+    (let [s (session)]
+      (k/eval-string s "(ns lt3 (:require [klara.jit :as jit])) (defn sz [v] (count v)) (def big (vec (range 50000)))")
+      (let [big (WeakReference. (k/eval-string s "big"))]
+        (k/eval-string s "(dotimes [_ 3] (sz big))")
+        (k/eval-string s "(def c (:status (jit/compile! 'lt3/sz)))")
+        (k/eval-string s "(def big nil) (def k 1) (def k 2)")
+        (is (= :ready (k/eval-string s "c")))
+        (is (collected? big))))))

@@ -7,23 +7,20 @@
   primitive path returns it. Klara specifies checked 64-bit arithmetic: an
   overflow exactly when the result is out of range. Found by the
   differential test against the formal semantics (spec/formal)."
-  (:refer-clojure :exclude [- conj! assoc! dissoc! disj! pop! persistent!]))
+  (:refer-clojure :exclude [- conj! assoc! dissoc! disj! pop! persistent! transient]))
 
 (defn same?
-  "Value speculation guard (L4.check.speculate-value): equal and of the same
-   class, so that the speculated value cannot be told apart from the real one.
-   Only simple immutable values qualify."
+  "Value speculation guard (L4.check.speculate-value): x cannot be told apart
+   from c. A collection or other object must be c itself (identity is
+   observable, and comparing structure could realize lazy sequences); a
+   scalar must be equal, of the same class and with the same metadata. Total:
+   it never runs Klara code."
   [x c]
   (or (identical? x c)
-      (and (= (class x) (class c))
-           (cond
-             (or (nil? c) (keyword? c) (string? c) (boolean? c) (symbol? c) (char? c)
-                 (instance? Long c) (instance? Double c)) (= x c)
-             (or (vector? c) (seq? c)) (and (= (count x) (count c)) (every? true? (map same? x c)))
-             (map? c) (and (= (count x) (count c))
-                           (every? (fn [[k v]] (and (contains? x k) (same? (get x k) v))) c))
-             (set? c) (= x c)
-             :else false))))
+      (and (or (nil? c) (number? c) (string? c) (keyword? c) (symbol? c) (boolean? c) (char? c))
+           (= (class x) (class c))
+           (= x c)
+           (= (meta x) (meta c)))))
 
 (defn -
   ([x] (clojure.core/- x))
@@ -63,12 +60,22 @@
 (def ^ISub SUB (Sub.))
 
 ;; ---------------------------------------------------------------------------
-;; Owned updates (L4.check.in-place, design/04-ownership.md)
+;; Owned updates (L4.check.in-place, L0.surface.transient, design/04-ownership.md)
 ;;
-;; Klara's transient operations act on a transient in place and on a
-;; persistent value persistently: what erasure says they mean. Compiled code
-;; freezes every local it hands the interpreter when it leaves (freeze), so a
-;; continuation resumed once or many times goes on with persistent values.
+;; Klara has no transients of its own: `transient` is the identity, and the
+;; transient operations act persistently on persistent values, which is what
+;; erasure says they mean. Only compiled code the kernel admitted as owned
+;; makes real transients, from `own` at a loop's initial value; it freezes
+;; every local it hands the interpreter when it leaves (freeze), so the
+;; interpreter, and any continuation resumed once or many times, only ever
+;; sees persistent values.
+
+(defn transient [x] x)
+
+(defn own
+  "Marks the initial value of an owned loop accumulator. The identity, except
+   in compiled code admitted as owned, where lowering makes it a transient."
+  [x] x)
 
 ;; A leave builds one frame per enclosing let, and the same transient is in
 ;; several; it can be made persistent only once, so freezing remembers.

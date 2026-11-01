@@ -307,7 +307,7 @@
   "Lower term `t` with prepared node `n`. `scope` is the environment layout
    (names, as in klara.runtime.prepare); `frames` are the let contexts of the
    current function around this point, innermost first, each [body-node scope]."
-  [t n scope frames consts self-name self-sym osr]
+  [t n scope frames consts self-name self-sym osr owned?]
   (let [selves (atom {})                 ; self name -> [fn node, free names]
         top t]
   (letfn [(constant [x]
@@ -371,6 +371,9 @@
                          args (mapv (fn [x xn] (go x xn scope frames)) (:args t) (.-args an))]
                      (at (cond
                        (:recur t) (list* 'recur args)
+                       ;; L4.check.in-place: own makes a transient only in code admitted as owned
+                       (and (= :host (:op f)) (= 'klara.core/own (:name f)) (= 1 (count args)))
+                       (if owned? (list 'clojure.core/transient (first args)) (first args))
                        ;; two-argument subtraction: the host picks a primitive overload
                        (and (= :host (:op f)) (= 'klara.core/- (:name f)) (= 2 (count args)))
                        (list* '.sub 'klara.runtime.prims/SUB args)
@@ -493,9 +496,10 @@
 
 (defn lower
   "Compile a :fn term to a host function. With :self-name, late references
-   to that definition call the compiled function itself."
+   to that definition call the compiled function itself. With :owned?, the
+   term was admitted as owned (L4.check.in-place) and `own` makes transients."
   ([term] (lower term {}))
-  ([term {:keys [self-name]}]
+  ([term {:keys [self-name owned?]}]
    (when-not (= :fn (:op term)) (fail :L4.lower.subset "only functions are compiled"))
    (when-let [x (subset-violation term)]
      (fail :L4.lower.subset (str "the backend does not compile " x)))
@@ -505,7 +509,7 @@
          term (anf/anf (assoc term :self self-sym))
          node (m/prepare-term term)
          osr (atom [])
-         form (lower* term node [] () consts self-name self-sym osr)
+         form (lower* term node [] () consts self-name self-sym osr (boolean owned?))
          osr-entries @osr
          wrapper (list 'fn* ['consts] (vector form (mapv second osr-entries)))
          [f factories] ((with-bindings {#'*ns* (the-ns 'klara.compile.lower)

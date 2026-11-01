@@ -97,6 +97,13 @@ front of its host stack trace; compiled code reports Klara source lines.
 
 ## Surface
 
+`L0.surface.transient` Klara has no transients of its own: `transient` is
+the identity, and `conj!`, `assoc!`, `dissoc!`, `disj!`, `pop!` and
+`persistent!` act persistently on persistent values (each returns the
+updated collection, as Clojure requires its callers to use). Clojure code
+that uses transients correctly computes the same results; whether a
+collection is updated in place is the compiler's choice (L4.check.in-place).
+
 `L0.surface.defrecord` `(defrecord Name [f ..])` defines `Name` (its type
 tag, a symbol), `->Name` and `map->Name`. A record is a map with exactly its
 fields, tagged `{:klara/record ns/Name}` in its metadata; equality is map

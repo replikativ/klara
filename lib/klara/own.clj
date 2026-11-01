@@ -2,8 +2,9 @@
   "Functional but in place, as a specializer (design/04-ownership.md).
 
   (own/in-place ctx default) rewrites loops whose accumulator is only ever
-  replaced by a persistent update of itself: the accumulator starts as a
-  transient, the updates become their owned versions (assoc -> assoc!), and
+  replaced by a persistent update of itself: the accumulator's initial value
+  is marked owned (klara.core/own, a transient in compiled code), the
+  updates become their owned versions (assoc -> assoc!), and
   the exits that return it return (persistent! acc). It is optimistic: the
   kernel admits the candidate only if the ownership judgment holds and the
   erasure means the reference (L4.check.in-place), so compile with
@@ -76,7 +77,7 @@
         (when j
           (let [p (nth (:params f) j)]
             (app (code/make (assoc f :body (rewrite-tails (:body f) p (:self f) j)))
-                 (assoc (vec (:args v)) j (app (host 'clojure.core/transient) [(nth (:args v) j)])))))))))
+                 (assoc (vec (:args v)) j (app (host 'klara.core/own) [(nth (:args v) j)])))))))))
 
 (defn rewrite
   "Every loop in c with an accumulator to own, rewritten."
@@ -85,7 +86,14 @@
       (let [cs (code/children c)]
         (if (seq cs) (code/with-children c (mapv rewrite cs)) c))))
 
+(defn- ownable?
+  "Does c contain a loop with an accumulator to own?"
+  [c]
+  (or (some? (own-loop c)) (boolean (some ownable? (code/children c)))))
+
 (defn in-place
-  "The specializer: own the accumulators of the definition's loops."
+  "The specializer: own the accumulators of the definition's loops; declines
+   (nil) when there are none."
   [ctx default]
-  (rewrite (:reference ctx)))
+  (when (ownable? (:reference ctx))
+    (rewrite (:reference ctx))))

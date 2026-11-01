@@ -8,7 +8,13 @@
   heads agree, subterms are compared; otherwise a definition at the head
   is unfolded (L4.check.delta), lazily and on one side at a time. Every
   step costs one unit of the job's budget. Unfolding a late link records
-  the premise (name, generation) it relied on."
+  the premise (name, generation) it relied on.
+
+  The definition being prepared (the `self` of a check) is never unfolded on
+  the candidate's side (L4.check.self): after installation its name means
+  the candidate, so treating it as its reference there would assume what is
+  being shown. Unfolding it on the reference's side is a finite unfolding of
+  the reference, which has the same fixed point."
   (:require [klara.lang.builtins :as b]
             [klara.lang.term :as t]
             [klara.runtime.value :as v]
@@ -28,16 +34,37 @@
 ;; Values and constants
 
 (defn- same-value?
-  "Equality that also distinguishes number representations, so that folding
-   never confuses 1 with 1N or 1.0."
+  "Constants that no Klara program can tell apart: the same class, the same
+   metadata, and for collections the same elements in the same iteration
+   order (so 1 and 1N, a list and a vector, an array map and a hash map, a
+   sorted and a hash set all differ). Functions, code and other objects are
+   compared by identity; lazy sequences too, since comparing them would run
+   them."
   [a b]
   (cond
-    (and (number? a) (number? b)) (and (= (class a) (class b)) (= a b))
-    (and (sequential? a) (sequential? b)) (and (= (count a) (count b)) (every? true? (map same-value? a b)))
-    (and (map? a) (map? b)) (and (= (count a) (count b))
-                                 (every? (fn [[k x]] (and (contains? b k) (same-value? x (get b k)))) a))
-    (or (v/closure? a) (v/code? a)) (identical? a b)
-    :else (= a b)))
+    (identical? a b) true
+    (not= (class a) (class b)) false
+    (not (same-value? (meta a) (meta b))) false
+    (instance? clojure.lang.LazySeq a) false
+    (or (map? a) (set? a) (sequential? a))
+    (and (= (count a) (count b))
+         (every? true? (map same-value? (seq a) (seq b))))
+    (instance? java.util.Map$Entry a) (and (same-value? (key a) (key b)) (same-value? (val a) (val b)))
+    (or (nil? a) (number? a) (string? a) (keyword? a) (symbol? a) (boolean? a) (char? a)) (= a b)
+    :else false))
+
+(defn- value-sig
+  "A value's identity for keys: its class, metadata and structure."
+  [x]
+  (cond (nil? x) nil
+        (or (map? x) (set? x) (sequential? x))
+        (if (instance? clojure.lang.LazySeq x)
+          [::object (System/identityHashCode x)]
+          [(class x) (value-sig (meta x)) (mapv value-sig (seq x))])
+        (instance? java.util.Map$Entry x) [(value-sig (key x)) (value-sig (val x))]
+        (or (number? x) (string? x) (keyword? x) (symbol? x) (boolean? x) (char? x))
+        [(class x) (when (instance? clojure.lang.IMeta x) (value-sig (meta x))) x]
+        :else [::object (System/identityHashCode x)]))
 
 (defn- value-term?
   "A term whose evaluation cannot fail, diverge or perform an effect."
@@ -84,10 +111,13 @@
 
 (defn- unfold
   "If `t` is a reference to a function definition, its term; else nil.
-   Records a premise for late and guarded links."
-  [ctx t]
+   Records a premise for late and guarded links. On the candidate's side the
+   definition being prepared is not unfolded (L4.check.self)."
+  [ctx t side]
   (case (:op t)
     :global (let [{:keys [kind name world generation]} (:link t)]
+              (if (and (= side :candidate) (some? (:self ctx)) (= name (:self ctx)))
+                nil
               (case kind
                 :pinned (let [x (w/pin world name)]
                           (when (v/closure? x) (closure-term x)))
@@ -96,7 +126,7 @@
                   (when (and d (v/closure? (:value d))
                              (or (= kind :late) (= generation (:generation d))))
                     (vswap! (:premises ctx) conj [name (:generation d)])
-                    (closure-term (:value d))))))
+                    (closure-term (:value d)))))))
     :const (when (v/closure? (:value t)) (closure-term (:value t)))
     nil))
 
@@ -136,7 +166,18 @@
           body (cond-> (:body a) (:self f) (t/substitute {(:self f) (dissoc f :self)}))]
       (reduce (fn [b [p e]] (t/let1 p e b)) body (reverse (map vector (:params a) args))))))
 
-(defn- term-key [t] (t/->form t))
+(defn- signed
+  "`t` with every constant replaced by its value's signature."
+  [t]
+  (let [cs (t/children t)
+        t (if (seq cs) (t/with-children t (mapv signed cs)) t)]
+    (if (= :const (:op t)) (assoc t :value (value-sig (:value t))) t)))
+
+(defn- term-key
+  "Assumption key: terms that differ only in how their constants print
+   (1 and 1N, a list and a vector) get different keys."
+  [t]
+  (t/->form (signed t)))
 
 (defn- assumed
   "true or false if the truth of `t` is assumed in `ctx`, else nil."
@@ -189,11 +230,11 @@
 
 (defn- unfold-head
   "Unfold the definition at the head of `t` (its function position for a
-   call), or nil."
-  [ctx t]
+   call), or nil. `side` is :reference or :candidate."
+  [ctx t side]
   (case (:op t)
-    :app (when-let [f (unfold ctx (:fn t))] (assoc t :fn f))
-    (unfold ctx t)))
+    :app (when-let [f (unfold ctx (:fn t) side)] (assoc t :fn f))
+    (unfold ctx t side)))
 
 (defn- bind-pairs
   "Rename binders of `b` to those of `a` (L4.check.alpha)."
@@ -244,7 +285,9 @@
      clojure.core/map? clojure.core/vector? clojure.core/seq? clojure.core/coll?
      clojure.core/fn? clojure.core/boolean? clojure.core/set? clojure.core/nil?
      clojure.core/some? clojure.core/true? clojure.core/false? clojure.core/not
-     clojure.core/= clojure.core/not= clojure.core/identical? klara.jit/same?})
+     clojure.core/identical? klara.jit/same?})
+;; = and not= are not here: comparing a lazy sequence realizes it, which runs
+;; Klara code that may fail or not terminate.
 
 (defn- total-guard?
   "Locals and constants, and total predicates applied to total guards."
@@ -292,7 +335,7 @@
   "Is `a` equivalent to `b` under the checker's rules?"
   [ctx a b]
   (let [a (whnf ctx a) b (whnf ctx b)]
-    (or (identical? a b) (= a b)                     ; the same term means the same
+    (or (identical? a b)                             ; the same term means the same
         (cond
           ;; L4.check.speculate: both branches must mean the other side
           (and (speculation? b) (not (speculation? a)))
@@ -306,21 +349,23 @@
           (and (speculation? a) (not (speculation? b)))
           (and (guard? (:test a) (:else a)) (equal? ctx (:then a) b) (equal? ctx (:else a) b)))
         (and (= (:op a) (:op b)) (same-shape ctx a b))
-        (if-let [a' (unfold-head ctx a)]
+        ;; a is on the reference's side, b on the candidate's (see check)
+        (if-let [a' (unfold-head ctx a :reference)]
           (equal? ctx a' b)
-          (when-let [b' (unfold-head ctx b)]
+          (when-let [b' (unfold-head ctx b :candidate)]
             (equal? ctx a b')))
         (do (when-not @(:difference ctx) (vreset! (:difference ctx) [a b]))
             false))))
 
 (defn check
   "Compare `reference` and `candidate` terms in preparation world `world`,
-   charging `meter` (a long array, or nil). Returns
+   charging `meter` (a long array, or nil). `self` is the name of the
+   definition being prepared, or nil (L4.check.self). Returns
      {:result :equal :premises #{[q g] ..}}
      {:result :different :difference [ref-form cand-form]}
      {:result :exhausted}"
-  [reference candidate world meter]
-  (let [ctx {:world world :meter meter :premises (volatile! #{}) :difference (volatile! nil)}]
+  [reference candidate world meter & [self]]
+  (let [ctx {:world world :meter meter :self self :premises (volatile! #{}) :difference (volatile! nil)}]
     (try
       (if (equal? ctx reference candidate)
         {:result :equal :premises @(:premises ctx)}
@@ -340,7 +385,7 @@
         go #(normalize* ctx depth %)]
     (case (:op t)
       :app (let [t (assoc t :fn (go (:fn t)) :args (mapv go (:args t)))]
-             (if-let [u (and (pos? depth) (some #(= :const (:op %)) (:args t)) (unfold-head ctx t))]
+             (if-let [u (and (pos? depth) (some #(= :const (:op %)) (:args t)) (unfold-head ctx t :reference))]
                (normalize* ctx (dec depth) u)
                (or (some->> (fold-prim t) go) t)))
       :fn (t/fn-term (:self t) (mapv #(update % :body go) (:arities t)))

@@ -119,14 +119,28 @@
   (if (cheap-value? x) x (java.lang.ref.WeakReference. x)))
 
 (defn- observed [v]
-  (if (instance? java.lang.ref.WeakReference v) (.get ^java.lang.ref.WeakReference v) v))
+  (if (instance? java.lang.ref.Reference v) (.get ^java.lang.ref.Reference v) v))
+
+(defn- plain-size
+  "The number of scalars in x if it is plain data (scalars and collections of
+   plain data, nothing that could keep a world, a function or a mutable
+   object alive) of at most `bound` of them, else nil."
+  [x ^long bound]
+  (let [n (volatile! 0)]
+    (letfn [(walk [x]
+              (cond (cheap-value? x) (<= (vswap! n inc) bound)
+                    (and (coll? x) (not (instance? clojure.lang.LazySeq x)))
+                    (every? walk (if (map? x) (mapcat identity x) x))
+                    :else false))]
+      (when (walk x) @n))))
 
 (defn- sample-of
-  "Arguments kept as a sample: held strongly when small (scalars and
-   collections of at most 10000 elements), so a profile retains at most one
-   bounded sample per function; large arguments only weakly (L1.retain.roots)."
+  "Arguments kept as a sample (L1.retain.roots): held strongly when they are
+   plain data of at most 10000 scalars in all, so a profile keeps at most one
+   bounded sample per function and never a world, a function or a mutable
+   object; otherwise only weakly."
   [args]
-  (if (every? #(or (not (coll? %)) (and (counted? %) (<= (count %) 10000))) args)
+  (if (plain-size args 10000)
     args
     (java.lang.ref.WeakReference. args)))
 

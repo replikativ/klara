@@ -21,6 +21,9 @@ It returns an outcome with `:status` `:ready`, `:rejected` (with `:rule`,
 `L4.prepare.recipe-failed` A recipe that throws or returns a non-Code value
 gives `:rejected` with this rule.
 
+`L4.prepare.declined` A recipe (a specializer) that returns nil declines:
+the outcome is `:declined` with this rule, and nothing is checked.
+
 ## Checking
 
 The checker decides `reference ≡ candidate` by comparing terms up to the
@@ -50,6 +53,18 @@ arguments may be replaced by its result, if the call returns normally.
 `L4.check.alpha` Terms that differ only in the names of bound locals are
 equal.
 
+`L4.check.const` Two constants are equal only if no Klara program can tell
+them apart: the same class and metadata and, for collections, equal
+elements in the same iteration order (so `1` and `1N`, a list and a vector,
+an array map and a hash map, a sorted and a hash set differ). Functions,
+code and other objects are equal only to themselves.
+
+`L4.check.self` When preparing the definition `q` (`(:name opts)`), `q` is
+never unfolded on the candidate's side: once installed, `q` means the
+candidate, so the reference may not be assumed for it there. It may be
+unfolded on the reference's side; the candidate then equals a finite
+unfolding of the reference, which has the same fixed point.
+
 A *value* for these rules is a `:const`, a `:local`, or a `:fn`.
 
 `L4.check.certificate` When the rules above do not relate the candidate to
@@ -69,6 +84,16 @@ subterms.
 
 `L4.check.premises` The candidate's premises are the premises recorded by
 `L4.check.delta` on either side.
+
+## Facts
+
+`L4.facts.pure` `(klara.jit/pure? q)` is `{:pure true :premises ..}` when
+calling the function definition `q` on plain data can neither mutate
+anything that existed before the call nor perform an effect: its body and
+those of the definitions it calls use only pure host functions, functions
+that allocate, and writes to arrays allocated in the same call; no interop,
+intrinsics or definitions. Otherwise `{:pure false :why ..}`. The analysis
+is conservative.
 
 ## Lowering
 
@@ -213,16 +238,19 @@ guards; otherwise as any call. The decision is cached per call site and
 world, like the resolution itself.
 
 `L4.check.in-place` A candidate with the certificate `{:kind :in-place}` is
-admitted when (1) its erasure, which drops `transient` and `persistent!`
-and reads `conj!`, `assoc!`, `dissoc!`, `disj!`, `pop!` as their persistent
-versions, is equal to the reference by the definitional rules, and (2) the
-ownership judgment holds: every `transient` is the initial value of a loop
-parameter; in the loop that parameter is read (`get`, `count`, `contains?`,
-`nth`) only before it is updated, updated only into the `recur` at its own
-position, never captured by a function or passed elsewhere, and returned
-only through `persistent!`. Klara's owned updates act persistently on
-persistent values, and compiled code freezes the values it leaves with
-(`persistent!`), so continuations resumed any number of times stay correct.
+admitted when (1) its erasure, which drops `own`, `transient` and
+`persistent!` and reads `conj!`, `assoc!`, `dissoc!`, `disj!`, `pop!` as their
+persistent versions, is equal to the reference by the definitional rules,
+and (2) the ownership judgment holds: every `(klara.core/own e)` is, by its
+place in the term, the initial value of a parameter of the loop it starts;
+in that loop the parameter is read (`get`, `count`, `contains?`, `nth`) only
+before it is updated, updated only into the `recur` at its own position,
+never captured by a function or passed elsewhere, and returned only through
+`persistent!`. Only compiled code admitted this way makes transients
+(`own` lowers to `transient`); it freezes the values it leaves with
+(`persistent!`), so the interpreter and continuations resumed any number of
+times only see persistent values. The erasure check is charged to the
+preparation's budget.
 
 `L4.lower.hint` A host type hint on a let binding (`^booleans`, `^String`) is
 a guard in compiled code: where the bound value is an instance of the class,

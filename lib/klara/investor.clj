@@ -12,10 +12,9 @@
      it cost; otherwise it declines;
   4. accounts for everything it spent, chosen or not.
 
-  Running a function on a real argument to measure it is safe because the
-  measurement is a job: it sees a fork of the world, cannot mutate anything
-  outside, and a measurement that would perform an effect just fails. The
-  decision is data."
+  Running a function on a real argument to measure it is safe because only
+  pure definitions (L4.facts.pure) on plain data are measured, in a job: a
+  fork of the world that does not train profiles. The decision is data."
   (:require [klara.jit :as jit]
             [klara.own :as own]
             [klara.compiler :as compiler]
@@ -30,6 +29,15 @@
   {:as-is (fn [ctx default] (:reference ctx))
    :default (fn [ctx default] (jit/default ctx))
    :in-place {:specializer own/in-place :opts {:certificate {:kind :in-place}}}})
+
+(defn data?
+  "Plain data: no functions, atoms, arrays or other objects, so a pure
+   function called on it can only compute."
+  [x]
+  (cond (or (nil? x) (number? x) (string? x) (keyword? x) (symbol? x) (boolean? x) (char? x)) true
+        (map? x) (every? (fn [[k v]] (and (data? k) (data? v))) x)
+        (coll? x) (every? data? x)
+        :else false))
 
 (def min-work
   "Below this much work (jit/work) the investor does not look at a definition."
@@ -96,8 +104,15 @@
         calls (get-in ctx [:profile :entries :external])
         args (get-in ctx [:profile :entries :sample])
         f (world/get (world/current) q)]
-    (if (or (nil? calls) (< (jit/work ctx) min-work) (nil? args))
+    (cond
+      (or (nil? calls) (< (jit/work ctx) min-work) (nil? args))
       {:name q :decision :not-hot :calls calls :work (jit/work ctx)}
+      ;; measuring runs the definition: only where that changes nothing but time
+      (not (:pure (jit/pure? q)))
+      {:name q :decision :unmeasurable :why (:why (jit/pure? q))}
+      (not (data? args))
+      {:name q :decision :unmeasurable :why "its sample arguments are not plain data"}
+      :else
       (let [alts (cond-> alternatives
                    (:specializer ctx) (assoc :attached (:specializer ctx)))
             names (vec (keys alts))

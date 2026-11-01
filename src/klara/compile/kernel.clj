@@ -7,6 +7,7 @@
   backend. An executable checks its premises at entry and otherwise runs
   the reference meaning."
   (:require [klara.compile.check :as check]
+            [klara.compile.facts :as facts]
             [klara.compile.own :as own]
             [klara.compile.lower :as lower]
             [klara.lang.builtins :as b]
@@ -52,16 +53,16 @@
 
 (defn register-certifier! [kind f] (swap! certifiers assoc kind f))
 
-(v/deftype-callable Executable [cand ^:volatile-mutable validity   ; [world valid?], one write
+(v/deftype-callable Executable [cand ^:volatile-mutable validity   ; [world id, valid?], one write; the id, not the world
                                 ^:volatile-mutable last-path]
   v/IExecutable
   (-execute [this st args]
     (let [world (:world st)
           ok (and (or (nil? (:mint st)) (:mint-safe cand))
                   (let [^objects v validity]
-                    (if (and v (identical? world (aget v 0)))
+                    (if (and v (identical? (w/id world) (aget v 0)))
                       (aget v 1)
-                      (let [r (valid? cand world)] (set! validity (object-array [world r])) r)))
+                      (let [r (valid? cand world)] (set! validity (object-array [(w/id world) r])) r)))
                   (guards-hold? cand args))
           r (if ok
               (do (m/set-context! world (:mint st) (:dyn st))
@@ -79,18 +80,18 @@
   (-call [this world mint dyn args]
     (if (and (or (nil? mint) (:mint-safe cand))
              (let [^objects v validity]
-               (if (and v (identical? world (aget v 0)))
+               (if (and v (identical? (w/id world) (aget v 0)))
                  (aget v 1)
-                 (let [r (valid? cand world)] (set! validity (object-array [world r])) r)))
+                 (let [r (valid? cand world)] (set! validity (object-array [(w/id world) r])) r)))
              (guards-hold? cand args))
       (do (set! last-path :compiled) (apply (:host-fn cand) args))
       v/fallback))
   (-direct [this world]
     (when (and (nil? (:guards cand))
                (let [^objects v validity]
-                 (if (and v (identical? world (aget v 0)))
+                 (if (and v (identical? (w/id world) (aget v 0)))
                    (aget v 1)
-                   (let [r (valid? cand world)] (set! validity (object-array [world r])) r))))
+                   (let [r (valid? cand world)] (set! validity (object-array [(w/id world) r])) r))))
       (:host-fn cand)))
   (-describe [this]
     {:name (:name cand) :reference (:reference cand) :premises (:premises cand)
@@ -164,16 +165,25 @@
 (defn- finish
   "Check and lower `candidate` against `reference`, inside the job (state `st`)."
   [st reference candidate opts]
-  (if-not (v/code? candidate)
+  (cond
+    ;; L4.prepare.declined: a specializer may decline
+    (nil? candidate) {:status :declined :rule :L4.prepare.declined :message "the recipe declined"}
+    (not (v/code? candidate))
     (reject :L4.prepare.recipe-failed (str "the recipe returned " (pr-str candidate) ", not code"))
+    :else
     (let [ref-term (intr/strip-annotations (.-term ^Code reference))
           cand-term (intr/strip-annotations (.-term ^Code candidate))
-          r (check/check ref-term cand-term (:world st) (get-in st [:dyn :meter]))
+          meter (get-in st [:dyn :meter])
+          self (:name opts)                                   ; L4.check.self
+          r (check/check ref-term cand-term (:world st) meter self)
           r (if-let [cert (and (= :different (:result r)) (:certificate opts))]
               (if-let [certify (get @certifiers (:kind cert))]
-                (let [c (certify {:reference ref-term :candidate cand-term :world (:world st) :certificate cert})]
-                  (if (= :proved (:result c))
-                    {:result :equal :premises (or (:premises c) #{}) :guards (:guards c) :evidence (:evidence c)}
+                ;; certifiers charge the preparation's budget and see its self
+                (let [c (certify {:reference ref-term :candidate cand-term :world (:world st)
+                                  :certificate cert :meter meter :self self})]
+                  (case (:result c)
+                    :proved {:result :equal :premises (or (:premises c) #{}) :guards (:guards c) :evidence (:evidence c)}
+                    :exhausted {:result :exhausted}
                     {:result :certificate-failed :message (:message c)}))
                 {:result :certificate-failed :message (str "no certifier for " (pr-str (:kind cert)))})
               r)]
@@ -190,8 +200,11 @@
                  (reject :L4.lower.subset (str "the backend does not compile " x))
                  (let [premises (cond-> (:premises r)
                                   (:name opts) (conj [(:name opts) (w/generation (:world st) (:name opts))]))
-                       {:keys [fn form osr]} (lower/lower cand-term {:self-name (:name opts)})
-                       cand (assoc (->Candidate (:name opts) reference cand-term premises fn form
+                       {:keys [fn form osr]} (lower/lower cand-term {:self-name (:name opts)
+                                                                     :owned? (= :in-place (:evidence r))})
+                       ;; the stored reference has no profile annotations (whose
+                       ;; samples would otherwise stay alive with the candidate)
+                       cand (assoc (->Candidate (:name opts) (Code. ref-term) cand-term premises fn form
                                                 (:guards r) (:evidence r) (lower/mint-safe? cand-term))
                                    :reentries (java.util.concurrent.atomic.AtomicLong.))]
                    (attach-osr! cand osr)
@@ -385,11 +398,16 @@
 ;; L4.check.in-place: an owned candidate is admitted by the ownership
 ;; judgment and the definitional check of its erasure.
 (register-certifier! :in-place
-  (fn [{:keys [reference candidate world]}]
+  (fn [{:keys [reference candidate world meter self]}]
     (if-let [why (own/violation candidate)]
       {:result :failed :message why}
-      (let [r (check/check reference (own/erase candidate) world nil)]
-        (if (= :equal (:result r))
-          {:result :proved :evidence :in-place :premises (:premises r)}
+      (let [r (check/check reference (own/erase candidate) world meter self)]
+        (case (:result r)
+          :equal {:result :proved :evidence :in-place :premises (:premises r)}
+          :exhausted {:result :exhausted}
           {:result :failed :message (str "its erasure differs from the reference: "
                                          (pr-str (:difference r)))})))))
+
+(b/register! 'klara.jit/pure?                                         ; L4.facts.pure
+  {:kind :intrinsic
+   :fn (fn [st [q]] (ret st (facts/pure (:world st) q)))})

@@ -1,21 +1,23 @@
 (ns klara.compile.own
   "Functional but in place (design/04-ownership.md, L4.check.in-place).
 
-  An owned candidate uses transients where its reference uses persistent
-  collections. It is admitted when
+  An owned candidate marks loop accumulators `own` and updates them with
+  Klara's owned operations (conj!, assoc!, ...) where its reference uses
+  persistent ones. It is admitted when
 
-    1. its erasure (transient and persistent! dropped, conj! as conj, ...)
-       is definitionally equal to the reference, and
-    2. the ownership judgment WO holds: every transient is the initial value
-       of a loop parameter, and inside the loop that parameter is used
-       linearly. It is read only before it is consumed, consumed only into
-       the recur at its own position, never captured by a function, passed
-       anywhere else or returned except through persistent!.
+    1. its erasure (own, transient and persistent! dropped, conj! read as
+       conj, ...) is definitionally equal to the reference, and
+    2. the ownership judgment WO holds: every `own` is the initial value of a
+       parameter of the loop it starts, and inside that loop the parameter is
+       used linearly. It is read only before it is consumed, consumed only
+       into the recur at its own position, never captured by a function,
+       passed anywhere else or returned except through persistent!.
 
-  Leaving compiled code freezes owned values (klara.runtime.prims/freeze),
-  and Klara's transient operations act persistently on persistent values, so
-  a continuation resumed any number of times goes on correctly. The erasure
-  theorem about the formal semantics is open (design/04-ownership.md)."
+  Only compiled code admitted this way makes real transients (lowering turns
+  `own` into `transient`); everywhere else these operations are their
+  persistent meanings, and compiled code freezes owned values when it leaves
+  (klara.runtime.prims). The erasure theorem about the formal semantics is
+  open (design/04-ownership.md)."
   (:require [klara.lang.term :as t]))
 
 (def consuming
@@ -33,7 +35,7 @@
 
 (defn- host-name [t] (get-in t [:fn :name]))
 
-(def ^:private boundary '#{clojure.core/transient klara.core/persistent!})
+(def ^:private boundary '#{klara.core/own klara.core/transient klara.core/persistent!})
 
 (defn erase
   "The persistent program an owned candidate means."
@@ -68,13 +70,13 @@
            (chain? (first (:args t)) p)
            (every? #(reads-only? % p) (rest (:args t))))))
 
-(defn- tail-ok?
+(defn- linear?
   "The loop body `t` uses parameter p (at position j of loop `self`) linearly."
   [t p self j]
   (case (:op t)
-    :if (and (reads-only? (:test t) p) (tail-ok? (:then t) p self j) (tail-ok? (:else t) p self j))
-    :let (and (reads-only? (:init t) p) (not= p (:name t)) (tail-ok? (:body t) p self j))
-    :do (and (every? #(reads-only? % p) (butlast (:body t))) (tail-ok? (last (:body t)) p self j))
+    :if (and (reads-only? (:test t) p) (linear? (:then t) p self j) (linear? (:else t) p self j))
+    :let (and (reads-only? (:init t) p) (not= p (:name t)) (linear? (:body t) p self j))
+    :do (and (every? #(reads-only? % p) (butlast (:body t))) (linear? (last (:body t)) p self j))
     :recur (if (= self (:target t))
              (let [args (:args t)]
                (and (every? #(reads-only? % p) (take j args))
@@ -85,39 +87,36 @@
     (or (not (mentions? t p))
         (and (host-app? t #{'klara.core/persistent!}) (local? (first (:args t)) p)))))
 
-(defn- owned-params
-  "For a loop app t: [[param index] ..] whose initial argument is (transient e)."
+(defn- owned-positions
+  "For a loop app t (a one-arity named function applied where it is made):
+   {j param} for the arguments that are (own e)."
   [t]
   (let [f (:fn t)]
     (when (and (= :app (:op t)) (= :fn (:op f)) (:self f) (= 1 (count (:arities f))))
-      (keep-indexed (fn [j a] (when (host-app? a #{'clojure.core/transient})
-                                [(nth (:params (first (:arities f))) j) j]))
-                    (:args t)))))
+      (into {} (keep-indexed (fn [j a] (when (host-app? a #{'klara.core/own})
+                                         [j (nth (:params (first (:arities f))) j)])))
+            (:args t)))))
 
 (defn violation
-  "Why `candidate` does not satisfy WO, or nil."
+  "Why `candidate` does not satisfy WO, or nil. The judgment follows where
+   things are, not what they look like: an `own` is allowed only at the
+   initial-value position of an owned loop, checked by its place in the term."
   [candidate]
-  (let [nodes (t/nodes candidate)
-        owned-inits (set (for [n nodes :when (= :app (:op n)), [_ j] (owned-params n)] (nth (:args n) j)))]
-    (or
-     ;; every transient is an owned loop init
-     (some (fn [n] (when (and (host-app? n #{'clojure.core/transient}) (not (contains? owned-inits n)))
-                     "a transient that is not the initial value of a loop parameter"))
-           nodes)
-     ;; every owned parameter is used linearly in its loop
-     (some (fn [n]
-             (some (fn [[p j]]
-                     (let [f (:fn n)
-                           body (:body (first (:arities f)))]
-                       (when-not (tail-ok? body p (:self f) j)
-                         (str "the owned accumulator " (t/base-name p) " escapes or is used after it is updated"))))
-                   (owned-params n)))
-           (filter #(= :app (:op %)) nodes))
-     ;; owned updates and persistent! only on owned parameters (checked above
-     ;; for owned loops; anywhere else they would be unowned mutation)
-     (let [owned (set (for [n nodes :when (= :app (:op n)), [p _] (owned-params n)] p))]
-       (some (fn [n] (when (and (host-app? n (into #{'klara.core/persistent!} (keys consuming)))
-                                (not (some #(local? (first (:args n)) %) owned))
-                                (not (host-app? (first (:args n)) (set (keys consuming)))))
-                       "an owned update of something that is not an owned accumulator"))
-             nodes)))))
+  (letfn [(walk [t]
+            (let [owned (owned-positions t)]
+              (cond
+                (seq owned)
+                (let [f (:fn t)
+                      body (:body (first (:arities f)))]
+                  (or (some (fn [[j p]]
+                              (when-not (linear? body p (:self f) j)
+                                (str "the owned accumulator " (t/base-name p)
+                                     " escapes or is used after it is updated")))
+                            owned)
+                      ;; the initial values themselves, the other arguments, the body
+                      (some walk (map-indexed (fn [j a] (if (contains? owned j) (first (:args a)) a)) (:args t)))
+                      (walk f)))
+                (host-app? t #{'klara.core/own})
+                "an own that is not the initial value of a loop parameter"
+                :else (some walk (t/children t)))))]
+    (walk candidate)))

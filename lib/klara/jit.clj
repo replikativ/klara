@@ -184,9 +184,10 @@
   ([q opts]
    (let [ctx (cond-> (assoc (context q (:profile opts)) :policy (:policy opts))
                (:specializer opts) (assoc :specializer (:specializer opts)))
-         candidate (specialize ctx)
+         ;; the specializer runs as the recipe, inside the preparation job:
+         ;; budgeted, isolated, its work counted (L4.prepare.job)
          outcome (compiler/prepare (:reference ctx)
-                                   (merge {:recipe (fn [_] candidate) :name q}
+                                   (merge {:recipe (fn [_] (specialize ctx)) :name q}
                                           (dissoc opts :specializer :profile :specializer-name :policy)))]
      ;; L4.exec.provenance: how this candidate came about
      (assoc outcome :provenance

@@ -249,10 +249,16 @@
     (case (:op m)
       :const (t/const (:value m))
       :local (t/local (:name m))
-      :host (let [q (:name m)]
-              (if (or (b/lookup q) (and (= "clojure.core" (namespace q)) (resolve q)))
+      ;; exactly what the expander would accept (L0.surface.unsupported):
+      ;; registered functions, and clojure.core functions that are not macros
+      ;; and not refused
+      :host (let [q (:name m)
+                  v (when (= "clojure.core" (namespace q)) (resolve q))]
+              (if (or (b/lookup q)
+                      (and (var? v) (not (:macro (meta v)))
+                           (not (contains? b/unsupported (symbol (name q))))))
                 (t/host q)
-                (fail :L2.view.make (str "unknown host function " q))))
+                (fail :L2.view.make (str "not a host function Klara supports: " q))))
       :app (t/app (term-of (:fn m)) (map term-of (:args m)))
       :let (t/let1 (:name m) (term-of (:init m)) (term-of (:body m)))
       :if (t/if* (term-of (:test m)) (term-of (:then m)) (term-of (:else m)))
@@ -286,7 +292,7 @@
 
 (b/register! 'klara.core/- {:kind :host :fn prims/- :symbol 'klara.runtime.prims/- :pure true})
 ;; owned updates: in place on transients, persistent otherwise (L4.check.in-place)
-(doseq [s '[conj! assoc! dissoc! disj! pop! persistent!]]
+(doseq [s '[conj! assoc! dissoc! disj! pop! persistent! transient own]]
   (b/register! (symbol "klara.core" (name s))
                {:kind :host :fn @(ns-resolve 'klara.runtime.prims s) :symbol (symbol "klara.runtime.prims" (name s))}))
 (b/register! 'klara.jit/same? {:kind :host :fn prims/same? :symbol 'klara.runtime.prims/same? :pure true})

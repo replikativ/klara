@@ -64,7 +64,11 @@ printing.
 `L3.job.intent-limit` More than `:intent-limit` intents (default 10000) fail
 the job.
 
-`L3.job.host-mutation` Inside a job, `swap!`, `reset!`, `vswap!` and
+`L3.job.host-mutation` (Limitation: only these are checked. Interop calls
+and array writes on objects from outside a job are not refused, so a job
+running such code is not isolated; code that must run isolated, such as the
+investor's measurements, is restricted to pure definitions, L4.facts.pure.)
+Inside a job, `swap!`, `reset!`, `vswap!` and
 `vreset!` on objects not created inside the job raise this rule.
 
 `L3.job.adopt` `(job/adopt! outcome)` publishes the job's world changes to
