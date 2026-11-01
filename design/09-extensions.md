@@ -52,11 +52,11 @@ policy.
 
 ## 2. First rules
 
-1. **Class speculation.** A parameter or local the profile always saw with
-   one class: `(instance? C x)` guards a body where `x` carries the hint
-   (L4.lower.hint), so array access and host methods resolve without
-   reflection. Sources that lack hints get them from profiles. Needs
-   `instance?` with a constant class among the total guards.
+1. **Class speculation** (done for array parameters). A parameter or
+   local the profile always saw with one class: `(instance? C x)` guards a
+   body where `x` carries the hint (L4.lower.hint), so array access and
+   host methods resolve without reflection. Sources that lack hints get
+   them from profiles. `instance?` with a constant class is a total guard.
 2. **Primitive numbers.** Loop variables seen only as longs (or doubles)
    become primitive, with overflow and class guards; float semantics stay
    exact (operation order is kept; numerics stage 0).
@@ -136,7 +136,16 @@ The backend needs to emit Vector API calls, which the bytecode backend
 1. [x] Rule interface in `klara.jit.staged` (`:app`, `:entry`, `:if`,
    `:loop`, `:let`), provenance of fired rules, the investor's rule-set
    alternatives; spec L4.jit.rules.
-2. Class speculation as the first rule; `instance?` as a total guard.
+2. [x] Class speculation as the first rule; `instance?` as a total guard
+   (`klara.jit.rules/classes`, L4.jit.class-hints). Arrays only for now: a
+   hint on anything else has nothing to act on until interop is compiled
+   (07-performance.md, step 2); parameters only, loop variables later. A
+   1000-element sum over an unhinted `long[]`: 60 µs compiled as is, 6 µs
+   with the rule. Found on the way: a stable array made the default fail
+   (stable values are now only liftable ones); compiled code read unhinted
+   arrays by host reflection, 2x slower than the interpreter (10 ms; now
+   `java.lang.reflect.Array`, L4.lower.arrays); and a hinted let's own class
+   test was reflective (Sieve 1.23x → 1.02x Clojure).
 3. Effect classes in L4.facts (section 3), replacing the purity bit.
 4. The regex showcase as a user rule.
 5. Primitive loops; then vectorization with the bytecode backend.

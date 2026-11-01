@@ -18,7 +18,8 @@
     pure?        the purity fact of a definition (L4.facts.pure)"
   (:require [klara.code :as code]
             [klara.compiler :as compiler]
-            [klara.jit.staged :as staged]))
+            [klara.jit.staged :as staged]
+            [klara.jit.rules :as jit-rules]))
 
 ;; ---------------------------------------------------------------------------
 ;; Reading the context
@@ -91,11 +92,13 @@
    inlined loop (no longer in return position) cost more."
   ([ctx] (default ctx {}))
   ([ctx pol]
-   (staged/specialize ctx (merge {:inline-loops? (not= :closure (get-in ctx [:runtime :backend :loop-outside-return]))
-                                  ;; the world's rules, then the preparation's (L4.jit.rules)
-                                  :rules (into rules (get-in ctx [:policy :rules]))}
-                                 (dissoc (:policy ctx) :rules)
-                                 pol))))
+   (let [p (merge {:inline-loops? (not= :closure (get-in ctx [:runtime :backend :loop-outside-return]))
+                   ;; the world's rules, then the preparation's (L4.jit.rules)
+                   :rules (into rules (get-in ctx [:policy :rules]))}
+                  (dissoc (:policy ctx) :rules)
+                  pol)]
+     ;; then the default's own (klara.jit.rules), unless the policy says :builtin-rules false
+     (staged/specialize ctx (update p :rules (fn [rs] (into (vec rs) (when-not (false? (:builtin-rules p)) jit-rules/builtin))))))))
 
 (defn specialize
   "Run the definition's specializer, or the default."

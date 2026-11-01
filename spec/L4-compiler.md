@@ -102,7 +102,8 @@ so `x` and `c` cannot be told apart.
 reference where `g` holds: while comparing, an `if` whose test is `g` takes
 its then branch, and one whose test `g` negates (`g` = `(not t)`) its else
 branch. A guard is admissible if it is total (locals, constants, total
-predicates such as type tests, `=`, `identical?`, `not`, `same?`) or if it
+predicates such as type tests, `instance?` of a constant class,
+`identical?`, `not`, `same?`) or if it
 is the reference's own test or its negation, which the reference evaluates
 first, so the guard fails only where the reference fails.
 
@@ -173,6 +174,12 @@ a guard in compiled code: where the bound value is an instance of the class,
 the body runs with the hint (so the host compiles array and method access
 without reflection); where it is not, compiled code leaves to the
 interpreter at the body. A wrong hint costs speed, never meaning.
+
+`L4.lower.arrays` Compiled code reads arrays (`aget`, `alength`) with the
+host's own access where the host knows the array's class (a hint), and
+through `java.lang.reflect.Array` otherwise: never by the host's
+reflection, which would make compiled code slower than the interpreter.
+The result is the same: `aget` and `alength` of the host.
 
 ## Execution
 
@@ -311,8 +318,9 @@ nothing known is the function again, which the kernel admits as
 equivalent to `c`. A call of a known function with a known argument is
 unfolded, within a fuel per generation. `(staged/specialize ctx)` also
 turns the facts of the reference's profile annotations into speculations
-(a branch not taken, an argument always the same value, a call site that
-always called the same function); each fallback is generated again with
+(a branch not taken, an argument always the same value that can be lifted
+(L2.lift.mutable: an array always passed is the same object, not the same
+contents), a call site that always called the same function); each fallback is generated again with
 speculation off, never spliced from the reference. Constructs it does not
 take apart (`try`, interop, `letrec`, `def`, code templates, functions with
 several arities) are kept whole, their free locals replaced by the code of
@@ -328,6 +336,15 @@ and profile and returns a binding-time value, or nil to decline. What a
 rule produces is checked like any candidate. The rules that fired are in
 the candidate's provenance (`:rules`); the investor also measures the
 default without the world's rules.
+
+`L4.jit.class-hints` The default's own rules (`klara.jit.rules/builtin`)
+come after the world's and the preparation's; `{:builtin-rules false}` in
+the policy leaves them out. The first, `:classes`: at a function's entry,
+each parameter whose profile saw a single array class (often enough, the
+policy's `:hot`) is bound under that class's host hint (L4.lower.hint)
+inside `(if (instance? C p) .. ..)`, whose other branch is the reference
+generated with nothing speculated. `(instance? C x)` with a constant class
+`C` is a total guard (L4.check.speculate-assume).
 
 `L4.jit.tiers` The investor (`klara.investor`, Klara code) estimates the
 interpreted time a definition has spent from its profile's events and the

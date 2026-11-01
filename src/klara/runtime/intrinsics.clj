@@ -80,6 +80,7 @@
 (b/register! 'klara.stage/esc {:kind :special})
 
 (defintrinsic klara.stage/lift [st [x]] (ret st (Code. (m/lift-term x))))   ; L2.lift.values
+(defintrinsic klara.stage/liftable? [st [x]] (ret st (nil? (v/find-mutable x))))   ; L2.lift.mutable
 
 (defintrinsic klara.stage/run [st [c]]                          ; L2.run.*
   (when-not (v/code? c) (fail :L2.run.closed (str "run expects code, got " (pr-str c))))

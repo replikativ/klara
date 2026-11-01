@@ -343,13 +343,24 @@
   [f]
   (and (= :host (:op f)) (identical? (:fn (b/lookup (:name f))) prims/same?)))
 
+(defn- class-test?
+  "(instance? C x) with C a constant class: total (with any other first
+   argument instance? throws)."
+  [t]
+  (and (= :app (:op t))
+       (= :host (get-in t [:fn :op]))
+       (= 'clojure.core/instance? (get-in t [:fn :name]))
+       (= 2 (count (:args t)))
+       (= :const (:op (first (:args t))))
+       (class? (:value (first (:args t))))))
+
 (defn- total-guard?
   "Locals and constants, and total predicates applied to total guards."
   [t]
   (or (contains? #{:local :const} (:op t))
       (and (= :app (:op t))
            (= :host (get-in t [:fn :op]))
-           (or (contains? total-predicates (get-in t [:fn :name])) (same-guard? (:fn t)))
+           (or (contains? total-predicates (get-in t [:fn :name])) (same-guard? (:fn t)) (class-test? t))
            (every? total-guard? (:args t)))))
 
 (defn- pure-term?

@@ -70,6 +70,39 @@
   [^Leave l frame]
   (.addFrames l [frame]))
 
+(defn- array-local?
+  "Does the host know local `a` (in macro environment env) to be an array?"
+  [env a]
+  (let [^clojure.lang.Compiler$LocalBinding lb (and (symbol? a) (get env a))]
+    (boolean (and lb (.hasJavaClass lb) (.isArray (.getJavaClass lb))))))
+
+;; Array reads in compiled code (L4.lower.arrays): where the host knows the
+;; array's class (a hint, L4.lower.hint), its own access; otherwise, for an
+;; array and a long index, java.lang.reflect.Array, not the host's reflection
+;; (which looks the method up on every call and is slower than the
+;; interpreter); anything else goes to the host's aget function, failing as
+;; it fails
+(defmacro array-get [a i]
+  (if (array-local? &env a)
+    (list 'clojure.core/aget a i)
+    (let [x (gensym "a") j (gensym "i")]
+      (list 'let* [x a j i]
+            (list 'if (list 'and (list 'some? x) (list '.isArray (list '.getClass (with-meta x {:tag 'Object})))
+                            (list 'instance? 'java.lang.Long j))
+                  ;; canonical booleans, as the host's aget (Array.get boxes afresh)
+                  (list 'clojure.lang.Reflector/prepRet (list '.getComponentType (list '.getClass (with-meta x {:tag 'Object})))
+                        (list 'java.lang.reflect.Array/get x (list 'clojure.lang.RT/intCast j)))
+                  (list '.invoke (with-meta (list 'var 'clojure.core/aget) {:tag 'clojure.lang.IFn}) x j))))))
+
+(defmacro array-length [a]
+  (if (array-local? &env a)
+    (list 'clojure.core/alength a)
+    (let [x (gensym "a")]
+      (list 'let* [x a]
+            (list 'if (list 'and (list 'some? x) (list '.isArray (list '.getClass (with-meta x {:tag 'Object}))))
+                  (list 'java.lang.reflect.Array/getLength x)
+                  (list '.invoke (with-meta (list 'var 'clojure.core/alength) {:tag 'clojure.lang.IFn}) x))))))
+
 (defn leave-eval [node env] (leave {:mode :eval :node node :env env}))
 
 (defn let-frame [body-node env] {:f :let :body body-node :env env})
@@ -419,6 +452,10 @@
                                         (list 'if tick-form
                                               (list 'klara.compile.lower/leave-apply (constant fnode) (vec free) (vec params))
                                               (go body (.-body a) (into (vec free) params) []))))
+                       (and (= :host (:op f)) (= 'clojure.core/aget (:name f)) (= 2 (count args)))
+                       (list* 'klara.compile.lower/array-get args)
+                       (and (= :host (:op f)) (= 'clojure.core/alength (:name f)) (= 1 (count args)))
+                       (list* 'klara.compile.lower/array-length args)
                        (and (= :host (:op f)) (= "clojure.core" (namespace (:name f)))
                             (not (m/intrinsic? (m/host-value (:name f)))))
                        (list* (:name f) args)
@@ -451,7 +488,7 @@
                          ;; L4.lower.hint: a hint is a guard; where it does not hold the
                          ;; interpreter goes on with the body
                          body (if hint
-                                (list 'if (list '.isInstance (constant hint) x)
+                                (list 'if (list '.isInstance (with-meta (constant hint) {:tag 'java.lang.Class}) x)
                                       (list 'let* [(with-meta x {:tag (if (contains? array-hints (:tag t)) (:tag t) (symbol (.getName hint)))}) x]
                                             body)
                                       (list 'klara.compile.lower/leave-eval (constant (.-body ln)) (env-form inner)))

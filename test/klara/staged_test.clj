@@ -166,3 +166,30 @@
                (def o (jit/compile! 'rl/f {:policy {:rules [never add-one]}}))
                [(:status o) (get-in o [:provenance :rules]) (f 3)
                 (not (.contains (pr-str (:candidate (klara.compiler/explain f))) \"add1\"))]"))))))
+
+(deftest array-parameters-get-their-class   ; L4.jit.class-hints L4.lower.arrays L4.jit.staged
+  (testing "a parameter always seen as a long array is hinted under an instance? guard; another class takes the fallback"
+    (let [s (session)]
+      (is (= [:ready [:classes] 1 499500 6]
+             (k/eval-string s "(ns ac (:require [klara.jit :as jit] [klara.compiler :as compiler]))
+               (defn total [a] (loop [i 0 s 0] (if (< i (alength a)) (recur (inc i) (+ s (aget a i))) s)))
+               (def arr (long-array (range 1000)))
+               (dotimes [_ 200] (total arr))
+               ;; the array is also always the same object: not a value to speculate on
+               (def o (jit/compile! 'ac/total))
+               [(:status o) (get-in o [:provenance :rules]) (:speculations o) (total arr) (total (int-array [1 2 3]))]"))))))
+  (testing "compiled without a hint, array reads are the host's aget and alength, failing as they fail"
+    (let [s (session)]
+      (is (= [:ready 2 -1 [1 nil] 3 true]
+             (k/eval-string s "(ns ar (:require [klara.jit :as jit] [klara.compiler :as compiler]))
+               (defn first-false [a] (loop [i 0] (if (< i (alength a)) (if (aget a i) (recur (inc i)) i) -1)))
+               (defn pair [a] [(aget a 0) (aget a 1)])
+               (defn len [a] (alength a))
+               (def as-is {:specializer (fn [ctx d] (:reference ctx))})
+               [(:status (jit/compile! 'ar/first-false as-is))
+                (do (jit/compile! 'ar/pair as-is) (jit/compile! 'ar/len as-is)
+                    (first-false (boolean-array [true true false true])))
+                (first-false (boolean-array [true]))
+                (pair (object-array [1 nil]))
+                (len (long-array 3))
+                (= (try (len \"abc\") (catch Exception e (type e))) java.lang.IllegalArgumentException)]")))))

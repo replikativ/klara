@@ -56,7 +56,8 @@ Allowed values: immutable data (recursively), closures, host functions,
 worlds, Code and candidates.
 
 `L2.lift.mutable` Lifting a mutable host object, or a collection containing
-one, is rejected.
+one, is rejected. `(klara.stage/liftable? x)` tells whether `x` can be
+lifted.
 
 `L2.lift.preserves` `(run (lift v))` yields `v` itself, in every context.
 
