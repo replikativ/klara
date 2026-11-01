@@ -317,5 +317,14 @@ several arities) are kept whole, their free locals replaced by the code of
 their values, which is always a local, a constant or a global, so nothing
 runs twice or out of order.
 
+`L4.jit.tiers` The investor (`klara.investor`, Klara code) estimates the
+interpreted time a definition has spent from its profile's events and the
+interpreter's measured cost per event. Below the policy's `:baseline-ns`
+it leaves the definition alone; past it, it compiles the definition as it
+is, without running it (any definition, pure or not); past `:explore-ns`,
+for a pure definition with a plain-data sample, it prepares and measures
+its alternatives and installs the one with the best net gain. Measuring
+never runs an impure definition (L4.facts.pure).
+
 `L4.jit.attach` `^{:klara/specialize f}` on a definition names its
 specializer, resolved in the definition's namespace when the JIT runs.

@@ -140,15 +140,15 @@
                  (def counter (atom 0))
                  (defn bump [] (swap! counter inc))
                  (mapv #(:pure (jit/pure? %)) ['adv/sq 'adv/fill 'adv/log! 'adv/bump])")))))
-  (testing "the investor does not run an impure definition to measure it"
-    (is (= [1500 1500 :unmeasurable]
+  (testing "the investor does not run an impure definition to measure it: it compiles it unmeasured"
+    (is (= [1500 1500 :compiled :baseline]
            (run (str header "(require '[klara.investor :as investor])
-                 (def buf (java.util.ArrayList.))
-                 (defn log! [b x] (loop [i 0] (if (< i 50) (do (.add b x) (recur (inc i))) (.size b))))
-                 (dotimes [_ 30] (log! buf 1))
-                 (def before (.size buf))
-                 (def d (investor/consider 'adv/log!))
-                 [before (.size buf) (:decision d)]"))))))
+                 (def buf (long-array 1))
+                 (defn bump! [a] (loop [i 0] (if (< i 50) (do (aset a 0 (inc (aget a 0))) (recur (inc i))) (aget a 0))))
+                 (dotimes [_ 30] (bump! buf))
+                 (def before (aget buf 0))
+                 (def d (investor/consider 'adv/bump! {:baseline-ns 0 :explore-ns 0}))
+                 [before (aget buf 0) (:decision d) (:tier d)]"))))))
 
 (deftest specializers-may-decline   ; L4.prepare.declined
   (testing "the in-place specializer declines a function without an accumulator to own"
@@ -166,3 +166,14 @@
                             o (job/run-all {:budget {:steps 50000000}}
                                 (for [_ (range 6)] (fn [] (wc ws) (:status (jit/prepare 'adv/wc)))))]
                         (:value o)))"))))))
+
+(deftest the-investor-tiers-by-time-spent   ; L4.jit.tiers
+  (testing "below the baseline cost nothing happens; then compiled as it is, unmeasured; exploring only past its cost"
+    (is (= [:not-hot :baseline :explored]
+           (run (str header "(require '[klara.investor :as investor])
+                 (defn sq [x] (* x x))
+                 (dotimes [_ 200] (sq 3))
+                 (def s (investor/spent-ns (jit/context 'adv/sq)))
+                 [(:decision (investor/consider 'adv/sq {:baseline-ns (inc s)}))
+                  (:tier (investor/consider 'adv/sq {:baseline-ns 0 :explore-ns (inc s)}))
+                  (:tier (investor/consider 'adv/sq {:baseline-ns 0 :explore-ns 0}))]"))))))

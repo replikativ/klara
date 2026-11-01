@@ -50,6 +50,13 @@
   [ctx]
   (apply max 0 (counts (:reference ctx))))
 
+(defn events
+  "Everything the definition's profile counted (calls, entries, branches
+   taken), summed: proportional to the interpreter's work in its body (its
+   callees count in their own profiles)."
+  [ctx]
+  (reduce + 0 (counts (:reference ctx))))
+
 (defn params [ctx] (:params (code/view (:reference ctx))))
 
 (defn body [ctx] (:body (code/view (:reference ctx))))

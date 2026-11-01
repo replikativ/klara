@@ -46,7 +46,7 @@
 (def before (measure #(word-counts words)))
 (def expected (word-counts words))
 
-(def decision (investor/consider 'showcases.in-place/word-counts))
+(def decision (investor/consider 'showcases.in-place/word-counts {:baseline-ns 0 :explore-ns 0}))   ; explore now
 (def after (measure #(word-counts words)))
 (def refused (jit/prepare 'showcases.in-place/with-total
                           {:specializer own/in-place :certificate {:kind :in-place}}))

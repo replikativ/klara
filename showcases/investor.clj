@@ -42,7 +42,9 @@
 (def before (ms #(rank catalogue)))
 (def best (banner (second before)))
 
-(def decisions (investor/invest! 'showcases.investor))
+;; a short demonstration: explore whatever has passed the baseline (the
+;; default policy waits until a definition has spent half a second)
+(def decisions (investor/invest! 'showcases.investor {:explore-ns 0}))
 (dotimes [_ 20] (rank catalogue))
 (def after (ms #(rank catalogue)))
 

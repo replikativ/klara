@@ -2,7 +2,15 @@
   "Deciding what to compile, with which specializer, and whether it pays
   (design/05-specialization.md, design/06-speculation.md#7-the-investor).
 
-  For a function definition the investor
+  It works in two tiers, each entered when the time a definition has spent
+  interpreted (its profile's events times the interpreter's measured cost
+  per event) covers what the tier costs, as a JIT tiers ('ski rental'):
+  - baseline: compile the definition as it is, without measuring it, so any
+    definition qualifies (impure ones too);
+  - explored: for pure definitions with a plain-data sample argument,
+    compare the alternatives as below.
+
+  Exploring a function definition, the investor
   1. measures what an interpreted call costs, on a recent argument from the
      profile;
   2. explores its alternatives (specializers), each prepared and measured on
@@ -52,9 +60,43 @@
   (def decisions (update decisions (:name d) (fnil conj []) d))
   d)
 
-(def min-work
-  "Below this much work (jit/work) the investor does not look at a definition."
-  1000)
+(defn interpreted? [x] (= :interpreted (:kind (compiler/explain x))))
+
+(def policy
+  "When a definition is worth a tier, in nanoseconds of interpreted time spent
+   so far. Compiling as it is costs milliseconds; exploring prepares every
+   alternative and measures each for at least 300 ms. `consider` and
+   `invest!` take overrides."
+  {:baseline-ns 20000000 :explore-ns 500000000})
+
+(defn calibration-loop
+  "The loop the interpreter's cost per profile event is measured on."
+  [n]
+  (loop [i 0 acc 0] (if (< i n) (recur (inc i) (+ acc i)) acc)))
+
+(def calibration
+  "Nanoseconds the interpreter spends per profile event, measured once."
+  nil)
+
+(defn event-ns
+  "The interpreter's cost per profile event: measured on calibration-loop the
+   first time and kept (a def, so per world), 100 if it cannot be measured."
+  []
+  (or calibration
+      (let [q 'klara.investor/calibration-loop
+            e0 (jit/events (jit/context q))
+            t0 (time/now)
+            _ (calibration-loop 20000)
+            t (- (time/now) t0)
+            e (- (jit/events (jit/context q)) e0)
+            c (if (and (pos? e) (interpreted? calibration-loop)) (max 1 (quot t e)) 100)]
+        (def calibration c)
+        c)))
+
+(defn spent-ns
+  "Estimated interpreted time the definition has cost so far."
+  [ctx]
+  (* (jit/events ctx) (event-ns)))
 
 (def budget
   "Steps for preparing an alternative."
@@ -109,9 +151,22 @@
     (when (= :done (:status o))
       {:ns (:value o) :steps (get-in o [:spent :steps]) :measure-ns (- (now) t0)})))
 
+(defn- baseline
+  "Compile q as it is, unmeasured: compiled code is never slower than the
+   interpreter by much, and nothing runs to find out."
+  [q d why]
+  (let [o (jit/prepare q {:specializer (:as-is alternatives) :specializer-name :as-is})
+        d (assoc d :tier :baseline :why why)]
+    (if (= :ready (:status o))
+      (let [d (assoc d :decision :compiled :chosen :as-is)]
+        (compiler/install! (assoc-in o [:provenance :decision] d))
+        d)
+      (assoc d :decision :declined :rejected (:message o)))))
+
 (defn- decide
-  [q]
+  [q pol]
   (let [ctx (jit/context q)
+        spent (spent-ns ctx)
         ;; calls from outside: a recursive function's own calls run compiled
         ;; inside the measured call, so they are not further calls
         calls (get-in ctx [:profile :entries :external])
@@ -119,16 +174,18 @@
         ;; the definition's own function, as the alternatives run: not pinned
         f (:function ctx)]
     (cond
-      (or (nil? calls) (< (jit/work ctx) min-work))
-      {:name q :decision :not-hot :calls calls :work (jit/work ctx)}
+      (or (nil? calls) (< spent (:baseline-ns pol)))
+      {:name q :decision :not-hot :calls calls :spent-ns spent}
+      (< spent (:explore-ns pol))
+      (baseline q {:name q :calls calls :spent-ns spent} "not yet worth exploring")
       ;; measuring runs the definition: only where that changes nothing but time
       (not (:pure (jit/pure? q)))
-      {:name q :decision :unmeasurable :why (:why (jit/pure? q))}
+      (baseline q {:name q :calls calls :spent-ns spent} (str "unmeasurable: " (:why (jit/pure? q))))
       ;; samples that are not plain data are held weakly (L4.profile.record)
       (nil? args)
-      {:name q :decision :unmeasurable :why "no sample arguments are kept"}
+      (baseline q {:name q :calls calls :spent-ns spent} "unmeasurable: no sample arguments are kept")
       (not (data? args))
-      {:name q :decision :unmeasurable :why "its sample arguments are not plain data"}
+      (baseline q {:name q :calls calls :spent-ns spent} "unmeasurable: its sample arguments are not plain data")
       :else
       (let [alts (cond-> alternatives
                    (:specializer ctx) (assoc :attached (:specializer ctx)))
@@ -152,7 +209,9 @@
             ready (filter #(and (= :ready (:status %)) (:ns-per-call %)) tried)
             best (when (and reference (seq ready)) (apply max-key net ready))
             decision {:name q
+                      :tier :explored
                       :calls calls
+                      :spent-ns spent
                       :interpreted-ns (:ns reference)
                       :alternatives (mapv #(cond-> (dissoc % :outcome) (:ns-per-call %) (assoc :net-ns (net %))) tried)
                       :spent {:steps (+ (reduce + (map #(or (:spent %) 0) tried)) (or (:steps reference) 0))
@@ -172,20 +231,19 @@
 
 (defn consider
   "Decide about the definition named q. Returns the decision, also recorded
-   in `decisions`; installs the chosen candidate."
-  [q]
-  (remember! (decide q)))
-
-(defn interpreted? [x] (= :interpreted (:kind (compiler/explain x))))
+   in `decisions`; installs the chosen candidate. `pol` overrides `policy`."
+  ([q] (consider q {}))
+  ([q pol] (remember! (decide q (merge policy pol)))))
 
 (defn invest!
   "Consider every interpreted function definition in namespace ns-sym;
    returns the decisions. What was declined is considered once more after
    the first round: a caller measured while its callees were interpreted
    pays for entering the interpreter on every call."
-  [ns-sym]
-  (let [round (fn [names] (mapv consider (filter #(interpreted? (world/get (world/current) %)) names)))
+  ([ns-sym] (invest! ns-sym {}))
+  ([ns-sym pol]
+  (let [round (fn [names] (mapv #(consider % pol) (filter #(interpreted? (world/get (world/current) %)) names)))
         first-round (round (world/names (world/current) ns-sym))
         again (round (map :name (filter #(= :declined (:decision %)) first-round)))
         by-name (into {} (map (juxt :name identity)) (concat first-round again))]
-    (mapv #(get by-name (:name %)) first-round)))
+    (mapv #(get by-name (:name %)) first-round))))
