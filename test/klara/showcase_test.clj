@@ -1,6 +1,7 @@
 (ns klara.showcase-test
   "The showcase programs (design/PLAN.md#showcase-programs) run as tests."
   (:require [clojure.edn]
+            [klara.host.precompile :as pre]
             [clojure.test :refer [deftest is testing]]
             [klara.host.api :as k]))
 
@@ -37,19 +38,21 @@
       (is (:old-world-keeps r))
       (is (#{:compiled :left} (:old-world-path r))))))
 
-(deftest ahead-of-time   ; L4.profile.saved
-  (let [file "showcases/ahead_of_time.clj"
+(deftest precompiled   ; L4.profile.saved
+  (let [file "showcases/precompiled.clj"
+        dir (.getParent (.getAbsoluteFile (java.io.File. file)))
         first-run (k/session {:roots ["lib" "."] :out (java.io.StringWriter.)})
         _ (k/load-file first-run file)
-        saved (klara.runtime.session/saved-profiles first-run)
+        saved (pre/saved-profiles first-run #(pre/program-namespace? first-run dir %))
         second-run (k/session {:roots ["lib" "."] :out (java.io.StringWriter.)})
-        _ (swap! second-run assoc :aot (clojure.edn/read-string (pr-str saved)))
+        outcomes (pre/install! second-run (clojure.edn/read-string (pr-str saved)))
         r (k/load-file second-run file)]
-    (testing "the saved profile is small and names the program's functions"
-      (is (contains? saved 'showcases.ahead-of-time/settle))
+    (testing "the saved profile is small and names the program's functions, not the libraries'"
+      (is (contains? saved 'showcases.precompiled/settle))
+      (is (not-any? #(.startsWith (namespace %) "klara.") (keys saved)))
       (is (< (count (pr-str saved)) 4000)))
     (testing "the second run compiles settle before its first call, which runs compiled"
-      (is (= :ready (get-in @second-run [:aot-outcomes 'showcases.ahead-of-time/settle])))
+      (is (= :ready (get @outcomes 'showcases.precompiled/settle)))
       (is (#{:compiled :left} (:ran r)))
       (is (= 217801084 (:total r))))))
 

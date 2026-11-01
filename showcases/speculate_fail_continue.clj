@@ -41,10 +41,9 @@
 
 ;; A day of normal traffic: the refund branch is never taken.
 (settle (subvec ledger 0 2000))
-(profile/record! false)                      ; measuring is not training
-(dotimes [_ 3] (reviewed (fn [] (settle ledger))))
-(def interpreted (ms #(reviewed (fn [] (settle ledger)))))
-(profile/record! true)
+(def interpreted                             ; measuring is not training
+  (profile/without (fn [] (dotimes [_ 3] (reviewed (fn [] (settle ledger))))
+                          (ms #(reviewed (fn [] (settle ledger)))))))
 
 (def plain (compiler/optimize! 'showcases.speculate-fail-continue/settle))   ; without speculation
 (def outcome (jit/compile! 'showcases.speculate-fail-continue/settle))       ; the default specializer

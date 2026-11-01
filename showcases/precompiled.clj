@@ -1,14 +1,14 @@
-(ns showcases.ahead-of-time
+(ns showcases.precompiled
   "Static when we want it.
 
   Run once with --record: the program runs interpreted and its profile is
-  saved. Run again with --aot: each definition is compiled as soon as it is
+  saved. Run again with --precompile: each definition is compiled as soon as it is
   defined, from the saved profile, so the first call already runs compiled
   code. The rare refund is still handled: compiled code leaves for it and
   comes back.
 
-    clojure -M:klara run --record /tmp/ledger.edn showcases/ahead_of_time.clj
-    clojure -M:klara run --aot /tmp/ledger.edn showcases/ahead_of_time.clj"
+    clojure -M:klara run --record /tmp/ledger.edn showcases/precompiled.clj
+    clojure -M:klara run --precompile /tmp/ledger.edn showcases/precompiled.clj"
   (:require [klara.effect :refer [perform handle]]
             [klara.compiler :as compiler]))
 

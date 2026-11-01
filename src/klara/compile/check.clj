@@ -17,6 +17,7 @@
   the reference, which has the same fixed point."
   (:require [klara.lang.builtins :as b]
             [klara.lang.term :as t]
+            [klara.runtime.prims :as prims]
             [klara.runtime.value :as v]
             [klara.runtime.world :as w])
   (:import [klara.runtime.value Closure]))
@@ -71,14 +72,7 @@
   [t]
   (contains? #{:const :local :fn :host} (:op t)))
 
-(defn- data?
-  "Immutable data the checker may compute with: collections of data,
-   keywords and symbols (which are IFn on the JVM, but values in Klara)."
-  [x]
-  (cond (or (keyword? x) (symbol? x)) true
-        (coll? x) (and (not (instance? clojure.lang.LazySeq x)) (not (record? x))
-                       (every? data? (if (map? x) (mapcat identity x) x)))
-        :else (not (or (fn? x) (v/closure? x) (instance? clojure.lang.IFn x) (v/mutable? x)))))
+(def data? "Immutable data the checker may compute with (klara.runtime.value/data?)." v/data?)
 
 (defn- fold-prim
   "L4.check.prim: a pure host function applied to constant data."
@@ -285,9 +279,15 @@
      clojure.core/map? clojure.core/vector? clojure.core/seq? clojure.core/coll?
      clojure.core/fn? clojure.core/boolean? clojure.core/set? clojure.core/nil?
      clojure.core/some? clojure.core/true? clojure.core/false? clojure.core/not
-     clojure.core/identical? klara.jit/same?})
+     clojure.core/identical?})
 ;; = and not= are not here: comparing a lazy sequence realizes it, which runs
 ;; Klara code that may fail or not terminate.
+
+(defn- same-guard?
+  "Is host term f the value-speculation guard? Recognized by the function it
+   names (klara.runtime.prims/same?), not by a library's name for it."
+  [f]
+  (and (= :host (:op f)) (identical? (:fn (b/lookup (:name f))) prims/same?)))
 
 (defn- total-guard?
   "Locals and constants, and total predicates applied to total guards."
@@ -295,7 +295,7 @@
   (or (contains? #{:local :const} (:op t))
       (and (= :app (:op t))
            (= :host (get-in t [:fn :op]))
-           (contains? total-predicates (get-in t [:fn :name]))
+           (or (contains? total-predicates (get-in t [:fn :name])) (same-guard? (:fn t)))
            (every? total-guard? (:args t)))))
 
 (defn- pure-term?
@@ -325,9 +325,9 @@
 (defn- speculation? [t] (and (= :if (:op t)) (:speculate t)))
 
 (defn- value-guard
-  "[local-name constant-term] for a guard (klara.jit/same? x c), else nil."
+  "[local-name constant-term] for a guard (same? x c), else nil."
   [t]
-  (when (and (= :app (:op t)) (= 'klara.jit/same? (get-in t [:fn :name])))
+  (when (and (= :app (:op t)) (same-guard? (:fn t)))
     (let [[x c] (:args t)]
       (when (and (= :local (:op x)) (= :const (:op c))) [(:name x) c]))))
 
@@ -373,36 +373,3 @@
          :difference (mapv t/->form @(:difference ctx))})
       (catch clojure.lang.ExceptionInfo e
         (if (::exhausted (ex-data e)) {:result :exhausted} (throw e))))))
-
-;; ---------------------------------------------------------------------------
-;; A normalizing recipe. It is NOT part of the trusted checker: its output
-;; is checked like any other candidate. It unfolds a call when the callee is
-;; a definition and some argument is a constant (online partial evaluation),
-;; within a depth bound.
-
-(defn- normalize* [ctx depth t]
-  (let [t (whnf ctx t)
-        go #(normalize* ctx depth %)]
-    (case (:op t)
-      :app (let [t (assoc t :fn (go (:fn t)) :args (mapv go (:args t)))]
-             (if-let [u (and (pos? depth) (some #(= :const (:op %)) (:args t)) (unfold-head ctx t :reference))]
-               (normalize* ctx (dec depth) u)
-               (or (some->> (fold-prim t) go) t)))
-      :fn (t/fn-term (:self t) (mapv #(update % :body go) (:arities t)))
-      :let (let [t (assoc t :init (go (:init t)) :body (go (:body t)))]
-             (if (value-term? (:init t)) (go (t/substitute (:body t) {(:name t) (:init t)})) t))
-      :if (let [c (go (:test t))]
-            (if (= :const (:op c)) (go (if (:value c) (:then t) (:else t)))
-                (assoc t :test c :then (go (:then t)) :else (go (:else t)))))
-      :do (t/do* (mapv go (:body t)))
-      :recur (assoc t :args (mapv go (:args t)))
-      t)))
-
-(defn normalize
-  "Normalize `term` in `world`, charging `meter`. Returns the term, or nil
-   if the budget ran out."
-  [term world meter & {:keys [depth] :or {depth 64}}]
-  (let [ctx {:world world :meter meter :premises (volatile! #{}) :difference (volatile! nil)}]
-    (try (t/refresh-free (normalize* ctx depth term))
-         (catch clojure.lang.ExceptionInfo e
-           (if (::exhausted (ex-data e)) nil (throw e))))))

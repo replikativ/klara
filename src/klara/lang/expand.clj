@@ -9,6 +9,7 @@
   and returns a Core term. Errors are ex-info with :rule."
   (:require [clojure.string :as str]
             [klara.lang.builtins :as b]
+            [klara.lang.surface]
             [klara.lang.term :as t]))
 
 (set! *warn-on-reflection* true)

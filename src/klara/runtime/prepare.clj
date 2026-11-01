@@ -43,24 +43,24 @@
 ;; world). It keeps the world's id, not the world: a cache must not be a root
 ;; (L1.retain.roots).
 (definterface IGlobalCache
-  (cached [id ^long epoch])
-  (cache [id ^long epoch value]))
+  (cached [id])
+  (cache [id value]))
 
 ;; One immutable entry per cache, replaced as a whole: jobs run in parallel
 ;; on different worlds (L3.job.parallel), so a world id and its value must
 ;; never be read from two different writes.
-(deftype CacheEntry [id ^long epoch value])
+(deftype CacheEntry [id value])
 
 (defn entry-value
-  "The value cached in `e` for world `id` at dispatch `epoch`, or nil."
-  [^CacheEntry e id ^long epoch]
-  (when (and e (identical? (.-id e) id) (== (.-epoch e) epoch)) (.-value e)))
+  "The value cached in `e` for world `id`, or nil."
+  [^CacheEntry e id]
+  (when (and e (identical? (.-id e) id)) (.-value e)))
 
 (deftype Global [term link ^:volatile-mutable entry]
   INode (tag [_] 2) (sourceTerm [_] term)
   IGlobalCache
-  (cached [_ id epoch] (entry-value entry id epoch))
-  (cache [_ id epoch value] (set! entry (CacheEntry. id epoch value)) value)
+  (cached [_ id] (entry-value entry id))
+  (cache [_ id value] (set! entry (CacheEntry. id value)) value)
   Object (toString [_] "#node/Global"))
 (defnode Host 3 [value name])
 ;; arities: vector of Arity; captured: slots of the free locals in the enclosing scope
@@ -194,11 +194,11 @@
 
 (defn new-profile [] (Profile. 0 0 nil nil nil 0 0 nil))
 
-(defonce ^{:doc "Whether the interpreter records profiles (L4.profile.record)."} profiling (atom true))
+
 
 ;; Cache access for globals (the machine is the only writer).
-(defn global-cached [^IGlobalCache g id ^long epoch] (.cached g id epoch))
-(defn global-cache! [^IGlobalCache g id ^long epoch value] (.cache g id epoch value))
+(defn global-cached [^IGlobalCache g id] (.cached g id))
+(defn global-cache! [^IGlobalCache g id value] (.cache g id value))
 
 ;; ---------------------------------------------------------------------------
 ;; Preparation

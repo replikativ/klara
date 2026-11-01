@@ -16,6 +16,7 @@
   pure definitions (L4.facts.pure) on plain data are measured, in a job: a
   fork of the world that does not train profiles. The decision is data."
   (:require [klara.jit :as jit]
+            [klara.time :as time]
             [klara.own :as own]
             [klara.compiler :as compiler]
             [klara.job :as job]
@@ -51,7 +52,7 @@
   "Steps for measuring: compiled loops count one step per iteration."
   {:steps 100000000000})
 
-(defn- now [] (System/nanoTime))
+(defn- now [] (time/now))
 
 (defn per-call
   "Nanoseconds per call of f on args, at steady state: batches of doubling
@@ -91,8 +92,10 @@
   "Nanoseconds per call of f on args, in a job of its own: a measurement
    that would perform an effect or mutate anything outside fails instead."
   [f args]
-  (let [o (job/run {:budget measure-budget :profile false} (fn [] (per-call f args)))]
-    (when (= :done (:status o)) {:ns (:value o) :steps (get-in o [:spent :steps])})))
+  (let [t0 (now)
+        o (job/run {:budget measure-budget :profile false} (fn [] (per-call f args)))]
+    (when (= :done (:status o))
+      {:ns (:value o) :steps (get-in o [:spent :steps]) :measure-ns (- (now) t0)})))
 
 (defn consider
   "Decide about the definition named q. Returns the decision; installs the
@@ -103,7 +106,8 @@
         ;; inside the measured call, so they are not further calls
         calls (get-in ctx [:profile :entries :external])
         args (get-in ctx [:profile :entries :sample])
-        f (world/get (world/current) q)]
+        ;; the definition's own function, as the alternatives run: not pinned
+        f (:function ctx)]
     (cond
       (or (nil? calls) (< (jit/work ctx) min-work) (nil? args))
       {:name q :decision :not-hot :calls calls :work (jit/work ctx)}
@@ -124,7 +128,7 @@
                           (let [a (if (= :done (:status o)) (:value o) {:status :failed :why (get-in o [:error :message])})
                                 m (when (= :ready (:status a)) (measure (compiler/executable (:outcome a)) args))]
                             (cond-> (assoc a :name k :spent (get-in o [:spent :steps]))
-                              m (assoc :ns-per-call (:ns m))
+                              m (assoc :ns-per-call (:ns m) :measure-ns (:measure-ns m))
                               (and (= :ready (:status a)) (nil? m)) (assoc :status :unmeasured))))
                         names prepared)
             ;; expect as many calls again as so far; a saving within the
@@ -139,7 +143,10 @@
                       :interpreted-ns (:ns reference)
                       :alternatives (mapv #(cond-> (dissoc % :outcome) (:ns-per-call %) (assoc :net-ns (net %))) tried)
                       :spent {:steps (+ (reduce + (map #(or (:spent %) 0) tried)) (or (:steps reference) 0))
-                              :prepare-ns (reduce + (map #(or (:prepare-ns %) 0) tried))}}]
+                              :prepare-ns (reduce + (map #(or (:prepare-ns %) 0) tried))
+                              ;; measuring is spent too (usually more than preparing)
+                              :measure-ns (+ (or (:measure-ns reference) 0)
+                                             (reduce + (map #(or (:measure-ns %) 0) tried)))}}]
         (cond
           (nil? reference) (assoc decision :decision :unmeasurable)
           (and best (pos? (net best)))

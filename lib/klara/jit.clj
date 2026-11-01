@@ -8,10 +8,18 @@
 
     (defn ^{:klara/specialize my-specializer} f [..] ..)
 
-  and compile with (jit/compile! 'ns/f). guard, same?, context and function
-  are runtime functions of this namespace; the rest is Klara code."
+  and compile with (jit/compile! 'ns/f); a specializer may decline (nil).
+
+  Runtime functions of this namespace (the rest is Klara code):
+    context      the context of a definition (L4.jit.context)
+    function     a candidate function with fresh parameters (L4.jit.function)
+    guard        a speculation (if guard specialized reference) (L4.check.speculate)
+    same?        the value-speculation guard (L4.check.speculate-value)
+    admissible?  whether a guard is admissible for a reference (L4.check.speculate)
+    pure?        the purity fact of a definition (L4.facts.pure)"
   (:require [klara.code :as code]
-            [klara.compiler :as compiler]))
+            [klara.compiler :as compiler]
+            [klara.compiler.recipes :as recipes]))
 
 ;; ---------------------------------------------------------------------------
 ;; Reading the context
@@ -70,10 +78,18 @@
   "A branch taken at most once in this many observations counts as cold."
   10000)
 
+(def small
+  "Nodes in a function small enough to inline."
+  40)
+
+(def large
+  "Nodes a call specialized to its known arguments may grow to."
+  400)
+
 (defn- policy
   "Thresholds of the default specializer; (:policy opts) of prepare overrides them."
   [p]
-  (merge {:hot hot :rare rare :small 40 :large 400} p))
+  (merge {:hot hot :rare rare :small small :large large} p))
 
 (defn- cold? [p taken other]
   (and (>= other (:hot p)) (<= (* taken (:rare p)) other)))
@@ -100,12 +116,10 @@
 
 (defn size [c] (inc (reduce + 0 (map size (code/children c)))))
 
-(def small
-  "Nodes in a function small enough to inline."
-  40)
-
-(defn- loops? [c]
-  (or (= :other (:op (code/view c)))            ; recur and other constructs show as :other
+(defn- loops?
+  "Does c contain a loop (a recur)?"
+  [c]
+  (or (= :recur (:op (code/view c)))
       (boolean (some loops? (code/children c)))))
 
 (defn inline-calls
@@ -122,17 +136,13 @@
       (let [f (code/view (:fn v))
             callee (when (and (= :global (:op f)) (= :late (:kind f)) (not= self (:name f))
                               (>= (or (:count (:profile v)) 0) (:hot pol)))
-                     (callee-code (:name f)))]
+                     (code/unfold (:fn v)))]
         ;; a callee with a loop stays a call: on the JVM a loop that is not in
         ;; return position costs a closure per evaluation (design/07-performance.md)
         (if (and callee (<= (size callee) (:small pol)) (not (loops? callee)))
           (code/make {:op :app :fn callee :args (rest (code/children rebuilt))})
           rebuilt))
       rebuilt))))
-
-(def large
-  "Nodes a call specialized to its known arguments may grow to."
-  400)
 
 (defn- calls? [c q]
   (let [v (code/view c)]
@@ -141,7 +151,7 @@
 
 (defn specialize-known-calls
   "Specialize hot calls whose arguments include constants or data
-   definitions, by partial evaluation (simplify). The caller then needs none
+   definitions, by partial evaluation (klara.compiler.recipes/inline). The caller then needs none
    of the callee's guards on those arguments: the checker accepts the
    residual by unfolding the callee and the data, whose generations become
    premises (L4.check.delta-data). Kept only when the call is gone and the
@@ -153,8 +163,8 @@
         v (code/view c)
         f (when (= :app (:op v)) (code/view (:fn v)))]
     (if (and f (= :global (:op f)) (>= (or (:count (:profile v)) 0) (:hot pol))
-             (some #(known? %) (:args v)))
-      (let [s (simplify rebuilt)]
+             (some #(some? (code/known %)) (:args v)))
+      (let [s (recipes/inline rebuilt)]
         (if (and (not (calls? s (:name f))) (<= (size s) (:large pol))) s rebuilt))
       rebuilt))))
 

@@ -13,6 +13,7 @@
             [klara.lang.builtins :as b]
             [klara.lang.term :as t]
             [klara.runtime.intrinsics :as intr]
+            [klara.runtime.profile :as profile]
             [klara.runtime.job :as job]
             [klara.runtime.machine :as m]
             [klara.runtime.value :as v]
@@ -153,7 +154,7 @@
       (m/perform st :world/update [(fn [w] (installed w q e))]))))
 
 (reset! m/resolve-hook
-        (fn [q d world _session]
+        (fn [q d world]
           (some #(when (valid? (candidate-of %) world) %) (:compiled d))))
 
 ;; ---------------------------------------------------------------------------
@@ -171,8 +172,8 @@
     (not (v/code? candidate))
     (reject :L4.prepare.recipe-failed (str "the recipe returned " (pr-str candidate) ", not code"))
     :else
-    (let [ref-term (intr/strip-annotations (.-term ^Code reference))
-          cand-term (intr/strip-annotations (.-term ^Code candidate))
+    (let [ref-term (profile/strip-annotations (.-term ^Code reference))
+          cand-term (profile/strip-annotations (.-term ^Code candidate))
           meter (get-in st [:dyn :meter])
           self (:name opts)                                   ; L4.check.self
           r (check/check ref-term cand-term (:world st) meter self)
@@ -295,13 +296,6 @@
                             (recur (inc i) (rest ps) (conj out (t/local (first ps)))))))]
            (ret st (Code. (t/fn-term nil [(t/arity ps nil (t/app (m/lift-term f) args))])))))})
 
-(b/register! 'klara.compiler.kernel/normalize
-  {:kind :intrinsic
-   :fn (fn [st [c]]
-         (if-let [n (check/normalize (.-term ^Code c) (:world st) (get-in st [:dyn :meter]))]
-           (ret st (Code. n))
-           (m/abandon! :exhausted)))})
-
 ;; ---------------------------------------------------------------------------
 ;; klara.jit: building speculations (L4.check.speculate, L4.exec.leave)
 
@@ -335,11 +329,13 @@
                                (or (:value (w/lookup world sq))
                                    (fail :L4.jit.attach (str "specializer " sq " is not defined"))))]
              (ret st {:name q
-                      :reference (if saved (intr/reference-with-profile f saved) (intr/annotated-reference f))
-                      :profile (intr/profile-snapshot f)
+                      :reference (if saved (profile/reference-with-profile f saved) (profile/annotated-reference f))
+                      :profile (profile/profile-snapshot f)
                       :runtime (runtime-info)
                       :specializer specializer
-                      :specializer-name sq}))))})
+                      :specializer-name sq
+                      ;; the definition's own function, unpinned (for measuring it)
+                      :function f}))))})
 
 (b/register! 'klara.jit/function                                      ; L4.jit.function
   {:kind :intrinsic
@@ -362,38 +358,8 @@
   {:kind :host
    :pure true
    :fn (fn [guard reference]
-         (check/guard? (intr/strip-annotations (.-term ^Code guard))
-                       (intr/strip-annotations (.-term ^Code reference))))})
-
-(b/register! 'klara.jit/callee-code                                   ; L4.jit.inline
-  {:kind :intrinsic
-   :fn (fn [st [q]]
-         ;; Code of the function definition q in the current world, or nil
-         (let [f (:value (w/lookup (:world st) q))]
-           (ret st (when (v/closure? f) (intr/reify-closure f)))))})
-
-(b/register! 'klara.jit/simplify                                      ; L4.jit.simplify
-  {:kind :intrinsic
-   :fn (fn [st [code opts]]
-         ;; online partial evaluation (check/normalize); its result is a
-         ;; candidate like any other, checked by the kernel. Budget: the job's.
-         (let [meter (get-in st [:dyn :meter])
-               r (check/normalize (intr/strip-annotations (.-term ^Code code)) (:world st) meter
-                                  :depth (or (:depth opts) 64))]
-           (ret st (if r (Code. r) code))))})
-
-(b/register! 'klara.jit/known?                                        ; L4.check.delta-data
-  {:kind :intrinsic
-   :fn (fn [st [code]]
-         ;; a constant, or a global defined as immutable data
-         (let [t (.-term ^Code code)]
-           (ret st (boolean
-                    (case (:op t)
-                      :const true
-                      :global (let [d (w/lookup (:world st) (get-in t [:link :name]))]
-                                (and d (not (:macro? d)) (not (v/closure? (:value d)))
-                                     (not (v/mutable? (:value d)))))
-                      false)))))})
+         (check/guard? (profile/strip-annotations (.-term ^Code guard))
+                       (profile/strip-annotations (.-term ^Code reference))))})
 
 ;; L4.check.in-place: an owned candidate is admitted by the ownership
 ;; judgment and the definitional check of its erasure.

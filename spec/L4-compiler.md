@@ -160,17 +160,18 @@ often each branch was taken. A function's profile counts all entries (`:count`) 
 self calls (`:external`). It also keeps a recent
 argument vector as `:sample`: strongly when its elements are scalars or
 collections of at most 10000 elements (a bounded retention of one sample per
-function), otherwise weakly. `(klara.profile/record! false)` turns recording
-off, `(klara.profile/record! true)` on again.
+function), otherwise weakly. `(klara.profile/without thunk)` calls `thunk`
+without recording, as a job with `{:profile false}` does (L3.job.profile).
 
 `L4.profile.snapshot` `(klara.profile/snapshot f)` returns the profile of
 closure `f` as data: `:entries`, `:calls` and `:branches`, with source
 positions.
 
 `L4.profile.saved` A run can save the profiles of the program's functions
-that ran, as EDN keyed by definition, the hash of its source form and the
+that ran (those in namespaces loaded from the program's directory), as EDN
+keyed by definition, the SHA-256 of its source form with metadata, and the
 path of each annotated term (`clojure -M:klara run --record FILE`). A later
-run given them (`--aot FILE`) compiles each such definition with
+run given them (`--precompile FILE`) compiles each such definition with
 `klara.jit/compile!` and the saved profile right after its definition is
 evaluated, if its source form is unchanged, so its first call can run
 compiled code. Saved stable values are small data only.

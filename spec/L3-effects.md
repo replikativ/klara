@@ -33,6 +33,10 @@ inside `clojure.core/map`) runs in a nested machine with the default
 handlers of the current context. Operations that only a handler outside the
 host call could handle raise this rule.
 
+`L3.effect.time` `(klara.time/now)` performs `:time/now`; the session and
+jobs handle it with the host's monotonic clock in nanoseconds. A handler
+may answer it instead.
+
 ## Jobs
 
 `L3.job.run` `(job/run opts thunk)` calls `thunk` in a new activation whose

@@ -63,7 +63,8 @@
            (outcome frame :exhausted {:continuation suspension}))))
 
 (defn- job-defaults []
-  {:io/print (fn [st [s]]
+  {:time/now (fn [st _] (assoc st :mode :ret :ctl (System/nanoTime) :env nil))   ; L3.effect.time
+   :io/print (fn [st [s]]
                (let [job (get-in st [:dyn :job])
                      j (swap! job update :intents conj [:io/print s])]
                  (when (> (count (:intents j)) (:intent-limit j))

@@ -41,11 +41,9 @@
 
 ;; Hooks set by later layers (L4): select a compiled implementation of a
 ;; definition, and call an executable.
-(defonce resolve-hook (atom nil))     ; (fn [q definition world session] value-or-nil)
-
-;; Bumped whenever the dispatch table changes; globals' inline caches are
-;; keyed by world identity and this epoch.
-(defonce ^java.util.concurrent.atomic.AtomicLong dispatch-epoch (java.util.concurrent.atomic.AtomicLong. 0))
+;; Compiled code lives in the world (L4.exec.provenance), so a world's
+;; resolution of a name never changes and caches are keyed by world id.
+(defonce resolve-hook (atom nil))     ; (fn [q definition world] value-or-nil)
 
 ;; ---------------------------------------------------------------------------
 ;; Intrinsic values
@@ -86,18 +84,19 @@
 ;; Globals (L2.link.*)
 
 (defn resolve-link
-  ([link world] (resolve-link link world nil))
-  ([link ^World world session]
+  "The value a link denotes in `world`: for a late link the definition's
+   compiled code valid there (resolve-hook), else its value."
+  [link ^World world]
   (case (:kind link)
     :late (let [q (:name link)
                 d (w/lookup world q)]
             (when (nil? d) (fail :L1.resolve.unbound (str "unable to resolve " q " in " (w/id world)) :name q))
-            (or (when-let [h (and session @resolve-hook)] (h q d world session)) (:value d)))
+            (or (when-let [h @resolve-hook] (h q d world)) (:value d)))
     :pinned (w/pin (:world link) (:name link))
     :guarded (let [q (:name link)]
                (if (= (:generation link) (w/generation world q))
                  (:value link)
-                 (resolve-link {:kind :late :name q} world session))))))
+                 (resolve-link {:kind :late :name q} world)))))
 
 ;; ---------------------------------------------------------------------------
 ;; Closure application (on prepared nodes, klara.runtime.prepare)
@@ -375,11 +374,10 @@
 (defn- resolve-global [^klara.runtime.prepare.Global g world dyn]
   (let [link (.-link g)]
     (if (= :late (:kind link))
-      (let [epoch (.get dispatch-epoch)
-            id (.-id ^World world)]
-        (or (prep/global-cached g id epoch)
-            (prep/global-cache! g id epoch (resolve-link link world (:session dyn)))))
-      (resolve-link link world (:session dyn)))))
+      (let [id (.-id ^World world)]
+        (or (prep/global-cached g id)
+            (prep/global-cache! g id (resolve-link link world))))
+      (resolve-link link world))))
 
 (declare imm)
 
@@ -446,7 +444,7 @@
       (aset m 0 n)
       (neg? n))))
 
-(defn- profiling? [dyn] (and @prep/profiling (nil? (:no-profile dyn))))
+(defn- profiling? [dyn] (nil? (:no-profile dyn)))
 
 (defn- self-call-frame?
   "Is args frame f completing a definition's call of itself?"
@@ -613,6 +611,8 @@
             :do (let [[a & more] (:rest f)]
                   (next! regs :eval a (:env f) (if more (conj k (assoc f :rest more)) k) world mint dyn))
             :restore (next! regs :ret x env k (:world f) (:mint f) dyn)
+            :restore-profile (next! regs :ret x env k world mint
+                                    (if (:no-profile f) (assoc dyn :no-profile true) (dissoc dyn :no-profile)))
             :binders (next! regs :ret x env k world mint dyn)
             :handle (if-let [r (:return f)]
                       (next! regs :apply [r [x]] env k (:world f) (:mint f) dyn)

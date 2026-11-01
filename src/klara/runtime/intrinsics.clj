@@ -173,32 +173,6 @@
                           (swap! job update :owned (fnil conj #{}) x))
                         (ret st x)))}))
 
-;; vswap! is a macro in Clojure: (vswap! v f & args) = (vreset! v (f @v args..))
-(b/register! 'klara.core/vswap!
-             {:kind :macro
-              :fn (fn [[_ v f & args] _env]
-                    (let [x (gensym "v")]
-                      (list 'clojure.core/let [x v]
-                            (list 'clojure.core/vreset! x (list* f (list 'clojure.core/deref x) args)))))})
-
-;; defrecord (L0.surface.defrecord): a record is a map of its fields, tagged
-;; with its type in metadata; ->Name and map->Name construct it.
-(b/register! 'klara.core/defrecord
-             {:kind :macro
-              :fn (fn [[_ nm fields & impls] env]
-                    (when (seq impls)
-                      (fail :L0.surface.defrecord "protocol implementations in defrecord are not supported yet"))
-                    (let [tag (symbol (str (:ns env)) (name nm))
-                          ks (mapv (comp keyword name) fields)
-                          m (gensym "m")]
-                      (list 'do
-                            (list 'def nm (list 'quote tag))
-                            (list 'defn (symbol (str "->" nm)) (vec fields)
-                                  (list 'clojure.core/with-meta (zipmap ks fields) {:klara/record (list 'quote tag)}))
-                            (list 'defn (symbol (str "map->" nm)) [m]
-                                  (list 'clojure.core/with-meta (list 'clojure.core/merge (zipmap ks (repeat nil)) m)
-                                        {:klara/record (list 'quote tag)})))))})
-
 ;; ---------------------------------------------------------------------------
 ;; klara.code: Code views for guest recipes (L2.view.make)
 ;;
@@ -274,15 +248,40 @@
 (defintrinsic klara.code/subst [st [code bindings]]
   (ret st (Code. (t/refresh-free (t/substitute (term-of code) (into {} (map (fn [[n x]] [n (term-of x)])) bindings))))))
 
-(defintrinsic klara.code/unfold [st [code]]
+(defintrinsic klara.code/unfold [st [code]]                    ; L2.view.unfold
   ;; The function a global link or lifted closure denotes, as code with fresh
-  ;; binders, or nil. Untrusted: recipes use it, the checker re-derives it.
+  ;; binders, or nil: for a global, its definition (the reference, also when
+  ;; compiled code is installed for it). Untrusted: recipes use it, the
+  ;; checker re-derives what it needs.
   (let [t (term-of code)
         f (case (:op t)
-            :global (let [x (m/resolve-link (:link t) (:world st))] (when (v/closure? x) x))
+            :global (let [{:keys [kind name world]} (:link t)
+                          x (if (= :pinned kind) (w/pin world name) (:value (w/lookup (:world st) name)))]
+                      (when (v/closure? x) x))
             :const (when (v/closure? (:value t)) (:value t))
             nil)]
     (ret st (when f (Code. (first (t/freshen (.-term ^Code (reify-closure f)))))))))
+
+(defintrinsic klara.code/known [st [code]]                     ; L2.view.known
+  ;; Code for the value of a constant or of a global defined as immutable data
+  ;; (L4.check.delta-data), or nil.
+  (let [t (term-of code)
+        x (case (:op t)
+            :const [(:value t)]
+            :global (let [{:keys [kind name world]} (:link t)
+                          d (when-not (= :pinned kind) (w/lookup (:world st) name))
+                          v (if (= :pinned kind) (w/pin world name) (:value d))]
+                      (when (and (not (:macro? d)) (not (v/closure? v)) (v/data? v)) [v]))
+            nil)]
+    (ret st (when x (Code. (t/const (first x)))))))
+
+(defintrinsic klara.code/pure-host? [st [code]]                ; L2.view.known
+  ;; Is code a host function the checker may evaluate on constants (L4.check.prim)?
+  (let [t (term-of code)
+        q (:name t)]
+    (ret st (boolean (and (= :host (:op t))
+                          (or (and (= "clojure.core" (namespace q)) (contains? b/pure-host (symbol (name q))))
+                              (:pure (b/lookup q))))))))
 
 (defintrinsic klara.code/host-fn [st [code]]
   (let [t (term-of code)] (ret st (when (= :host (:op t)) (m/host-value (:name t))))))
@@ -296,145 +295,3 @@
   (b/register! (symbol "klara.core" (name s))
                {:kind :host :fn @(ns-resolve 'klara.runtime.prims s) :symbol (symbol "klara.runtime.prims" (name s))}))
 (b/register! 'klara.jit/same? {:kind :host :fn prims/same? :symbol 'klara.runtime.prims/same? :pure true})
-
-;; ---------------------------------------------------------------------------
-;; klara.profile: the interpreter's feedback as data (L4.profile.snapshot)
-
-(defn- node-children [n]
-  (let [tg (prep/tag n)]
-    (case tg
-      4 (map #(.-body ^klara.runtime.prepare.Arity %) (.-arities ^klara.runtime.prepare.Fn n))
-      5 (cons (.-f ^klara.runtime.prepare.App n) (.-args ^klara.runtime.prepare.App n))
-      6 [(.-init ^klara.runtime.prepare.Let n) (.-body ^klara.runtime.prepare.Let n)]
-      7 (concat (.-fns ^klara.runtime.prepare.Letrec n) [(.-body ^klara.runtime.prepare.Letrec n)])
-      8 [(.-test ^klara.runtime.prepare.If n) (.-then ^klara.runtime.prepare.If n) (.-else ^klara.runtime.prepare.If n)]
-      9 (concat (.-exprs ^klara.runtime.prepare.Do n) [(.-last ^klara.runtime.prepare.Do n)])
-      10 (.-args ^klara.runtime.prepare.Recur n)
-      11 [(.-ex ^klara.runtime.prepare.Throw n)]
-      12 (cons (.-body ^klara.runtime.prepare.Try n) (keep :body (.-catches ^klara.runtime.prepare.Try n)))
-      13 (.-args ^klara.runtime.prepare.Interop n)
-      14 [(.-init ^klara.runtime.prepare.Def n)]
-      15 (.-holes ^klara.runtime.prepare.Code n)
-      [])))
-
-(defn- describe-callee [x]
-  (cond (v/closure? x) (or (some-> (:self (.-term ^Closure x)) str) :fn)
-        (keyword? x) x
-        :else (str x)))
-
-(defn profile-snapshot
-  "The profile of closure `f`: its entries (argument classes and stable
-   values), its calls and its branches, with source positions."
-  [^Closure f]
-  (let [root (.-node f)
-        nodes (tree-seq (comp seq node-children) node-children root)
-        pos #(:pos (.sourceTerm ^klara.runtime.prepare.INode %))
-        snap #(.snapshot ^klara.runtime.prepare.IProfile %)]
-    {:entries (snap (.-profile ^klara.runtime.prepare.Fn root))
-     :calls (vec (for [n nodes :when (== 5 (prep/tag n))
-                       :let [p (snap (.-profile ^klara.runtime.prepare.App n))]
-                       :when (pos? (:count p))]
-                   {:pos (pos n) :count (:count p) :callee (describe-callee (:callee p))}))
-     :branches (vec (for [n nodes :when (== 8 (prep/tag n))
-                          :let [[t e] (:branches (snap (.-profile ^klara.runtime.prepare.If n)))]
-                          :when (pos? (+ t e))]
-                      {:pos (pos n) :then t :else e}))}))
-
-(defn- keep-root-profile
-  "reify rebuilds the function term itself; its profile goes back on it."
-  [^Code code p]
-  (if p (Code. (assoc (.-term code) :profile p)) code))
-
-(defn annotated-reference
-  "Code of closure `f` whose terms carry their profiles under :profile
-   (L4.jit.context): a function its entries, a call its count and callee,
-   an if its branch counts. Prepared nodes share their terms, so the
-   profiles are found by identity."
-  [^Closure f]
-  (let [root (.-node f)
-        by-term (java.util.IdentityHashMap.)
-        snap #(.snapshot ^klara.runtime.prepare.IProfile %)]
-    (doseq [n (tree-seq (comp seq node-children) node-children root)]
-      (case (prep/tag n)
-        4 (.put by-term (.sourceTerm ^klara.runtime.prepare.INode n) (snap (.-profile ^klara.runtime.prepare.Fn n)))
-        5 (let [p (snap (.-profile ^klara.runtime.prepare.App n))]
-            (.put by-term (.sourceTerm ^klara.runtime.prepare.INode n)
-                  {:count (:count p) :callee (describe-callee (:callee p))}))
-        8 (let [[a b] (:branches (snap (.-profile ^klara.runtime.prepare.If n)))]
-            (.put by-term (.sourceTerm ^klara.runtime.prepare.INode n) {:then a :else b}))
-        nil))
-    (letfn [(annotate [term]
-              (let [cs (t/children term)
-                    t' (if (seq cs) (t/with-children term (mapv annotate cs)) term)]
-                (if-let [p (.get by-term term)] (assoc t' :profile p) t')))]
-      (keep-root-profile (reify-closure f (annotate (.-term f)))
-                         (.get by-term (.-term f))))))
-
-;; Saved profiles (L4.profile.saved): profiles as data keyed by the path of
-;; child indices from the function's term, for a later run (AOT).
-
-(defn- edn-data? [x]
-  (cond (or (nil? x) (boolean? x) (number? x) (string? x) (keyword? x) (symbol? x) (char? x)) true
-        (or (vector? x) (set? x) (seq? x)) (every? edn-data? x)
-        (map? x) (and (not (record? x)) (every? edn-data? (mapcat identity x)))
-        :else false))
-
-(defn- small-data?
-  "EDN data of at most 64 scalars: worth saving as a stable value."
-  [x]
-  (and (edn-data? x)
-       (<= (count (filter (complement coll?) (tree-seq coll? seq x))) 64)))
-
-(defn- export-profile [p]
-  (cond-> (dissoc p :sample)
-    (:classes p) (update :classes (fn [cs] (mapv #(if (class? %) (.getName ^Class %) %) cs)))
-    (:stable p) (update :stable (fn [vs] (mapv #(if (and (vector? %) (small-data? (second %))) % :unstable) vs)))
-    (contains? p :callee) (update :callee #(if (or (string? %) (keyword? %) (nil? %)) % (str %)))))
-
-(defn- import-profile [p]
-  (cond-> p
-    (:classes p) (update :classes (fn [cs] (mapv #(if (string? %)
-                                                     (try (Class/forName ^String %) (catch Throwable _ :polymorphic))
-                                                     %) cs)))))
-
-(defn saved-profile
-  "The profile of closure `f` as EDN data: {:form-hash h :paths {path profile}}."
-  [^Closure f form]
-  (let [paths (transient {})]
-    (letfn [(walk [term path]
-              (when-let [p (:profile term)] (assoc! paths path (export-profile p)))
-              (doseq [[i c] (map-indexed vector (t/children term))] (walk c (conj path i))))]
-      (walk (.-term ^Code (annotated-reference f)) []))
-    {:form-hash (hash form) :paths (persistent! paths)}))
-
-(defn reference-with-profile
-  "Code of closure `f` annotated with a saved profile instead of its own."
-  [^Closure f saved]
-  (let [paths (:paths saved)]
-    (letfn [(annotate [term path]
-              (let [cs (t/children term)
-                    t' (if (seq cs)
-                         (t/with-children term (vec (map-indexed (fn [i c] (annotate c (conj path i))) cs)))
-                         term)]
-                (if-let [p (get paths path)] (assoc t' :profile (import-profile p)) t')))]
-      (keep-root-profile (reify-closure f (annotate (.-term f) []))
-                         (some-> (get paths []) import-profile)))))
-
-(defn strip-annotations
-  "The term without profile annotations."
-  [term]
-  (let [cs (t/children term)]
-    (cond-> (dissoc term :profile)
-      (seq cs) (t/with-children (mapv strip-annotations cs)))))
-
-(defintrinsic klara.profile/snapshot [st [f]]                   ; L4.profile.snapshot
-  (ret st (cond
-            (v/closure? f) (profile-snapshot f)
-            (instance? klara.runtime.value.IExecutable f)
-            (let [r (:reference (v/-describe f))]
-              {:compiled true :reference r})
-            :else (fail :L4.profile.snapshot (str "no profile for " (pr-str f))))))
-
-(defintrinsic klara.profile/record! [st [on?]]                 ; L4.profile.record
-  (reset! prep/profiling (boolean on?))
-  (ret st on?))

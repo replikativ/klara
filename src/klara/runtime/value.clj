@@ -26,34 +26,25 @@
 
 (defonce host-invoke (atom (fn [f args] (throw (ex-info "machine not loaded" {})))))
 
-(defmacro deftype-callable
-  "deftype whose IFn methods (arities 0..20 and applyTo) delegate to host-invoke."
-  [name fields & specs]
+(defn- callable-methods
+  "IFn methods (arities 0..20 and applyTo) delegating to host-invoke."
+  []
   (let [this (gensym "this")
-        sigs (for [n (range 21)]
-               (let [args (vec (repeatedly n #(gensym "a")))]
-                 `(~'invoke [~this ~@args] (@host-invoke ~this ~args))))
         rest-sym (gensym "args")]
-    `(deftype ~name ~fields
-       clojure.lang.Fn
-       clojure.lang.IFn
-       ~@sigs
-       (~'applyTo [~this ~rest-sym] (@host-invoke ~this (vec ~rest-sym)))
-       ~@specs)))
+    (concat (for [n (range 21)]
+              (let [args (vec (repeatedly n #(gensym "a")))]
+                `(~'invoke [~this ~@args] (@host-invoke ~this ~args))))
+            [`(~'applyTo [~this ~rest-sym] (@host-invoke ~this (vec ~rest-sym)))])))
+
+(defmacro deftype-callable
+  "deftype that host code can call: its IFn methods delegate to host-invoke."
+  [name fields & specs]
+  `(deftype ~name ~fields clojure.lang.Fn clojure.lang.IFn ~@(callable-methods) ~@specs))
 
 (defmacro defrecord-callable
-  "defrecord whose IFn methods delegate to host-invoke, as deftype-callable."
+  "defrecord that host code can call, as deftype-callable."
   [name fields & specs]
-  (let [this (gensym "this")
-        sigs (for [n (range 21)]
-               (let [args (vec (repeatedly n #(gensym "a")))]
-                 `(~'invoke [~this ~@args] (@host-invoke ~this ~args))))
-        rest-sym (gensym "args")]
-    `(defrecord ~name ~fields
-       clojure.lang.IFn
-       ~@sigs
-       (~'applyTo [~this ~rest-sym] (@host-invoke ~this (vec ~rest-sym)))
-       ~@specs)))
+  `(defrecord ~name ~fields clojure.lang.IFn ~@(callable-methods) ~@specs))
 
 ;; ---------------------------------------------------------------------------
 ;; World and definitions (spec/L1-worlds.md)
@@ -151,3 +142,13 @@
     (instance? clojure.lang.IPersistentCollection x) nil   ; lazy or other seqs: not traversed
     (mutable? x) x
     :else nil))
+
+(defn data?
+  "Immutable data: collections of data, keywords and symbols (IFn on the JVM,
+   values in Klara) and other values that are neither functions nor mutable.
+   The checker computes with it (L4.check.prim, L4.check.delta-data)."
+  [x]
+  (cond (or (keyword? x) (symbol? x)) true
+        (coll? x) (and (not (instance? clojure.lang.LazySeq x)) (not (record? x))
+                       (every? data? (if (map? x) (mapcat identity x) x)))
+        :else (not (or (fn? x) (closure? x) (instance? clojure.lang.IFn x) (mutable? x)))))

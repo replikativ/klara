@@ -11,6 +11,9 @@
   {:certificate {:kind :in-place}}. Plain Klara over Code views."
   (:require [klara.code :as code]))
 
+;; The persistent updates the recipe owns, and their owned versions. The
+;; kernel's table (klara.compile.own/consuming, the reverse direction) is the
+;; authority: an update it does not know is not admitted.
 (def owned-update
   '{clojure.core/conj klara.core/conj!, clojure.core/assoc klara.core/assoc!,
     clojure.core/dissoc klara.core/dissoc!, clojure.core/disj klara.core/disj!})

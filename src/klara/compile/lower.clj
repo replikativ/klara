@@ -12,8 +12,8 @@
   (klara.runtime.prepare). Lowering walks the term and its prepared nodes
   together, so at every point where compiled code may leave it knows the
   interpreter node to continue at, which compiled locals fill which
-  environment slots, and the `let` frames around the point. It leaves by
-  throwing a Leave that carries this state:
+  environment slots, and the `let` frames around the point. It leaves with
+  a Leave that carries this state:
 
   - a failed speculation, `(if guard specialized reference)`, continues at
     the reference node (L4.exec.leave);
@@ -146,8 +146,8 @@
 ;; ---------------------------------------------------------------------------
 ;; Calls
 
-;; A call site of a late link: the world id, dispatch epoch and value of its
-;; last resolution, as in the interpreter's globals (klara.runtime.prepare).
+;; A call site of a late link: the world id and value of its last resolution,
+;; as in the interpreter's globals (klara.runtime.prepare).
 (definterface ISite (lookup [ctx q]) (direct [ctx q]))
 
 ;; direct: the callee's host function when it can be called without checks
@@ -159,22 +159,20 @@
       (when (nil? (aget c 1))
         (let [world (aget c 0)
               id (.-id ^klara.runtime.value.World world)
-              epoch (.get m/dispatch-epoch)
-              d (klara.runtime.prepare/entry-value dentry id epoch)]
+              d (klara.runtime.prepare/entry-value dentry id)]
           (if d
             (when-not (identical? d ::none) d)
             (let [x (.lookup this c q)
                   f (when (instance? klara.runtime.value.IExecutable x) (v/-direct x world))]
-              (set! dentry (klara.runtime.prepare.CacheEntry. id epoch (or f ::none)))
+              (set! dentry (klara.runtime.prepare.CacheEntry. id (or f ::none)))
               f))))))
   (lookup [_ c q]
     (let [^objects c c
           world (aget c 0)
-          id (.-id ^klara.runtime.value.World world)
-          epoch (.get m/dispatch-epoch)]
-      (or (klara.runtime.prepare/entry-value entry id epoch)
-          (let [x (m/resolve-link {:kind :late :name q} world (:session (aget c 2)))]
-            (set! entry (klara.runtime.prepare.CacheEntry. id epoch x))
+          id (.-id ^klara.runtime.value.World world)]
+      (or (klara.runtime.prepare/entry-value entry id)
+          (let [x (m/resolve-link {:kind :late :name q} world)]
+            (set! entry (klara.runtime.prepare.CacheEntry. id x))
             x)))))
 
 (defn late [^ISite site ctx q] (.lookup site ctx q))

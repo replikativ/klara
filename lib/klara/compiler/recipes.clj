@@ -13,15 +13,32 @@
 
 (defn- value? [c] (contains? #{:const :local :fn :host} (view-op c)))
 
+(defn- plain?
+  "Plain data: what folding may produce (no lazy sequences, functions or
+   mutable objects)."
+  [x]
+  (cond (or (nil? x) (number? x) (boolean? x) (string? x) (keyword? x) (symbol? x) (char? x)) true
+        (map? x) (every? (fn [[k v]] (and (plain? k) (plain? v))) x)
+        (or (vector? x) (set? x)) (every? plain? x)
+        :else false))
+
 (defn- fold
-  "A host function applied to constants, evaluated now; nil if it fails or
-   yields something that is not plain data."
+  "A pure host function (the checker's table, L4.check.prim) applied to
+   constants, evaluated now; nil if it fails or yields something that is not
+   plain data."
   [f args]
-  (when-let [hf (code/host-fn f)]
-    (try (let [r (apply hf (map (fn [a] (:value (code/view a))) args))]
-           (when (or (number? r) (boolean? r) (nil? r) (string? r) (keyword? r))
-             (lift r)))
-         (catch Exception _ nil))))
+  (when (code/pure-host? f)
+    (let [hf (code/host-fn f)]
+      (try (let [r (apply hf (map (fn [a] (:value (code/view a))) args))]
+             (when (plain? r) (lift r)))
+           (catch Exception _ nil)))))
+
+(defn- recurs-to?
+  "Does c contain a recur to `self`, not looking inside other functions?"
+  [c self]
+  (let [v (code/view c)]
+    (or (and (= :recur (:op v)) (= self (:target v)))
+        (and (not= :fn (:op v)) (boolean (some #(recurs-to? % self) (code/children c)))))))
 
 (declare inline*)
 
@@ -34,11 +51,14 @@
       (and (= :host (:op fv)) (every? constant? args))
       (or (fold f args) (code/make (assoc v :fn f :args args)))
 
-      ;; beta reduction when every argument is a value
-      (and (= :fn (:op fv)) (= (count (:params fv)) (count args)) (every? value? args))
-      (inline* (code/subst (:body fv)
-                           (cond-> (zipmap (:params fv) args)
-                             (:self fv) (assoc (:self fv) f)))
+      ;; beta reduction: arguments become lets, in order (L4.check.let-app),
+      ;; and the let rule substitutes those that are values; a loop is not
+      ;; unrolled (its recur needs the function)
+      (and (= :fn (:op fv)) (= (count (:params fv)) (count args))
+           (not (and (:self fv) (recurs-to? (:body fv) (:self fv)))))
+      (inline* (reduce (fn [body [p a]] (code/make {:op :let :name p :init a :body body}))
+                       (if (:self fv) (code/subst (:body fv) {(:self fv) f}) (:body fv))
+                       (reverse (map vector (:params fv) args)))
                depth)
 
       ;; unfold a definition when some argument is known
@@ -50,6 +70,8 @@
 (defn- inline* [c depth]
   (let [v (code/view c)]
     (case (:op v)
+      ;; a data definition is its value (L4.check.delta-data)
+      :global (or (code/known c) c)
       :app (inline-app v depth)
       :if (let [test (inline* (:test v) depth)]
             (if (constant? test)
@@ -64,8 +86,9 @@
       c)))
 
 (defn inline
-  "Online partial evaluation: fold constants, reduce known calls, and unfold
-   definitions called with at least one constant argument, up to `depth`
-   nested unfoldings (default 32)."
+  "Online partial evaluation: fold pure host functions on constants, read
+   data definitions, reduce known calls, and unfold definitions called with
+   at least one known argument, up to `depth` nested unfoldings (default
+   32). The only partial evaluator; klara.jit/simplify is this."
   ([reference] (inline reference 32))
   ([reference depth] (inline* reference depth)))
