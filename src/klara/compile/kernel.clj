@@ -51,9 +51,6 @@
 
 (defn register-certifier! [kind f] (swap! certifiers assoc kind f))
 
-;; Compiled code left (L4.exec.leave); carries the leave state.
-(deftype Left [leave])
-
 (v/deftype-callable Executable [cand ^:volatile-mutable validity   ; [world valid?], one write
                                 ^:volatile-mutable last-path]
   v/IExecutable
@@ -66,19 +63,17 @@
                       (let [r (valid? cand world)] (set! validity (object-array [world r])) r)))
                   (guards-hold? cand args))
           r (if ok
-              (try (m/set-context! world (:mint st) (:dyn st))
-                   (apply (:host-fn cand) args)
-                   (catch clojure.lang.ExceptionInfo ex
-                     (if-let [l (lower/leave? ex)] (Left. @l) (throw ex))))
+              (do (m/set-context! world (:mint st) (:dyn st))
+                  (apply (:host-fn cand) args))
               ::invalid)]
       (cond
         (= ::invalid r)
         (do (set! last-path :reference)                           ; L4.exec.executable
             (assoc st :mode :apply
                    :ctl [(m/closure-of (.-term ^Code (:reference cand)) (:mint st)) (vec args)]))
-        (instance? Left r)
+        (lower/leave? r)
         (do (set! last-path :left)                                 ; L4.exec.leave
-            (lower/resume st (.-leave ^Left r)))
+            (lower/resume st (lower/leave? r)))
         :else (do (set! last-path :compiled) (ret st r)))))
   (-call [this world mint dyn args]
     (if (and (or (nil? mint) (:mint-safe cand))
@@ -89,6 +84,13 @@
              (guards-hold? cand args))
       (do (set! last-path :compiled) (apply (:host-fn cand) args))
       v/fallback))
+  (-direct [this world]
+    (when (and (nil? (:guards cand))
+               (let [^objects v validity]
+                 (if (and v (identical? world (aget v 0)))
+                   (aget v 1)
+                   (let [r (valid? cand world)] (set! validity (object-array [world r])) r))))
+      (:host-fn cand)))
   (-describe [this]
     {:name (:name cand) :reference (:reference cand) :premises (:premises cand)
      :guards (:guards cand) :evidence (:evidence cand)

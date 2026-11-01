@@ -206,6 +206,12 @@ predicates such as type tests, `=`, `identical?`, `not`, `same?`) or if it
 is the reference's own test or its negation, which the reference evaluates
 first, so the guard fails only where the reference fails.
 
+`L4.lower.direct` Compiled code calls a late definition directly, without
+argument checks, when in the current world (and without a mint) the
+definition resolves to compiled code that holds there and has no argument
+guards; otherwise as any call. The decision is cached per call site and
+world, like the resolution itself.
+
 `L4.exec.osr` Where compiled code left to the interpreter inside a loop,
 the interpreter enters compiled code for that loop again at its next
 iteration, if the candidate still holds in the current world and mint

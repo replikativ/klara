@@ -34,7 +34,7 @@
    Deterministic, no effects, no mutable results."
   '#{+ - * / quot rem mod inc dec < > <= >= = == not= not zero? pos? neg? even? odd?
      identity max min abs compare
-     list vector hash-map hash-set cons first second rest next seq empty? count nth get
+     list vector hash-map array-map hash-set cons first second rest next seq empty? count nth get
      assoc dissoc conj concat vec str keyword symbol name namespace subs
      contains? keys vals peek pop into merge select-keys update get-in assoc-in
      nil? some? true? false? number? integer? int? double? float? ratio? string? keyword? symbol? map? vector?

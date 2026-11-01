@@ -104,6 +104,10 @@
   "Nodes in a function small enough to inline."
   40)
 
+(defn- loops? [c]
+  (or (= :other (:op (code/view c)))            ; recur and other constructs show as :other
+      (boolean (some loops? (code/children c)))))
+
 (defn inline-calls
   "Inline hot calls of small function definitions other than `self` (whose
    own calls are direct): (f x) becomes ((fn [p] body) x). The checker
@@ -119,7 +123,9 @@
             callee (when (and (= :global (:op f)) (= :late (:kind f)) (not= self (:name f))
                               (>= (or (:count (:profile v)) 0) (:hot pol)))
                      (callee-code (:name f)))]
-        (if (and callee (<= (size callee) (:small pol)))
+        ;; a callee with a loop stays a call: on the JVM a loop that is not in
+        ;; return position costs a closure per evaluation (design/07-performance.md)
+        (if (and callee (<= (size callee) (:small pol)) (not (loops? callee)))
           (code/make {:op :app :fn callee :args (rest (code/children rebuilt))})
           rebuilt))
       rebuilt))))

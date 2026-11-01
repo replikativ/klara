@@ -17,6 +17,9 @@
    candidate is not valid there."
   (-execute [f st args])
   (-call [f world mint dyn args])
+  (-direct [f world]
+    "The host function to call directly in `world` without a mint, when it
+     needs no check at the call (valid there, no argument guards); else nil.")
   (-describe [f]))
 
 (def fallback ::fallback)

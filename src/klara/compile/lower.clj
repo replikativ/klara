@@ -22,9 +22,13 @@
   - the budget running out at a function entry: the call is applied again by
     the interpreter.
 
-  Each compiled call site in a non-tail position adds its own frames as the
-  Leave passes through, so the receiving executable rebuilds the whole
-  continuation and the machine goes on from there: nothing is re-executed."
+  A Leave is a value, not an exception: compiled code returns it, and every
+  let whose initializer may leave checks for it and adds its own frame on
+  the way out (an instance test, no try, no allocation). The receiving
+  executable rebuilds the whole continuation and the machine goes on from
+  there: nothing is re-executed. Host code never sees a Leave: a compiled
+  function that host code calls (an executable, a lambda passed to a host
+  function) completes its Leave in a nested machine first."
   (:require [klara.compile.anf :as anf]
             [klara.lang.builtins :as b]
             [klara.lang.term :as t]
@@ -41,29 +45,31 @@
 ;; ---------------------------------------------------------------------------
 ;; Leaving
 
+(definterface ILeave (state []) (addFrames [frames]))
+
+;; state is one of
+;;   {:mode :eval :node n :env env}      continue at node n
+;;   {:mode :apply :f f :args args}      apply f to args
+;;   {:mode :nested :state st}           continue a nested machine's state
+;; with :frames, the let frames collected on the way out, innermost first.
+(deftype Leave [^:volatile-mutable st]
+  ILeave
+  (state [_] st)
+  (addFrames [this frames] (set! st (update st :frames into frames)) this))
+
 (defn leave?
-  "The leave state carried by exception `e`, or nil."
-  [e]
-  (when (instance? clojure.lang.ExceptionInfo e) (::leave (ex-data e))))
+  "The leave state of `x` if it is a Leave, else nil."
+  [x]
+  (when (instance? Leave x) (.state ^Leave x)))
 
-(defn- leave!
-  "Leave compiled code: `state` is one of
-     {:mode :eval :node n :env env}      continue at node n
-     {:mode :apply :f f :args args}      apply f to args
-     {:mode :nested :state st}           continue a nested machine's state
-   `frames` are the let frames around the leaving point, innermost first."
-  [state frames]
-  (throw (ex-info "leave compiled code" {::leave (volatile! (assoc state :frames frames))})))
+(defn- leave [state] (Leave. (assoc state :frames [])))
 
-(defn push-frames!
-  "A Leave passing through a compiled call site: add the site's frames
-   (outside the frames already collected) and pass it on."
-  [e frames]
-  (when-let [l (leave? e)]
-    (vswap! l update :frames into frames))
-  (throw e))
+(defn leave-up
+  "A Leave passing out of a let: add the let's frame and pass it on."
+  [^Leave l frame]
+  (.addFrames l [frame]))
 
-(defn leave-eval! [node env frames] (leave! {:mode :eval :node node :env env} frames))
+(defn leave-eval [node env] (leave {:mode :eval :node node :env env}))
 
 (defn let-frame [body-node env] {:f :let :body body-node :env env})
 
@@ -71,26 +77,55 @@
 ;; exercise frame states everywhere (as V8's --deopt-every-n-times does).
 (defonce stress (atom nil))
 
+;; read on every function entry: a flag in a final array, kept by a watch
+(defonce ^"[Z" stressed (boolean-array 1))
+(add-watch stress ::flag (fn [_ _ _ p] (aset stressed 0 (some? p))))
+
 (defn tick!
   "L4.lower.steps: one step per function entry and loop iteration. True when
    compiled code must leave here: the budget ran out, or stress testing."
   []
   (let [^objects c (m/current-context)
-        ^longs meter (:meter (aget c 2))]
+        meter (m/meter-of c)]
     (or (when meter
           (aset meter 0 (dec (aget meter 0)))
           (neg? (aget meter 0)))
+        (when (aget stressed 0)
+          (when-let [p @stress] (< (Math/random) (double p)))))))
+
+(defn tick-meter!
+  "tick! with the meter fetched once per function entry (see entry-bindings)."
+  [^longs meter]
+  (or (when meter
+        (aset meter 0 (dec (aget meter 0)))
+        (neg? (aget meter 0)))
+      (when (aget stressed 0)
         (when-let [p @stress] (< (Math/random) (double p))))))
+
+;; Every compiled function body starts by fetching the context once; its
+;; loops and call sites use these locals. Nested machines install their own
+;; context array and restore this one, so it is stable while the body runs.
+(def ^:private entry-bindings
+  '[klara-ctx__ (klara.runtime.machine/current-context)
+    klara-meter__ (klara.runtime.machine/meter-of klara-ctx__)
+    klara-stress__ (clojure.core/aget klara.compile.lower/stressed 0)])
+
+;; inline: outside a budgeted job (no meter) and without stress testing a
+;; step costs two local tests, no call
+(def ^:private tick-form
+  '(if (if (nil? klara-meter__) klara-stress__ true)
+     (klara.compile.lower/tick-meter! klara-meter__)
+     false))
 
 (defn interpreted
   "The interpreter's closure for a compiled function: its node and captured values."
   [fn-node captured]
   (Closure. (.-term ^klara.runtime.prepare.Fn fn-node) fn-node captured nil))
 
-(defn leave-apply!
+(defn leave-apply
   "Leave at a function entry: the interpreter applies the function again."
   [fn-node captured args]
-  (leave! {:mode :apply :f (interpreted fn-node captured) :args args} []))
+  (leave {:mode :apply :f (interpreted fn-node captured) :args args}))
 
 (defn resume
   "The machine state that continues `st`, the state in which an executable
@@ -111,12 +146,27 @@
 
 ;; A call site of a late link: the world id, dispatch epoch and value of its
 ;; last resolution, as in the interpreter's globals (klara.runtime.prepare).
-(definterface ISite (lookup [q]))
+(definterface ISite (lookup [ctx q]) (direct [ctx q]))
 
-(deftype Site [^:volatile-mutable entry]
+;; direct: the callee's host function when it can be called without checks
+;; (L4.lower.direct), cached per world like the value; ::none when it cannot.
+(deftype Site [^:volatile-mutable entry ^:volatile-mutable dentry]
   ISite
-  (lookup [_ q]
-    (let [^objects c (m/current-context)
+  (direct [this c q]
+    (let [^objects c c]
+      (when (nil? (aget c 1))
+        (let [world (aget c 0)
+              id (.-id ^klara.runtime.value.World world)
+              epoch (.get m/dispatch-epoch)
+              d (klara.runtime.prepare/entry-value dentry id epoch)]
+          (if d
+            (when-not (identical? d ::none) d)
+            (let [x (.lookup this c q)
+                  f (when (instance? klara.runtime.value.IExecutable x) (v/-direct x world))]
+              (set! dentry (klara.runtime.prepare.CacheEntry. id epoch (or f ::none)))
+              f))))))
+  (lookup [_ c q]
+    (let [^objects c c
           world (aget c 0)
           id (.-id ^klara.runtime.value.World world)
           epoch (.get m/dispatch-epoch)]
@@ -125,7 +175,9 @@
             (set! entry (klara.runtime.prepare.CacheEntry. id epoch x))
             x)))))
 
-(defn late [^ISite site q] (.lookup site q))
+(defn late [^ISite site ctx q] (.lookup site ctx q))
+
+(defn direct ^clojure.lang.IFn [^ISite site ctx q] (.direct site ctx q))
 
 (defn- nested
   "Run a Klara function in a nested machine. If it performs an effect it
@@ -135,8 +187,40 @@
     (try (m/call-in [(aget c 0) (aget c 1) (aget c 2)] f args true)
          (catch clojure.lang.ExceptionInfo e
            (if-let [st (::m/state (ex-data e))]
-             (leave! {:mode :nested :state st} [])
+             (leave {:mode :nested :state st})
              (throw e))))))
+
+(declare resume)
+
+(defn complete
+  "The value of `r` for host code: a Leave runs to its end in a nested
+   machine (where an effect nobody inside handles is an error, as for any
+   Klara function host code calls, L3.effect.host-boundary)."
+  [r]
+  (if-let [l (leave? r)]
+    (let [^objects c (m/current-context)
+          base {:mode :ret :ctl nil :env nil :k (list {:f :boundary :deopt false})
+                :world (aget c 0) :mint (aget c 1) :dyn (aget c 2)}]
+      (:ctl (m/run-state (resume base l))))
+    r))
+
+;; A function compiled code creates: host code calls it through IFn and gets
+;; values; compiled code calls the raw function and sees its Leave.
+(deftype Lambda [^clojure.lang.IFn raw]
+  clojure.lang.Fn
+  clojure.lang.IFn
+  (invoke [_] (complete (.invoke raw)))
+  (invoke [_ a] (complete (.invoke raw a)))
+  (invoke [_ a b] (complete (.invoke raw a b)))
+  (invoke [_ a b c] (complete (.invoke raw a b c)))
+  (invoke [_ a b c d] (complete (.invoke raw a b c d)))
+  (invoke [_ a b c d e] (complete (.invoke raw a b c d e)))
+  (invoke [_ a b c d e f] (complete (.invoke raw a b c d e f)))
+  (invoke [_ a b c d e f g] (complete (.invoke raw a b c d e f g)))
+  (invoke [_ a b c d e f g h] (complete (.invoke raw a b c d e f g h)))
+  (applyTo [_ args] (complete (.applyTo raw args))))
+
+(defn lambda [f] (Lambda. f))
 
 (defn call
   "Call any function value from compiled code (L4.lower.calls): compiled
@@ -144,6 +228,7 @@
    they are."
   [f args]
   (cond
+    (instance? Lambda f) (apply (.-raw ^Lambda f) args)
     (instance? klara.runtime.value.IExecutable f)
     (let [^objects c (m/current-context)
           r (v/-call f (aget c 0) (aget c 1) (aget c 2) args)]
@@ -177,16 +262,30 @@
                 (not (contains? (t/free-locals (:body a)) (:self f)))
                 (some #(and (= :recur (:op %)) (= (:self f) (:target %))) (t/nodes (:body a))))))))
 
+(defn- may-leave?
+  "Can evaluating `t` in compiled code produce a Leave? Host calls cannot:
+   host code never sees one (see complete)."
+  [t]
+  (case (:op t)
+    (:const :local :global :host :fn :recur :throw) false
+    :app (let [f (:fn t)]
+           (not (or (:recur t) (= :host (:op f))
+                    (and (= :const (:op f)) (keyword? (:value f))))))
+    :if (or (boolean (:speculate t)) (boolean (some may-leave? (t/children t))))
+    (boolean (some may-leave? (t/children t)))))
+
 (defn- inline-redex?
   "A call of a literal function with one fixed arity that does not refer to
-   itself, applied to as many arguments."
+   itself (by name or by recur; inner loops may recur to themselves),
+   applied to as many arguments."
   [t]
   (let [f (:fn t)]
     (and (= :fn (:op f)) (not (:recur t))
          (let [[a & more] (:arities f)]
            (and a (nil? more) (nil? (:rest a)) (= (count (:params a)) (count (:args t)))
-                (not (contains? (t/free-locals (:body a)) (:self f)))
-                (not (some #(= :recur (:op %)) (t/nodes (:body a)))))))))
+                (or (nil? (:self f)) (not (contains? (t/free-locals (:body a)) (:self f))))
+                (not-any? #(and (= :recur (:op %)) (or (nil? (:target %)) (= (:self f) (:target %))))
+                          (t/nodes (:body a))))))))
 
 (defn- lower*
   "Lower term `t` with prepared node `n`. `scope` is the environment layout
@@ -205,17 +304,6 @@
                       (list 'klara.compile.lower/interpreted (constant fnode) (vec free))
                       nm))
                   scope))
-          (frames-form [frames]
-            (mapv (fn [[body-node sc]] (list 'klara.compile.lower/let-frame (constant body-node) (env-form sc)))
-                  frames))
-          (protect
-            ;; a call in a non-tail position: add this point's frames to a passing Leave
-            [form frames]
-            (if (empty? frames)
-              form
-              (list 'try form
-                    (list 'catch 'clojure.lang.ExceptionInfo 'e
-                          (list 'klara.compile.lower/push-frames! 'e (frames-form frames))))))
           (go [t n scope frames]
             (case (:op t)
               :const (let [x (:value t)]
@@ -232,7 +320,7 @@
                           ;; generation is a premise, so it denotes this function (L4.exec.valid)
                           (and (= :late (:kind l)) self-name (= (:name l) self-name)) self-sym
                           (= :late (:kind l))
-                          (list 'klara.compile.lower/late (constant (Site. nil)) (list 'quote (:name l)))
+                          (list 'klara.compile.lower/late (constant (Site. nil nil)) 'klara-ctx__ (list 'quote (:name l)))
                           :else (constant (link-value l))))
               :fn (let [^klara.runtime.prepare.Fn fnode n
                         self (or (:self t) (t/fresh "fn"))
@@ -245,10 +333,11 @@
                                                 true (into params)
                                                 rest (conj rest))]
                                     (list (cond-> (vec params) rest (conj '& rest))
-                                          (list 'when (list 'klara.compile.lower/tick!)
-                                                (list 'klara.compile.lower/leave-apply! (constant fnode) (vec free)
-                                                      (if rest (list 'clojure.core/into (vec params) rest) (vec params))))
-                                          (go body (.-body a) inner []))))
+                                          (list 'let* entry-bindings
+                                                (list 'if tick-form
+                                                      (list 'klara.compile.lower/leave-apply (constant fnode) (vec free)
+                                                            (if rest (list 'clojure.core/into (vec params) rest) (vec params)))
+                                                      (go body (.-body a) inner []))))))
                                 (:arities t) (.-arities fnode))) form
                       ;; L4.exec.osr: an inner function can be entered from the
                       ;; interpreter given its captured values
@@ -256,7 +345,8 @@
                                      ;; it must not call the outer compiled function directly
                                      (not (some #{self-sym} (filter symbol? (tree-seq coll? seq form)))))
                             (swap! osr conj [fnode (list 'fn* (vec free) form)]))
-                          form)))
+                          ;; inner functions may reach host code (see Lambda)
+                          (if (identical? t top) form (list 'klara.compile.lower/lambda form)))))
               :app (let [^klara.runtime.prepare.App an n
                          line (get-in t [:pos :line])
                          at (fn [form] (if (and line (seq? form)) (with-meta form {:line line}) form))
@@ -278,16 +368,15 @@
                              free (:free f)
                              _ (swap! selves assoc self [fnode free])
                              inner (cond-> (vec free) (.-self? a) (conj self) true (into params))
-                             tick (list 'when (list 'klara.compile.lower/tick!)
-                                        (list 'klara.compile.lower/leave-apply! (constant fnode) (vec free) (vec params)))
+                             leave-form (list 'klara.compile.lower/leave-apply (constant fnode) (vec free) (vec params))
                              body-form (go body (.-body a) inner [])
+                             step (list 'if tick-form leave-form body-form)
                              tmps (mapv (fn [_] (t/fresh "arg")) params)]
                          ;; L4.exec.osr: the same loop as a function, for re-entry
                          (when-not (some #{self-sym} (filter symbol? (tree-seq coll? seq body-form)))
-                           (swap! osr conj [fnode (list 'fn* (vec free) (list 'fn* self (list (vec params) tick body-form)))]))
-                         (protect (list 'let* (vec (interleave tmps args))
-                                        (list 'loop* (vec (interleave params tmps)) tick body-form))
-                                  frames))
+                           (swap! osr conj [fnode (list 'fn* (vec free) (list 'fn* self (list (vec params) (list 'let* entry-bindings step))))]))
+                         (list 'let* (vec (interleave tmps args))
+                               (list 'loop* (vec (interleave params tmps)) step)))
                        ;; ((fn [p ..] body) a ..): the call happens in place, as a let
                        ;; with the function's entry step and frame state (L4.lower.steps)
                        (inline-redex? t)
@@ -298,32 +387,53 @@
                          ;; application binds in parallel: arguments go to fresh
                          ;; temporaries first, since they may mention the parameter
                          ;; names (an inlined function called with its own locals)
-                         (protect (list 'let* (let [tmps (mapv (fn [_] (t/fresh "arg")) params)]
+                         (list 'let* (let [tmps (mapv (fn [_] (t/fresh "arg")) params)]
                                                 (into (vec (interleave tmps args)) (interleave params tmps)))
-                                        (list 'when (list 'klara.compile.lower/tick!)
-                                              (list 'klara.compile.lower/leave-apply! (constant fnode) (vec free) (vec params)))
-                                        (go body (.-body a) (into (vec free) params) []))
-                                  frames))
+                                        (list 'if tick-form
+                                              (list 'klara.compile.lower/leave-apply (constant fnode) (vec free) (vec params))
+                                              (go body (.-body a) (into (vec free) params) []))))
                        (and (= :host (:op f)) (= "clojure.core" (namespace (:name f)))
                             (not (m/intrinsic? (m/host-value (:name f)))))
                        (list* (:name f) args)
                        (and (= :host (:op f)) (:symbol (b/lookup (:name f))))
                        (list* (:symbol (b/lookup (:name f))) args)
                        (and self-name (= :global (:op f)) (= :late (get-in f [:link :kind])) (= self-name (get-in f [:link :name])))
-                       (protect (list* self-sym args) frames)
-                       :else (protect (list 'klara.compile.lower/call (go f (.-f an) scope frames) (vec args)) frames))))
+                       (list* self-sym args)
+                       ;; (:k m) and (:k m default): keyword lookup, as the host does it
+                       ;; (L0.eval.not-fn: applying a keyword is get)
+                       (and (= :const (:op f)) (keyword? (:value f)) (<= 1 (count args) 2))
+                       (list* (:value f) args)
+                       ;; a call of a late definition: directly when the callee is
+                       ;; compiled and holds here (L4.lower.direct), else as any call
+                       (and (= :global (:op f)) (= :late (get-in f [:link :kind])))
+                       (let [site (constant (Site. nil nil))
+                             q (list 'quote (get-in f [:link :name]))
+                             d (t/fresh "direct")]
+                         (list 'let* [d (list 'klara.compile.lower/direct site 'klara-ctx__ q)]
+                                        (list 'if d
+                                              (list* '.invoke (with-meta d {:tag 'clojure.lang.IFn}) args)
+                                              (list 'klara.compile.lower/call (list 'klara.compile.lower/late site 'klara-ctx__ q) (vec args)))))
+                       :else (list 'klara.compile.lower/call (go f (.-f an) scope frames) (vec args)))))
               :recur (let [^klara.runtime.prepare.Recur rn n]
                        (list* 'recur (mapv (fn [x xn] (go x xn scope frames)) (:args t) (.-args rn))))
               :let (let [^klara.runtime.prepare.Let ln n
-                         inner (conj scope (:name t))]
-                     (list 'let* [(:name t) (go (:init t) (.-init ln) scope (cons [(.-body ln) scope] frames))]
-                           (go (:body t) (.-body ln) inner frames)))
+                         x (:name t)
+                         inner (conj scope x)
+                         body (go (:body t) (.-body ln) inner frames)]
+                     (list 'let* [x (go (:init t) (.-init ln) scope (cons [(.-body ln) scope] frames))]
+                           (if (may-leave? (:init t))
+                             ;; L4.exec.frame-state: a Leave passing out adds this let's frame
+                             (list 'if (list 'clojure.core/instance? 'klara.compile.lower.Leave x)
+                                   (list 'klara.compile.lower/leave-up x
+                                         (list 'klara.compile.lower/let-frame (constant (.-body ln)) (env-form scope)))
+                                   body)
+                             body)))
               :if (let [^klara.runtime.prepare.If in n]
                     (list 'if (go (:test t) (.-test in) scope frames)
                           (go (:then t) (.-then in) scope frames)
                           (if (:speculate t)
                             ;; L4.exec.leave: the else branch of a speculation is the reference
-                            (list 'klara.compile.lower/leave-eval! (constant (.-else in)) (env-form scope) (frames-form frames))
+                            (list 'klara.compile.lower/leave-eval (constant (.-else in)) (env-form scope))
                             (go (:else t) (.-else in) scope frames))))
               :throw (list 'throw (go (:ex t) (.-ex ^klara.runtime.prepare.Throw n) scope frames))
               (fail :L4.lower.subset (str "the backend does not compile " (:op t)))))]

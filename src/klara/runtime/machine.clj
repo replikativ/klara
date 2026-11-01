@@ -230,6 +230,14 @@
   [world mint dyn]
   (let [^objects h (.get context)] (aset h 0 world) (aset h 1 mint) (aset h 2 dyn)))
 
+(defn meter-of
+  "The step meter of the context `c`, cached by the identity of its dyn."
+  ^longs [^objects c]
+  (let [dyn (aget c 2)]
+    (if (identical? dyn (aget c 3))
+      (aget c 4)
+      (let [m (:meter dyn)] (aset c 3 dyn) (aset c 4 m) m))))
+
 (defmacro ^:private with-context [world mint dyn & body]
   `(do (set-context! ~world ~mint ~dyn) ~@body))
 
@@ -704,7 +712,7 @@
   [st]
   (let [saved (.get context)
         regs (object-array 7)]
-    (.set context (object-array 3))
+    (.set context (object-array 5))   ; world mint dyn, and the meter cached per dyn (see meter-of)
     (try
       (loop [st st]
         (let [r (try (drive st regs)

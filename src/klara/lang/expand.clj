@@ -352,10 +352,11 @@
         terms (mapv #(expand env %) items)]
     (if (every? #(= :const (:op %)) terms)
       (let [vals (map :value terms)]
-        (t/const (cond (map? form) (apply hash-map vals)
+        ;; small maps keep their order, as Clojure's reader makes them array maps
+        (t/const (cond (map? form) (if (<= (count form) 8) (apply array-map vals) (apply hash-map vals))
                        (set? form) (set vals)
                        :else (vec vals))))
-      (t/app (t/host (cond (map? form) 'clojure.core/hash-map
+      (t/app (t/host (cond (map? form) (if (<= (count form) 8) 'clojure.core/array-map 'clojure.core/hash-map)
                            (set? form) 'clojure.core/hash-set
                            :else 'clojure.core/vector))
              terms))))

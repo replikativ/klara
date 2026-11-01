@@ -44,20 +44,24 @@
 (defn per-call
   "Nanoseconds per call of f on args, at steady state: batches of doubling
    size until a batch takes at least 10 ms and agrees with the previous one
-   within 10%. The first batches are the host's warm-up: fresh code (a new
-   candidate) runs slowly until the JVM has compiled it, and measuring it
-   then would favour old code."
+   within 10%, after at least 300 ms in all. The first batches are the
+   host's warm-up: fresh code (a new candidate) runs slowly until the JVM
+   has compiled it, and two cold batches can agree; measuring then would
+   favour old code. A single call that takes a second is its own estimate."
   [f args]
-  (loop [n 1 previous nil]
-    (let [t0 (now)]
-      (dotimes [_ n] (apply f args))
-      (let [d (- (now) t0)
-            per (quot d n)]
-        (if (or (>= n 4000000)
-                (>= d 1000000000)                     ; one batch took a second: that is the estimate
-                (and previous (>= d 10000000) (<= (abs (- per previous)) (quot previous 10))))
-          per
-          (recur (* 2 n) (when (>= d 1000000) per)))))))
+  (let [start (now)]
+    (loop [n 1 previous nil]
+      (let [t0 (now)]
+        (dotimes [_ n] (apply f args))
+        (let [t1 (now)
+              d (- t1 t0)
+              per (quot d n)]
+          (if (or (>= n 4000000)
+                  (>= d 1000000000)
+                  (and previous (>= d 10000000) (>= (- t1 start) 300000000)
+                       (<= (abs (- per previous)) (quot previous 10))))
+            per
+            (recur (* 2 n) (when (>= d 1000000) per))))))))
 
 (defn- explore
   "Prepare q with specializer s (called name). Runs inside a job."

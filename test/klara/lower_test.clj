@@ -2,6 +2,7 @@
   "Lowering (L4.lower.*) on terms specializers can build but the expander
   never produces."
   (:require [clojure.test :refer [deftest is testing]]
+            [klara.compile.lower :as lower]
             [klara.host.api :as k]))
 
 (deftest L4-lower-steps-parallel-binding
@@ -21,3 +22,27 @@
                (def o (compiler/prepare (code (fn [a b] (- b a))) {:recipe (fn [_] candidate)}))
                (def f (compiler/executable o))
                [(:status o) (f 3 5) ((run candidate) 3 5)]"))))))
+
+(deftest L4-lower-direct   ; L4.lower.direct
+  (testing "compiled code calls compiled code directly, and generally again once the callee changes"
+    (let [s (k/session {:roots ["lib"] :out (java.io.StringWriter.)})]
+      (is (= [7 10]
+             (k/eval-string s "(ns ld (:require [klara.compiler :as compiler]))
+               (defn g [x] (* 2 x))
+               (defn f [x] (+ (g x) 1))
+               (compiler/optimize! 'ld/g)
+               (compiler/optimize! 'ld/f)
+               (def a (f 3))
+               (defn g [x] (* 3 x))
+               [a (f 3)]"))))))
+
+(deftest L4-exec-leave-host-boundary
+  (testing "a compiled lambda that leaves while host code runs it finishes there, in a nested machine"
+    (let [s (k/session {:roots ["lib"] :out (java.io.StringWriter.)})]
+      (k/eval-string s "(ns lb (:require [klara.compiler :as compiler]))
+        (defn h [xs] (reduce + (map (fn [x] (* x x)) xs)))
+        (compiler/optimize! 'lb/h)")
+      (reset! lower/stress 0.5)
+      (try
+        (is (= #{328350} (set (k/eval-string s "(vec (for [_ (range 30)] (h (range 100))))"))))
+        (finally (reset! lower/stress nil))))))
