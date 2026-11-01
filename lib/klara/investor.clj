@@ -229,7 +229,15 @@
             ;; the decision is part of the compiled code's provenance
             (compiler/install! (assoc-in (:outcome best) [:provenance :decision] d))
             d)
-          :else (assoc decision :decision :declined))))))
+          ;; nothing measurably faster: still past the baseline, so compiled as it
+          ;; is (a callee left interpreted costs its compiled callers an entry
+          ;; into the interpreter on every call, which measuring alone cannot see)
+          :else (if-let [as-is (first (filter #(and (= :as-is (:name %)) (= :ready (:status %))) tried))]
+                  (let [d (assoc decision :decision :compiled :chosen :as-is :tier :baseline
+                                 :why "explored: none measurably faster")]
+                    (compiler/install! (assoc-in (:outcome as-is) [:provenance :decision] d))
+                    d)
+                  (assoc decision :decision :declined)))))))
 
 (defn consider
   "Decide about the definition named q. Returns the decision, also recorded

@@ -169,11 +169,12 @@
 
 (deftest the-investor-tiers-by-time-spent   ; L4.jit.tiers
   (testing "below the baseline cost nothing happens; then compiled as it is, unmeasured; exploring only past its cost"
-    (is (= [:not-hot :baseline :explored]
+    (is (= [:not-hot :baseline true]
            (run (str header "(require '[klara.investor :as investor])
                  (defn sq [x] (* x x))
                  (dotimes [_ 200] (sq 3))
                  (def s (investor/spent-ns (jit/context 'adv/sq)))
                  [(:decision (investor/consider 'adv/sq {:baseline-ns (inc s)}))
                   (:tier (investor/consider 'adv/sq {:baseline-ns 0 :explore-ns (inc s)}))
-                  (:tier (investor/consider 'adv/sq {:baseline-ns 0 :explore-ns 0}))]"))))))
+                  ;; explored: alternatives were prepared and measured
+                  (some? (:alternatives (investor/consider 'adv/sq {:baseline-ns 0 :explore-ns 0})))]"))))))

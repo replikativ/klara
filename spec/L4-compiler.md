@@ -325,7 +325,8 @@ is, without running it (any definition, pure or not); past `:explore-ns`,
 for a pure definition with a plain-data sample, it prepares and measures
 its alternatives and installs the one with the best expected gain (preparing
 is paid by then, so it decides whether to explore, not what to install), if
-any is measurably faster than the interpreter. Measuring
+any is measurably faster than the interpreter, and otherwise compiles the
+definition as it is (it is past the baseline). Measuring
 never runs an impure definition (L4.facts.pure).
 
 `L4.jit.attach` `^{:klara/specialize f}` on a definition names its
