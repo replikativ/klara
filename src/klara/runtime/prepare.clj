@@ -54,11 +54,11 @@
   Object (toString [_] "#node/Global"))
 (defnode Host 3 [value name])
 ;; arities: vector of Arity; captured: slots of the free locals in the enclosing scope
-(defnode Fn 4 [arities captured])
-(defnode App 5 [f args flat recur-arity all-imm])
+(defnode Fn 4 [arities captured profile])
+(defnode App 5 [f args flat recur-arity all-imm profile])
 (defnode Let 6 [init body])
 (defnode Letrec 7 [fns body])
-(defnode If 8 [test then else])
+(defnode If 8 [test then else profile])
 (defnode Do 9 [exprs last])
 (defnode Recur 10 [^long slot ^long arity args all-imm])
 (defnode Throw 11 [ex])
@@ -72,6 +72,65 @@
 (deftype Arity [^long nparams rest? self? body])
 
 (defn tag ^long [^INode n] (.tag n))
+
+;; ---------------------------------------------------------------------------
+;; Profiles (spec/L4-compiler.md#profiles, design/06-speculation.md#5-profiles)
+;;
+;; Mutable feedback owned by a node, written by the interpreter and read by
+;; Klara as data. An observation that matches what was seen before writes
+;; nothing, so a monomorphic program pays only a comparison.
+
+(definterface IProfile
+  (enter [args])          ; a function entry with its argument vector
+  (call [callee])         ; a call node evaluated with this callee
+  (branch [taken])        ; an if node took its then (true) or else branch
+  (snapshot []))
+
+(def ^:private poly ::polymorphic)
+(def ^:private unstable ::unstable)
+
+(defn- cheap-value?
+  "Values whose stability is worth tracking and cheap to compare."
+  [x]
+  (or (nil? x) (keyword? x) (string? x) (number? x) (boolean? x) (symbol? x) (char? x)))
+
+(deftype Profile [^:volatile-mutable ^long n
+                  ^:volatile-mutable ^objects classes   ; per argument: a class, or poly
+                  ^:volatile-mutable ^objects values    ; per argument: a value, or unstable
+                  ^:volatile-mutable callee
+                  ^:volatile-mutable ^long taken
+                  ^:volatile-mutable ^long not-taken]
+  IProfile
+  (enter [_ args]
+    (set! n (inc n))
+    (let [cnt (count args)]
+      (if (nil? classes)
+        (do (set! classes (object-array (map class args)))
+            (set! values (object-array (map #(if (cheap-value? %) % unstable) args))))
+        (when (== cnt (alength classes))
+          (dotimes [i cnt]
+            (let [x (nth args i) c (aget classes i)]
+              (when (and (not (identical? c poly)) (not (identical? c (class x))))
+                (aset classes i poly))
+              (let [v (aget values i)]
+                (when (and (not (identical? v unstable)) (not (identical? v x)) (not= v x))
+                  (aset values i unstable)))))))))
+  (call [_ f]
+    (set! n (inc n))
+    (cond (nil? callee) (set! callee f)
+          (and (not (identical? callee poly)) (not (identical? callee f))) (set! callee poly)))
+  (branch [_ t]
+    (if t (set! taken (inc taken)) (set! not-taken (inc not-taken))))
+  (snapshot [_]
+    {:count n
+     :classes (when classes (mapv #(if (identical? % poly) :polymorphic %) classes))
+     :stable (when values (mapv #(if (identical? % unstable) :unstable [:value %]) values))
+     :callee (cond (nil? callee) nil (identical? callee poly) :polymorphic :else callee)
+     :branches [taken not-taken]}))
+
+(defn new-profile [] (Profile. 0 nil nil nil 0 0))
+
+(defonce ^{:doc "Whether the interpreter records profiles (L4.profile.record)."} profiling (atom true))
 
 ;; Cache access for globals (the machine is the only writer).
 (defn global-cached [^IGlobalCache g id ^long epoch] (.cached g id epoch))
@@ -112,7 +171,8 @@
                                (:rest a) (conj (:rest a)))]
                    (Arity. (count (:params a)) (boolean (:rest a)) used (prep inner (:body a) host-value))))
                (:arities term))
-         (mapv #(slot-of scope %) free))))
+         (mapv #(slot-of scope %) free)
+         (new-profile))))
 
 (defn prep
   "Prepare term `t` in `scope` (a vector of local names, index = slot).
@@ -131,13 +191,13 @@
                            (not (instance? clojure.lang.IRecord hv)) ; intrinsics are records
                            (every? immediate? (:args t)))]
              (let [args (mapv go (:args t))]
-               (App. t (go f) args flat (:recur t) (every? imm-node? args))))
+               (App. t (go f) args flat (:recur t) (every? imm-node? args) (new-profile))))
       :let (Let. t (go (:init t)) (prep (conj scope (:name t)) (:body t) host-value))
       :letrec (let [names (mapv first (:bindings t))
                     inner (into scope names)]
                 (Letrec. t (mapv #(prep-fn inner (second %) host-value) (:bindings t))
                          (prep inner (:body t) host-value)))
-      :if (If. t (go (:test t)) (go (:then t)) (go (:else t)))
+      :if (If. t (go (:test t)) (go (:then t)) (go (:else t)) (new-profile))
       :do (Do. t (mapv go (butlast (:body t))) (go (last (:body t))))
       :recur (let [args (mapv go (:args t))]
                (Recur. t (slot-of scope (:target t)) (:arity t) args (every? imm-node? args)))

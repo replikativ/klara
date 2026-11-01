@@ -6,6 +6,7 @@
   new state. Rule IDs refer to spec/."
   (:require [klara.lang.builtins :as b]
             [klara.runtime.prims :as prims]
+            [klara.runtime.prepare :as prep]
             [klara.lang.term :as t]
             [klara.runtime.machine :as m]
             [klara.runtime.value :as v]
@@ -230,3 +231,58 @@
 ;; Primitives that correct host behaviour (klara.runtime.prims)
 
 (b/register! 'klara.core/- {:kind :host :fn prims/- :symbol 'klara.runtime.prims/- :pure true})
+
+;; ---------------------------------------------------------------------------
+;; klara.profile: the interpreter's feedback as data (L4.profile.snapshot)
+
+(defn- node-children [n]
+  (let [tg (prep/tag n)]
+    (case tg
+      4 (map #(.-body ^klara.runtime.prepare.Arity %) (.-arities ^klara.runtime.prepare.Fn n))
+      5 (cons (.-f ^klara.runtime.prepare.App n) (.-args ^klara.runtime.prepare.App n))
+      6 [(.-init ^klara.runtime.prepare.Let n) (.-body ^klara.runtime.prepare.Let n)]
+      7 (concat (.-fns ^klara.runtime.prepare.Letrec n) [(.-body ^klara.runtime.prepare.Letrec n)])
+      8 [(.-test ^klara.runtime.prepare.If n) (.-then ^klara.runtime.prepare.If n) (.-else ^klara.runtime.prepare.If n)]
+      9 (concat (.-exprs ^klara.runtime.prepare.Do n) [(.-last ^klara.runtime.prepare.Do n)])
+      10 (.-args ^klara.runtime.prepare.Recur n)
+      11 [(.-ex ^klara.runtime.prepare.Throw n)]
+      12 (cons (.-body ^klara.runtime.prepare.Try n) (keep :body (.-catches ^klara.runtime.prepare.Try n)))
+      13 (.-args ^klara.runtime.prepare.Interop n)
+      14 [(.-init ^klara.runtime.prepare.Def n)]
+      15 (.-holes ^klara.runtime.prepare.Code n)
+      [])))
+
+(defn- describe-callee [x]
+  (cond (v/closure? x) (or (some-> (:self (.-term ^Closure x)) str) :fn)
+        (keyword? x) x
+        :else (str x)))
+
+(defn profile-snapshot
+  "The profile of closure `f`: its entries (argument classes and stable
+   values), its calls and its branches, with source positions."
+  [^Closure f]
+  (let [root (.-node f)
+        nodes (tree-seq (comp seq node-children) node-children root)
+        pos #(:pos (.sourceTerm ^klara.runtime.prepare.INode %))
+        snap #(.snapshot ^klara.runtime.prepare.IProfile %)]
+    {:entries (snap (.-profile ^klara.runtime.prepare.Fn root))
+     :calls (vec (for [n nodes :when (== 5 (prep/tag n))
+                       :let [p (snap (.-profile ^klara.runtime.prepare.App n))]
+                       :when (pos? (:count p))]
+                   {:pos (pos n) :count (:count p) :callee (describe-callee (:callee p))}))
+     :branches (vec (for [n nodes :when (== 8 (prep/tag n))
+                          :let [[t e] (:branches (snap (.-profile ^klara.runtime.prepare.If n)))]
+                          :when (pos? (+ t e))]
+                      {:pos (pos n) :then t :else e}))}))
+
+(defintrinsic klara.profile/snapshot [st [f]]                   ; L4.profile.snapshot
+  (ret st (cond
+            (v/closure? f) (profile-snapshot f)
+            (instance? klara.runtime.value.IExecutable f)
+            (let [r (:reference (v/-describe f))]
+              {:compiled true :reference r})
+            :else (fail :L4.profile.snapshot (str "no profile for " (pr-str f))))))
+
+(defintrinsic klara.profile/reset! [st [on?]]
+  (reset! prep/profiling (boolean on?))
+  (ret st on?))

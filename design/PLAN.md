@@ -24,7 +24,9 @@ and `clojure -M:bench` stay green at every commit. Progress is recorded here.
   source positions. Validation: a deopt-stress mode that leaves at random
   points, compared with the interpreter on generated programs and the
   conformance corpus. Proof: the speculation rule.
-- [ ] **P2. Profiles.** Prepared nodes record argument classes, stable
+- [x] **P2. Profiles.** Done: entries (argument classes and stable values,
+  including loop iterations), callees, branches; `klara.profile/snapshot`;
+  overhead within noise on the benchmark. Originally: Prepared nodes record argument classes, stable
   values, call targets, branch counts, collection shapes;
   `klara.profile/snapshot` returns them as data. Overhead under 10% on the
   benchmark.

@@ -124,6 +124,19 @@ is a guard (a pure host predicate on locals and constants, which cannot fail),
 reference, premises, validity in `E`, and `:last-path` (`:compiled` or
 `:reference`).
 
+## Profiles
+
+`L4.profile.record` While profiling is on (the default), the interpreter
+records, without changing any result: for each function, its entries
+(including loop iterations) with the class and, for simple values, the
+value of each argument, marked polymorphic or unstable once they vary; for
+each call of a Klara function, the count and the callee; for each `if`, how
+often each branch was taken.
+
+`L4.profile.snapshot` `(klara.profile/snapshot f)` returns the profile of
+closure `f` as data: `:entries`, `:calls` and `:branches`, with source
+positions.
+
 ## Pinning
 
 `L4.pin.links` `(compiler/pin c w)` returns `c` with every late link replaced by a
