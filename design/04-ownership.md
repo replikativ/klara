@@ -4,8 +4,11 @@ Status: the inferred mode is implemented (P6, design/PLAN.md), without its
 proofs: the ownership judgment and erasure check are `klara.compile.own`
 (L4.check.in-place), the recipe is `klara.own/in-place`, and
 `showcases/in_place.clj` shows it on a word-count loop. The declared mode
-(an explicit affine subset that programs write) is designed here and not
-implemented. A first version of the declared mode was reviewed for
+(an explicit affine subset that programs write) is checked but not yet
+compiled: `defaffine` checks the judgment below when a definition is made
+(`klara.compile.affine`, L4.check.affine) and the definition runs its
+erasure with all dynamic checks; compiling it is L4.check.affine-erase
+(planned). A first version of the declared mode was reviewed for
 soundness on 2026-11-01 and failed in four ways; the design below answers
 that review (last section). The earlier prototype (tag
 `prototype-2026-10-31` on the `main` branch history) had a different,
@@ -29,7 +32,8 @@ Ownership comes from two places, with one judgment and one meaning:
   judgment holds (implemented);
 - **declared**: a program writes owned code itself, in a definition marked
   `defaffine`, and the judgment is checked when it is defined; if it does
-  not hold the definition is rejected with a diagnostic (planned).
+  not hold the definition is rejected with a diagnostic (implemented;
+  compiling it as owned code is planned).
 
 ## Boundaries: the memory model decides where ownership can live
 
@@ -97,7 +101,10 @@ A parameter can be owned:
   caller's token is frozen for the call and owned again after it (`own` on a
   persistent value is O(1); the first writes after it copy their paths).
   Erasure: an ordinary parameter. A borrow therefore needs no lexical
-  lifetime: what the callee keeps is a value.
+  lifetime: what the callee keeps is a value. The checker
+  (L4.check.affine) is stricter: a borrowed parameter may only be read or
+  passed on as a borrow, so the same rule serves account tokens, whose
+  borrow is the token itself, read without copying.
 
 ```clojure
 (defaffine add-all [^:own acc xs]          ; moves acc in, returns the next token
@@ -263,10 +270,14 @@ implementation found:
    `test/klara/adversarial_test.clj`).
 4. [x] **Fixes from the soundness review**: total lowering of `own`, final
    exhaustion inside host calls, host transients as mutable.
-5. **The declared mode** (L4.check.affine, planned): `defaffine`, `^:own`
-   and `^:borrow` parameters, `WO` extended by rules 1-6 above with
-   diagnostics that name the rule and the place, the compile obligation at
-   definition.
+5. [x] **The declared mode, checked** (L4.check.affine): `defaffine`, `^:own`
+   and `^:borrow` parameters, the judgment's rules 1-6 above checked at
+   definition over owned collections and account tokens, diagnostics that
+   name the clause, the place and the local (`klara.compile.affine`,
+   `test/klara/affine_test.clj`).
+5b. **The compile obligation** (L4.check.affine-erase, planned): a declared
+   definition compiled as owned code when it is defined, and the dynamic
+   reuse check on account tokens skipped in admitted code.
 6. **Formal**: the store semantics, `WO` in ansatz, the erasure theorem; then
    the verified `WO` replaces the host one.
 7. **Primitive arrays** as resources that cannot be frozen cheaply; budgets

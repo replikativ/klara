@@ -4,7 +4,9 @@ Status: vectors, wallets, tokens, settlement and receipts are implemented
 (`klara.runtime.account`, `lib/klara/account.clj`, L3.account.*), with a
 randomized conservation test (`test/klara/account_test.clj`) and a
 showcase (`showcases/accounting.clj`). The declared mode (`defaffine`,
-L4.check.affine) and the formal semantics are planned (Plan, at the end). It answers how Klara accounts for more
+L4.check.affine) checks threaded tokens at definition
+(`klara.compile.affine`); compiling declared code with the checks erased,
+and the formal semantics, are planned (Plan, at the end). It answers how Klara accounts for more
 than memory: time, money, model calls, connections, licences, evidence,
 with one small mechanism that composes with kontor's double-entry
 accounting at boundaries.
@@ -155,10 +157,13 @@ back, since the session never settles. The one way a token crosses a boundary is
 job's grant. This is the dvergr rule (a child receives resources only by
 one transfer from its parent) in the language.
 
-**Statically** (`L4.check.affine`, planned). In a `defaffine` definition
-tokens follow the ownership judgment of 04-ownership.md (rules 1–6), which
-proves each token is used at most once on every path. Compiled code
-admitted under it skips the dynamic reuse check. Unlike owned collections,
+**Statically** (`L4.check.affine`). In a `defaffine` definition tokens
+follow the ownership judgment of 04-ownership.md (rules 1–6), checked when
+the definition is made, which proves each token is used at most once on
+every path; a definition that fails is not defined, and the diagnostic
+names the clause, the place and the local. Today the definition still runs
+with the dynamic checks; compiled code admitted under the judgment will
+skip the reuse check (L4.check.affine-erase, planned). Unlike owned collections,
 an account operation is not erased: spending is the meaning. What the
 judgment erases is the check, so the theorem is: for a program that passes
 the judgment, the program with checks and the program without them have
@@ -172,7 +177,7 @@ style of amortized resource analysis; it would erase the cone check too.
 |---|---|
 | Rust: owned `T`, move | an owned collection or a token, `^:own` parameter |
 | Rust: `&mut T` | the token threaded through the callee and returned (reborrowing is the same) |
-| Rust: `&T` | `^:borrow`: a frozen snapshot for collections (O(1)); for a held resource, a split-off read permission |
+| Rust: `&T` | `^:borrow`: read-only and not passed on except as a borrow (L4.check.affine); for a collection the callee reads a value, for a token the token itself |
 | Rust: `Copy` | data |
 | Rust: `Drop` | `put` at the end of the scope; a job puts every live token back when it settles |
 | Rust: `Rc`/`Arc`, `RefCell` | counting permissions checked at run time (the dynamic check is always there in the interpreter) |
@@ -213,7 +218,9 @@ without a rule for either.
 4. [x] Conservation test; a showcase with a k-reader pool and a money
    budget passed to callees; the receipt mapped to kontor transfers
    (`klara.account/transfers`, data only: Klara does not depend on kontor).
-5. [ ] The declared mode (`defaffine`, L4.check.affine) for owned
-   collections and tokens, with the reuse check erased in admitted code.
+5. [x] The declared mode (`defaffine`, L4.check.affine) for owned
+   collections and tokens, checked at definition with diagnostics.
+5b. [ ] Declared code compiled, with the reuse check erased in admitted
+   code (L4.check.affine-erase).
 6. [ ] Formal: vectors, wallets and tokens in the semantics; conservation
    and the check-erasure theorem.

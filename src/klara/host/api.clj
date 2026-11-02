@@ -3,7 +3,8 @@
   (design/03-clojure.md#running-klara). Everything a tool or an agent needs
   from the host side."
   (:refer-clojure :exclude [load-file])
-  (:require [klara.compile.kernel]
+  (:require [klara.compile.affine]
+            [klara.compile.kernel]
             [klara.runtime.intrinsics]
             [klara.runtime.job]
             [klara.runtime.prepare]

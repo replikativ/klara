@@ -145,13 +145,31 @@ is the fallback's own test or its negation (the head test of the
 speculation's else branch, which evaluates it first), so the guard fails
 only where the fallback fails.
 
-`L4.check.affine` (planned) A definition made with `defaffine` is checked
-by the ownership judgment when it is defined (design/04-ownership.md: tokens
-used linearly, `^:own` parameters moved in and returned, `^:borrow`
-parameters given a frozen snapshot, no token captured, stored, compared,
-thrown, performed or passed to code that is not a declared definition),
-and rejected with this rule, the judgment's clause and the place otherwise.
-It runs its erasure until it is compiled as owned (L4.check.in-place).
+`L4.check.affine` `(defaffine f [params] body..)` defines `f` as `defn`
+would after checking, when it is defined, that its tokens are threaded: owned
+collections (`own`, `conj!`, `assoc!`, `dissoc!`, `disj!`, `pop!`,
+`persistent!`) and account tokens (L3.account.token). Parameters marked
+`^:own` are tokens moved in; parameters marked `^:borrow` may only be read
+or passed on as a borrow. The judgment's clauses (design/04-ownership.md):
+(1) a token is made by `own`, `take`, an operation on a token, a declared
+call that returns one, or is an `^:own` parameter, and operations that
+consume a token are given one; (2) each token is consumed at most once on
+every path, and read only before; (3) both arms of a branch consume the
+same tokens and give the same kind of result, and loops thread tokens
+through `recur`; (4) a token is never captured, stored in data, or passed
+other than to an operation or to a declared definition at an `^:own` or
+`^:borrow` position; (5) a declared call consumes the tokens at its
+`^:own` positions and returns what it declares; (6) at every exit each
+token was consumed or is returned, alone or in a vector, and none is
+dropped. A definition that fails is not defined and raises this rule with
+`:clause`, `:place` and `:local`. A definition that passes records
+`:klara/affine {:own #{i} :borrow #{i} :returns r}` in its metadata, against
+which declared callers are checked. It runs with every dynamic check
+(L3.affine.reuse); one fixed arity is supported.
+
+`L4.check.affine-erase` (planned) A declared definition is compiled when it
+is defined, as owned code (L4.check.in-place) where it threads collections,
+and admitted code skips the dynamic reuse check on its account tokens.
 
 `L4.check.in-place` A candidate with the certificate `{:kind :in-place}` is
 admitted when (1) its erasure, which drops `own`, `transient` and

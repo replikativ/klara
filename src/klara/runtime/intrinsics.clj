@@ -156,7 +156,9 @@
   (let [job (get-in st [:dyn :job])]
     (or (nil? job) (contains? (:owned @job) x))))
 
-(doseq [s b/mutating-host]
+;; vswap! is a macro over vreset! (klara.lang.surface), checked through it;
+;; registering it here too made the meaning depend on load order
+(doseq [s (disj b/mutating-host 'vswap!)]
   (let [hf @(resolve (symbol "clojure.core" (name s)))]
     (b/register! (symbol "klara.core" (name s))
                  {:kind :intrinsic

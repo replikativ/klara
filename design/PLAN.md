@@ -154,8 +154,10 @@ and `clojure -M:bench` stay green at every commit. Progress is recorded here.
   the right to spend or hold to callees, checked at use (L3.affine.reuse,
   L3.account.foreign), settlement with receipts shaped as kontor
   transfers; conservation on generated programs; `showcases/accounting.clj`.
-  Open: the declared mode for tokens (L4.check.affine), the formal
-  semantics of wallets and the conservation theorem.
+  The declared mode checked at definition (`defaffine`, L4.check.affine)
+  for owned collections and tokens. Open: compiling declared code with the
+  checks erased (L4.check.affine-erase), the formal semantics of wallets
+  and the conservation theorem.
 
 ## Next iteration
 
@@ -163,11 +165,10 @@ A direct bytecode backend (07-performance.md, path step 3): the subset
 lowered today, emitted as hidden classes with explicit context, primitive
 signatures and real loops, designed to become the first backend of a
 checked low-level IR. Then vectorized reductions (09-extensions.md, step 5)
-with a reassociation opt-in and overflow certificates. The declared affine
-subset (04-ownership.md, plan step 5, L4.check.affine): `defaffine`,
-`^:own`/`^:borrow` parameters, threaded tokens, the interpreter running the
-erasure; for account tokens (10-accounting.md, plan step 5) the same
-judgment, with the dynamic reuse check erased in admitted code.
+with a reassociation opt-in and overflow certificates. Compiling the
+declared affine subset (L4.check.affine-erase): `defaffine` definitions,
+already checked, admitted as owned code; for account tokens the dynamic
+reuse check erased in admitted code.
 
 ## Showcase programs
 
