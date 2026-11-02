@@ -237,6 +237,12 @@ evidence, guards, time, allocation), and run as a test.
 
 ## Later
 
+Native substrates ([12-native.md](12-native.md)): a low IR with machine
+descriptions as checked Klara values, the interpreter emitted for every
+substrate, and the runtime services (allocation and collection,
+continuation segments, scheduler, wallets) written in the affine profile,
+following Chez Scheme's approach and PreScheme's split.
+
 Equality saturation for pure regions; a JavaScript host; machine learning
 workloads (models as candidates with data-evaluated evidence). Durable
 world and investor state on [Datahike](https://github.com/replikativ/datahike),
