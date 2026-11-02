@@ -230,6 +230,22 @@ subterms.
 `L4.check.exhausted` Running out of budget during checking gives
 `:exhausted`.
 
+`L4.check.law` A certificate `{:kind :law}` admits a candidate that is an
+instance of laws the ansatz kernel has proved once (spec/formal, `laws.clj`).
+For fold fusion (Law.foldl-map, Law.foldl-filter): the reference is
+`(fn [xs] (reduce f init (S1 (S2 .. xs))))` with each `Si` a `map` or
+`filter` stage, the initial value is a constant, the reducing function and
+every stage are pure (L4.facts.pure; these facts are the premises), and the
+candidate is, up to names, the one-pass loop `klara.compile.fusion/fuse`
+builds from the reference, which the certifier rebuilds: it applies the
+stages per element in the reference's order, stops on `reduced` as `reduce`
+does, and gives way to the reference body on any exception, so the error
+observed is the reference's (lazy stages are chunked). The guard is that
+the argument is a vector. Stages stay calls, so a stage's own admitted code
+runs inside the fused loop (cases/fused_horner.clj composes this with
+L4.check.certificate). Trusted: that `reduce`, `map` and `filter` on a
+finite vector denote the list functions the laws are about.
+
 `L4.check.premises` The candidate's premises are the premises recorded by
 `L4.check.delta` on either side.
 

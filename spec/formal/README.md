@@ -26,6 +26,8 @@ checkout instead.
 | `src/klara/formal/certify.clj` | The ansatz certifier for proof-carrying candidates (L4.check.certificate) |
 | `cases/certified_identity.clj` | A candidate admitted by proof: `(* x 1)` replaced by `x` for 64-bit integers |
 | `cases/proof_search.clj` | Proof search as guest code: a Klara program looks for the certificate in a budgeted job |
+| `src/klara/formal/laws.clj` | The fusion laws (`Law.foldl-map`, `Law.foldl-filter`) and the `:law` certifier (L4.check.law) |
+| `cases/fused_horner.clj` | Composition: a fold fused by the laws calls the certified Horner `poly`; a stage change retires the fused code |
 | `cases/certified_horner.clj` | Horner's rule admitted by a certificate under the range guard \|x\| ≤ 2^20, computed by a Klara function (bounds by `nlinarith`, values by `ring`) |
 | `src/klara/formal/bridge.clj` | The trusted bridge: quoting real Core terms into `Tm`, running the model, observations |
 | `src/klara/formal/gen.clj` | A seeded generator of Klara programs inside the fragment |

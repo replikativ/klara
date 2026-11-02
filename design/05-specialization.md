@@ -42,7 +42,14 @@ reference ──fuse──▶ R1 ──horner──▶ R2 ──longs──▶ R
 ```
 
 Each step is checked against the previous one; evidence composes by
-transitivity; the final guards are the union. The investor weighs:
+transitivity; the final guards are the union.
+
+As built, the composition goes through the world rather than through one
+chain: `spec/formal/cases/fused_horner.clj` fuses the caller's fold by a
+law (L4.check.law), certifies the callee's Horner form under its range
+guard (L4.check.certificate), and the fused loop calls the callee, so each
+executable checks its own guards at entry and neither rewrite needs to know
+the other. The longs step was dropped (06-speculation.md §4). The investor weighs:
 
 - expected benefit: calls (from profiles) times predicted saving;
 - preparation cost: rewriting, checking, proof search, lowering, measured;

@@ -8,6 +8,7 @@
   the reference meaning."
   (:require [klara.compile.check :as check]
             [klara.compile.facts :as facts]
+            [klara.compile.fusion :as fusion]
             [klara.compile.own :as own]
             [klara.compile.lower :as lower]
             [klara.lang.builtins :as b]
@@ -40,7 +41,8 @@
 (def guard-predicates
   "Argument guards a certificate can assume (L4.check.certificate): :long,
    or [:range lo hi], a long between lo and hi inclusive."
-  {:long #(instance? Long %)})
+  {:long #(instance? Long %)
+   :vector vector?})
 
 (defn- guard-holds? [g x]
   (cond (nil? g) true
@@ -427,3 +429,8 @@
 (b/register! 'klara.jit/pure?                                         ; L4.facts.pure
   {:kind :intrinsic
    :fn (fn [st [q]] (ret st (facts/pure (:world st) q)))})
+
+;; L4.check.law: the fusion recipe (klara.compile.fusion), for guest recipes
+(b/register! 'klara.jit/fuse
+  {:kind :host
+   :fn (fn [reference] (some-> (fusion/fuse (.-term ^Code reference)) Code.))})

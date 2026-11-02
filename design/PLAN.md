@@ -226,7 +226,12 @@ evidence, guards, time, allocation), and run as a test.
    values equated by `ring`), and the ansatz kernel checks it against the
    quoted terms. Without the certificate the candidate is rejected; outside
    the range the reference runs; a range the bounds do not cover fails to
-   check. Open: the investor proposing certified alternatives itself. (The plan said "long arithmetic" as the speculative step; it is
+   check. Composition: `spec/formal/cases/fused_horner.clj` fuses a fold
+   over the polynomial by a law-licensed rewrite (L4.check.law: the fusion
+   laws proved once in ansatz, stage purity as premises), and the fused loop
+   calls the certified Horner code; changing a stage retires the fused code,
+   an old world keeps it. Open: the investor proposing certified and law
+   alternatives itself, and shadow checking in its fork. (The plan said "long arithmetic" as the speculative step; it is
    pointless on HotSpot, see 06-speculation.md §4.)
    Originally: Polynomial scoring: the investor plans
    fusion (definitional), Horner's rule (certificate under a range guard)
