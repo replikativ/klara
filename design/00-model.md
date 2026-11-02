@@ -204,10 +204,9 @@ An **effect** is a request to the context: `(perform :io/print "hi")`. A
 ```
 
 A handler receives the **continuation** `k`, an ordinary function that
-resumes the computation. Calling `k` twice is allowed (multi-shot). A
-continuation that holds an affine resource (below) is meant to be one-shot,
-its second use an error (`L3.affine.reuse`, planned: there are no
-first-class affine resources yet). Unhandled effects reach the session's
+resumes the computation. Calling `k` twice is allowed (multi-shot). If the
+resumed computation uses an account token (below) that the first resumption
+already consumed, that use is an error (`L3.affine.reuse`, planned). Unhandled effects reach the session's
 default handlers, so `println` prints.
 
 A **job** runs a computation in a fork of the current world, under a budget,
@@ -240,9 +239,10 @@ and returns its outcome as data instead of changing anything:
 
 **Affine resources.** A budget is a resource: it can be split and moved but
 not copied. Reserving steps for a job moves them out of the parent's budget,
-and unused steps return when the job settles (L3.budget.nesting). General
-affine resources, checked dynamically so that using a consumed one is an
-error, are planned (`L3.affine.reuse`).
+and unused steps return when the job settles (L3.budget.nesting). Budgets of
+any resource (money, time, connections, permissions with k holders), and
+tokens that pass the right to spend or hold explicitly to callees, are
+designed in [10-accounting.md](10-accounting.md) (planned).
 
 ## Compilation (L4)
 

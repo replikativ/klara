@@ -18,10 +18,11 @@ as the value of `perform`, with the frame reinstalled (deep handlers).
 
 `L3.cont.multishot` A continuation may be called more than once.
 
-`L3.affine.reuse` (planned) A continuation that captured an affine resource
-may be called at most once; a second call raises this rule. The first
-version has no first-class affine values: budgets are held by job frames,
-not by programs.
+`L3.affine.reuse` (planned) Using an account token (L3.account.token) that
+an operation already consumed raises this rule, however the second use
+reached it (another local, a collection, a closure, a definition, a
+continuation resumed twice). Continuations stay multi-shot; only the second
+use of a consumed token fails.
 
 `L3.effect.default` An operation with no enclosing handler is handled by the
 context's default handler: the session's at top level, the job's inside a
@@ -114,3 +115,60 @@ the abandoned host call did to the job's world or intents is kept.
 `L3.budget.nesting` A nested job's budget is reserved from its parent's
 remaining budget. Steps spent by the nested job count as spent by the parent.
 Unused reserved steps return to the parent when the nested job ends.
+
+## Accounts
+
+Design: design/10-accounting.md.
+
+`L3.account.vector` (planned) A resource vector is a map from keywords to
+exact non-negative amounts (integers, ratios or decimals). Vectors add
+pointwise and are compared pointwise; a missing key is zero. Anything else
+given as a vector raises this rule.
+
+`L3.account.wallet` (planned) The session and every job have a wallet, a
+resource vector. A job's `:budget` (a vector, or a token as in
+L3.account.token) is reserved from the parent's wallet when it starts;
+L3.budget.nesting is the `:steps` instance. `:steps` is spent by the machine
+(L3.budget.steps); `(klara.account/spend! v)` spends `v` from the current
+wallet; `(klara.account/wallet)` returns the current wallet as data.
+
+`L3.account.mint` (planned) `(klara.account/mint! v)` adds `v` to the
+session's wallet. Inside a job it raises this rule.
+
+`L3.account.insufficient` (planned) Spending, taking or splitting more than
+the wallet or token holds raises this rule and changes nothing.
+
+`L3.account.token` (planned) `(klara.account/take v)` moves `v` from the
+current wallet into a new token. `(klara.account/spend t v)` consumes `t`
+and returns a token holding the rest; `v` is spent. `(klara.account/put t)`
+consumes `t` and returns its vector to the current wallet.
+`(klara.account/balance t)` returns the vector `t` holds as data, consuming
+nothing. Tokens are not data: they compare by identity and `lift` refuses
+them (L2.lift.mutable).
+
+`L3.account.split` (planned) `(klara.account/split t v)` consumes `t` and
+returns `[t1 t2]` holding `v` and the rest; `(klara.account/join t1 t2)`
+consumes both and returns a token holding their sum.
+
+`L3.account.holds` (planned) `(klara.account/holds? t v)` is true when `t`
+holds at least `v`, and consumes nothing. A permission for k holders is a
+resource of which k units were minted; each holder holds one.
+
+`L3.account.foreign` (planned) A token belongs to the job (or the session)
+it was taken in. Using it anywhere else raises this rule.
+`(klara.job/run {:budget t} thunk)` consumes `t` and makes its vector the
+job's grant: the only way a token crosses a job boundary.
+
+`L3.account.settle` (planned) When a job ends, whatever its status, the live
+tokens taken in it return to its wallet, what it spent is charged to the
+parent (also when the outcome is discarded), and the rest of its wallet
+returns to the parent's.
+
+`L3.account.receipt` (planned) An outcome's `:receipt` has an `:id`, the
+`:granted`, `:spent` and `:returned` vectors, and `:postings`, a vector of
+transfers `{:kind :source :destination :resources}` with kinds `:grant`,
+`:consume` and `:return`, as kontor's resource transfers.
+
+`L3.account.conservation` (planned) At every point between steps, for every
+resource, what the session minted equals what wallets and live tokens hold
+plus what was spent; for every receipt, granted equals spent plus returned.

@@ -223,10 +223,13 @@ certificate, L4.check.certificate).
 
 A primitive array has no O(1) freeze: freezing copies. For `long[]`
 accumulators (the prototype's private-accumulator family) the options are a
-copy at each way out, or a one-shot discipline checked at run time, where
-`L3.affine.reuse` (planned) applies: a continuation that captured such a
-resource may be resumed once. Budgets are the other candidate affine
-resource; their boundary is the job that holds them.
+copy at each way out, or a run-time check that an array consumed once is
+not used again, as `L3.affine.reuse` (planned) does for account tokens.
+Budgets and other accounted resources are
+not owned values: freezing them would mint spending rights. They are tokens
+of design/10-accounting.md, which share this document's threading discipline
+but keep their operations (spending is the meaning) and settle at job
+boundaries.
 
 ## What the soundness review found, and the answers
 
@@ -266,8 +269,8 @@ implementation found:
    definition.
 6. **Formal**: the store semantics, `WO` in ansatz, the erasure theorem; then
    the verified `WO` replaces the host one.
-7. **Primitive arrays and budgets** as resources that cannot be frozen
-   cheaply (`L3.affine.reuse`).
+7. **Primitive arrays** as resources that cannot be frozen cheaply; budgets
+   and other accounted resources are design/10-accounting.md.
 
 ## What the prototype did
 
