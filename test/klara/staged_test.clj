@@ -126,7 +126,7 @@
 (deftest other-constructs-are-kept   ; L4.jit.staged L2.view.free L4.check.code
   (testing "throw, try, interop, letrec and several arities: interpreted, and kept whole in residuals"
     (let [s (session)]
-      (is (= [[:caught 3 "AB" 3 [1 2]] [:checked :checked :checked :checked :ready]]
+      (is (= [[:caught 3 "AB" 3 [1 2]] [:ready :ready :checked :checked :ready]]
              (k/eval-string s "(ns oc (:require [klara.jit.staged :as staged] [klara.compiler :as compiler]))
                (defn t1 [x] (try (if (pos? x) (throw (ex-info \"no\" {})) x) (catch Exception e :caught)))
                (defn t2 [x] (try x (finally (str x))))
@@ -135,7 +135,7 @@
                (defn t5 [x] (let [f (fn ([a] [a]) ([a b] [a b]))] (f x 2)))
                (defn run [q & args] (apply staged/interpret (compiler/reference q) args))
                [[(run 'oc/t1 1) (run 'oc/t2 3) (run 'oc/t3 \"ab\") (run 'oc/t4 3) (run 'oc/t5 1)]
-                ;; admitted by the checker; the backend does not compile try, interop and letrec yet
+                ;; admitted by the checker; the backend compiles try (L4.lower.try), not interop and letrec yet
                 (mapv (fn [q] (let [o (compiler/prepare (compiler/reference q) {:recipe (fn [r] (staged/residual r)) :name q})]
                                 (if (= :L4.lower.subset (:rule o)) :checked (:status o))))
                       ['oc/t1 'oc/t2 'oc/t3 'oc/t4 'oc/t5])]"))))))

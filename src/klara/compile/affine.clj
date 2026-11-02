@@ -38,8 +38,12 @@
   of an undeclared call, `run`, interop) are data to the judgment: it cannot
   operate on them (clause 1), so their dynamic checks remain.
 
-  The definition keeps running with all dynamic checks (L3.affine.reuse):
-  nothing relies on the judgment yet. Its use is the diagnostic at
+  The definition is compiled when it is made (L4.check.affine-erase): the
+  kernel checks the definition as its own candidate and installs it. The
+  compiled code calls the account operations on the context's wallet with
+  their checks (in this representation the lookup that finds a token's
+  amount is the reuse check); a definition the backend cannot compile runs
+  interpreted. Its use is the diagnostic at
   definition, naming the clause and the place, and the declaration
   `:klara/affine {:own #{i} :borrow #{i} :returns r}` that callers are
   checked against."
@@ -390,6 +394,16 @@
                term (ex/expand (assoc env :self self) fn-form)
                premises (volatile! #{})
                returns (binding [*premises* premises] (check term own borrow env self))]
-           (list* 'def (vary-meta nm assoc :klara/affine {:own own :borrow borrow :returns returns
-                                                          :premises @premises})
-                  (concat (when doc [doc]) [fn-form]))))})
+           ;; L4.check.affine-erase: compiled when it is defined, as it is (the
+           ;; kernel checks the candidate against the definition and installs it)
+           (list 'do
+                 (list* 'def (vary-meta nm assoc :klara/affine {:own own :borrow borrow :returns returns
+                                                                :premises @premises})
+                        (concat (when doc [doc]) [fn-form]))
+                 (list 'let ['outcome__affine (list 'klara.compiler.kernel/prepare
+                                                    (list 'klara.compiler.kernel/reference (list 'quote self))
+                                                    {:name (list 'quote self)})]
+                       (list 'if (list '= :ready (list :status 'outcome__affine))
+                             (list 'klara.compiler.kernel/install! 'outcome__affine)
+                             nil)
+                       (list 'quote self)))))})

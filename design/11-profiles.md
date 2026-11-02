@@ -6,8 +6,7 @@ and its `try` rule); the accounting calculus λ-acct is in
 `spec/formal/src/klara/formal/acct*.clj` with conservation, preservation,
 progress without reuse and check erasure proved, and a differential test
 against the runtime (Plan, at the end); compiling declared code
-(L4.check.affine-erase) and `try` in compiled code (L4.lower.try) are
-planned. This note settles how the affine segment of Klara (design/04,
+and `try` compile (L4.check.affine-erase, L4.lower.try). This note settles how the affine segment of Klara (design/04,
 design/10) behaves under exceptions, copied continuations and effects, and
 how its claims are made checkable.
 
@@ -200,11 +199,14 @@ with the interpreter.
 3. [x] λ-acct: syntax and step, conservation, the typing judgment and the
    invariant, preservation, progress, no-reuse, erasure; the differential
    test against the runtime.
-4. [ ] `try` in compiled code (L4.lower.try): a leave from inside a `try`
-   adds an interpreter frame carrying its catch and finally clauses.
-5. [ ] Compiling declared code at definition (L4.check.affine-erase), with
+4. [x] `try` in compiled code (L4.lower.try): a leave from inside a `try`
+   adds an interpreter frame carrying its catch and finally clauses; tested
+   with leaves from the body and from a catch arm, and under deopt stress.
+5. [x] Compiling declared code at definition (L4.check.affine-erase), with
    the declaration's premises; the affine profile's obligation tested on
-   generated programs.
+   generated programs (every accepted definition compiles and agrees with
+   the interpreter). Skipping the reuse check needs unboxed tokens, which
+   belong to the bytecode backend.
 
 Later: closures that capture tokens as tokens (`FnOnce`), operations
 marked one-shot, tail-resumptive handlers compiled as calls, arrays as

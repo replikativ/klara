@@ -159,7 +159,7 @@ and `clojure -M:bench` stay green at every commit. Progress is recorded here.
   checks erased (L4.check.affine-erase), the formal semantics of wallets
   and the conservation theorem.
 
-- [ ] **P11. Profiles and the affine semantics** (11-profiles.md). How the
+- [x] **P11. Profiles and the affine semantics** (11-profiles.md). How the
   affine segment behaves under exceptions, copied continuations and
   effects, made checkable. Done: soundness fixes in the declared judgment
   found by a review (a token made in `try`, `def` or `throw` was data to
@@ -171,10 +171,14 @@ and `clojure -M:bench` stay green at every commit. Progress is recorded here.
   copying cannot create authority); the accounting calculus λ-acct
   (`spec/formal/src/klara/formal/acct*.clj`) with conservation,
   preservation, progress without reuse and check erasure proved, and a
-  differential test against the runtime.
-  Open: `try` in compiled code (L4.lower.try), compiling
-  declared code (L4.check.affine-erase) with the affine profile's
-  obligation tested. This closes P6's and P10's open erasure theorems.
+  differential test against the runtime; `try` in compiled code
+  (L4.lower.try); declared code compiled at definition
+  (L4.check.affine-erase), with the affine profile's obligation tested on
+  generated programs. This closes P10's open erasure theorem for tokens;
+  open for the next iteration: unboxed tokens in the bytecode backend (where
+  skipping the reuse check pays), owned collections in place under the
+  declared judgment (P6's erasure theorem for collections), several
+  resources and jobs in λ-acct.
 
 ## Next iteration
 
@@ -182,10 +186,11 @@ A direct bytecode backend (07-performance.md, path step 3): the subset
 lowered today, emitted as hidden classes with explicit context, primitive
 signatures and real loops, designed to become the first backend of a
 checked low-level IR. Then vectorized reductions (09-extensions.md, step 5)
-with a reassociation opt-in and overflow certificates. Compiling the
-declared affine subset (L4.check.affine-erase): `defaffine` definitions,
-already checked, admitted as owned code; for account tokens the dynamic
-reuse check erased in admitted code.
+with a reassociation opt-in and overflow certificates. In that backend,
+tokens in declared code unboxed (a local amount, arithmetic for spend,
+split and join, one swap for take and put), where the reuse check proved
+redundant in λ-acct is actually skipped, and owned collections in place
+under the declared judgment.
 
 ## Showcase programs
 

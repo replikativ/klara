@@ -182,15 +182,27 @@ it (clause 1). A definition that fails is not defined and raises this rule
 with `:clause`, `:place` and `:local`. A definition that passes records
 `:klara/affine {:own #{i} :borrow #{i} :returns r :premises #{[q g]}}` in its
 metadata: declared callers are checked against it, and `:premises` are the
-callees whose effect facts clause 7 relied on, at their generations. It runs
-with every dynamic check (L3.affine.reuse); one fixed arity is supported.
+callees whose effect facts clause 7 relied on, at their generations. It is
+compiled when it is defined (L4.check.affine-erase); one fixed arity is
+supported.
 
-`L4.check.affine-erase` (planned) A declared definition is compiled when it
-is defined, as owned code (L4.check.in-place) where it threads collections,
-and admitted code skips the dynamic reuse check on its account tokens. The
-admission's premises are the declaration's `:premises`; a callee redefined
-past them invalidates the code (L4.check.premises, L4.exec.valid). Only the reuse check is
-erased: the foreign check, `put`, settlement and the cone check stay.
+`L4.check.affine-erase` A declared definition is compiled when it is
+defined: the kernel prepares the definition as its own candidate and
+installs it, as `compiler/optimize!` would; one the backend cannot compile
+runs interpreted. Inside the affine profile (design/11-profiles.md: the
+judgment and no effects) every accepted definition compiles and runs as its
+body does interpreted (tested on generated programs). Compiled code calls
+the account operations on the context's wallet. The judgment licenses
+erasing the reuse check: on every configuration a typed program reaches,
+the step without the check is the step (λ-acct, `Acct.erasure` with
+`Acct.preservation`). With tokens boxed as they are, the reuse check is the
+lookup that finds a token's amount, so it stays; the saving comes with
+unboxed tokens (the bytecode backend). Owned collections in declared code
+compile persistently; updating them in place is the `:in-place`
+certificate's (L4.check.in-place). The foreign check, `put`, settlement and
+the cone check always stay. The declaration's `:premises` are the
+admission's: a callee redefined past them invalidates the code
+(L4.check.premises, L4.exec.valid).
 
 `L4.check.in-place` A candidate with the certificate `{:kind :in-place}` is
 admitted when (1) its erasure, which drops `own`, `transient` and
@@ -255,17 +267,20 @@ any other host function in a definition makes it impure. Otherwise
 
 ## Lowering
 
-`L4.lower.subset` The backend accepts terms without `:try`, `:interop`,
-`:code`, `:hole`, `:def` and `:letrec`, and without any intrinsic (`perform`,
+`L4.lower.subset` The backend accepts terms without `:interop`,
+`:code`, `:hole`, `:def` and `:letrec`, without a `recur` inside a `try`, a
+`finally` clause that may leave (L4.lower.try), or any intrinsic (`perform`,
 `handle`, printing, atoms, `lift`, time, world and job operations), except in the else branch
 of a speculation, which is left to the interpreter (L4.exec.leave). Others
 give `:rejected` with this rule.
 
-`L4.lower.try` (planned) The backend lowers `try` to a host try. A leave
+`L4.lower.try` The backend lowers `try` to a host try. A leave
 from inside its body (L4.exec.leave) adds an interpreter frame carrying the
 catch and finally clauses, so the interpreter continues inside the same
 `try`; a leave from inside a catch arm adds a frame holding only the
-finally clause. Normal returns and host exceptions behave as the host's.
+finally clause; the finally clause runs in compiled code only when the
+`try` completes there, by a value or an exception. Normal returns and host
+exceptions behave as the host's.
 
 `L4.lower.links` A pinned or guarded link is lowered to its value as a
 constant. (Nothing produces guarded links yet; when something does, the

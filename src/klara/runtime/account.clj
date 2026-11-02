@@ -20,6 +20,7 @@
   is refused (L3.account.foreign). Every change is one swap! whose function
   validates first and throws, leaving the wallet unchanged."
   (:require [klara.lang.builtins :as b]
+            [klara.runtime.machine :as m]
             [klara.runtime.value :as v])
   (:import [java.util UUID]
            [java.util.concurrent ThreadLocalRandom]
@@ -295,3 +296,33 @@
 (defop klara.account/holds? [t v] (holds? (current st) t (vector! v))) ; L3.account.holds
 (defop klara.account/balance [t] (balance (current st) t))
 (defop klara.account/token? [x] (token? x))
+
+;; ---------------------------------------------------------------------------
+;; The token operations for compiled code (L4.check.affine-erase): the same
+;; operations on the wallet of the running machine's context, which the
+;; machine sets before it enters compiled code. Each keeps its checks: in
+;; this representation the lookup that finds a token's amount is the reuse
+;; check, so there is nothing to erase until tokens are unboxed.
+
+(defn- context-wallet ^Wallet []
+  (let [^objects c (m/current-context)]
+    (or (and c (:wallet (aget c 2))) (fail :L3.account.wallet "there is no wallet in this context"))))
+
+(defn take-c [v] (take! (context-wallet) (vector! v)))
+(defn spend-c [t v] (spend (context-wallet) t (vector! v)))
+(defn split-c [t v] (split (context-wallet) t (vector! v)))
+(defn join-c [t1 t2] (join (context-wallet) t1 t2))
+(defn put-c [t] (put! (context-wallet) t))
+(defn holds-c? [t v] (holds? (context-wallet) t (vector! v)))
+(defn balance-c [t] (balance (context-wallet) t))
+
+(def compiled
+  "Account operations compiled code calls directly (klara.compile.lower)."
+  '{klara.account/take klara.runtime.account/take-c
+    klara.account/spend klara.runtime.account/spend-c
+    klara.account/split klara.runtime.account/split-c
+    klara.account/join klara.runtime.account/join-c
+    klara.account/put klara.runtime.account/put-c
+    klara.account/holds? klara.runtime.account/holds-c?
+    klara.account/balance klara.runtime.account/balance-c
+    klara.account/token? klara.runtime.account/token?})

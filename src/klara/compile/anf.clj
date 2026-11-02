@@ -51,5 +51,7 @@
             (anf x)))
     :throw (let [[bs [ex]] (bind-all [(:ex term)])]
              (wrap bs (assoc term :ex ex)))
+    :try (cond-> (assoc term :body (anf (:body term)) :catches (mapv #(update % :body anf) (:catches term)))
+           (:finally term) (update :finally anf))
     ;; outside the compilable subset; lowering rejects them
     term))

@@ -114,3 +114,53 @@
     (try (k/eval-string s "(defaffine leak [q] (let [t (a/take {:eur 1})] q))") (catch Exception _))
     (is (= :L1.resolve.unbound
            (try (k/eval-string s "(leak 1)") (catch clojure.lang.ExceptionInfo e (:rule (ex-data e))))))))
+
+;; ---------------------------------------------------------------------------
+;; The affine profile's obligation (design/11-profiles.md, L4.check.affine-erase):
+;; every generated definition the judgment accepts inside the profile's
+;; subset (no effects) is compiled when it is defined, and runs as the same
+;; body does interpreted.
+
+(defn- gen-body [^java.util.Random r d toks]
+  (let [pick #(nth % (.nextInt r (count %)))
+        tok (fn [] (if (and (seq toks) (.nextBoolean r)) (pick toks) (list 'a/take {:r (.nextInt r 3)})))
+        fresh (fn [p] (symbol (str p (.nextInt r 100000))))]
+    (if (zero? d)
+      (case (.nextInt r 3) 0 (.nextInt r 3) 1 (list 'a/put (tok)) (list 'a/balance (tok)))
+      (let [sub #(gen-body r (dec d) toks)]
+        (case (.nextInt r 9)
+          0 (let [x (fresh "t")] (list 'let [x (tok)] (gen-body r (dec d) (conj toks x))))
+          1 (list 'a/put (list 'a/spend (tok) {:r (.nextInt r 2)}))
+          2 (list 'a/put (list 'a/join (tok) (tok)))
+          3 (list 'if (.nextBoolean r) (sub) (sub))
+          4 (list 'try (sub) (list 'catch 'clojure.lang.ExceptionInfo 'e :caught))
+          5 (let [x (fresh "t")] (list 'let [x (tok)] (list 'do (list 'a/holds? x {:r 1}) (list 'a/put x))))
+          6 (list 'do (sub) (sub))
+          7 (let [x (fresh "t")] (list 'let [x (tok)] (list 'if (.nextBoolean r) (list 'a/put x) (list 'a/put (list 'a/spend x {:r 0})))))
+          (sub))))))
+
+(defn- outcome [s src]
+  (try (let [v (k/eval-string s src)] [:value (if (instance? klara.runtime.value.Token v) :token v)])
+       (catch clojure.lang.ExceptionInfo e [:error (:rule (ex-data e))])))
+
+(deftest the-affine-profile-compiles   ; L4.check.affine-erase
+  (let [header "(ns pf (:require [klara.account :as a] [klara.compiler :as compiler])) (a/mint! {:r 5})"
+        results (for [seed (range 120)]
+                  (let [body (gen-body (java.util.Random. seed) 3 [])
+                        declared (doto (k/session {:roots ["lib"] :out (java.io.StringWriter.)}) (k/eval-string header))
+                        accepted (try (k/eval-string declared (pr-str (list 'defaffine 'p [] body))) true
+                                      (catch clojure.lang.ExceptionInfo e
+                                        (is (= :L4.check.affine (:rule (ex-data e))) (pr-str body))
+                                        false))]
+                    (when accepted
+                      (let [plain (doto (k/session {:roots ["lib"] :out (java.io.StringWriter.)}) (k/eval-string header))]
+                        (k/eval-string plain (pr-str (list 'defn 'p [] body)))
+                        {:body body
+                         :compiled (k/eval-string declared "(some? (compiler/compiled 'pf/p))")
+                         :declared [(outcome declared "(p)") (k/eval-string declared "(a/wallet)")]
+                         :plain [(outcome plain "(p)") (k/eval-string plain "(a/wallet)")]}))))
+        accepted (remove nil? results)]
+    (is (< 20 (count accepted)) "enough generated definitions are accepted")
+    (doseq [r accepted]
+      (is (:compiled r) (str "accepted but not compiled: " (pr-str (:body r))))
+      (is (= (:plain r) (:declared r)) (pr-str (:body r))))))

@@ -4,11 +4,11 @@ Status: the inferred mode is implemented (P6, design/PLAN.md), without its
 proofs: the ownership judgment and erasure check are `klara.compile.own`
 (L4.check.in-place), the recipe is `klara.own/in-place`, and
 `showcases/in_place.clj` shows it on a word-count loop. The declared mode
-(an explicit affine subset that programs write) is checked but not yet
-compiled: `defaffine` checks the judgment below when a definition is made
-(`klara.compile.affine`, L4.check.affine) and the definition runs its
-erasure with all dynamic checks; compiling it is L4.check.affine-erase
-(planned). A first version of the declared mode was reviewed for
+(an explicit affine subset that programs write) is checked and compiled:
+`defaffine` checks the judgment below when a definition is made
+(`klara.compile.affine`, L4.check.affine) and compiles the definition
+(L4.check.affine-erase); its owned collections are updated persistently
+there, and in place only under the `:in-place` certificate. A first version of the declared mode was reviewed for
 soundness on 2026-11-01 and failed in four ways; the design below answers
 that review (last section). The earlier prototype (tag
 `prototype-2026-10-31` on the `main` branch history) had a different,
@@ -277,9 +277,11 @@ implementation found:
    definition over owned collections and account tokens, diagnostics that
    name the clause, the place and the local (`klara.compile.affine`,
    `test/klara/affine_test.clj`).
-5b. **The compile obligation** (L4.check.affine-erase, planned): a declared
-   definition compiled as owned code when it is defined, and the dynamic
-   reuse check on account tokens skipped in admitted code.
+5b. [x] **The compile obligation** (L4.check.affine-erase): a declared
+   definition is compiled when it is defined, and inside the affine profile
+   every accepted one compiles (`test/klara/affine_test.clj`). Open: owned
+   collections in place under the declared judgment (its erasure theorem for
+   collections), the reuse check skipped once tokens are unboxed.
 6. **Formal**: the store semantics, `WO` in ansatz, the erasure theorem; then
    the verified `WO` replaces the host one.
 7. **Primitive arrays** as resources that cannot be frozen cheaply; budgets

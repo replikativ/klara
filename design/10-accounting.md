@@ -168,9 +168,9 @@ the definition is made, which proves each token is used at most once on
 every path; a definition that fails is not defined, and the diagnostic
 names the clause, the place and the local. No token may be live where the
 computation may be captured (clause 7), and `try` follows Rust's
-`catch_unwind` (11-profiles.md). Today the definition still runs
-with the dynamic checks; compiled code admitted under the judgment will
-skip the reuse check (L4.check.affine-erase, planned). Unlike owned collections,
+`catch_unwind` (11-profiles.md). The definition is compiled when it is
+defined (L4.check.affine-erase); the judgment licenses skipping the reuse
+check (proved in λ-acct), which pays once tokens are unboxed. Unlike owned collections,
 an account operation is not erased: spending is the meaning. What the
 judgment erases is the check, so the theorem is: for a program that passes
 the judgment, the program with checks and the program without them have
@@ -227,8 +227,8 @@ without a rule for either.
    (`klara.account/transfers`, data only: Klara does not depend on kontor).
 5. [x] The declared mode (`defaffine`, L4.check.affine) for owned
    collections and tokens, checked at definition with diagnostics.
-5b. [ ] Declared code compiled, with the reuse check erased in admitted
-   code (L4.check.affine-erase; P11).
+5b. [x] Declared code compiled when it is defined (L4.check.affine-erase,
+   P11); skipping the reuse check waits for unboxed tokens.
 6. [ ] Formal: the accounting calculus λ-acct (`spec/formal`, 11-profiles.md)
    with one resource: conservation, affine soundness and check erasure [x];
    several resources, wallets per job and receipts later.

@@ -61,3 +61,42 @@
                        (compiler/optimize! 'e4/fib)
                        (fib 20)")))
         (finally (reset! lower/stress nil))))))
+
+(def ^:private try-program
+  "(ns tl (:require [klara.compiler :as compiler] [klara.effect :refer [perform handle]]))
+   (defn ask [] (perform :ask))
+   (defn risky [x] (if (> x 0) (throw (ex-info \"positive\" {:x x})) x))
+   (defn f1 [x] (try (risky x) (catch clojure.lang.ExceptionInfo e :caught)))
+   (defn f2 [] (try (let [a (ask)] (risky a)) (catch clojure.lang.ExceptionInfo e :caught-after-leave)))
+   (defn f3 [] (try (risky 1) (catch clojure.lang.ExceptionInfo e (let [a (ask)] (+ a 1))) (finally 7)))
+   (defn f4 [x] (try (inc x) (finally (dec x))))
+   (defn f5 [x] (try (let [a (ask)] (+ a x)) (catch ArithmeticException e :arith) (finally (inc x))))")
+
+(def ^:private try-uses
+  "[(f1 0) (f1 5) (handle {:ask (fn [k] (k 3))} (f2)) (handle {:ask (fn [k] (k 3))} (f3)) (f4 1)
+    (handle {:ask (fn [k] (k 3))} (f5 1)) (handle {:ask (fn [k] (k Long/MAX_VALUE))} (f5 1))]")
+
+(deftest L4-lower-try   ; L4.lower.try L4.lower.subset
+  (testing "a try compiles; a leave from its body or a catch arm continues inside the same try"
+    (let [s (session)]
+      (k/eval-string s try-program)
+      (let [interpreted (k/eval-string s try-uses)]
+        (is (= [0 :caught :caught-after-leave 4 2 4 :arith] interpreted))
+        (is (every? #(= :ready (:status %))
+                    (k/eval-string s "(mapv compiler/optimize! '[tl/f1 tl/f2 tl/f3 tl/f4 tl/f5])")))
+        (is (= interpreted (k/eval-string s try-uses)))
+        (is (= [:compiled :left :left :compiled]
+               (k/eval-string s "[(do (f1 5) (:last-path (compiler/explain f1)))
+                                  (do (handle {:ask (fn [k] (k 3))} (f2)) (:last-path (compiler/explain f2)))
+                                  (do (handle {:ask (fn [k] (k 3))} (f3)) (:last-path (compiler/explain f3)))
+                                  (do (f4 1) (:last-path (compiler/explain f4)))]")))
+        (testing "leaving at every function entry gives the same values"
+          (reset! lower/stress 1.0)
+          (try (is (= interpreted (k/eval-string s try-uses)))
+               (finally (reset! lower/stress nil)))))))
+  (testing "recur across a try and a finally clause that may leave stay outside the subset"
+    (let [s (session)]
+      (k/eval-string s "(ns tl2 (:require [klara.compiler :as compiler] [klara.effect :refer [perform]]))
+                        (defn ask [] (perform :ask))
+                        (defn g [x] (try (inc x) (finally (ask))))")
+      (is (= :rejected (k/eval-string s "(:status (compiler/optimize! 'tl2/g))"))))))

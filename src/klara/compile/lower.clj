@@ -22,6 +22,12 @@
   - the budget running out at a function entry: the call is applied again by
     the interpreter.
 
+  A `try` (L4.lower.try) is a host try: a Leave from its body passes out
+  with an interpreter :try frame carrying its catch and finally clauses, so
+  the interpreter continues inside the same try; a Leave from a catch arm
+  carries the finally clause; the finally clause runs in compiled code only
+  when the try completes here, by a value or an exception.
+
   A Leave is a value, not an exception: compiled code returns it, and every
   let whose initializer may leave checks for it and adds its own frame on
   the way out (an instance test, no try, no allocation). The receiving
@@ -32,6 +38,7 @@
   (:require [klara.compile.anf :as anf]
             [klara.lang.builtins :as b]
             [klara.lang.term :as t]
+            [klara.runtime.account :as acct]
             [klara.runtime.machine :as m]
             [klara.runtime.prepare :as prep]
             [klara.runtime.prims :as prims]
@@ -106,6 +113,17 @@
 (defn leave-eval [node env] (leave {:mode :eval :node node :env env}))
 
 (defn let-frame [body-node env] {:f :let :body body-node :env env})
+
+(defn try-frame
+  "L4.lower.try: the interpreter's frame for a try whose body left compiled code."
+  [catches finally env ^objects ctx]
+  {:f :try :catches catches :finally finally :env env :world (aget ctx 0) :mint (aget ctx 1)})
+
+(defn finally-frame
+  "L4.lower.try: the frame that runs a try's finally clause after a catch arm
+   that left compiled code."
+  [finally env]
+  {:f :finally-ret :term finally :env env})
 
 ;; Stress testing: leave at function entries with probability `stress`, to
 ;; exercise frame states everywhere (as V8's --deopt-every-n-times does).
@@ -282,7 +300,7 @@
 ;; ---------------------------------------------------------------------------
 ;; Lowering
 
-(def ^:private unsupported #{:try :interop :code :hole :def :letrec})
+(def ^:private unsupported #{:interop :code :hole :def :letrec})
 
 (defn- link-value [link]
   (case (:kind link)
@@ -461,6 +479,9 @@
                        (list* (:name f) args)
                        (and (= :host (:op f)) (:symbol (b/lookup (:name f))))
                        (list* (:symbol (b/lookup (:name f))) args)
+                       ;; account operations on the context's wallet (L4.check.affine-erase)
+                       (and (= :host (:op f)) (contains? acct/compiled (:name f)))
+                       (list* (acct/compiled (:name f)) args)
                        (and self-name (= :global (:op f)) (= :late (get-in f [:link :kind])) (= self-name (get-in f [:link :name])))
                        (list* self-sym args)
                        ;; (:k m) and (:k m default): keyword lookup, as the host does it
@@ -509,6 +530,34 @@
                             (list 'klara.compile.lower/leave-eval (constant (.-else in)) (env-form scope))
                             (go (:else t) (.-else in) scope frames))))
               :throw (list 'throw (go (:ex t) (.-ex ^klara.runtime.prepare.Throw n) scope frames))
+              ;; L4.lower.try
+              :try (let [^klara.runtime.prepare.Try tn n
+                         fin-n (.-finally tn)
+                         env (env-form scope)
+                         v (t/fresh "v")
+                         passing (fn [form frame]
+                                   (list 'let* [v form]
+                                         (list 'if (list 'clojure.core/instance? 'klara.compile.lower.Leave v)
+                                               (list 'klara.compile.lower/leave-up v frame) v)))
+                         body (passing (go (:body t) (.-body tn) scope frames)
+                                       (list 'klara.compile.lower/try-frame (constant (.-catches tn)) (constant fin-n)
+                                             env 'klara-ctx__))
+                         arms (map (fn [c cn]
+                                     (let [x (:name c)
+                                           h (go (:body c) (:body cn) (conj scope x) frames)]
+                                       (list 'catch (symbol (.getName ^Class (:class cn))) x
+                                             (if fin-n
+                                               (passing h (list 'klara.compile.lower/finally-frame (constant fin-n) env))
+                                               h))))
+                                   (:catches t) (.-catches tn))
+                         inner (list* 'try body arms)]
+                     (if-let [f (:finally t)]
+                       (let [fin (go f fin-n scope frames)
+                             r (t/fresh "try")
+                             ex (t/fresh "ex")]
+                         (list 'let* [r (list 'try inner (list 'catch 'java.lang.Throwable ex (list 'do fin (list 'throw ex))))]
+                               (list 'if (list 'clojure.core/instance? 'klara.compile.lower.Leave r) r (list 'do fin r))))
+                       inner))
               (fail :L4.lower.subset (str "the backend does not compile " (:op t)))))]
     (go t n scope frames))))
 
@@ -530,12 +579,26 @@
     (every? #(contains? applied (t/->form %))
             (filter #(= :fn (:op %)) (rest (compiled-nodes term))))))
 
+(defn- recur-inside?
+  "Does `t` contain a recur that is not inside a function of its own?"
+  [t]
+  (case (:op t)
+    :recur true
+    :fn false
+    (boolean (some recur-inside? (t/children t)))))
+
 (defn subset-violation
   "The first construct outside the compilable subset (L4.lower.subset), or nil."
   [term]
   (some (fn [n]
           (cond (contains? unsupported (:op n)) (:op n)
-                (and (= :host (:op n)) (m/intrinsic? (m/host-value (:name n)))) (:name n)))
+                (and (= :host (:op n)) (m/intrinsic? (m/host-value (:name n)))
+                     (not (contains? acct/compiled (:name n))))
+                (:name n)
+                ;; L4.lower.try: the host does not recur across a try, and a finally
+                ;; clause runs in compiled code only where it cannot leave
+                (and (= :try (:op n)) (recur-inside? n)) "recur inside try"
+                (and (= :try (:op n)) (:finally n) (may-leave? (:finally n))) "a finally clause that may leave"))
         (compiled-nodes term)))
 
 (defn lower
