@@ -108,3 +108,36 @@
       (is (:balanced r))
       (is (= [:grant :consume :return] (mapv :kind (:kontor r))))
       (is (= 0.5M (get-in (:kontor r) [1 :resources "eur"]))))))
+
+;; The independent state-machine baseline for showcases/smc.clj: particle
+;; state as data, the same keys, draws and systematic resampling.
+(defn- smc-plain []
+  (let [M 2147483647
+        next-key (fn [key] (mod (* 48271 key) M))
+        split-key (fn [key i] (next-key (mod (+ (* 1000003 key) i 1) M)))
+        uniform (fn [key] (/ (double key) M))
+        emission (fn [p n] (loop [i n q 0.5] (if (> i 0) (recur (dec i) (/ (+ q p) 2.0)) q)))
+        ys [true true false true false true false false true true true false]]
+    (loop [ps (mapv (fn [i] (let [key (next-key (split-key 42 i))] {:x (< (uniform key) 0.5) :key key})) (range 32))
+           obs ys key 42 z 1.0]
+      (if (empty? obs)
+        [(count (filter :x ps)) z]
+        (let [weighted (mapv (fn [p] (let [q (emission (if (:x p) 0.9 0.2) 16)] (assoc p :w (if (first obs) q (- 1.0 q))))) ps)
+              total (reduce + (map :w weighted))
+              key2 (next-key key)
+              kids (loop [j 0 i 0 acc (:w (first weighted)) out []]
+                     (if (= j 32) out
+                         (if (< acc (* (/ (+ (uniform key2) j) 32) total))
+                           (recur j (inc i) (+ acc (:w (nth weighted (inc i)))) out)
+                           (recur (inc j) i acc (conj out (nth weighted i))))))
+              children (mapv (fn [i p] (let [split (split-key (:key p) i)
+                                             draw (if (next obs) (next-key split) split)]
+                                         {:key draw :x (if (next obs) (< (uniform draw) (if (:x p) 0.8 0.2)) (:x p))}))
+                             (range 32) kids)]
+          (recur children (next obs) key2 (* z (/ total 32))))))))
+
+(deftest smc   ; L3.cont.multishot L3.handle.deep L4.lower.calls
+  (let [r (run "showcases/smc.clj")]
+    (is (= :ready (:kernel r)))
+    (is (= :compiled (:kernel-path r)))
+    (is (= (smc-plain) (:interpreted r) (:compiled r)))))
