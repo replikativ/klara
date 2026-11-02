@@ -60,6 +60,14 @@ programs by default; with `KLARA_DIFF_SEEDS=5000`, 10003 of 10003 forms
 agreed when last run). The comparison found and fixed a
 Clojure subtraction inconsistency and a missing not-a-function rule.
 
+Accounts have a calculus of their own, λ-acct (`spec/formal/src/klara/formal/acct*.clj`,
+design/11-profiles.md): tokens over one resource, deep multi-shot handlers,
+raise and try. Conservation is proved for every term; for the affine
+judgment, preservation, progress without reuse, and check erasure (the step
+with the reuse check erased is the step on configurations typed programs
+reach). Klara's runtime is compared with it on generated token programs
+(500 by default, all agreeing, about a fifth ending in L3.affine.reuse).
+
 The checker's head rules, in the fragment's form, are proved to be steps of the semantics, and a
 step is proved to preserve the terminal configurations reached
 (`spec/formal/src/klara/formal/checker.clj`). Candidates the definitional

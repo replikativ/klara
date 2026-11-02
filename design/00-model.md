@@ -206,7 +206,9 @@ An **effect** is a request to the context: `(perform :io/print "hi")`. A
 A handler receives the **continuation** `k`, an ordinary function that
 resumes the computation. Calling `k` twice is allowed (multi-shot). If the
 resumed computation uses an account token (below) that the first resumption
-already consumed, that use is an error (`L3.affine.reuse`, planned). Unhandled effects reach the session's
+already consumed, that use is an error (`L3.affine.reuse`). Resuming runs
+with the resumer's budget and wallet, never captured ones
+(L3.cont.context): continuations copy control, not authority. Unhandled effects reach the session's
 default handlers, so `println` prints.
 
 A **job** runs a computation in a fork of the current world, under a budget,
@@ -242,7 +244,19 @@ not copied. Reserving steps for a job moves them out of the parent's budget,
 and unused steps return when the job settles (L3.budget.nesting). Budgets of
 any resource (money, time, connections, permissions with k holders), and
 tokens that pass the right to spend or hold explicitly to callees, are
-designed in [10-accounting.md](10-accounting.md) (planned).
+designed in [10-accounting.md](10-accounting.md).
+
+**Authority and erasure.** The meaning of a program is what the machine
+does, with every check: misused authority is a named error where it is
+used, and conservation (minted = held + live + spent) holds for every
+program. Static judgments never change that meaning; they let the compiler
+drop a check or change a representation, each with an erasure theorem. A
+raise leaves the tokens it skips live until their job settles; a job
+outcome is resumed and adopted at most once; continuations stay multi-shot,
+and declared code holds no token where one may be captured.
+[11-profiles.md](11-profiles.md) states the rules, the Rust mapping, and
+the accounting calculus λ-acct in which conservation and affine soundness
+are proved.
 
 ## Compilation (L4)
 

@@ -206,3 +206,6 @@ transfers `{:kind :source :destination :resources}` with kinds `:grant`,
 `L3.account.conservation` At every point between steps, for every
 resource, what the session minted equals what wallets and live tokens hold
 plus what was spent; for every receipt, granted equals spent plus returned.
+(Proved for one resource and one wallet in λ-acct, `Acct.conservation`,
+including steps that raise, catch, handle and resume continuations any
+number of times; tested with nested jobs.)

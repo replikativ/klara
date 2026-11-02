@@ -261,6 +261,12 @@ any other host function in a definition makes it impure. Otherwise
 of a speculation, which is left to the interpreter (L4.exec.leave). Others
 give `:rejected` with this rule.
 
+`L4.lower.try` (planned) The backend lowers `try` to a host try. A leave
+from inside its body (L4.exec.leave) adds an interpreter frame carrying the
+catch and finally clauses, so the interpreter continues inside the same
+`try`; a leave from inside a catch arm adds a frame holding only the
+finally clause. Normal returns and host exceptions behave as the host's.
+
 `L4.lower.links` A pinned or guarded link is lowered to its value as a
 constant. (Nothing produces guarded links yet; when something does, the
 checker must unfold the link's `:value`, which lowering embeds, not the

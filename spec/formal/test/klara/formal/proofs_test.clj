@@ -4,11 +4,14 @@
   (:require [ansatz.core :as a]
             [clojure.test :refer [deftest is]]
             [klara.formal.props]
-            [klara.formal.checker]))
+            [klara.formal.checker]
+            [klara.formal.acct-typing]))
 
 (def headline
   '[step-det preservation progress safety run-quote ws-subst ws-pinTm wsb-WS
-    beta-step fix-step let-value-step if-true-step if-false-step prim-step delta-step pin-step step-equiv speculate-sound])
+    beta-step fix-step let-value-step if-true-step if-false-step prim-step delta-step pin-step step-equiv speculate-sound
+    ;; the accounting calculus λ-acct (acct*.clj)
+    Acct.conservation Acct.preservation Acct.progress Acct.no-reuse Acct.erasure Acct.erasure-good])
 
 (deftest kernel-checked
   (doseq [n headline]

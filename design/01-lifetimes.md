@@ -36,6 +36,13 @@ Only these hold Klara memory alive (`L1.retain.roots`):
 | Values in definitions | the current world | whatever the program stored, including worlds it holds on purpose |
 | Installed candidates | the definitions in the worlds that hold them (bounded per definition) | their executable and their footprint |
 | In-flight jobs | the parent activation | the job's world, intents, continuation |
+| Wallets | the session (root) and each job frame | their live tokens (design/10-accounting.md) |
+
+A job's wallet is freed when the job settles, whatever its status. The
+session's never settles, so a token taken at the session and dropped stays
+in its live map, visible in `(account/wallet)`, until it is put back: one
+entry, and authority not returned. (The strict variant, allowing `take` only
+inside jobs, would bound every token's lifetime by a settlement.)
 
 Everything else must be reachable only through these. In particular, the
 following are **not** roots:

@@ -7,7 +7,7 @@ specification; ansatz compiles it to Clojure, so it is also an executable
 reference interpreter.
 
 ```sh
-clojure -M:formal:test-formal   # check every definition and theorem, run the differential tests (500 programs)
+clojure -M:formal:test-formal   # check every definition and theorem, run the differential tests (500 programs each)
 KLARA_DIFF_SEEDS=5000 clojure -M:formal:test-formal
 ```
 
@@ -28,6 +28,10 @@ checkout instead.
 | `cases/proof_search.clj` | Proof search as guest code: a Klara program looks for the certificate in a budgeted job |
 | `src/klara/formal/bridge.clj` | The trusted bridge: quoting real Core terms into `Tm`, running the model, observations |
 | `src/klara/formal/gen.clj` | A seeded generator of Klara programs inside the fragment |
+| `src/klara/formal/acct.clj` | λ-acct, the accounting calculus: syntax, store, `ev` (checked or with the reuse check erased), `step` |
+| `src/klara/formal/acct_props.clj` | Conservation |
+| `src/klara/formal/acct_typing.clj` | The affine judgment, the invariant, preservation, progress, no-reuse, check erasure |
+| `src/klara/formal/acct_bridge.clj` | The trusted bridge for λ-acct: a generator of token programs rendered as Klara source and as λ-acct terms |
 | `test/klara/formal/` | Proof check and differential tests |
 
 ## The fragment
@@ -65,6 +69,52 @@ The checker's head rules, each proved for the fragment's form of the rule
 | `step-equiv` | a configuration and its step reach the same terminal configurations | composition |
 | `ev-prim-lit`, `ev-prim-l`, `ev-prim-r`, `step-of-ev` | a step inside nested arithmetic is a step of the operand it is in | certificates for straight-line integer code |
 | `speculate-sound` | `(if g a r)` reaches what `r` reaches when `a` is equivalent to `r` unconditionally, for any guard value | L4.check.speculate, in its trivial form only: the implemented rules relate `a` to `r` under the guard (L4.check.speculate-assume, L4.check.speculate-value), which is not proved |
+
+## The accounting calculus λ-acct
+
+Accounts, exceptions and the affine judgment are formalized in a calculus
+of their own (design/11-profiles.md), so that they do not touch the core
+model's syntax or proofs: functions, `let`, `if`, tokens over one resource
+(`take`, `spend`, `join`, `put`), deep handlers by operation name as in core
+(multi-shot), `raise` and `try`. A configuration is a store (wallet, spent,
+next id, live tokens as id and amount) and a term; a token in a term is a
+reference `tok i` to a live entry. `ev` takes a flag: checked is Klara's
+semantics (a token that is not live is the stuck state `reuse`), unchecked
+is the step of code compiled with the check erased.
+
+The judgment `Acct.HasTy G t A e` is simply typed (data, tokens, functions
+with a latent effect flag) with two kinds of premise that make it affine:
+a token variable occurs at most once on every path of its scope, and
+function bodies, handler clauses and every part of a term that is still in
+the context while another part may perform are token-free (L4.check.affine
+clauses 2, 4 and 7). The invariant `Acct.Inv`: every token id occurs at most
+once in the term, every id that occurs is live, and live ids are below the
+next id.
+
+| Theorem | Statement | Rules |
+|---|---|---|
+| `Acct.conservation` | every step of every term, typed or not, keeps wallet + spent + held in live tokens | L3.account.conservation (one resource, no jobs); copying a continuation cannot mint (L3.cont.context) |
+| `Acct.preservation` | a typed configuration with the invariant steps to one | L4.check.affine (soundness) |
+| `Acct.progress` | such a configuration is a value, steps, performs an unhandled effect, raises past every `try`, or is stuck, but never on reuse or a free variable | L3.affine.reuse |
+| `Acct.no-reuse` | such a configuration never uses a token that is not live | L3.affine.reuse, L4.check.affine |
+| `Acct.erasure`, `Acct.erasure-good` | on configurations with the invariant, the step with the reuse check erased is the step | L4.check.affine-erase |
+
+The headline lemma is `Acct.ev-ok`: one evaluation of a typed term with the
+invariant gives a step to a typed term related to it by `Acct.StepRel` (old
+ids do not occur more, consumed ids occur no longer, new ids once), an
+effect whose continuation and argument hold no token, a raised value
+holding none, or a stuck state other than reuse. Not in λ-acct yet: several
+resources, jobs and wallets per job, receipts, reads (`holds?`, `balance`),
+`split`, recursion, and a check that the declared judgment (as implemented)
+implies `HasTy`; the latter correspondence is stated in
+design/11-profiles.md and tested by `test/klara/affine_test.clj`.
+
+`test/klara/formal/acct_differential_test.clj` links λ-acct to Klara: it
+generates token programs (with aliases, multi-shot handlers, raises and
+catches) without regard to typing, runs them through the reader, expander
+and CEK machine and through λ-acct's `step`, and requires the same outcome,
+wallet and spent amount (500 programs by default; about a fifth end in
+`L3.affine.reuse`).
 
 Not yet proved, though specified and tested (including adversarially,
 `test/klara/adversarial_test.clj`):

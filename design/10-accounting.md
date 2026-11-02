@@ -6,7 +6,9 @@ randomized conservation test (`test/klara/account_test.clj`) and a
 showcase (`showcases/accounting.clj`). The declared mode (`defaffine`,
 L4.check.affine) checks threaded tokens at definition
 (`klara.compile.affine`); compiling declared code with the checks erased,
-and the formal semantics, are planned (Plan, at the end). It answers how Klara accounts for more
+and the formal semantics, are planned (Plan, at the end); how tokens behave
+under exceptions, copied continuations and effects is settled in
+[11-profiles.md](11-profiles.md). It answers how Klara accounts for more
 than memory: time, money, model calls, connections, licences, evidence,
 with one small mechanism that composes with kontor's double-entry
 accounting at boundaries.
@@ -145,8 +147,11 @@ already consumed raises `L3.affine.reuse`, however the second use reached
 it: a second local, a collection, a closure, a definition, or a
 continuation resumed twice. Continuations stay multi-shot
 (L3.cont.multishot): resuming one twice is allowed, and only the second
-*use* of a consumed token fails. Tokens are not data: `lift` refuses them
-(L2.lift.mutable), and they compare by identity.
+*use* of a consumed token fails. A continuation runs with the resumer's
+wallet and meter, never one it captured (L3.cont.context), so copying it
+copies references to tokens, never authority. A raise drops frames and
+leaves their tokens live until the job settles. Tokens are not data: `lift`
+refuses them (L2.lift.mutable), and they compare by identity.
 
 **Tokens belong to their job** (`L3.account.foreign`). A token taken in a
 job can be used only in that job; using it in another job (or in the
@@ -161,7 +166,9 @@ one transfer from its parent) in the language.
 follow the ownership judgment of 04-ownership.md (rules 1–6), checked when
 the definition is made, which proves each token is used at most once on
 every path; a definition that fails is not defined, and the diagnostic
-names the clause, the place and the local. Today the definition still runs
+names the clause, the place and the local. No token may be live where the
+computation may be captured (clause 7), and `try` follows Rust's
+`catch_unwind` (11-profiles.md). Today the definition still runs
 with the dynamic checks; compiled code admitted under the judgment will
 skip the reuse check (L4.check.affine-erase, planned). Unlike owned collections,
 an account operation is not erased: spending is the meaning. What the
@@ -221,6 +228,7 @@ without a rule for either.
 5. [x] The declared mode (`defaffine`, L4.check.affine) for owned
    collections and tokens, checked at definition with diagnostics.
 5b. [ ] Declared code compiled, with the reuse check erased in admitted
-   code (L4.check.affine-erase).
-6. [ ] Formal: vectors, wallets and tokens in the semantics; conservation
-   and the check-erasure theorem.
+   code (L4.check.affine-erase; P11).
+6. [ ] Formal: the accounting calculus λ-acct (`spec/formal`, 11-profiles.md)
+   with one resource: conservation, affine soundness and check erasure [x];
+   several resources, wallets per job and receipts later.

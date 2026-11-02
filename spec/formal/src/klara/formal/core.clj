@@ -14,7 +14,10 @@
   names (locally nameless) as in BER MetaOCaml's model of scope extrusion."
   (:require [ansatz.core :as a]))
 
-(a/load-init!)
+;; Load Lean's Init once: another model may already have loaded it, and
+;; loading replaces the environment with everything declared in it.
+(when-not (some-> (try (a/env) (catch Exception _ nil)) (.lookup (ansatz.kernel.name/from-string "Nat.add")))
+  (a/load-init!))
 
 ;; ---------------------------------------------------------------------------
 ;; Syntax

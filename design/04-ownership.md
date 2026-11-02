@@ -214,7 +214,9 @@ certificate, L4.check.certificate).
 - **Bounded memory.** The point of the rewrite: a loop that builds a vector
   allocates a path-copied root per iteration in the reference and updates one
   transient in the candidate. Allocation is part of what benchmarks report.
-- **Continuations.** No continuation is captured inside an owned region,
+- **Continuations.** In declared code no token is live where a
+  continuation may be captured (L4.check.affine clause 7,
+  11-profiles.md). No continuation is captured inside an owned region,
   since compiled code performs no effects, and leaving freezes. Continuations
   stay multi-shot. If compiled code ever performs effects (compiling
   everything, 07-performance.md, path step 2), capture must freeze the

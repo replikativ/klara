@@ -159,6 +159,23 @@ and `clojure -M:bench` stay green at every commit. Progress is recorded here.
   checks erased (L4.check.affine-erase), the formal semantics of wallets
   and the conservation theorem.
 
+- [ ] **P11. Profiles and the affine semantics** (11-profiles.md). How the
+  affine segment behaves under exceptions, copied continuations and
+  effects, made checkable. Done: soundness fixes in the declared judgment
+  found by a review (a token made in `try`, `def` or `throw` was data to
+  it; a token live across `perform` or a call that may perform was
+  accepted), the `try` rule (`catch_unwind`), clause 7 (no token live where
+  the computation may be captured, with effect premises); job outcomes
+  resumed once (L3.job.resumed: resuming twice shared the job record);
+  L3.cont.context (a continuation runs with the resumer's dynamic context:
+  copying cannot create authority); the accounting calculus λ-acct
+  (`spec/formal/src/klara/formal/acct*.clj`) with conservation,
+  preservation, progress without reuse and check erasure proved, and a
+  differential test against the runtime.
+  Open: `try` in compiled code (L4.lower.try), compiling
+  declared code (L4.check.affine-erase) with the affine profile's
+  obligation tested. This closes P6's and P10's open erasure theorems.
+
 ## Next iteration
 
 A direct bytecode backend (07-performance.md, path step 3): the subset
