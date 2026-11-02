@@ -78,7 +78,9 @@ and in tests, so `grep -r L2.run.closed` finds all of them.
 ## Status
 
 A research prototype of a deliberately small nucleus, rebuilt around a clear
-programming model from the earlier prototype (tag `prototype-2026-10-31`),
-whose broader experiments it does not yet include. See [STATUS.md](STATUS.md).
+programming model from the earlier prototype, whose broader experiments it
+does not yet include. The prototype is the history of the `main` branch, at
+tag `prototype-2026-10-31`; this branch starts afresh and does not share that
+history. See [STATUS.md](STATUS.md).
 
 Licensed under Apache-2.0.

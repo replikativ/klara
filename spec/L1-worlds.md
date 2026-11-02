@@ -55,11 +55,14 @@ value is a closure without basis, it is returned with basis `w` (a slice of
 
 `L1.def.effect` `(def q e)` evaluates `e` with `m = nil` and then performs
 `:world/define`. The session's default handler publishes the new world and
-sets the activation's `E` to it (`L1.def.read-your-writes`), also across
-host code: when a Klara function that host code calls (a function passed to
-`mapv`, say) changes the world, the host code's later callbacks and the
-activation after the host call go on in the changed world. In a pinned
+sets the activation's `E` to it (L1.def.read-your-writes). In a pinned
 context (`m` not nil) `def` raises `L1.def.pinned`.
+
+`L1.def.read-your-writes` After a definition, the activation that made it
+goes on in the world that has it, also across host code: when a Klara
+function that host code calls (a function passed to `mapv`, say) changes
+the world, the host code's later callbacks and the activation after the
+host call go on in the changed world.
 
 `L1.def.pinned` `def` in a pinned context (mint not nil) raises this rule:
 a pinned world is a fixed past, not a place to define.
@@ -96,8 +99,8 @@ from its value, closed under the same rule in the world.
 rule. It indicates an unsound footprint, an implementation error.
 
 `L1.slice.dynamic` If a footprint contains `run`, `world/current`,
-`world/advance`, `eval` or `world/get` with a non-constant name, the slice is
-the whole world.
+`world/advance`, `world/get`, `world/in`, `world/define` or `require`, the
+slice is the whole world.
 
 ## Retention
 

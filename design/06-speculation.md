@@ -167,26 +167,33 @@ function called at compile time with a context, returning Code or declining.
 
 ```clojure
 (defn match-specializer [ctx default]
-  (let [pattern (profile/stable-arg ctx 0)]          ; argument 0 always the same value?
-    (if pattern
-      (jit/guard (code (same? (esc (jit/arg ctx 0)) (esc (lift pattern))))
-                 (stage-matcher pattern (jit/arg ctx 1)))   ; our own code for that pattern
-      (default ctx))))
+  (if (jit/stable? ctx 0)                             ; argument 0 always the same value?
+    (let [pattern (jit/stable-value ctx 0)]
+      (jit/function ctx
+        (fn [p s]                                     ; the parameters, as Code
+          (jit/guard (code (jit/same? (esc p) (esc (lift pattern))))
+                     (stage-matcher pattern s)        ; our own code for that pattern
+                     (jit/reference-body ctx p s)))))  ; else: the reference
+    (default ctx)))
 
 (defn ^{:klara/specialize match-specializer} match [pattern s] ...)
 ```
+
+(As in `showcases/interpreter_to_compiler.clj`; `showcases/regex.clj` does
+the same with a rule, design/09-extensions.md.)
 
 | Context field | Contents |
 |---|---|
 | `:reference` | the function's Code, with its links |
 | `:profile` | argument classes, stable values, call targets, branch counts, shapes |
-| `:facts` | what type systems and analyses established |
-| `:runtime` | host and hardware data: JVM, cores, measured call and allocation costs |
-| `:budget` | what this specialization may still spend |
+| `:runtime` | host data (`runtime-info` in kernel.clj) |
+| `:facts` (planned) | what type systems and analyses established; today a specializer asks `jit/effect` and `jit/pure?` |
+| `:budget` (planned) | what this specialization may still spend; today the preparation job's budget limits it |
 
-`jit/guard` builds `(if guard specialized reference)` with its frame state;
-`jit/arg` gives the arguments as Code; representation hints mark unboxed
-values. Specializers compose like middleware: each receives the default and
+`(jit/guard guard specialized reference)` builds `(if guard specialized
+reference)` as a speculation, left through its frame state when the guard
+fails; `jit/function` gives the parameters as Code; representation hints
+mark unboxed values. Specializers compose like middleware: each receives the default and
 handles what it knows. The JIT's own strategy (section 4) is the default
 specializer, written against the same interface.
 

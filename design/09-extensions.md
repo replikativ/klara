@@ -1,9 +1,10 @@
 # Extending the JIT: rules, effects, representations
 
-Status: design. The staged interpreter (08-staged-jit.md) is the default
-specializer and the investor tiers by time spent (L4.jit.tiers,
-L4.jit.trigger). This document plans how users and libraries extend what
-the JIT knows, in a way the investor sees and the kernel checks.
+Status: implemented through plan step 4 (section 5); step 5 measured, not
+built. The staged interpreter (08-staged-jit.md) is the default specializer
+and the investor tiers by time spent (L4.jit.tiers, L4.jit.trigger). This
+document plans how users and libraries extend what the JIT knows, in a way
+the investor sees and the kernel checks.
 
 ## 1. Rules
 
@@ -62,8 +63,8 @@ policy.
    exact (operation order is kept; numerics stage 0).
 3. **Domain rules.** A user's algebra: a known interpreter on its program
    (the `calc` result in 08), a regular expression matcher specialized to
-   its pattern (the old prototype's `examples/staging/06-regex.md`, to be
-   ported as a showcase of a user rule), rewrites justified by ansatz
+   its pattern (ported from the old prototype as a user rule,
+   `showcases/regex.clj`, plan step 4), rewrites justified by ansatz
    certificates (a Horner form).
 4. **Vectorization** (section 4).
 
@@ -73,7 +74,8 @@ direct read, as in Clojure.
 
 ## 3. Effects, thought through for Klara
 
-Purity today is one bit (L4.facts.pure). Rules need finer facts: a loop
+Purity was one bit (L4.facts.pure); it is now a view of the classes below
+(L4.facts.effect, plan step 3). Rules need finer facts: a loop
 may be vectorized when its body only writes arrays it allocated; a call
 may be measured in a job when its effects stay in the job. beichte, which
 raster uses, infers a four-point lattice for Clojure code
@@ -96,7 +98,9 @@ What each use needs:
 
 - measuring (the investor) and speculative compilation: at most *world*
   (run in a job), or *handled* under a handler that is itself pure; never
-  *shared* or *outside*. Today's analysis allows only *pure* and *fresh*.
+  *shared* or *outside*. The investor measures up to *handled*, since a job
+  also defers printing (it allowed only *pure* and *fresh* before plan
+  step 3).
 - vectorizing, reordering, common subexpressions: *pure* or *fresh*.
 - parallel jobs (`run-all`): at most *world*, with conflicts resolved at
   adoption.

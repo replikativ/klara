@@ -40,3 +40,12 @@
                              (concat (files "src" ".clj") (files "lib" ".clj"))))
         unknown (set/difference raised all)]
     (is (empty? unknown) (str "rules raised but not specified: " (sort unknown)))))
+
+(deftest every-cited-rule-is-specified
+  (let [{:keys [all]} (specified)
+        docs (concat (files "design" ".md") (map io/file ["README.md" "STATUS.md" "AGENTS.md"]))
+        cited (ids-in (concat (files "src" ".clj") (files "lib" ".clj") (files "test" ".clj")
+                              (files "spec/cases" ".clj") (files "showcases" ".clj") docs))
+        unknown (set/difference cited all)]
+    (is (empty? unknown) (str "rules cited but not specified: " (sort unknown)))))
+

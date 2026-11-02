@@ -1,5 +1,5 @@
 (ns klara.jit
-  "The programmable JIT (design/06-speculation.md#6-specializers).
+  "The programmable JIT (design/06-speculation.md#6-specializers-the-jit-is-programmable).
 
   A specializer is a pure function (fn [ctx default] code) called with a
   context built from the definition, its profile and the host, and the

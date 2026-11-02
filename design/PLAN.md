@@ -52,8 +52,9 @@ and `clojure -M:bench` stay green at every commit. Progress is recorded here.
   Core written in Klara: inlining of monomorphic calls, speculation on long
   arithmetic, specialization on stable values, loops.
 - [ ] **P4. Facts and guard discharge.** Done: guard discharge at call
-  sites by specializing calls to known arguments (`specialize-known-calls`
-  in the default, `jit/simplify`); data definitions as premises
+  sites by specializing calls to known arguments (first as rewrite passes
+  in the default; since P7.6 the staged interpreter unfolds known calls,
+  and `compiler/specialize` compiles a function for known arguments); data definitions as premises
   (L4.check.delta-data); the checker no longer unrolls loops when
   beta-reducing; intrinsics callable from host code. Showcase 1's driver
   specializes its call away. Precompilation from a saved profile (`run --record`,
@@ -72,9 +73,10 @@ and `clojure -M:bench` stay green at every commit. Progress is recorded here.
   so parallel jobs on different worlds cannot mix them. Later: tiers by
   interpreted time spent, automatic triggering between forms, promotion of
   baseline code (L4.jit.tiers, L4.jit.trigger); callees decided first,
-  ties to as-is, measuring after the host's JIT is idle. Open:
-  proof-carrying alternatives (needs the arithmetic certifier), decisions
-  kept in a world.
+  ties to as-is, measuring after the host's JIT is idle; decisions kept in
+  the world (`investor/decisions`); measuring in jobs whatever a job
+  contains (L4.facts.effect). Open: proof-carrying alternatives (needs the
+  arithmetic certifier).
   Originally: A Klara policy over profiles and measured
   costs: threshold and cost table first, parallel exploration in forks,
   honest accounting, declining when it does not pay.
@@ -120,6 +122,36 @@ and `clojure -M:bench` stay green at every commit. Progress is recorded here.
      the formal fragment; and the checker's fixpoint rule (L4.check.fix:
      a loop against a recursive definition, by Scott induction), trusted
      until then.
+
+- [x] **P8. Extending the JIT** ([09-extensions.md](09-extensions.md),
+  section 5). Rules as user extensions of the staged interpreter
+  (L4.jit.rules); the investor's measuring made trustworthy (callees first,
+  ties to as-is, waiting for the host's JIT, a host loop for batches, a JVM
+  per benchmark); class speculation as the first built-in rule
+  (L4.jit.class-hints) and arrays without reflection (L4.lower.arrays);
+  effect classes (L4.facts.effect); the regex matcher as a user rule
+  (`showcases/regex.clj`), with fixpoint induction, `bool-let` and
+  `commute` in the checker and `recur` across template holes
+  (L2.code.recur). Step 5 (primitive loops, vectorization) measured, not
+  built. Open: how a library adds to `klara.jit/rules`, relative effects
+  resolved at call sites.
+- [ ] **P9. Publication landing.** Consistency before collaborators read
+  it. Soundness fixes from a spec audit, each with an adversarial test: a
+  named preparation's reference must mean that definition
+  (L4.prepare.reference); unfolding and `reify` keep captured atoms as
+  references (L4.check.delta, L2.reify.fn); scalars compared by host
+  `equals` (L4.check.const, `same?`); the effect analysis outside for
+  anything it cannot see (L4.facts.effect). Proof claims mapped theorem by
+  theorem to the rules they cover (spec/formal/README.md); prose and spec
+  brought up to date with the code.
+
+## Next iteration
+
+A direct bytecode backend (07-performance.md, path step 3): the subset
+lowered today, emitted as hidden classes with explicit context, primitive
+signatures and real loops, designed to become the first backend of a
+checked low-level IR. Then vectorized reductions (09-extensions.md, step 5)
+with a reassociation opt-in and overflow certificates.
 
 ## Showcase programs
 

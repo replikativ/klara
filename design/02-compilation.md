@@ -68,9 +68,10 @@ an effect. So the checker rejects:
 - reordering two calls.
 
 These rejections are the point: a recipe that does algebra needs premises
-(for example a numeric type) and a checker that can use them. That is
-future work, and the natural place to add [ansatz](https://github.com/replikativ/ansatz)
-proofs: each new rule must come with a proof against the L0 semantics.
+(for example a numeric type) and a checker that can use them. Such
+candidates carry a certificate instead: an [ansatz](https://github.com/replikativ/ansatz)
+proof against the formal semantics, whose assumption becomes a runtime guard
+(L4.check.certificate, spec/formal/README.md).
 
 **Premises.** Unfolding a *pinned* link records nothing: the link cannot
 change. Unfolding a *late* link means the checker used the definition it
@@ -96,18 +97,20 @@ at explicit points, a compiled loop runs without further checks.
   reference definition stays in the world.
 
 **What compiled code may do.** The backend accepts Code without `perform`,
-handlers or staging operations. Compiled code calls other functions through
-the runtime: compiled callees directly, interpreted callees through a nested
-interpreter. If a nested callee performs an effect that is not handled
-inside it, the compiled region is abandoned *before the effect happens* and
-the call is re-executed by the interpreter from its start (`L4.exec.deopt`).
-This is correct because a compiled region performs no effects of its own: no
-effect has been observed when it is abandoned. Host exceptions propagate
-unchanged, since the region contains no handlers.
+handlers or staging operations, except in the reference branch of a
+speculation, which is left to the interpreter (L4.lower.subset). Compiled
+code calls other functions through the runtime: compiled callees directly,
+interpreted callees through a nested interpreter. When compiled code cannot
+go on (a failed speculation, a nested callee that performs an effect it does
+not handle, the budget running out) it *leaves*: it hands the interpreter a
+frame state, the node to continue at with the values of the live locals and
+the enclosing `let` frames, and the interpreter continues from there.
+Nothing is re-executed (L4.exec.leave, L4.exec.frame-state). Host exceptions
+propagate unchanged, since the region contains no handlers.
 
 **Budgets in compiled code.** Compiled code charges one step per function
-entry and loop iteration. Running out inside compiled code abandons the
-region in the same way, so the job's continuation resumes at the call.
+entry and loop iteration (L4.lower.steps). Running out inside compiled code
+leaves in the same way, so the job's continuation resumes where it stopped.
 
 ## Scheduling is a policy
 
@@ -115,14 +118,15 @@ When to prepare is a separate decision from how:
 
 | Schedule | Written as |
 |---|---|
-| ahead of time, for a release | `(compiler/optimize! (compiler/pin (compiler/reference 'app/main) release-world))` |
+| ahead of time, for a release | `(compiler/prepare (compiler/pin (compiler/reference 'app/main) release-world))`, or from saved profiles (L4.profile.saved) |
 | before first use, at load | `(compiler/optimize! 'demo.score/score)` at the end of the namespace |
-| after a threshold (planned) | `(compiler/watch! 'demo.score/score {:after 1000 :policy p})` |
+| when the time spent pays for it | the investor between forms: `(klara.host.api/automatic-investor! session pol)` runs `investor/tick!` (L4.jit.tiers, L4.jit.trigger) |
 | never | the default |
 
-A **policy** is a guest function from an observation map (call count, term
-size, previous outcomes) to `nil` or `{:recipe r :budget b}`. Policies are
-ordinary Klara code and can be edited and tested like any other. They cannot
+A **policy** is guest code and data. Today it is the investor
+(`klara.investor`, Klara code) with its thresholds (`investor/policy`: the
+interpreted time that pays for compiling as is, and for exploring
+alternatives); it can be edited and tested like any other code. It cannot
 make a rejected candidate acceptable.
 
 ## AOT by pinning
@@ -137,9 +141,10 @@ deployment step; the first version compiles in-process.
 ## What is not in the first version
 
 - Rewrites that need type or numeric premises, loop transformations,
-  unboxing, fusion, ownership-based allocation removal. The prototype has
-  most of these. Each returns as a recipe plus a checker rule with a stated
-  proof obligation, not as a hidden pass.
+  unboxing, fusion. The prototype has most of these. Each returns as a
+  recipe plus a checker rule with a stated proof obligation, or a
+  certificate, not as a hidden pass. Ownership-based allocation removal has
+  returned this way (04-ownership.md, L4.check.in-place).
 - Background compilation. `prepare` is synchronous and bounded.
 - Learned policies. The interface is ready for them; the first policies are
   thresholds.

@@ -47,7 +47,8 @@ Klara is a Clojure dialect. This is a deliberate, pragmatic choice:
 | `println` writes immediately | `println` performs `:io/print`, whose default handler writes | Jobs can defer and discard output |
 | `swap!` on any atom anywhere | Allowed outside jobs; inside a job only on atoms created in the job | Jobs are isolated |
 | `binding`, `alter-var-root`, `intern`, `eval` of host forms | Not supported in the first version | They mutate the global environment behind the world's back |
-| `deftype`, `defrecord`, `defprotocol`, `gen-class` | Not supported in the first version | They create host classes; they need their own world contract |
+| `defrecord` | A host record class, as in Clojure, without protocol implementations (L0.surface.defrecord) | Field reads are direct; its constructors are pure |
+| `deftype`, `defprotocol`, protocol implementations, `gen-class` | Not supported in the first version | They create host classes and dispatch tables; they need their own world contract |
 | Lazy sequences realise with whatever is current | A Klara function passed to host code runs in a nested interpreter; effects it does not handle itself are an error there (`L3.effect.host-boundary`) | The host cannot capture Klara continuations |
 
 The list of unsupported forms is expected to shrink. Each addition needs a
@@ -92,5 +93,5 @@ clojure -M:klara repl                            # interactive REPL
 ```
 
 From Clojure (and therefore from any Clojure nREPL), `klara.host.api` offers
-`(eval-string s)`, `(load-file path)` and `(session)`, so tools that already
+`(session)`, `(eval-string session s)` and `(load-file session path)`, so tools that already
 speak Clojure can drive Klara directly.

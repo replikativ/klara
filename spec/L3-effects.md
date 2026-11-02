@@ -54,8 +54,9 @@ effects in order), `:spent` (`{:steps n}`) and `:value`, `:error` or
 
 `L3.job.parallel` `(job/run-all opts thunks)` runs one job per thunk, as
 `job/run` would, and returns their outcomes in order. The jobs may run at
-the same time: each has its own forked world and budget and cannot mutate
-objects created outside it, so no job can observe another. The parent's
+the same time: each has its own forked world and budget, and the mutations
+L3.job.host-mutation checks are refused on objects created outside it, so
+jobs that avoid unchecked host mutation cannot observe one another. The parent's
 budget is charged with what the jobs spent together.
 
 `L3.job.profile` With `{:profile false}` in its options, a job (and the jobs
@@ -73,9 +74,10 @@ the job.
 `L3.job.host-mutation` (Limitation: only these are checked. Interop calls
 and array writes on objects from outside a job are not refused, so a job
 running such code is not isolated; code that must run isolated, such as the
-investor's measurements, is restricted to pure definitions, L4.facts.pure.)
-Inside a job, `swap!`, `reset!`, `vswap!` and
-`vreset!` on objects not created inside the job raise this rule.
+investor's measurements, is restricted by the effect analysis to what a job
+contains, L4.facts.effect.) Inside a job, `swap!`, `reset!`, `swap-vals!`,
+`reset-vals!`, `compare-and-set!`, `vswap!` and `vreset!` on objects not
+created inside the job raise this rule.
 
 `L3.job.adopt` `(job/adopt! outcome)` publishes the job's world changes to
 the session (as `L1.session.publish`) and then performs its intents in
@@ -93,7 +95,10 @@ be called, and the parent's spent budget is not reduced.
 
 `L3.budget.steps` A budget limits steps: every application of a Klara
 function or continuation, and every loop iteration (`recur`), costs one
-step, in interpreted and compiled code alike (L4.lower.steps). Every
+step, in interpreted and compiled code alike (L4.lower.steps). Compiled
+code may take fewer steps than the reference it replaces (an inlined or
+unfolded call costs none), so a computation that exhausts a budget
+interpreted may finish compiled (spec/cases/L4-specialize.clj). Every
 non-terminating computation performs infinitely many of them, so a finite
 budget always ends.
 

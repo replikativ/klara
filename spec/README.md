@@ -18,14 +18,16 @@ Every rule has an ID of the form `L<layer>.<topic>.<name>`, for example
 `L2.run.closed`. The same ID appears:
 
 - in the `:rule` key of every error or outcome the rule produces,
-- in a comment at the code that implements it (`; L2.run.closed`),
+- in a comment at the code that implements it (`; L2.run.closed`), for most
+  rules (not yet for all of them),
 - in the name or docstring of the test that checks it.
 
 So `grep -r L2.run.closed` finds the rule, its implementation and its tests.
 The traceability test (`test/klara/traceability_test.clj`) extracts every
 rule ID from these files and checks that each implemented rule is cited by
-a test or conformance case, and that every rule the implementation raises
-is specified here.
+a test or conformance case, that every rule the implementation raises is
+specified here, and that every rule cited in code, tests, cases and the
+design documents exists.
 
 ## Conformance
 
@@ -42,5 +44,8 @@ expected value or expected rule:
 
 The rules describe the first version of the nucleus. Rules marked
 **(planned)** are part of the design but not implemented; everything else
-is implemented and tested. Proofs: none of these rules is mechanically
-proved yet. The checker rules of L4 are the first targets for ansatz proofs.
+is implemented and tested. Proofs: a fragment of Core has a kernel-checked
+semantics with determinism, preservation, progress and safety, and some of
+the checker's head rules are proved for that fragment;
+[formal/README.md](formal/README.md) maps each theorem to the rules it
+covers and lists the rules that are not proved.

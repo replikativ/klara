@@ -94,7 +94,7 @@
 (defn tag ^long [^INode n] (.tag n))
 
 ;; ---------------------------------------------------------------------------
-;; Profiles (spec/L4-compiler.md#profiles, design/06-speculation.md#5-profiles)
+;; Profiles (spec/L4-compiler.md#profiles, design/06-speculation.md#5-profiles-feedback-in-prepared-nodes)
 ;;
 ;; Mutable feedback owned by a node, written by the interpreter and read by
 ;; Klara as data. An observation that matches what was seen before writes

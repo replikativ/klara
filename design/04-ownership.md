@@ -1,8 +1,12 @@
 # Ownership: affine regions as checked staged rewrites
 
-Status: design. Nothing in this document is implemented in the nucleus yet;
-the earlier prototype (tag `prototype-2026-10-31`) implemented a hosted
-version, described at the end.
+Status: implemented in P6 (design/PLAN.md) without its proofs. The kernel's
+ownership judgment and erasure check are `klara.compile.own`
+(L4.check.in-place), the recipe is `klara.own/in-place`, and
+`showcases/in_place.clj` shows it on a word-count loop. Open: the
+erasure theorem, and `WO` defined and proved in ansatz (plan steps 4-5
+below). The earlier prototype (tag `prototype-2026-10-31` on the `main`
+branch) implemented a hosted version, described at the end.
 
 ## The idea in one paragraph
 
@@ -81,45 +85,31 @@ exists that could observe the update.
 ## Klara programs do the rewriting
 
 Recipes are Klara code over Code views ([02-compilation.md](02-compilation.md)),
-not hosted transformations behind a policy switch. Two library layers:
+not hosted transformations behind a policy switch.
 
-**Loop recognition** (`klara.compiler.loops`). A loop in Core is a
-self-recursive function applied once, with `recur` in tail positions. The
-library finds them and describes each as data:
-
-```clojure
-{:bindings [{:name i :init <code> :update <code at each recur>}
-            {:name acc :init <code> :update <code> :uses [...]}]
- :exits [<code> ...]}
-```
-
-**Accumulator ownership** (`klara.own/in-place`), a specializer the
-investor may choose. For each loop
-binding whose updates are persistent operations on the previous value
-(`conj`, `assoc`, `update`, `disj`, `dissoc`), that is not otherwise used
-after the update, and that leaves the loop only through its exits, the recipe
-rebuilds the loop with `transient` at the init, the `!` operations at the
-updates, and `persistent!` at the exits. It uses `code`, `esc` and the view
-constructors, so it is a staged program that writes the candidate.
+**Accumulator ownership** (`klara.own/in-place`, lib/klara/own.clj), a
+specializer the investor may choose. It finds loops in the reference (a
+self-recursive function applied where it is made, with `recur` in tail
+positions) whose accumulator is only ever replaced by a persistent update of
+itself (`conj`, `assoc`, `dissoc`, `disj`). It marks the accumulator's
+initial value `own` (a transient in compiled code), replaces the updates by
+their owned versions (`assoc` by `assoc!`) and returns `(persistent! acc)`
+at the exits. It is plain Klara over the views (`code/view`,
+`code/children`, `code/with-children`, `code/make`), so it is a staged
+program that writes the candidate. It declines when there is nothing to own.
 
 ```clojure
-(defn own-accumulators [reference]
-  (code/rewrite reference
-    (fn [c]
-      (when-let [l (loops/loop-view c)]
-        (let [owned (filter owned/linear-accumulator? (:bindings l))]
-          (when (seq owned) (owned/rebuild l owned)))))))
-
-;; the investor considers it among other recipes; for a test it can be forced
-(compiler/optimize! 'app/frequencies* {:recipe own-accumulators})
+;; the investor considers it among other alternatives; for a test it can be forced
+(jit/compile! 'app/frequencies* {:specializer own/in-place
+                                 :certificate {:kind :in-place}})
 ```
 
 The recipe can be wrong. If it marks a binding that escapes or is used twice,
 `WO` rejects the candidate. If it changes anything else, the definitional
 check of the erasure rejects it. Either way the reference keeps running.
 
-The same loop library is the place for the other loop rewrites the prototype
-explored: fusing `map`/`filter`/`reduce` chains into one loop
+Other loop rewrites the prototype explored would be recipes of the same
+kind: fusing `map`/`filter`/`reduce` chains into one loop
 (definitional, checked by unfolding), and counted loops on primitive longs
 (which need a premise: an argument guard, or a certificate, L4.check.certificate).
 
@@ -156,13 +146,16 @@ reference; owned code runs compiled.
 
 ## Plan
 
-1. **Views for loops.** Extend `klara.code` views with `:recur`, function
-   self names and multiple arities; add `code/rewrite`.
-2. **Owned Core in the checker.** `WO` as a host decision procedure first;
-   erasure; admission as above; lowering to transients.
-3. **The loop library and the accumulator recipe** in `lib/`, with the
-   benchmark's `maps` and a vector-building loop as acceptance programs,
-   plus rejection cases (escaping token, double use, unknown call).
+1. [x] **Views for loops.** `klara.code` views cover `:recur`, function
+   self names and arities (no separate `code/rewrite`: the recipe walks
+   `code/children`).
+2. [x] **Owned Core in the checker.** `WO` as a host decision procedure;
+   erasure; admission as above; lowering to transients
+   (`klara.compile.own`, L4.check.in-place).
+3. [x] **The accumulator recipe** in `lib/` (`klara.own/in-place`), with a
+   word-count loop as the acceptance program (`showcases/in_place.clj`) and
+   rejection cases (an accumulator passed elsewhere, multi-shot resumption;
+   `test/klara/own_test.clj`, `test/klara/adversarial_test.clj`).
 4. **Formal.** Store semantics in `spec/formal`, `WO` defined in ansatz with
    a soundness proof, and the erasure theorem. Then replace the host `WO` by
    the compiled verified one.

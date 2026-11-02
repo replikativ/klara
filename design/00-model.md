@@ -14,13 +14,17 @@ refine one aspect each:
 | [01-lifetimes.md](01-lifetimes.md) | What keeps memory alive, and how do we stay in bounded memory? |
 | [02-compilation.md](02-compilation.md) | How does code become a checked, installed executable? |
 | [03-clojure.md](03-clojure.md) | How does Klara relate to Clojure code, tools and agents? |
-| [04-ownership.md](04-ownership.md) | How do affine regions become checked staged rewrites? (design) |
-| [05-specialization.md](05-specialization.md) | Candidates, evidence, the investor, facts, JIT to AOT (design) |
-| [06-speculation.md](06-speculation.md) | Frame states, speculation, pluggable type systems, the staged JIT, profiles (design) |
+| [04-ownership.md](04-ownership.md) | How do affine regions become checked staged rewrites? |
+| [05-specialization.md](05-specialization.md) | Candidates, evidence, the investor, facts, JIT to AOT |
+| [06-speculation.md](06-speculation.md) | Frame states, speculation, pluggable type systems, the staged JIT, profiles |
+| [07-performance.md](07-performance.md) | How fast is it, measured, and where can the design go? |
+| [08-staged-jit.md](08-staged-jit.md) | The staged interpreter as the default specializer |
+| [09-extensions.md](09-extensions.md) | Rules, effect classes and vectorization: extending the JIT |
+| [PLAN.md](PLAN.md) | The phases of this iteration and what each delivered |
 | [related-work.md](related-work.md) | Where the ideas come from and what is new |
 
 The normative rules are in [`spec/`](../spec/README.md); each rule has an ID
-such as `L2.lift.closure` that error messages, code comments and tests cite.
+such as `L2.run.closed` that error messages, code comments and tests cite.
 
 ## The value proposition in one program
 
@@ -86,7 +90,7 @@ ordinary Clojure data.
 | **Code** | A program fragment whose global names carry an explicit link | `#klara/code (fn [x__1] (* x__1 x__1))` |
 | **Continuation** | The rest of a computation, captured by an effect handler | `#klara/cont[...]` |
 | **Job** | The outcome of running a computation in an isolated world under a budget | a map `{:status ...}` |
-| **Candidate** | A checked executable together with the premises under which it is valid | `#klara/candidate[demo.power/power ...]` |
+| **Candidate** | A checked executable together with the premises under which it is valid | `#klara/executable[demo.power/power]` |
 
 There is no separate "program" type. A reference to a definition in a
 particular world is Code with a pinned link (below), and a compiled function
@@ -200,9 +204,10 @@ An **effect** is a request to the context: `(perform :io/print "hi")`. A
 ```
 
 A handler receives the **continuation** `k`, an ordinary function that
-resumes the computation. Calling `k` twice is allowed (multi-shot), unless
-the continuation holds an affine resource (below), in which case the second
-use is an error (`L3.affine.reuse`). Unhandled effects reach the session's
+resumes the computation. Calling `k` twice is allowed (multi-shot). A
+continuation that holds an affine resource (below) is meant to be one-shot,
+its second use an error (`L3.affine.reuse`, planned: there are no
+first-class affine resources yet). Unhandled effects reach the session's
 default handlers, so `println` prints.
 
 A **job** runs a computation in a fork of the current world, under a budget,
@@ -227,15 +232,17 @@ and returns its outcome as data instead of changing anything:
   refunded**: the steps it consumed are charged to the parent's budget
   whether or not the result is adopted.
 - Inside a job, printing becomes a recorded intent, `def` changes only the
-  job's world, and mutation of host objects created outside the job is
-  refused (`L3.job.host-mutation`). The first version supports exactly these
-  effects in isolation: pure computation, world changes, printing, and
-  budgets.
+  job's world, and `swap!`, `reset!`, `vswap!` and the like on atoms and
+  volatiles created outside the job are refused (`L3.job.host-mutation`). Interop and
+  array writes on outside objects are not refused yet: a job isolates code
+  that avoids them. The first version supports exactly these effects in
+  isolation: pure computation, world changes, printing, and budgets.
 
 **Affine resources.** A budget is a resource: it can be split and moved but
 not copied. Reserving steps for a job moves them out of the parent's budget,
-and unused steps return when the job settles. Resources are checked
-dynamically: using one that has already been consumed is an error.
+and unused steps return when the job settles (L3.budget.nesting). General
+affine resources, checked dynamically so that using a consumed one is an
+error, are planned (`L3.affine.reuse`).
 
 ## Compilation (L4)
 

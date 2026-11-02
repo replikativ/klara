@@ -1,6 +1,8 @@
 # Performance: where this design can go
 
-Status: assessment and plan, written after P1–P5 of this iteration. The
+Status: assessment and plan, written after P1–P5 of this iteration;
+measurements updated through the staged JIT (P7) and the measuring fixes of
+design/09-extensions.md (2026-11-01). The
 question: with a native host (C99, compiled ahead of time; GraalVM native
 image as a first step), could Klara's JIT be competitive with V8 or Graal,
 in completeness and in speed?
@@ -74,6 +76,13 @@ A native host needs its own code emission.
    representations: tagged or unboxed numbers, shapes for maps with known
    keys from profiles, arrays), produced by Klara specializers and checked
    as a refinement of Core. Backends: JVM bytecode directly, then C.
+   Decided 2026-11-01: a direct bytecode emitter comes first, for the subset
+   lowered today: hidden classes, static methods that take the context
+   explicitly, a primitive signature with a boxed `IFn` adapter, real loops
+   wherever they occur, and the same leave protocol and frame states. It is
+   built so that it becomes the IR's first backend, and it removes the
+   dependency of class unloading on soft references (STATUS.md, known
+   gaps). Planned for the next iteration; not started.
 4. **A native backend.** C emitted per candidate and compiled at run time
    (a small C compiler for fast tiers, an optimizing one for the top tier),
    or machine code through an existing code generator; with the runtime's
@@ -124,8 +133,9 @@ with the automatic investor and stops it before timing:
 | Towers | 0.066 | 0.26 | 30 | 0.48 | 1.85 | 7.3 |
 | List | 0.013 | 0.035 | 22 | 0.063 | 1.77 | 4.7 |
 
-Towers and List vary between runs with the investor's choices (whether the
-default specializer's inlining of a small callee measures as faster).
+Towers and List varied between runs with the investor's choices (whether the
+default specializer's inlining of a small callee measured as faster); the
+next paragraph explains why, and the table after it is the result.
 
 **Why they varied (2026-11-01).** Three causes, none of them the choices
 themselves: installed by hand and alternated in one JVM, as-is and the
@@ -161,9 +171,25 @@ same List decisions measured 0.077 and 0.13 ms in consecutive sessions of
 one JVM). What remains between Klara and Clojure on Towers and List is the
 per-call cost of compiled code (the context fetch, the meter), not a choice.
 
-All results agree. The interpreter is 500–1300× slower than V8; compiled
-Mandelbrot is at Clojure's speed and within 1.3× of V8, the others 12–40×
-behind V8. What the benchmarks taught the backend:
+**After the measuring fixes (2026-11-01).** Each benchmark in a JVM of its
+own, after the investor has run, on a loaded machine (load average 4–6);
+node was not rerun:
+
+| benchmark | Clojure (HotSpot) | Klara compiled | Klara / Clojure |
+|---|---|---|---|
+| Mandelbrot | 40 | 54 | 0.8–1.3 (noisy) |
+| Sieve | 0.0164 | 0.0187 | 1.1 |
+| Towers | 0.748 | 0.757 | 1.0 |
+| List | 0.061 | 0.102 | 1.7 |
+
+The decisions are now stable. List's gap is the cost of a call between
+compiled definitions, about 24 ns against 2 ns for a Clojure call, which the
+bytecode backend (path step 3) addresses.
+
+All results agree. The interpreter is 500–1300× slower than V8. In the
+first table compiled Mandelbrot was within 1.3× of V8 and the others 12–40×
+behind it; after the investor and record fixes, Mandelbrot and Sieve were
+within 1.1× of V8, Towers 7.3× and List 4.7× behind. What the benchmarks taught the backend:
 
 - **Loops must be host loops** (not self-applied functions) so the host
   keeps their locals primitive: Mandelbrot 390 → 79 ms.

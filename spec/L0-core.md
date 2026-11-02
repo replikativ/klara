@@ -118,17 +118,24 @@ conditionals enabled for the feature `:klara`. `*read-eval*` is false.
 
 `L0.surface.special` The special forms are `def`, `if`, `do`, `let*`,
 `loop*`, `recur`, `fn*`, `letfn*`, `quote`, `throw`, `try`, `.`, `new`, plus
-`klara.stage/code`, `klara.stage/esc`, `klara.effect/handle`. Clojure's macros
+`klara.stage/code` and `klara.stage/esc`; `ns`, `in-ns`, `require` and
+`defmacro` are directives (L1.module.require). `klara.effect/handle` is a
+macro over the intrinsic `handle*`. Clojure's macros
 (`defn`, `let`, `when`, `cond`, `->`, ...) are expanded by their host
 definitions, and their expansions are expanded again.
 
 `L0.surface.resolve` A symbol in operator or value position resolves, in
 order, to: a local; a definition in the current namespace, then a referred
-or aliased definition; a host function of `clojure.core` that is in the
-trusted table; a host class. Otherwise expansion fails with
+or aliased definition; a host var of `clojure.core` not listed in
+L0.surface.unsupported (a macro is expanded, a function called as a host
+function); a host class. Otherwise expansion fails with
 `L1.resolve.unbound`.
 
 `L0.surface.unsupported` `binding`, `set!`, `var`, `alter-var-root`,
-`intern`, `eval`, `deftype`, `defrecord`, `defprotocol`, `reify` (the
-Clojure form), `gen-class`, `case*` and `monitor-enter` are rejected with
-this rule. Klara's `case` is a macro over `=`.
+`intern`, `eval`, `deftype`, `defprotocol`, `extend-type`,
+`extend-protocol`, `reify` (the Clojure form), `gen-class`, `definterface`,
+`proxy`, `case*`, `monitor-enter`, `monitor-exit`, `with-redefs`,
+`with-redefs-fn`, `load`, `load-file`, `use`, `import`, `refer`,
+`find-var`, `resolve`, `ns-resolve`, `future`, `pmap`, `agent`, `send` and
+`send-off` are rejected with this rule (`require` only as a value: in operator
+position it is a directive, L1.module.require). Klara's `case` is a macro over `=`.

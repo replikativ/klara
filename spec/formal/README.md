@@ -7,9 +7,12 @@ specification; ansatz compiles it to Clojure, so it is also an executable
 reference interpreter.
 
 ```sh
-clojure -M:formal:test-formal   # check every definition and theorem, run the differential tests
+clojure -M:formal:test-formal   # check every definition and theorem, run the differential tests (500 programs)
 KLARA_DIFF_SEEDS=5000 clojure -M:formal:test-formal
 ```
+
+The `:formal` alias expects an [ansatz](https://github.com/replikativ/ansatz)
+checkout next to this repository (`../ansatz`, see `deps.edn`).
 
 ## Files
 
@@ -21,6 +24,7 @@ KLARA_DIFF_SEEDS=5000 clojure -M:formal:test-formal
 | `src/klara/formal/checker.clj` | The checker's head rules are steps; a step preserves the terminal configurations reached |
 | `src/klara/formal/certify.clj` | The ansatz certifier for proof-carrying candidates (L4.check.certificate) |
 | `cases/certified_identity.clj` | A candidate admitted by proof: `(* x 1)` replaced by `x` for 64-bit integers |
+| `cases/proof_search.clj` | Proof search as guest code: a Klara program looks for the certificate in a budgeted job |
 | `src/klara/formal/bridge.clj` | The trusted bridge: quoting real Core terms into `Tm`, running the model, observations |
 | `src/klara/formal/gen.clj` | A seeded generator of Klara programs inside the fragment |
 | `test/klara/formal/` | Proof check and differential tests |
@@ -47,18 +51,33 @@ compiler. Forms outside the fragment are reported, not compared.
 | `wsb-WS` | `run`'s closedness check is sound | L2.run.closed |
 | `run-quote` | `(run (code t))` steps to `t` for binder- and escape-free `t` | L2.run.context |
 
-| `beta-step`, `fix-step` | a call of a function on a value steps to the substituted body | L4.check.beta |
+The checker's head rules, each proved for the fragment's form of the rule
+(not the implementation's general one):
+
+| Theorem | Statement | Rules |
+|---|---|---|
+| `beta-step`, `fix-step` | a call of a one-parameter function (curried) on a value steps to the substituted body | L4.check.beta, one argument; the implementation goes through L4.check.let-app, which is not proved |
 | `let-value-step` | a let of a value steps to the substituted body | L4.check.let-value |
 | `if-true-step`, `if-false-step` | an if on a constant steps to the selected branch | L4.check.if-constant |
-| `prim-step` | a primitive on constants steps to its result when it succeeds | L4.check.prim |
+| `prim-step` | one of the model's five integer primitives (`+ - * = <`) on constants steps to its result when it succeeds | L4.check.prim, for those five; not the implementation's table of pure host functions |
 | `delta-step`, `pin-step` | a late or pinned global steps to its definition | L4.check.delta |
 | `step-equiv` | a configuration and its step reach the same terminal configurations | composition |
 | `ev-prim-lit`, `ev-prim-l`, `ev-prim-r`, `step-of-ev` | a step inside nested arithmetic is a step of the operand it is in | certificates for straight-line integer code |
-| `speculate-sound` | `(if g a r)` reaches what `r` reaches when `a` does, for any guard value | L4.check.speculate |
+| `speculate-sound` | `(if g a r)` reaches what `r` reaches when `a` is equivalent to `r` unconditionally, for any guard value | L4.check.speculate, in its trivial form only: the implemented rules relate `a` to `r` under the guard (L4.check.speculate-assume, L4.check.speculate-value), which is not proved |
 
-Not yet proved: rewriting under binders (needs contextual equivalence),
-`L4.check.let-app`, that the CEK machine refines `step` (tested
-differentially), and the bridge between named Core and `Tm` (tested).
+Not yet proved, though specified and tested (including adversarially,
+`test/klara/adversarial_test.clj`):
+
+- rewriting under binders (comparing function bodies needs contextual
+  equivalence);
+- the checker rules `L4.check.let-app`, `L4.check.speculate-assume`,
+  `L4.check.speculate-value`, `L4.check.fix` (fixpoint induction),
+  `L4.check.bool-let`, `L4.check.commute`, `L4.check.delta-data`,
+  `L4.check.self`, `L4.check.const`, `L4.check.code`, `L4.check.alpha`, and
+  the ownership judgment `L4.check.in-place` with its erasure theorem;
+- the effect analysis (`L4.facts.effect`) and lowering (`L4.lower.*`);
+- that the CEK machine refines `step` (tested differentially), and the
+  bridge between named Core and `Tm` (tested).
 
 ## Proof-carrying candidates
 
@@ -76,9 +95,10 @@ executable checks that its argument is a long and runs the reference
 otherwise. `cases/certified_identity.clj` replaces `(* x 1)` by `x`, which
 the definitional checker rightly rejects (it throws for non-numbers).
 
-Current limits: unary functions on integers; the proof is written by hand
-(the lemmas `equiv-of-reach`, `reach-beta`, `reach-prim` keep it short).
-Proof search as a budgeted job and theorems as world definitions are next.
+Current limits: unary functions on integers. Proofs are written by hand
+(the lemmas `equiv-of-reach`, `reach-beta`, `reach-prim` keep them short)
+or searched by Klara programs in budgeted jobs (`klara.proof/certify`,
+`cases/proof_search.clj`). Theorems as world definitions are next.
 
 ## The bridge
 
