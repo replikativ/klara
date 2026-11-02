@@ -25,16 +25,19 @@
                                                showcases.interpreter-to-compiler/model]))
       (is (:same-specialized r)))))
 
-(deftest speculate-fail-continue  ; L4.check.speculate-assume L4.jit.inline L4.exec.osr L4.exec.mint-safe L2.view.children
+(deftest speculate-fail-continue  ; L4.exec.leave L4.check.speculate-assume L4.jit.inline L4.exec.osr L4.exec.mint-safe L2.view.children
   (let [r (run "showcases/speculate_fail_continue.clj")]
-    (testing "a loop that performs an effect compiles only by speculating on its cold branch"
-      (is (= [:rejected :ready 1] [(:without-speculation r) (:status r) (:speculations r)])))
+    (testing "a loop that performs an effect compiles, its perform leaving; speculating on the cold branch inlines the helper"
+      (is (= [:ready :ready 1] [(:without-speculation r) (:status r) (:speculations r)]))
+      (is (not (some #{'showcases.speculate-fail-continue/fee} (:without-speculation-premises r))))
+      (is (some #{'showcases.speculate-fail-continue/fee} (:premises r))))
     (testing "the refund leaves compiled code once; the effect happens once; the result is the interpreter's"
       (is (= [true 1 :left] [(:same-result r) (:reviews r) (:left-at-refund r)])))
     (testing "after the effect the loop runs compiled again"
       (is (pos? (:reentered-compiled-loop r))))
-    (testing "inlining made the helper a premise: changing it retires the compiled loop, not in the old world"
-      (is (= :interpreted (:after-fee-change-runs r)))
+    (testing "inlining made the helper a premise: changing it retires the speculating loop, not in the old world"
+      (is (= [:left ['showcases.speculate-fail-continue/settle] true]
+             [(:after-fee-change-runs r) (:after-fee-change-premises r) (:after-fee-change-correct r)]))
       (is (:old-world-keeps r))
       (is (#{:compiled :left} (:old-world-path r))))))
 

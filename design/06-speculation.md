@@ -38,9 +38,10 @@ Leaving points are:
 The inverse mapping enters compiled code from a machine state, which is
 on-stack replacement for loops.
 
-**The obligation** (specified as `L4.exec.frame-state`, proved for the
-formal fragment): a frame state rebuilt at a leaving point is a state the
-reference reaches from the same input and world.
+**The obligation** (specified as `L4.exec.frame-state`; tested, not yet
+proved: the stress mode leaves at every function entry and the results are
+compared with the interpreter's): a frame state rebuilt at a leaving point
+is a state the reference reaches from the same input and world.
 
 **Stack traces** come from the same data. Prepared nodes keep the source
 position of their form; the continuation is a real stack; a Klara error
@@ -132,10 +133,13 @@ speculation is therefore not where Klara's JIT earns its keep on the JVM. It
 speculates on what the host cannot see:
 
 - **cold branches** (the profile never saw them taken): the hot path compiles
-  even when the cold one performs effects, calls host code or uses
-  constructs the backend does not compile; reaching it leaves to the
-  interpreter, which continues and re-enters the compiled loop at the next
-  iteration (on-stack replacement);
+  even when the cold one calls host code or uses constructs the backend
+  does not compile, and is specialized (callees inlined) as if the cold
+  branch did not exist; reaching it leaves to the interpreter, which
+  continues and re-enters the compiled loop at the next iteration (on-stack
+  replacement). Effects need no speculation: a `perform` or `handle` in
+  compiled code leaves to the interpreter, which performs it with the
+  handler's continuation (L4.exec.leave);
 - **stable values** of arguments (showcase 1: an interpreter specialized to
   its program);
 - **definitions**: inlining small hot callees makes their generations

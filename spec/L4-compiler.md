@@ -286,9 +286,10 @@ any other host function in a definition makes it impure. Otherwise
 
 `L4.lower.subset` The backend accepts terms without `:interop`,
 `:code`, `:hole`, `:def` and `:letrec`, without a `recur` inside a `try`, a
-`finally` clause that may leave (L4.lower.try), or any intrinsic (`perform`,
-`handle`, printing, atoms, `lift`, time, world and job operations), except in the else branch
-of a speculation, which is left to the interpreter (L4.exec.leave). Others
+`finally` clause that may leave (L4.lower.try), or any intrinsic (printing,
+atoms, `lift`, time, world and job operations) other than `perform` and
+`handle`, which compiled code applies by leaving (L4.exec.leave), except in
+the else branch of a speculation, which is left to the interpreter. Others
 give `:rejected` with this rule.
 
 `L4.lower.try` The backend lowers `try` to a host try. A leave
@@ -307,7 +308,10 @@ time of the call.
 
 `L4.lower.calls` Calls to closures go through the runtime: a closure with an
 installed candidate valid in `E` runs compiled; any other closure runs in a
-nested machine whose unhandled effects leave (L4.exec.leave).
+nested machine whose unhandled effects leave (L4.exec.leave). A function
+created by compiled code and called by the interpreter runs in the
+interpreter's machine, so an effect it performs reaches the caller's
+handlers as the interpreted function's would (spec/cases/L4-exec-lambda-effect.clj).
 
 `L4.lower.steps` Compiled code charges one step per function entry and loop
 iteration when it runs under a finite budget.
@@ -350,9 +354,12 @@ candidate whose premises do not hold in the world is refused.
 anything, when a speculation fails (the else branch of
 `(if guard specialized reference)` marked as a speculation), when a callee
 it runs in a nested machine performs an operation that callee does not
-handle, and when the budget runs out (inside compiled code or in such a
-callee). The machine continues from the rebuilt state; the executable
-reports `:last-path :left`.
+handle, when the budget runs out (inside compiled code or in such a
+callee), at a `perform` or `handle` it calls (the interpreter finds the
+handler, captures the continuation and resumes it, multi-shot included,
+from the state it would itself have reached at that call), and when it
+calls a continuation. The machine continues from the rebuilt state; the
+executable reports `:last-path :left`.
 
 `L4.exec.frame-state` Every point where compiled code can leave records a
 frame state: the interpreter node to continue at, the environment built from
@@ -371,7 +378,9 @@ the interpreter enters compiled code for that loop again at its next
 iteration, if the candidate still holds in the current world and mint
 (L4.exec.valid, L4.exec.mint-safe). The compiled loop continues from the
 same arguments the interpreter would have bound, so the result is the
-same. `(compiler/explain f)` counts these entries as `:reentries`.
+same. `(compiler/explain f)` counts these entries as `:reentries`. An
+iteration entered this way costs one step, as interpreted (L4.lower.steps,
+spec/cases/L4-lower-steps-osr.clj).
 
 `L4.exec.provenance` Installed code belongs to the world: the definition
 keeps its value and generation and lists its executables, so a fork or an

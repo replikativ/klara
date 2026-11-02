@@ -65,6 +65,11 @@
     :klara-defs "(defn gen [n] (loop [i 0 acc 0] (if (< i n) (recur (inc i) (+ acc (perform :next i))) acc))) (defn run-gen [n] (handle {:next (fn [k x] (k (* 2 x)))} (gen n)))"
     :klara-call "(run-gen 20000)"
     :defs "(defn nxt [x] (* 2 x)) (defn gen [n] (loop [i 0 acc 0] (if (< i n) (recur (inc i) (+ acc (nxt i))) acc)))" :call "(gen 20000)"}
+   ;; the same with work between effects (a 16-step recurrence per item): compiled code runs it, leaving only at the effect
+   {:name :generator-work :twin true
+    :klara-defs "(defn work [x] (loop [j 16 q x] (if (> j 0) (recur (dec j) (+ (quot q 2) j)) q))) (defn gen [n] (loop [i 0 acc 0] (if (< i n) (recur (inc i) (+ acc (work (perform :next i)))) acc))) (defn run-gen [n] (handle {:next (fn [k x] (k (* 2 x)))} (gen n)))"
+    :klara-call "(run-gen 20000)"
+    :defs "(defn work [x] (loop [j 16 q x] (if (> j 0) (recur (dec j) (+ (quot q 2) j)) q))) (defn nxt [x] (* 2 x)) (defn gen [n] (loop [i 0 acc 0] (if (< i n) (recur (inc i) (+ acc (work (nxt i)))) acc)))" :call "(gen 20000)"}
    ;; enumeration by a multi-shot handler (each flip resumed twice); twin: plain recursion
    {:name :multishot :twin true
     :klara-defs "(defn tree [d] (if (= d 0) 1 (if (perform :flip) (tree (dec d)) (+ 1 (tree (dec d)))))) (defn enum [d] (handle {:flip (fn [k] (+ (k true) (k false)))} (tree d)))"

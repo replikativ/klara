@@ -53,7 +53,7 @@
 ;; ---------------------------------------------------------------------------
 ;; Leaving
 
-(definterface ILeave (state []) (addFrames [frames]))
+(definterface ILeave (state []) (addFrames [frames]) (addFrame [frame]))
 
 ;; state is one of
 ;;   {:mode :eval :node n :env env}      continue at node n
@@ -63,7 +63,8 @@
 (deftype Leave [^:volatile-mutable st]
   ILeave
   (state [_] st)
-  (addFrames [this frames] (set! st (update st :frames into frames)) this))
+  (addFrames [this frames] (set! st (update st :frames into frames)) this)
+  (addFrame [this frame] (set! st (assoc st :frames (conj (:frames st) frame))) this))
 
 (defn leave?
   "The leave state of `x` if it is a Leave, else nil."
@@ -75,7 +76,7 @@
 (defn leave-up
   "A Leave passing out of a let: add the let's frame and pass it on."
   [^Leave l frame]
-  (.addFrames l [frame]))
+  (.addFrame l frame))
 
 (defn- array-local?
   "Does the host know local `a` (in macro environment env) to be an array?"
@@ -180,6 +181,16 @@
   [fn-node captured]
   (Closure. (.-term ^klara.runtime.prepare.Fn fn-node) fn-node (mapv prims/freeze captured) nil))
 
+(def leave-intrinsics
+  "Intrinsics that compiled code calls by leaving (L4.exec.leave): the
+   interpreter applies them to the rebuilt state, as it would itself."
+  '#{klara.effect/perform klara.effect/handle*})
+
+(defn leave-intrinsic
+  "Leave to apply intrinsic `f` to `args` (owned values frozen, L4.check.in-place)."
+  [f args]
+  (leave {:mode :apply :f f :args (mapv prims/freeze args)}))
+
 (defn leave-apply
   "Leave at a function entry: the interpreter applies the function again
    (owned arguments frozen, L4.check.in-place)."
@@ -264,6 +275,18 @@
 ;; A function compiled code creates: host code calls it through IFn and gets
 ;; values; compiled code calls the raw function and sees its Leave.
 (deftype Lambda [^clojure.lang.IFn raw]
+  ;; the interpreter runs a compiled function in its own machine: a Leave
+  ;; resumes there, with the caller's handlers in the continuation
+  v/IExecutable
+  (-execute [_ st args]
+    (m/set-context! (:world st) (:mint st) (:dyn st))
+    (let [r (apply raw args)]
+      (if-let [l (leave? r)]
+        (resume st l)
+        (assoc st :mode :ret :ctl r :env nil))))
+  (-call [_ world mint dyn args] (apply raw args))
+  (-direct [_ world] nil)
+  (-describe [_] {:kind :lambda})
   clojure.lang.Fn
   clojure.lang.IFn
   (invoke [_] (complete (.invoke raw)))
@@ -290,7 +313,10 @@
     (let [^objects c (m/current-context)
           r (v/-call f (aget c 0) (aget c 1) (aget c 2) args)]
       (if (identical? r v/fallback) (nested f args) r))
-    (or (instance? Closure f) (instance? klara.runtime.value.Continuation f) (m/intrinsic? f))
+    ;; a continuation resumes in the interpreter, in the caller's machine
+    (instance? klara.runtime.value.Continuation f)
+    (leave {:mode :apply :f f :args (mapv prims/freeze args)})
+    (or (instance? Closure f) (m/intrinsic? f))
     (nested f args)
     ;; the same rule as the interpreter (L0.eval.not-fn)
     (not (instance? clojure.lang.IFn f))
@@ -339,8 +365,9 @@
   (case (:op t)
     (:const :local :global :host :fn :recur :throw) false
     :app (let [f (:fn t)]
-           (not (or (:recur t) (= :host (:op f))
-                    (and (= :const (:op f)) (keyword? (:value f))))))
+           (or (and (= :host (:op f)) (contains? leave-intrinsics (:name f)))
+               (not (or (:recur t) (= :host (:op f))
+                        (and (= :const (:op f)) (keyword? (:value f)))))))
     :if (or (boolean (:speculate t)) (boolean (some may-leave? (t/children t))))
     :let (or (some? (hint-class (:tag t))) (boolean (some may-leave? (t/children t))))
     (boolean (some may-leave? (t/children t)))))
@@ -470,6 +497,9 @@
                                         (list 'if tick-form
                                               (list 'klara.compile.lower/leave-apply (constant fnode) (vec free) (vec params))
                                               (go body (.-body a) (into (vec free) params) []))))
+                       ;; L4.exec.leave: perform and handle are applied by the interpreter
+                       (and (= :host (:op f)) (contains? leave-intrinsics (:name f)))
+                       (list 'klara.compile.lower/leave-intrinsic (constant (m/host-value (:name f))) (vec args))
                        (and (= :host (:op f)) (= 'clojure.core/aget (:name f)) (= 2 (count args)))
                        (list* 'klara.compile.lower/array-get args)
                        (and (= :host (:op f)) (= 'clojure.core/alength (:name f)) (= 1 (count args)))
@@ -593,7 +623,8 @@
   (some (fn [n]
           (cond (contains? unsupported (:op n)) (:op n)
                 (and (= :host (:op n)) (m/intrinsic? (m/host-value (:name n)))
-                     (not (contains? acct/compiled (:name n))))
+                     (not (contains? acct/compiled (:name n)))
+                     (not (contains? leave-intrinsics (:name n))))
                 (:name n)
                 ;; L4.lower.try: the host does not recur across a try, and a finally
                 ;; clause runs in compiled code only where it cannot leave

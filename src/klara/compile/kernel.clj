@@ -122,6 +122,17 @@
 
 (defn- candidate-of [^Executable e] (.-cand e))
 
+;; An OSR entry: the hook has checked validity and mint; no argument guards
+(v/deftype-callable OsrEntry [cand ^clojure.lang.IFn host-fn]
+  v/IExecutable
+  (-execute [this st args]
+    (m/set-context! (:world st) (:mint st) (:dyn st))
+    (let [r (apply host-fn args)]
+      (if-let [l (lower/leave? r)] (lower/resume st l) (ret st r))))
+  (-call [this world mint dyn args] (apply host-fn args))
+  (-direct [this world] nil)
+  (-describe [this] {:name (:name cand) :osr true}))
+
 (defn- attach-osr!
   "L4.exec.osr: the candidate's inner functions (loops) can be entered from
    the interpreter, where the candidate's leaves continue, when the
@@ -129,10 +140,17 @@
   [cand entries]
   (doseq [[fnode factory] entries]
     (.setOsr ^klara.runtime.prepare.IOsr fnode
-             (fn [^klara.runtime.value.Closure self world mint]
-               (when (and (or (nil? mint) (:mint-safe cand)) (valid? cand world))
+             ;; validity cached per world id, as for executables: with effects
+             ;; leaving compiled code, re-entries happen once per iteration
+             (let [validity (volatile! nil)]
+              (fn [^klara.runtime.value.Closure self world mint]
+               (when (and (or (nil? mint) (:mint-safe cand))
+                          (let [^objects v @validity]
+                            (if (and v (identical? (w/id world) (aget v 0)))
+                              (aget v 1)
+                              (let [r (valid? cand world)] (vreset! validity (object-array [(w/id world) r])) r))))
                  (.incrementAndGet ^java.util.concurrent.atomic.AtomicLong (:reentries cand))
-                 (executable (assoc cand :host-fn (apply factory (.-env self)) :guards nil)))))))
+                 (->OsrEntry cand (apply factory (.-env self)))))))))
 
 ;; ---------------------------------------------------------------------------
 ;; Dispatch table (L4.exec.install, L4.retain.dispatch)

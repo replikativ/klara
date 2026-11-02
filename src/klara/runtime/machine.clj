@@ -588,20 +588,24 @@
                   (set-rec! r (Closure. (.-term f) f (mapv #(nth env' %) (.-captured f)) mint)))
                 (next! regs :eval (.-body c) env' k world mint dyn))
             10 (let [^klara.runtime.prepare.Recur c c
-                     self (let [x (nth env (.-slot c))] (if (instance? RecRef x) @x x))]
-                 (if (and (.-all-imm c) (nil? (.-basis ^Closure self)) (not (charge! (:meter dyn))))
+                     self (let [x (nth env (.-slot c))] (if (instance? RecRef x) @x x))
+                     fast (and (.-all-imm c) (nil? (.-basis ^Closure self)))
+                     osr (when fast (.osr ^klara.runtime.prepare.IOsr (.-node ^Closure self)))
+                     compiled (when osr (osr self world mint))]
+                 (cond
+                   ;; L4.exec.osr: compiled code for this loop exists and holds here;
+                   ;; its entry charges this iteration's step (L4.lower.steps)
+                   compiled
+                   (next! regs :apply [compiled (imm-all (.-args c) env world mint dyn ctx) nil] env k world mint dyn)
+                   (and fast (not (charge! (:meter dyn))))
                    ;; a loop iteration: re-enter the arity directly (L0.eval.tail)
                    (let [^Closure self self
                          fnode (.-node self)
                          ^klara.runtime.prepare.Arity a (nth (.-arities ^klara.runtime.prepare.Fn fnode) (.-arity c))
-                         args (imm-all (.-args c) env world mint dyn ctx)
-                         osr (.osr ^klara.runtime.prepare.IOsr fnode)
-                         compiled (when osr (osr self world mint))]
-                     (if compiled
-                       ;; L4.exec.osr: compiled code for this loop exists and holds here
-                       (next! regs :apply [compiled args nil] env k world mint dyn)
-                       (do (record-entry! dyn self args true)
-                           (next! regs :eval (.-body a) (bind-args self a args true) k world mint dyn))))
+                         args (imm-all (.-args c) env world mint dyn ctx)]
+                     (record-entry! dyn self args true)
+                     (next! regs :eval (.-body a) (bind-args self a args true) k world mint dyn))
+                   :else
                  (let [[vals remaining] (if (.-all-imm c)
                                         [(imm-all (.-args c) env world mint dyn ctx) nil]
                                         (imm-prefix (.-args c) env world mint dyn ctx))]
