@@ -117,19 +117,37 @@
               (if (and (.-rest? a) (>= n (.-nparams a))) i (recur (inc i))))
             (fail :L0.eval.arity (str "wrong number of arguments (" n ") passed to " f))))))))
 
+(defn- owning
+  "A vector owning array a (no copy for up to 32 elements)."
+  [^objects a]
+  (clojure.lang.LazilyPersistentVector/createOwning a))
+
+(defn- prepend
+  "[x] followed by the elements of vector v."
+  [x v]
+  (let [n (count v) a (object-array (inc n))]
+    (aset a 0 x)
+    (loop [i 0] (when (< i n) (aset a (inc i) (nth v i)) (recur (inc i))))
+    (owning a)))
+
 (defn- bind-args
   "The body environment: captured locals, the function itself if used, the
    parameters and (for a call) the rest argument as a seq, or (for recur) the
    rest argument as given."
   [^Closure f ^klara.runtime.prepare.Arity a args recur?]
   (let [env (.-env f)
-        env (if (.-self? a) (conj env f) env)
+        m (count env)
+        self? (.-self? a)
         n (.-nparams a)
-        env (loop [env env i 0]
-              (if (< i n) (recur (conj env (nth args i)) (inc i)) env))]
-    (if (.-rest? a)
-      (conj env (if recur? (nth args n) (seq (subvec (vec args) n))))
-      env)))
+        rest? (.-rest? a)
+        base (if self? (inc m) m)
+        arr (object-array (cond-> (+ base n) rest? inc))]
+    (loop [i 0] (when (< i m) (aset arr i (nth env i)) (recur (inc i))))
+    (when self? (aset arr m f))
+    (loop [i 0] (when (< i n) (aset arr (+ base i) (nth args i)) (recur (inc i))))
+    (when rest?
+      (aset arr (+ base n) (if recur? (nth args n) (seq (subvec (vec args) n)))))
+    (owning arr)))
 
 (defn prepare-term
   "Prepare a closed term for evaluation in an empty environment."
@@ -282,13 +300,13 @@
   (let [k (:k st)
         [kind i] (find-handler k op)]
     (if (= kind :handler)
-      (let [captured (vec (take (inc i) k))
-            frame (nth captured i)
-            cont (Continuation. captured (:world st) (:mint st))
+      (let [a (object-array (inc i))
+            below (loop [k k j 0] (if (<= j i) (do (aset a j (first k)) (recur (rest k) (inc j))) k))
+            frame (aget a i)
+            cont (Continuation. (owning a) (:world st) (:mint st))
             handler (get (:handlers frame) op)]
         ;; the handler runs outside its frame, in the handle expression's context
-        (assoc st :mode :apply :ctl [handler (into [cont] args)]
-               :k (nthrest k (inc i)) :world (:world frame) :mint (:mint frame)))
+        (state :apply [handler (prepend cont args)] (:env st) below (:world frame) (:mint frame) (:dyn st)))
       (if-let [d (and (not (and (= kind :stop) (:deopt (nth k i)))) (get-in st [:dyn :defaults op]))]
         (d st args)
         (if (and (= kind :stop) (:deopt (nth k i)))
@@ -384,6 +402,10 @@
     2 (.invoke f (nth args 0) (nth args 1))
     3 (.invoke f (nth args 0) (nth args 1) (nth args 2))
     4 (.invoke f (nth args 0) (nth args 1) (nth args 2) (nth args 3))
+    5 (.invoke f (nth args 0) (nth args 1) (nth args 2) (nth args 3) (nth args 4))
+    6 (.invoke f (nth args 0) (nth args 1) (nth args 2) (nth args 3) (nth args 4) (nth args 5))
+    7 (.invoke f (nth args 0) (nth args 1) (nth args 2) (nth args 3) (nth args 4) (nth args 5) (nth args 6))
+    8 (.invoke f (nth args 0) (nth args 1) (nth args 2) (nth args 3) (nth args 4) (nth args 5) (nth args 6) (nth args 7))
     (apply f args)))
 
 (defn- resolve-global [^klara.runtime.prepare.Global g world dyn]
@@ -398,54 +420,66 @@
 
 (defn- imm-all
   "Evaluate argument nodes known to be immediate (prep/imm-node?)."
-  [args env world mint dyn]
+  [args env world mint dyn ctx]
   (case (count args)
     0 []
-    1 [(imm (nth args 0) env world mint dyn)]
-    2 (let [a (imm (nth args 0) env world mint dyn)] [a (imm (nth args 1) env world mint dyn)])
-    3 (let [a (imm (nth args 0) env world mint dyn) b (imm (nth args 1) env world mint dyn)]
-        [a b (imm (nth args 2) env world mint dyn)])
-    (mapv #(imm % env world mint dyn) args)))
+    1 [(imm (nth args 0) env world mint dyn ctx)]
+    2 (let [a (imm (nth args 0) env world mint dyn ctx)] [a (imm (nth args 1) env world mint dyn ctx)])
+    3 (let [a (imm (nth args 0) env world mint dyn ctx) b (imm (nth args 1) env world mint dyn ctx)]
+        [a b (imm (nth args 2) env world mint dyn ctx)])
+    (let [n (count args) a (object-array n)]
+      (loop [i 0] (when (< i n) (aset a i (imm (nth args i) env world mint dyn ctx)) (recur (inc i))))
+      (owning a))))
 
 (defn- imm-prefix
-  "Evaluate the leading immediate argument nodes. Returns [values remaining],
-   where `remaining` starts at the first non-immediate node (or is nil)."
-  [args env world mint dyn]
-  (loop [args (seq args) out (transient [])]
-    (if (nil? args)
-      [(persistent! out) nil]
-      (let [x (imm (first args) env world mint dyn)]
-        (if (identical? x none)
-          [(persistent! out) args]
-          (recur (next args) (conj! out x)))))))
+  "Evaluate the leading immediate argument nodes of vector `args`. Returns
+   [values remaining], where `remaining` is the vector of nodes from the first
+   non-immediate one (or nil)."
+  [args env world mint dyn ctx]
+  (let [args (if (vector? args) args (vec args))
+        n (count args) a (object-array n)]
+    (loop [i 0]
+      (if (== i n)
+        [(owning a) nil]
+        (let [x (imm (nth args i) env world mint dyn ctx)]
+          (if (identical? x none)
+            [(owning (java.util.Arrays/copyOf a i)) (subvec args i)]
+            (do (aset a i x) (recur (inc i)))))))))
 
 (defn- imm
-  "The value of node `c` if it is immediate, else `none`."
-  [c env world mint dyn]
-  (case (prep/tag c)
-    0 (.-value ^klara.runtime.prepare.Const c)
-    1 (let [x (nth env (.-slot ^klara.runtime.prepare.Local c))]
-        (if (instance? RecRef x) @x x))
-    2 (resolve-global c world dyn)
-    3 (.-value ^klara.runtime.prepare.Host c)
-    4 (let [^klara.runtime.prepare.Fn c c
-            cap (.-captured c)]
-        (Closure. (.-term c) c (case (count cap)
-                                 0 []
-                                 1 [(nth env (nth cap 0))]
-                                 2 [(nth env (nth cap 0)) (nth env (nth cap 1))]
-                                 (mapv #(nth env %) cap))
-                  mint))
-    5 (let [^klara.runtime.prepare.App c c]
-        (if (.-flat c)
-          (let [hf (.-value ^klara.runtime.prepare.Host (.-f c))
-                vals (imm-all (.-args c) env world mint dyn)]
-            (when-not (instance? clojure.lang.IFn hf)
-              (fail :L0.eval.not-fn (str "cannot call " (pr-str hf) ": not a function")))
-            (set-context! world mint dyn)
-            (invoke-host hf vals))
-          none))
-    none))
+  "The value of node `c` if it is immediate, else `none`. `ctx` is the running
+   machine's context array (see run-state), which a flat host call publishes:
+   a lazy sequence it realizes may call Klara code back."
+  [c env world mint dyn ^objects ctx]
+  ;; class tests, most frequent first: cheaper than the interface call of
+  ;; prep/tag on this, the hottest dispatch of the interpreter
+  (cond
+    (instance? klara.runtime.prepare.Local c)
+    (let [x (.nth ^clojure.lang.Indexed env (.-slot ^klara.runtime.prepare.Local c))]
+      (if (instance? RecRef x) @x x))
+    (instance? klara.runtime.prepare.Const c) (.-value ^klara.runtime.prepare.Const c)
+    (instance? klara.runtime.prepare.App c)
+    (let [^klara.runtime.prepare.App c c]
+      (if (.-flat c)
+        (let [hf (.-value ^klara.runtime.prepare.Host (.-f c))
+              vals (imm-all (.-args c) env world mint dyn ctx)]
+          (when-not (instance? clojure.lang.IFn hf)
+            (fail :L0.eval.not-fn (str "cannot call " (pr-str hf) ": not a function")))
+          (aset ctx 0 world) (aset ctx 1 mint) (aset ctx 2 dyn)
+          (invoke-host hf vals))
+        none))
+    (instance? klara.runtime.prepare.Global c) (resolve-global c world dyn)
+    (instance? klara.runtime.prepare.Host c) (.-value ^klara.runtime.prepare.Host c)
+    (instance? klara.runtime.prepare.Fn c)
+    (let [^klara.runtime.prepare.Fn c c
+          cap (.-captured c)]
+      (Closure. (.-term c) c (case (count cap)
+                               0 []
+                               1 [(nth env (nth cap 0))]
+                               2 [(nth env (nth cap 0)) (nth env (nth cap 1))]
+                               (mapv #(nth env %) cap))
+                mint))
+    :else none))
 
 ;; ---------------------------------------------------------------------------
 ;; The driver
@@ -500,14 +534,14 @@
 (defn- step-eval [regs]
   (let [^objects regs regs
         mode (aget regs 0) ctl (aget regs 1) env (aget regs 2) k (aget regs 3)
-        world (aget regs 4) mint (aget regs 5) dyn (aget regs 6)]
+        world (aget regs 4) mint (aget regs 5) dyn (aget regs 6) ctx (aget regs 7)]
       (let [c ctl
-            x (imm c env world mint dyn)]
+            x (imm c env world mint dyn ctx)]
         (if-not (identical? x none)
           (next! regs :ret x env k world mint dyn)
           (case (prep/tag c)
             5 (let [^klara.runtime.prepare.App c c
-                    fv (imm (.-f c) env world mint dyn)
+                    fv (imm (.-f c) env world mint dyn ctx)
                     _ (when-not (identical? fv none) (record-call! dyn c fv))]
                 (cond
                   (identical? fv none)
@@ -515,28 +549,28 @@
                   (and (.-all-imm c) (instance? Closure fv) (nil? (.-basis ^Closure fv)) (not (charge! (:meter dyn))))
                   ;; the common case: an open closure on immediate arguments, entered directly
                   (let [^Closure fv fv
-                        args (imm-all (.-args c) env world mint dyn)
+                        args (imm-all (.-args c) env world mint dyn ctx)
                         ra (.-recur-arity c)
                         i (if ra (long ra) (select-arity fv (count args)))
                         ^klara.runtime.prepare.Arity a (nth (.-arities ^klara.runtime.prepare.Fn (.-node fv)) i)]
                     (record-entry! dyn fv args (not (.-self-call c)))
                     (next! regs :eval (.-body a) (bind-args fv a args (boolean ra)) k world mint dyn))
                   (.-all-imm c)
-                  (next! regs :apply [fv (imm-all (.-args c) env world mint dyn) (.-recur-arity c) (.-self-call c)] env k world mint dyn)
+                  (next! regs :apply [fv (imm-all (.-args c) env world mint dyn ctx) (.-recur-arity c) (.-self-call c)] env k world mint dyn)
                   :else
-                  (let [[vals remaining] (imm-prefix (.-args c) env world mint dyn)]
+                  (let [[vals remaining] (imm-prefix (.-args c) env world mint dyn ctx)]
                     (if (nil? remaining)
                       (next! regs :apply [fv vals (.-recur-arity c) (.-self-call c)] env k world mint dyn)
                       (next! regs :eval (first remaining) env
-                             (conj k {:f :args :node c :todo (next remaining) :vals (into [fv] vals) :env env :recur (.-recur-arity c)})
+                             (conj k {:f :args :node c :todo (subvec remaining 1) :vals (prepend fv vals) :env env :recur (.-recur-arity c)})
                              world mint dyn)))))
             6 (let [^klara.runtime.prepare.Let c c
-                    x (imm (.-init c) env world mint dyn)]
+                    x (imm (.-init c) env world mint dyn ctx)]
                 (if (identical? x none)
                   (next! regs :eval (.-init c) env (conj k {:f :let :body (.-body c) :env env}) world mint dyn)
                   (next! regs :eval (.-body c) (conj env x) k world mint dyn)))
             8 (let [^klara.runtime.prepare.If c c
-                    x (imm (.-test c) env world mint dyn)]
+                    x (imm (.-test c) env world mint dyn ctx)]
                 (if (identical? x none)
                   (next! regs :eval (.-test c) env (conj k {:f :if :node c :then (.-then c) :else (.-else c) :env env}) world mint dyn)
                   (do (record-branch! dyn c x)
@@ -560,7 +594,7 @@
                    (let [^Closure self self
                          fnode (.-node self)
                          ^klara.runtime.prepare.Arity a (nth (.-arities ^klara.runtime.prepare.Fn fnode) (.-arity c))
-                         args (imm-all (.-args c) env world mint dyn)
+                         args (imm-all (.-args c) env world mint dyn ctx)
                          osr (.osr ^klara.runtime.prepare.IOsr fnode)
                          compiled (when osr (osr self world mint))]
                      (if compiled
@@ -569,12 +603,12 @@
                        (do (record-entry! dyn self args true)
                            (next! regs :eval (.-body a) (bind-args self a args true) k world mint dyn))))
                  (let [[vals remaining] (if (.-all-imm c)
-                                        [(imm-all (.-args c) env world mint dyn) nil]
-                                        (imm-prefix (.-args c) env world mint dyn))]
+                                        [(imm-all (.-args c) env world mint dyn ctx) nil]
+                                        (imm-prefix (.-args c) env world mint dyn ctx))]
                  (if (nil? remaining)
                    (next! regs :apply [self vals (.-arity c)] env k world mint dyn)
                    (next! regs :eval (first remaining) env
-                          (conj k {:f :args :node c :todo (next remaining) :vals (into [self] vals) :env env :recur (.-arity c)})
+                          (conj k {:f :args :node c :todo (subvec remaining 1) :vals (prepend self vals) :env env :recur (.-arity c)})
                           world mint dyn)))))
             11 (next! regs :eval (.-ex ^klara.runtime.prepare.Throw c) env (conj k {:f :throw}) world mint dyn)
             12 (let [^klara.runtime.prepare.Try c c]
@@ -606,19 +640,19 @@
 (defn- step-ret [regs]
   (let [^objects regs regs
         mode (aget regs 0) ctl (aget regs 1) env (aget regs 2) k (aget regs 3)
-        world (aget regs 4) mint (aget regs 5) dyn (aget regs 6)]
+        world (aget regs 4) mint (aget regs 5) dyn (aget regs 6) ctx (aget regs 7)]
       (if (empty? k)
         (state :done ctl env k world mint dyn)
         (let [x ctl f (first k) k (rest k)]
           (case (:f f)
             :args (let [vals (conj (:vals f) x)]
-                    (if-let [todo (seq (:todo f))]
-                      (let [[more remaining] (imm-prefix todo (:env f) world mint dyn)
-                            vals (into vals more)]
+                    (if-let [todo (not-empty (:todo f))]
+                      (let [[more remaining] (imm-prefix todo (:env f) world mint dyn ctx)
+                            vals (reduce conj vals more)]
                         (if (nil? remaining)
                           (next! regs :apply [(first vals) (subvec vals 1) (:recur f) (self-call-frame? f)] env k world mint dyn)
                           (next! regs :eval (first remaining) (:env f)
-                                 (conj k (assoc f :todo (next remaining) :vals vals)) world mint dyn)))
+                                 (conj k (assoc f :todo (subvec remaining 1) :vals vals)) world mint dyn)))
                       (next! regs :apply [(first vals) (subvec vals 1) (:recur f) (self-call-frame? f)] env k world mint dyn)))
             :let (next! regs :eval (:body f) (conj (:env f) x) k world mint dyn)
             :if (do (record-branch! dyn (:node f) x)
@@ -731,10 +765,12 @@
    state map."
   [st]
   (let [saved (.get context)
-        regs (object-array 7)]
+        regs (object-array 8)
+        ctx (object-array 6)]
     ;; world mint dyn, the meter cached per dyn (see meter-of), and the
     ;; continuation of the host call in progress (see constructing)
-    (.set context (object-array 6))
+    (.set context ctx)
+    (aset regs 7 ctx)
     (try
       (loop [st st]
         (let [r (try (drive st regs)

@@ -104,8 +104,13 @@ V8; compiled code is what makes Klara usable.
 
 `clojure -M:bench` compares the interpreter, compiled Klara, SCI and Clojure
 on micro benchmarks in one JVM: good for finding cliffs, not for
-publication. The interpreter pays for frames that SCI does not have and
-runs at 2 to 13 times SCI (from 50–190 times before these):
+publication. It warms each engine for 20 calls or 2 s (an earlier 3-call
+warmup left SCI cold and reported 2 to 13 times). The interpreter pays for
+frames that SCI does not have and runs at 4 to 15 times SCI on plain
+programs, sequential Monte Carlo with multi-shot handlers included (about 7
+times SCI running a plain state machine); programs that perform an effect
+per iteration run at 25 to 30 times (50–190 times on plain programs before
+these):
 
 - Terms are prepared once into nodes with slot environments, resolved host
   functions and inline caches for globals keyed by world id
@@ -114,6 +119,10 @@ runs at 2 to 13 times SCI (from 50–190 times before these):
   nodes without frames, and is split into small step functions: the
   single large driver exceeded the JVM's huge-method limit and was never
   JIT-compiled.
+- Argument vectors, environments and captured continuations are built from
+  arrays rather than transients; immediate nodes are dispatched by class
+  tests; a flat host call publishes the context into the machine's own
+  context array, without a thread-local lookup.
 
 Next: a direct bytecode backend (design/07-performance.md, path step 3),
 then vectorized reductions with a reassociation opt-in and overflow
