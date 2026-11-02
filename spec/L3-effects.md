@@ -18,7 +18,7 @@ as the value of `perform`, with the frame reinstalled (deep handlers).
 
 `L3.cont.multishot` A continuation may be called more than once.
 
-`L3.affine.reuse` (planned) Using an account token (L3.account.token) that
+`L3.affine.reuse` Using an account token (L3.account.token) that
 an operation already consumed raises this rule, however the second use
 reached it (another local, a collection, a closure, a definition, a
 continuation resumed twice). Continuations stay multi-shot; only the second
@@ -46,11 +46,13 @@ does not say). A handler may answer either instead.
 world is a fork of the current `E` (a new world id with the same
 definitions), with the job's default handlers, under the budget
 `(:budget opts)`. It returns an outcome map and never throws for failures
-inside the job.
+inside the job; a budget the current wallet cannot grant raises
+L3.account.insufficient before the job starts.
 
 `L3.job.outcome` An outcome has `:status` (`:done`, `:failed` or
 `:exhausted`), `:world` (the job's final world), `:intents` (deferred
-effects in order), `:spent` (`{:steps n}`) and `:value`, `:error` or
+effects in order), `:spent` (the receipt's spent vector, always with
+`:steps`), `:receipt` (L3.account.receipt) and `:value`, `:error` or
 `:continuation` according to the status.
 
 `L3.job.parallel` `(job/run-all opts thunks)` runs one job per thunk, as
@@ -58,7 +60,10 @@ effects in order), `:spent` (`{:steps n}`) and `:value`, `:error` or
 the same time: each has its own forked world and budget, and the mutations
 L3.job.host-mutation checks are refused on objects created outside it, so
 jobs that avoid unchecked host mutation cannot observe one another. The parent's
-budget is charged with what the jobs spent together.
+budget is charged with what the jobs spent together. `(:budget opts)` is a
+vector granted to each job; the parent's wallet must hold all of them at
+once, or none starts (L3.account.insufficient). A token budget raises this
+rule: split the token and use `job/run`.
 
 `L3.job.profile` With `{:profile false}` in its options, a job (and the jobs
 it starts) does not record profiles (L4.profile.record): measuring code by
@@ -87,7 +92,10 @@ order. Adopting an outcome twice raises `L3.job.adopted`.
 `L3.job.adopted` Adopting the same outcome twice raises this rule.
 
 `L3.job.resume` `(job/resume outcome budget)` continues an `:exhausted`
-outcome's continuation under a new budget and returns a new outcome. An
+outcome's continuation under a new budget, granted from the current wallet
+into a new wallet, and returns a new outcome. The exhausted job settled when
+it stopped, so tokens it took are foreign to the resumed one
+(L3.account.foreign). An
 outcome without a continuation (L3.budget.exhausted) raises this rule.
 
 `L3.job.discard` Dropping an outcome is discarding the job. Nothing needs to
@@ -113,62 +121,73 @@ is `:exhausted` with `:resumable false` and no `:continuation`, and nothing
 the abandoned host call did to the job's world or intents is kept.
 
 `L3.budget.nesting` A nested job's budget is reserved from its parent's
-remaining budget. Steps spent by the nested job count as spent by the parent.
+remaining budget (the `:steps` instance of L3.account.wallet; steps missing
+from a budget are 1000000, and at most what the parent has left is
+reserved). Steps spent by the nested job count as spent by the parent.
 Unused reserved steps return to the parent when the nested job ends.
 
 ## Accounts
 
 Design: design/10-accounting.md.
 
-`L3.account.vector` (planned) A resource vector is a map from keywords to
-exact non-negative amounts (integers, ratios or decimals). Vectors add
-pointwise and are compared pointwise; a missing key is zero. Anything else
-given as a vector raises this rule.
+`L3.account.vector` A resource vector is a map from keywords to
+exact non-negative amounts (integers, ratios or decimals; a decimal is read
+as its exact ratio). Vectors add pointwise and are compared pointwise; a
+missing key is zero and zero entries are dropped. `:steps` must be a whole
+number. Anything else given as a vector raises this rule.
 
-`L3.account.wallet` (planned) The session and every job have a wallet, a
+`L3.account.wallet` The session and every job have a wallet, a
 resource vector. A job's `:budget` (a vector, or a token as in
 L3.account.token) is reserved from the parent's wallet when it starts;
 L3.budget.nesting is the `:steps` instance. `:steps` is spent by the machine
 (L3.budget.steps); `(klara.account/spend! v)` spends `v` from the current
-wallet; `(klara.account/wallet)` returns the current wallet as data.
+wallet; `(klara.account/wallet)` returns the current wallet as data, with
+the steps left inside a job. The session has no step budget: its steps are
+unlimited and not accounted.
 
-`L3.account.mint` (planned) `(klara.account/mint! v)` adds `v` to the
-session's wallet. Inside a job it raises this rule.
+`L3.account.mint` `(klara.account/mint! v)` adds `v` to the
+session's wallet. Inside a job it raises this rule, and so does minting
+`:steps`.
 
-`L3.account.insufficient` (planned) Spending, taking or splitting more than
+`L3.account.insufficient` Spending, taking or splitting more than
 the wallet or token holds raises this rule and changes nothing.
 
-`L3.account.token` (planned) `(klara.account/take v)` moves `v` from the
+`L3.account.token` `(klara.account/take v)` moves `v` from the
 current wallet into a new token. `(klara.account/spend t v)` consumes `t`
 and returns a token holding the rest; `v` is spent. `(klara.account/put t)`
 consumes `t` and returns its vector to the current wallet.
 `(klara.account/balance t)` returns the vector `t` holds as data, consuming
-nothing. Tokens are not data: they compare by identity and `lift` refuses
-them (L2.lift.mutable).
+nothing; `(klara.account/token? x)` tells tokens apart. Tokens are not data:
+they compare by identity and `lift` refuses them (L2.lift.mutable). A token
+taken at the session lives until it is put back. (Limitation: host interop
+on the runtime's objects is trusted, as in L3.job.host-mutation.)
 
-`L3.account.split` (planned) `(klara.account/split t v)` consumes `t` and
+`L3.account.split` `(klara.account/split t v)` consumes `t` and
 returns `[t1 t2]` holding `v` and the rest; `(klara.account/join t1 t2)`
-consumes both and returns a token holding their sum.
+consumes both and returns a token holding their sum; joining a token with
+itself raises L3.affine.reuse.
 
-`L3.account.holds` (planned) `(klara.account/holds? t v)` is true when `t`
+`L3.account.holds` `(klara.account/holds? t v)` is true when `t`
 holds at least `v`, and consumes nothing. A permission for k holders is a
 resource of which k units were minted; each holder holds one.
 
-`L3.account.foreign` (planned) A token belongs to the job (or the session)
-it was taken in. Using it anywhere else raises this rule.
+`L3.account.foreign` A token belongs to the wallet of the job (or
+the session) it was taken in. Using it anywhere else raises this rule,
+checked before L3.affine.reuse.
 `(klara.job/run {:budget t} thunk)` consumes `t` and makes its vector the
 job's grant: the only way a token crosses a job boundary.
 
-`L3.account.settle` (planned) When a job ends, whatever its status, the live
+`L3.account.settle` When a job ends, whatever its status, the live
 tokens taken in it return to its wallet, what it spent is charged to the
-parent (also when the outcome is discarded), and the rest of its wallet
-returns to the parent's.
+parent (also when the outcome is discarded, and also what a host call
+spent before it was abandoned, L3.budget.exhausted), and the rest of its
+wallet returns to the parent's.
 
-`L3.account.receipt` (planned) An outcome's `:receipt` has an `:id`, the
+`L3.account.receipt` An outcome's `:receipt` has an `:id`, the
 `:granted`, `:spent` and `:returned` vectors, and `:postings`, a vector of
 transfers `{:kind :source :destination :resources}` with kinds `:grant`,
 `:consume` and `:return`, as kontor's resource transfers.
 
-`L3.account.conservation` (planned) At every point between steps, for every
+`L3.account.conservation` At every point between steps, for every
 resource, what the session minted equals what wallets and live tokens hold
 plus what was spent; for every receipt, granted equals spent plus returned.

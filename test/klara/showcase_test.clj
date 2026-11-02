@@ -93,3 +93,18 @@
       (is (:agree r)))
     (testing "faster (typically several hundred times)"
       (is (< 20 (:speedup r))))))
+
+(deftest accounting   ; L3.account.holds L3.account.token L3.account.receipt L3.affine.reuse L3.job.parallel
+  (let [r (run "showcases/accounting.clj")]
+    (testing "three readers share three connections; each answer spent half a euro"
+      (is (= 3 (count (:answers r))))
+      (is (= {:eur 1/2} (:spent-per-answer r))))
+    (testing "a fourth reader does not start"
+      (is (= :L3.account.insufficient (:fourth-reader r))))
+    (testing "reusing a consumed token fails its job, which is still charged"
+      (is (= :L3.affine.reuse (:mistake r)))
+      (is (= {:eur 33/4 :db 3} (:wallet r))))
+    (testing "receipts balance and map to kontor transfers"
+      (is (:balanced r))
+      (is (= [:grant :consume :return] (mapv :kind (:kontor r))))
+      (is (= 0.5M (get-in (:kontor r) [1 :resources "eur"]))))))

@@ -4,9 +4,12 @@
 
   A job is a :job frame on the continuation plus a job record (an atom
   holding the job's world, deferred intents and owned host objects). The
-  frame stops effect search (isolation) and owns the budget meter."
+  frame stops effect search (isolation) and owns the budget: the step meter
+  and the job's wallet (klara.runtime.account), which settles when the job
+  ends, whatever its status (L3.account.settle)."
   (:require [klara.lang.builtins :as b]
             [klara.lang.term :as t]
+            [klara.runtime.account :as acct]
             [klara.runtime.machine :as m]
             [klara.runtime.session :as session]
             [klara.runtime.world :as w]))
@@ -19,26 +22,24 @@
 (def default-steps 1000000)
 (def default-intent-limit 10000)
 
-(defn- remaining [^longs meter] (max 0 (aget meter 0)))
-
-(defn- refund!
-  "Return unused reserved steps to the parent meter (L3.budget.nesting)."
+(defn- settle!
+  "Settle the job's wallet into its parent's (L3.account.settle,
+   L3.budget.nesting) and return its receipt (L3.account.receipt)."
   [frame]
-  (when-let [^longs pm (get-in frame [:parent-dyn :meter])]
-    (aset pm 0 (long (+ (aget pm 0) (long (remaining (:meter frame))))))))
-
-(defn- spent [frame] {:steps (- (:reserved frame) (remaining (:meter frame)))})
+  (acct/settle! (:wallet frame) (get-in frame [:parent-dyn :meter]) (:granted frame)))
 
 (defn- outcome [frame status extra]
-  (let [j @(:job frame)]
-    (merge {:status status :world (:world j) :intents (:intents j) :spent (spent frame)
+  (let [j @(:job frame)
+        receipt (settle! frame)]
+    (merge {:status status :world (:world j) :intents (:intents j)
+            :spent (:spent receipt) :receipt receipt
             ::job (:job frame)}
            extra)))
 
 (defn- leave
-  "Pop back into the parent context with `x` as the job's value."
+  "Pop back into the parent context with `x` (an outcome, so the job has
+   settled) as the job's value."
   [st frame x]
-  (refund! frame)
   (assoc st :mode :ret :ctl x :env nil :world (:world frame) :mint (:mint frame) :dyn (:parent-dyn frame)))
 
 (defn- error-data [^Throwable ex]
@@ -86,36 +87,34 @@
                      (swap! (get-in st [:dyn :job]) assoc :world nw)
                      (assoc st :mode :ret :ctl nil :env nil :world nw)))})
 
-(defn- reserve!
-  "Reserve up to `n` steps from the parent meter (L3.budget.nesting)."
-  [parent-meter n]
-  (if-let [^longs pm parent-meter]
-    (let [r (long (min n (max 0 (aget pm 0))))] (aset pm 0 (- (aget pm 0) r)) r)
-    n))
-
 (defn- enter
-  "Push a job frame and switch to the job's dynamic context."
-  [st job steps]
-  (let [meter (long-array [(reserve! (get-in st [:dyn :meter]) steps)])
-        frame {:f :job :job job :meter meter :reserved (aget meter 0)
+  "Push a job frame for `grant` (a vector with the reserved :steps,
+   klara.runtime.account/grant!) and switch to the job's dynamic context."
+  [st job grant]
+  (let [meter (long-array [(long (:steps grant))])
+        wallet (acct/child-wallet (get-in st [:dyn :wallet]) meter (dissoc grant :steps))
+        frame {:f :job :job job :meter meter :wallet wallet :granted grant
                :parent-dyn (:dyn st) :world (:world st) :mint (:mint st)
                :on-return on-return :on-throw on-throw}
-        dyn (cond-> {:meter meter :defaults (job-defaults) :session (get-in st [:dyn :session])
+        dyn (cond-> {:meter meter :wallet wallet :defaults (job-defaults) :session (get-in st [:dyn :session])
                      :job job :on-exhausted on-exhausted}
               ;; L3.job.profile: a job may run without training profiles
               (or (false? (:profile @job)) (get-in st [:dyn :no-profile])) (assoc :no-profile true))]
     (assoc st :k (conj (:k st) frame) :dyn dyn)))
 
-(defn- steps-of [budget] (long (or (:steps budget) default-steps)))
+(defn- grant! [st budget withdrawn]
+  (acct/grant! (:dyn st) budget default-steps withdrawn))
 
 (defn start
-  "Enter a new job from `st`: push its frame, fork the world and switch to
-   the job's context. The caller then sets the control to run inside it."
+  "Enter a new job from `st`: reserve its budget from the current wallet
+   (L3.account.wallet), push its frame, fork the world and switch to the
+   job's context. The caller then sets the control to run inside it."
   [st opts]
-  (let [fork (w/fork (:world st))
+  (let [grant (grant! st (:budget opts) (::withdrawn opts))
+        fork (w/fork (:world st))
         job (atom {:world fork :intents [] :owned #{} :profile (:profile opts)
                    :intent-limit (or (:intent-limit opts) default-intent-limit)})]
-    (assoc (enter st job (steps-of (:budget opts))) :world fork :mint nil)))
+    (assoc (enter st job grant) :world fork :mint nil)))
 
 (b/register! 'klara.job/run                                          ; L3.job.run
   {:kind :intrinsic
@@ -129,15 +128,27 @@
          ;; outside objects), so they may run at the same time. Each runs its
          ;; own machine on its own thread; the parent reserves all budgets
          ;; first and takes back what is left after all have finished.
+         (when (acct/token? (:budget opts))
+           (fail :L3.job.parallel "parallel jobs take a budget vector each; split the token and use job/run"))
          (let [thunks (vec thunks)
                n (count thunks)
-               steps (steps-of (:budget opts))
-               granted (reserve! (get-in st [:dyn :meter]) (* n steps))
+               budget (acct/vector! (or (:budget opts) {}))
+               steps (long (get budget :steps default-steps))
+               ;; the non-step part of every budget is withdrawn at once, so
+               ;; either all jobs start or none does (L3.account.insufficient)
+               each-rest (dissoc budget :steps)
+               _ (when (and (seq each-rest) (pos? n))
+                   (acct/withdraw! (or (get-in st [:dyn :wallet]) (fail :L3.account.wallet "there is no wallet in this context"))
+                                   (acct/scale each-rest n)))
+               granted (let [pm (get-in st [:dyn :meter])]
+                         (if pm (let [^longs pm pm r (min (* n steps) (max 0 (aget pm 0)))] (aset pm 0 (- (aget pm 0) r)) r)
+                             (* n steps)))
                each (quot granted (max n 1))
                run1 (fn [thunk]
                       (let [own (long-array [each])
                             base (assoc st :k () :dyn (assoc (:dyn st) :meter own))
-                            s (assoc (start base (assoc opts :budget {:steps each})) :mode :apply :ctl [thunk []])]
+                            s (assoc (start base (assoc opts :budget {:steps each} ::withdrawn each-rest))
+                                     :mode :apply :ctl [thunk []])]
                         [(:ctl (m/run-state s)) (aget own 0)]))
                results (mapv deref (mapv #(future (run1 %)) thunks))]
            (when-let [^longs pm (get-in st [:dyn :meter])]
@@ -152,7 +163,8 @@
          (when-not (:continuation outcome)
            (fail :L3.job.resume "this job ran out of budget inside a host call and cannot be resumed"))
          (let [{:keys [mode ctl env frames world mint]} (:continuation outcome)
-               st (enter st (::job outcome) (steps-of budget))]
+               ;; a new grant and wallet: tokens of the settled one are foreign now
+               st (enter st (::job outcome) (grant! st budget nil))]
            (assoc st :mode mode :ctl ctl :env env :world world :mint mint
                   :k (reduce conj (:k st) (rseq frames)))))})
 

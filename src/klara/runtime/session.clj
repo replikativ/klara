@@ -9,6 +9,7 @@
             [klara.lang.builtins :as b]
             [klara.lang.expand :as ex]
             [klara.lang.term :as t]
+            [klara.runtime.account :as account]
             [klara.runtime.machine :as m]
             [klara.runtime.value :as v]
             [klara.runtime.world :as w])
@@ -31,6 +32,7 @@
           :history-limit history-limit
           :ns 'user
           :roots roots
+          :wallet (account/root-wallet)                          ; L3.account.wallet
           :out (or out *out*)})))
 
 (defn current-world [session] (:world @session))
@@ -84,7 +86,7 @@
                      (assoc st :mode :ret :ctl nil :env nil :world published)))})
 
 (defn session-dyn [session]
-  {:meter nil :defaults (session-defaults session) :session session :job nil})
+  {:meter nil :wallet (:wallet @session) :defaults (session-defaults session) :session session :job nil})
 
 (defn activation
   "Evaluate a Core term as a top-level activation (L1.context.top)."

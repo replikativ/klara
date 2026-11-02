@@ -1,8 +1,10 @@
 # Accounting: graded tokens at boundaries
 
-Status: designed, being implemented (see Plan at the end). Steps budgets
-(L3.budget.*) and the inferred ownership mode (04-ownership.md) exist; the
-rest of this document is planned. It answers how Klara accounts for more
+Status: vectors, wallets, tokens, settlement and receipts are implemented
+(`klara.runtime.account`, `lib/klara/account.clj`, L3.account.*), with a
+randomized conservation test (`test/klara/account_test.clj`) and a
+showcase (`showcases/accounting.clj`). The declared mode (`defaffine`,
+L4.check.affine) and the formal semantics are planned (Plan, at the end). It answers how Klara accounts for more
 than memory: time, money, model calls, connections, licences, evidence,
 with one small mechanism that composes with kontor's double-entry
 accounting at boundaries.
@@ -103,8 +105,15 @@ ledger at the boundary, not on every step.
 between steps: minted = held in wallets + held in live tokens + spent,
 for every resource. A job's receipt satisfies granted = spent + returned.
 This is checked by a randomized test over mint, spend, take, split, join,
-put, job, discard and resume (as the prototype's AU6 did for evidence) and
-is a theorem target for the formal semantics.
+put, nested jobs with vector and token budgets, discard, resume and host
+callbacks that run out of steps (as the prototype's AU6 did for evidence),
+after every top-level form and for every receipt; it is a theorem target
+for the formal semantics.
+
+Two consequences of where wallets live. The session has no step budget, so
+its steps are unlimited and not accounted; steps are accounted per job, in
+receipts. And a wallet is not part of the job's record: when a host call is
+abandoned and its job's record is rolled back, what it spent stays spent.
 
 ## Tokens: the affine segment
 
@@ -140,7 +149,8 @@ continuation resumed twice. Continuations stay multi-shot
 **Tokens belong to their job** (`L3.account.foreign`). A token taken in a
 job can be used only in that job; using it in another job (or in the
 parent after the job ended, when settlement has put it back) raises
-`L3.account.foreign`. The one way a token crosses a boundary is a move:
+`L3.account.foreign`. A token taken at the session lives until it is put
+back, since the session never settles. The one way a token crosses a boundary is a move:
 `(job/run {:budget t} thunk)` consumes `t`, and its vector becomes the
 job's grant. This is the dvergr rule (a child receives resources only by
 one transfer from its parent) in the language.
@@ -194,14 +204,15 @@ without a rule for either.
 
 ## Plan
 
-1. [ ] Design and planned rules (this document, spec/L3-effects.md).
-2. [ ] Vectors and wallets: the session's root wallet, `mint!`,
+1. [x] Design and planned rules (this document, spec/L3-effects.md).
+2. [x] Vectors and wallets: the session's root wallet, `mint!`,
    `spend!`, job budgets as vectors reserved from the parent, settlement
    and receipts; `:steps` as the metered instance.
-3. [ ] Tokens: `take`, `spend`, `split`, `join`, `put`, `holds?`,
+3. [x] Tokens: `take`, `spend`, `split`, `join`, `put`, `holds?`,
    `balance`; dynamic reuse and foreign checks; `{:budget t}`.
-4. [ ] Conservation test; a showcase with a k-reader pool and a money
-   budget passed to callees; the receipt mapped to kontor postings.
+4. [x] Conservation test; a showcase with a k-reader pool and a money
+   budget passed to callees; the receipt mapped to kontor transfers
+   (`klara.account/transfers`, data only: Klara does not depend on kontor).
 5. [ ] The declared mode (`defaffine`, L4.check.affine) for owned
    collections and tokens, with the reuse check erased in admitted code.
 6. [ ] Formal: vectors, wallets and tokens in the semantics; conservation

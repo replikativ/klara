@@ -149,6 +149,13 @@ and `clojure -M:bench` stay green at every commit. Progress is recorded here.
   L3.budget.exhausted), `own` lowered to an unguarded transient
   (L4.check.in-place), host transients were not mutable (L2.lift.mutable);
   the affine design was rewritten on its findings (04-ownership.md).
+- [x] **P10. Accounting** (10-accounting.md, plan steps 1–4). Resource
+  vectors, a wallet per job reserved from its parent's, tokens that pass
+  the right to spend or hold to callees, checked at use (L3.affine.reuse,
+  L3.account.foreign), settlement with receipts shaped as kontor
+  transfers; conservation on generated programs; `showcases/accounting.clj`.
+  Open: the declared mode for tokens (L4.check.affine), the formal
+  semantics of wallets and the conservation theorem.
 
 ## Next iteration
 
@@ -159,7 +166,8 @@ checked low-level IR. Then vectorized reductions (09-extensions.md, step 5)
 with a reassociation opt-in and overflow certificates. The declared affine
 subset (04-ownership.md, plan step 5, L4.check.affine): `defaffine`,
 `^:own`/`^:borrow` parameters, threaded tokens, the interpreter running the
-erasure.
+erasure; for account tokens (10-accounting.md, plan step 5) the same
+judgment, with the dynamic reuse check erased in admitted code.
 
 ## Showcase programs
 

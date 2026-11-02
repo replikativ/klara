@@ -122,11 +122,22 @@
 (defrecord CodeVar [name])
 
 ;; ---------------------------------------------------------------------------
+;; Account tokens (L3.account.token): identity only; what a token holds is
+;; kept by the wallet it was taken from (klara.runtime.account).
+
+(deftype Token [owner]
+  Object
+  (toString [_] (str "#klara/token " owner)))
+
+(defmethod print-method Token [t ^java.io.Writer out] (.write out (str t)))
+
+;; ---------------------------------------------------------------------------
 ;; Mutability (L2.lift.mutable, L3.job.host-mutation)
 
 (defn mutable? [x]
   (and (some? x)
    (or (instance? clojure.lang.IAtom x) (instance? clojure.lang.Volatile x)
+      (instance? Token x)
       (instance? clojure.lang.IRef x) (.isArray (class x))
       ;; a host transient: writable in place by whoever holds it
       (instance? clojure.lang.ITransientCollection x)
