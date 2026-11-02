@@ -26,6 +26,7 @@ checkout instead.
 | `src/klara/formal/certify.clj` | The ansatz certifier for proof-carrying candidates (L4.check.certificate) |
 | `cases/certified_identity.clj` | A candidate admitted by proof: `(* x 1)` replaced by `x` for 64-bit integers |
 | `cases/proof_search.clj` | Proof search as guest code: a Klara program looks for the certificate in a budgeted job |
+| `cases/certified_horner.clj` | Horner's rule admitted by a certificate under the range guard \|x\| ≤ 2^20, computed by a Klara function (bounds by `nlinarith`, values by `ring`) |
 | `src/klara/formal/bridge.clj` | The trusted bridge: quoting real Core terms into `Tm`, running the model, observations |
 | `src/klara/formal/gen.clj` | A seeded generator of Klara programs inside the fragment |
 | `src/klara/formal/acct.clj` | λ-acct, the accounting calculus: syntax, store, `ev` (checked or with the reuse check erased), `step` |
@@ -174,6 +175,11 @@ the ansatz kernel. The assumption `inRange i` becomes a runtime guard: the
 executable checks that its argument is a long and runs the reference
 otherwise. `cases/certified_identity.clj` replaces `(* x 1)` by `x`, which
 the definitional checker rightly rejects (it throws for non-numbers).
+
+A certificate may carry `:range [lo hi]`: the theorem then also assumes
+`lo <= i <= hi`, and the executable's guard is `[:range lo hi]`
+(`cases/certified_horner.clj`; lemmas `prim-mul-ok`, `prim-add-ok`,
+`in-range`, `reach-ev` in `checker.clj`).
 
 Current limits: unary functions on integers. Proofs are written by hand
 (the lemmas `equiv-of-reach`, `reach-beta`, `reach-prim` keep them short)

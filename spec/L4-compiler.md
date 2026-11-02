@@ -114,8 +114,9 @@ a `:fn`.
 the reference, `(:certificate opts)` may supply a proof. A certifier
 registered for its `:kind` states the theorem about the *actual* reference
 and candidate terms (quoted into the formal semantics) and checks the proof
-with a kernel. The theorem may assume guards on the arguments (for example
-`:long`); the executable checks them at entry and falls back otherwise. A
+with a kernel. The theorem may assume guards on the arguments (`:long`, or
+`[:range lo hi]` when the certificate carries `:range [lo hi]`); the
+executable checks them at entry and falls back otherwise. A
 proof that does not check rejects the candidate with this rule.
 
 `L4.check.speculate` A speculation `(if g a b)` is equivalent to `r` if `g`

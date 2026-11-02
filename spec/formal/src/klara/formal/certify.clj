@@ -14,7 +14,8 @@
   function bodies, `%arg` for the argument, `%world`/`%worlds` for the empty
   world and world table. The kernel checks it; nothing
   else about the certificate is trusted. The assumption `inRange i` becomes
-  the runtime guard `:long` on the argument."
+  the runtime guard `:long` on the argument; a certificate with `:range [lo
+  hi]` also assumes lo <= i <= hi, which becomes the guard [:range lo hi]."
   (:require [ansatz.core :as a]
             [clojure.walk :as walk]
             [klara.compile.kernel :as kernel]
@@ -60,13 +61,16 @@
 (defn- config [t] (list 'Config.mk 'World.empty 'Worlds.none 0 t))
 
 (defn statement
-  "The equivalence of unary integer functions `ref` and `cand` (kernel terms)."
-  [ref cand]
+  "The equivalence of unary integer functions `ref` and `cand` (kernel terms),
+   for 64-bit arguments, or for those between lo and hi with `range`."
+  [ref cand range]
   (let [arg '(Tm.lit (Datum.int i))
         cr (config (list 'Tm.app ref arg))
         cc (config (list 'Tm.app cand arg))]
     {:ref-config cr :cand-config cc
-     :params '[i :- Int, hi :- (= Bool (inRange i) Bool.true)]
+     :params (cond-> '[i :- Int, hi :- (= Bool (inRange i) Bool.true)]
+               range (into ['hb :- (list 'And (list '<= (int-term (first range)) 'i)
+                                          (list '<= 'i (int-term (second range))))]))
      :type (list 'forall '[d :- Config]
                  (list '=> '(forall [e :- Config] (Not (Step d e)))
                        (list 'And (list '=> (list 'Star cr 'd) (list 'Star cc 'd))
@@ -80,7 +84,8 @@
     (let [ctx (bridge/new-ctx)
           ref (tm-term (bridge/quote-term ctx reference))
           cand (tm-term (bridge/quote-term ctx candidate))
-          {:keys [ref-config cand-config params type]} (statement ref cand)
+          range (:range certificate)
+          {:keys [ref-config cand-config params type]} (statement ref cand range)
           body (fn [t] (if (= 'Tm.lam (first t)) (second t) t))
           tactics (walk/postwalk-replace {'%ref ref-config '%cand cand-config
                                           '%ref-term ref '%cand-term cand
@@ -92,7 +97,7 @@
           name (symbol (str "Klara.certificate." (.replace (str (java.util.UUID/randomUUID)) "-" "")))]
       (binding [*ns* (the-ns 'klara.formal.checker)]
         (eval (list* 'ansatz.core/theorem name params type tactics)))
-      {:result :proved :guards [:long]
+      {:result :proved :guards [(if range (into [:range] range) :long)]
        :evidence {:kernel :ansatz :theorem name :statement type}})
     (catch Throwable e
       {:result :failed

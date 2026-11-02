@@ -161,6 +161,22 @@
   (Star (Config.mk w ws n (Tm.prim op (Tm.lit x) (Tm.lit y))) m)
   (exact (Star.step _ _ _ (prim-step w ws n op x y r hr) hm)))
 
+;; Checked arithmetic that stays in range: a multiplication or addition of
+;; integers whose result is a 64-bit value succeeds with that value.
+(a/theorem prim-mul-ok [a :- Int, b :- Int, h :- (= Bool (inRange (* a b)) Bool.true)]
+  (= PrimRes (primApply PrimOp.mul (Datum.int a) (Datum.int b)) (PrimRes.ok (Datum.int (* a b))))
+  (simp only [primApply, intOp]) (exact (checked-in-range (* a b) h)))
+
+(a/theorem prim-add-ok [a :- Int, b :- Int, h :- (= Bool (inRange (+ a b)) Bool.true)]
+  (= PrimRes (primApply PrimOp.add (Datum.int a) (Datum.int b)) (PrimRes.ok (Datum.int (+ a b))))
+  (simp only [primApply, intOp]) (exact (checked-in-range (+ a b) h)))
+
+;; A value between the 64-bit bounds is in range (bounds from nlinarith).
+(a/theorem in-range [x :- Int, h1 :- (<= (Int.negSucc 9223372036854775807) x), h2 :- (<= x (Int.ofNat 9223372036854775807))]
+  (= Bool (inRange x) Bool.true)
+  (simp only [inRange]) (unfold minLong) (unfold maxLong) (simp)
+  (apply And.intro) (apply (Iff.mpr Int.not_lt)) (exact h1) (apply (Iff.mpr Int.not_lt)) (exact h2))
+
 ;; Evaluation inside arithmetic: a step of a nested prim is a step of the
 ;; operand it is in (left first, then right once the left is a literal). With
 ;; ev-prim-lit and step-of-ev, a certificate for straight-line integer code
@@ -211,3 +227,10 @@
   (constructor)
   (intro hx) (exact (And.left (ha e ht) (And.left (step-equiv _ _ e hs ht) hx)))
   (intro hx) (exact (And.right (step-equiv _ _ e hs ht) (And.right (ha e ht) hx))))
+
+;; A step given by ev, then the rest of a reduction (chains of these make
+;; certificates for straight-line arithmetic, cases/certified_horner.clj).
+(a/theorem reach-ev [w :- World, ws :- Worlds, n :- Nat, t :- Tm, t2 :- Tm, m :- Config,
+                     h :- (= Out (ev w ws n 0 t) (Out.next n t2)), hm :- (Star (Config.mk w ws n t2) m)]
+  (Star (Config.mk w ws n t) m)
+  (exact (Star.step _ _ _ (step-of-ev w ws n n t t2 h) hm)))

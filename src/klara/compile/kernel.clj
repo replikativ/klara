@@ -38,14 +38,21 @@
   (every? (fn [[q g]] (= g (w/generation world q))) (:premises cand)))
 
 (def guard-predicates
-  "Argument guards a certificate can assume (L4.check.certificate)."
+  "Argument guards a certificate can assume (L4.check.certificate): :long,
+   or [:range lo hi], a long between lo and hi inclusive."
   {:long #(instance? Long %)})
+
+(defn- guard-holds? [g x]
+  (cond (nil? g) true
+        (keyword? g) ((guard-predicates g) x)
+        (= :range (first g)) (and (instance? Long x) (<= (long (second g)) (long x) (long (nth g 2))))
+        :else false))
 
 (defn- guards-hold? [cand args]
   (let [gs (:guards cand)]
     (or (nil? gs)
         (and (= (count gs) (count args))
-             (every? true? (map (fn [g x] (or (nil? g) ((guard-predicates g) x))) gs args))))))
+             (every? true? (map guard-holds? gs args))))))
 
 ;; Certifiers admit candidates the definitional checker cannot relate, given
 ;; a certificate (L4.check.certificate). A certifier returns

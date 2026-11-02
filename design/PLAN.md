@@ -217,15 +217,16 @@ evidence, guards, time, allocation), and run as a test.
    the guard inside the loop and the interpreter continues at that
    iteration; redefining a helper invalidates the compiled code while an old
    world keeps its own.
-3. **Proofs where they pay** (P4–P5). The investor part is done
-   (`showcases/investor.clj`). The proof part, Horner's rule under a range
-   guard as a certified alternative, has its first building blocks proved
-   (`ev-prim-lit`, `ev-prim-l`, `ev-prim-r`, `step-of-ev`: a step inside
-   nested arithmetic), but is blocked on bounding nonlinear intermediates
-   (`i*i <= 2^40` from `|i| <= 2^20`): ansatz had no `nlinarith`, and
-   `linarith` over the product of the bounds did not finish. ansatz 0.2.579
-   (pinned since 2026-11-01) has `nlinarith` and `positivity` (ansatz PR
-   #369): to be retried. (The plan said "long arithmetic" as the speculative step; it is
+3. **Proofs where they pay** (P4–P5). Done in two parts. The investor
+   part is `showcases/investor.clj`. The proof part is
+   `spec/formal/cases/certified_horner.clj`: Horner's rule as a certified
+   alternative under the range guard |x| <= 2^20. A Klara function computes
+   the certificate from the coefficients (a beta step and a chain of
+   arithmetic steps per side, each intermediate bounded by `nlinarith`, the
+   values equated by `ring`), and the ansatz kernel checks it against the
+   quoted terms. Without the certificate the candidate is rejected; outside
+   the range the reference runs; a range the bounds do not cover fails to
+   check. Open: the investor proposing certified alternatives itself. (The plan said "long arithmetic" as the speculative step; it is
    pointless on HotSpot, see 06-speculation.md §4.)
    Originally: Polynomial scoring: the investor plans
    fusion (definitional), Horner's rule (certificate under a range guard)
