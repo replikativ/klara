@@ -81,8 +81,20 @@
 
 (defn own
   "Marks the initial value of an owned loop accumulator. The identity, except
-   in compiled code admitted as owned, where lowering makes it a transient."
+   in compiled code admitted as owned, where lowering makes it `owned`."
   [x] x)
+
+(defn owned
+  "`own` in compiled code admitted as owned: a transient where one means the
+   same as the value once frozen, else the value itself, which the owned
+   operations below update persistently. A transient cannot carry metadata
+   and only editable collections have one, so nil, lists, sorted collections
+   and values with metadata stay persistent (erasure: freeze after own is
+   the identity, L4.check.in-place)."
+  [x]
+  (if (and (instance? clojure.lang.IEditableCollection x) (nil? (meta x)))
+    (clojure.core/transient x)
+    x))
 
 ;; A leave builds one frame per enclosing let, and the same transient is in
 ;; several; it can be made persistent only once, so freezing remembers.

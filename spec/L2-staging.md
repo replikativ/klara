@@ -58,11 +58,14 @@ POPL 2026 ([related work](../design/related-work.md#staging)).
 ## Lift
 
 `L2.lift.values` `(lift v)` returns Code whose evaluation yields `v`.
-Allowed values: immutable data (recursively), closures, host functions,
-worlds, Code and candidates.
+Allowed values: immutable data (recursively), closures, continuations,
+host functions, worlds, Code and candidates. A closure or continuation is
+lifted as itself, with whatever it captured (L2.lift.preserves): code that
+shares it shares its captured atoms and arrays.
 
-`L2.lift.mutable` Lifting a mutable host object, or a collection containing
-one, is rejected. `(klara.stage/liftable? x)` tells whether `x` can be
+`L2.lift.mutable` Lifting a mutable host object (an atom, volatile, ref,
+array, host transient, or a mutable Java collection), or a collection
+containing one, is rejected. `(klara.stage/liftable? x)` tells whether `x` can be
 lifted.
 
 `L2.lift.preserves` `(run (lift v))` yields `v` itself, in every context.

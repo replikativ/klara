@@ -413,7 +413,7 @@
                        (:recur t) (list* 'recur args)
                        ;; L4.check.in-place: own makes a transient only in code admitted as owned
                        (and (= :host (:op f)) (= 'klara.core/own (:name f)) (= 1 (count args)))
-                       (if owned? (list 'clojure.core/transient (first args)) (first args))
+                       (if owned? (list 'klara.runtime.prims/owned (first args)) (first args))
                        ;; two-argument subtraction: the host picks a primitive overload
                        (and (= :host (:op f)) (= 'klara.core/- (:name f)) (= 2 (count args)))
                        (list* '.sub 'klara.runtime.prims/SUB args)

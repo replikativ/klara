@@ -41,6 +41,10 @@ by the [conformance cases](spec/cases/), the [examples](examples/) or the
 - **Class unloading depends on soft references.** Clojure's compiler caches
   generated classes softly; candidates' classes are reclaimed promptly only
   with `-XX:SoftRefLRUPolicyMSPerMB=0` (set for the test alias).
+- **Budgets inside host calls.** A job whose budget runs out inside a
+  callback of a host function (`mapv`, `reduce`, ...) ends with a final
+  `:exhausted` outcome: the host's stack cannot be captured, and running the
+  call again would repeat its callbacks' writes (L3.budget.exhausted).
 - **`finally` and discarded continuations.** A handler that drops its
   continuation skips `finally` blocks inside it (`L0.eval.exception`).
 

@@ -86,7 +86,8 @@ order. Adopting an outcome twice raises `L3.job.adopted`.
 `L3.job.adopted` Adopting the same outcome twice raises this rule.
 
 `L3.job.resume` `(job/resume outcome budget)` continues an `:exhausted`
-outcome's continuation under a new budget and returns a new outcome.
+outcome's continuation under a new budget and returns a new outcome. An
+outcome without a continuation (L3.budget.exhausted) raises this rule.
 
 `L3.job.discard` Dropping an outcome is discarding the job. Nothing needs to
 be called, and the parent's spent budget is not reduced.
@@ -103,7 +104,12 @@ non-terminating computation performs infinitely many of them, so a finite
 budget always ends.
 
 `L3.budget.exhausted` When a budget reaches zero the job stops with status
-`:exhausted` and the continuation at that point.
+`:exhausted` and the continuation at that point. If it reaches zero inside a
+host call (in a Klara function that a host function such as `mapv` calls),
+there is no continuation to keep, since the host's stack cannot be captured
+and running the call again would repeat what its callbacks did: the outcome
+is `:exhausted` with `:resumable false` and no `:continuation`, and nothing
+the abandoned host call did to the job's world or intents is kept.
 
 `L3.budget.nesting` A nested job's budget is reserved from its parent's
 remaining budget. Steps spent by the nested job count as spent by the parent.

@@ -742,7 +742,10 @@
                        (let [st (regs-state regs)]
                          (if-let [reason (abandoned ex)]
                            (if (and (= reason :exhausted) (= :job (stop-frame (:k st))))
-                             ((get-in st [:dyn :on-exhausted]) st)
+                             ;; the budget ran out inside a host call: the host's stack
+                             ;; is gone, and running the call again would repeat what
+                             ;; its callbacks did to objects (L3.budget.exhausted)
+                             ((get-in st [:dyn :on-exhausted]) (assoc st ::in-host true))
                              (throw ex))
                            (raise st ex)))))]
           (if (= :done (:mode r)) r (recur r))))

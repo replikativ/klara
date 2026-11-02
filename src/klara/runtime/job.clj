@@ -60,7 +60,13 @@
         suspension {:mode (:mode st) :ctl (:ctl st) :env (:env st)
                     :frames (vec (take i k)) :world (:world st) :mint (:mint st)}]
     (leave (assoc st :k (nthrest k (inc i))) frame
-           (outcome frame :exhausted {:continuation suspension}))))
+           (outcome frame :exhausted
+                    (if (::m/in-host st)
+                      ;; inside a host call there is no continuation to keep: the
+                      ;; outcome is final (resuming it would run the call again)
+                      {:resumable false
+                       :message "the budget ran out inside a host call, which cannot be resumed"}
+                      {:continuation suspension})))))
 
 (defn- job-defaults []
   {:time/now (fn [st _] (assoc st :mode :ret :ctl (System/nanoTime) :env nil))   ; L3.effect.time
@@ -143,6 +149,8 @@
    :fn (fn [st [outcome budget]]
          (when-not (= :exhausted (:status outcome))
            (fail :L3.job.resume (str "only an exhausted job can be resumed, not " (:status outcome))))
+         (when-not (:continuation outcome)
+           (fail :L3.job.resume "this job ran out of budget inside a host call and cannot be resumed"))
          (let [{:keys [mode ctl env frames world mint]} (:continuation outcome)
                st (enter st (::job outcome) (steps-of budget))]
            (assoc st :mode mode :ctl ctl :env env :world world :mint mint

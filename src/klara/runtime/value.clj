@@ -128,6 +128,8 @@
   (and (some? x)
    (or (instance? clojure.lang.IAtom x) (instance? clojure.lang.Volatile x)
       (instance? clojure.lang.IRef x) (.isArray (class x))
+      ;; a host transient: writable in place by whoever holds it
+      (instance? clojure.lang.ITransientCollection x)
       (and (instance? java.util.Collection x) (not (instance? clojure.lang.IPersistentCollection x)))
       (and (instance? java.util.Map x) (not (instance? clojure.lang.IPersistentMap x))))))
 

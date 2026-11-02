@@ -154,8 +154,11 @@ place in the term, the initial value of a parameter of the loop it starts;
 in that loop the parameter is read (`get`, `count`, `contains?`, `nth`) only
 before it is updated, updated only into the `recur` at its own position,
 never captured by a function or passed elsewhere, and returned only through
-`persistent!`. Only compiled code admitted this way makes transients
-(`own` lowers to `transient`); it freezes the values it leaves with
+`persistent!`. Only compiled code admitted this way makes transients:
+`own` lowers to a transient where freezing it gives back the same value (an
+editable collection without metadata) and to the value itself otherwise
+(nil, lists, sorted collections, values with metadata), which the owned
+operations update persistently. It freezes the values it leaves with
 (`persistent!`), so the interpreter and continuations resumed any number of
 times only see persistent values. The erasure check is charged to the
 preparation's budget.
@@ -176,7 +179,9 @@ subterms.
 #{i ..}}` (with `:why` when `c` is not `:pure`) for the function definition
 `q`: the most an evaluation of its body (and of the definitions it calls)
 may do, in the order of what can contain it: `:pure` (nothing), `:fresh`
-(writes to arrays allocated in the same call: the call contains them; making
+(writes to arrays allocated in the same call: the call contains them, though a
+continuation captured inside the call and resumed more than once re-enters it
+with the same arrays; making
 an atom or volatile is fresh, any `swap!` or `reset!` is `:shared`), `:world` (`def` and world operations: a job contains them), `:handled`
 (`perform`, printing: a handler or a job), `:shared` (writes to objects that
 existed before: `aset` on an array not allocated in the call, `swap!` and

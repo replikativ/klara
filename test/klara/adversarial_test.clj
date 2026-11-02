@@ -307,3 +307,38 @@
                    (defn ok1 [xs] (let [f (fn [x] (* x x))] (mapv f xs)))
                    (defn ok2 [n] (letfn [(ev? [n] (if (= n 0) true (od? (dec n)))) (od? [n] (if (= n 0) false (ev? (dec n))))] (ev? n)))
                    (mapv #(:class (jit/effect %)) ['adv/w1 'adv/w2 'adv/w3 'adv/w4 'adv/w5 'adv/ok1 'adv/ok2])")))))))
+
+(deftest exhaustion-inside-a-host-call-is-final   ; L3.budget.exhausted L3.job.resume
+  (testing "a callback's writes are not repeated by resuming: the outcome cannot be resumed"
+    (is (= [:exhausted false nil :L3.job.resume 50]
+           (run (str header "(def xs (vec (range 50)))
+                 (defn g [] (let [a (long-array 1)] (mapv (fn [x] (aset a 0 (inc (aget a 0)))) xs) (aget a 0)))
+                 (let [o (job/run {:budget {:steps 30}} g)]
+                   [(:status o) (:resumable o) (:continuation o)
+                    (try (job/resume o {:steps 100000}) (catch Exception e (:rule (ex-data e))))
+                    (:value (job/run {} g))])")))))
+  (testing "control: exhaustion in Klara code itself resumes where it stopped"
+    (is (= [:exhausted :done 50]
+           (run (str header "(defn h [] (let [a (long-array 1)]
+                                 (loop [i 0] (if (< i 50) (do (aset a 0 (inc (aget a 0))) (recur (inc i))) (aget a 0)))))
+                 (let [o (job/run {:budget {:steps 20}} h) r (job/resume o {:steps 100000})]
+                   [(:status o) (:status r) (:value r)])"))))))
+
+(deftest owned-code-means-its-erasure-for-every-initial-value   ; L4.check.in-place
+  (testing "nil, lists, sorted collections and metadata stay persistent in owned compiled code"
+    (is (= [:ready :compiled true]
+           (run (str header "(defn into* [init xs] (loop [i 0 acc init] (if (< i (count xs)) (recur (inc i) (conj acc (nth xs i))) acc)))
+                 (def inits [nil '(0) (sorted-set) (with-meta [] {:m 1}) [] {} #{} (array-map)])
+                 (def xss [[1 2] [[:a 1] [:b 2]] (vec (range 20)) (mapv (fn [i] [i i]) (range 20))])
+                 (defn results [] (vec (for [init inits xs xss]
+                                         (try (let [r (into* init xs)] [r (meta r) (type r)])
+                                              (catch Exception e [:threw (type e)])))))
+                 (def before (results))
+                 (def o (jit/compile! 'adv/into* {:specializer own/in-place :certificate {:kind :in-place}}))
+                 (let [same (= before (results))] [(:status o) (:last-path (compiler/explain into*)) same])"))))))
+
+(deftest host-transients-are-mutable   ; L2.lift.mutable
+  (testing "a host transient cannot be lifted into code, nor counts as data"
+    (is (= [false :L2.lift.mutable]
+           (run (str header "(let [t (. [1] asTransient)]
+                   [(klara.stage/liftable? t) (try (lift t) (catch Exception e (:rule (ex-data e))))])"))))))
