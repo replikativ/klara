@@ -262,3 +262,48 @@
             d (k/eval-string s "(ns pr) (investor/consider 'pr/shout {:baseline-ns 0 :explore-ns 0})")]
         (is (some? (:interpreted-ns d)))
         (is (= printed (count (str out))))))))
+
+(deftest the-reference-is-the-named-definition   ; L4.prepare.reference L4.exec.install
+  (testing "a candidate checked against some other reference is not installed on a name"
+    (is (= [:rejected :L4.prepare.reference 10]
+           (run (str header "(defn score [x] (* 2 x))
+                 (def o (compiler/prepare (code (fn [x] 42)) {:name 'adv/score}))
+                 [(:status o) (:rule o) (score 5)]")))))
+  (testing "control: the definition's own reference, and one that means the same"
+    (is (= [:ready :ready]
+           (run (str header "(defn score [x] (* 2 x))
+                 [(:status (compiler/prepare (compiler/reference 'adv/score) {:name 'adv/score}))
+                  (:status (compiler/prepare (code (fn [y] (* 2 y))) {:name 'adv/score}))]"))))))
+
+(deftest captured-references-are-not-their-contents   ; L4.check.delta L2.reify.fn
+  (testing "a closure that returns its atom is not the atom's current value"
+    (is (= :rejected
+           (run (str header "(def a (atom 5))
+                 (def get-a (let [b a] (fn [] b)))
+                 (:status (compiler/prepare (code (fn [] (get-a))) {:recipe (fn [_] (code (fn [] 5)))}))")))))
+  (testing "reifying keeps a captured atom, even one that holds a function"
+    (is (= [:threw true]
+           (let [r (run (str header "(require '[klara.stage :as st]) (def a (atom inc)) (def f (let [b a] (fn [] b))) (st/reify f)"))]
+             [(first r) (boolean (re-find #"mutable" (str (second r))))])))))
+
+(deftest constants-are-compared-as-programs-see-them   ; L4.check.const L4.check.speculate-value
+  (testing "signed zeros and decimal scales are different constants"
+    (is (= :rejected (status "(fn [] -0.0)" "(fn [] 0.0)")))
+    (is (= :rejected (status "(fn [] 1.0M)" "(fn [] 1.00M)"))))
+  (testing "and different values for same?"
+    (is (= [false false true]
+           (run (str header "[(jit/same? -0.0 0.0) (jit/same? 1.0M 1.00M) (jit/same? 0.5 0.5)]"))))))
+
+(deftest effects-the-analysis-cannot-see-are-outside   ; L4.facts.effect
+  (testing "functions handed to calling host functions, captured functions and computed functions"
+    (is (= [:handled :shared :shared :outside :outside :pure :pure]
+           (mapv #(when (keyword? %) %)
+                 (run (str header "(def buf (long-array 4))
+                   (defn w1 [xs] (run! println xs))
+                   (defn w2 [i] (apply aset buf [i 1]))
+                   (def w3 (let [w (fn [i] (aset buf i 1))] (fn [i] (w i))))
+                   (defn w4 [g] ((fn [h] (h 1)) g))
+                   (defn w5 [m k] ((get m k) 1))
+                   (defn ok1 [xs] (let [f (fn [x] (* x x))] (mapv f xs)))
+                   (defn ok2 [n] (letfn [(ev? [n] (if (= n 0) true (od? (dec n)))) (od? [n] (if (= n 0) false (ev? (dec n))))] (ev? n)))
+                   (mapv #(:class (jit/effect %)) ['adv/w1 'adv/w2 'adv/w3 'adv/w4 'adv/w5 'adv/ok1 'adv/ok2])")))))))

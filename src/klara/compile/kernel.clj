@@ -165,6 +165,21 @@
 (defn- reject [rule message & {:as more}]
   (merge {:status :rejected :rule rule :message message} more))
 
+(defn- own-reference
+  "Does `ref-term` mean definition q of `world`? {:result :equal} when it is
+   q's own term (the usual case: compiler/reference); otherwise the result of
+   checking it against q's term, :not-reference when they differ or q is not
+   a function definition."
+  [world q ref-term meter]
+  (let [d (w/lookup world q)]
+    (if-not (and d (v/closure? (:value d)))
+      {:result :not-reference}
+      (let [own (profile/strip-annotations (.-term ^Code (intr/reify-closure (:value d))))]
+        (if (= (t/->form own) (t/->form ref-term))
+          {:result :equal}
+          (let [r (check/check own ref-term world meter)]
+            (if (= :different (:result r)) (assoc r :result :not-reference) r)))))))
+
 (defn- finish
   "Check and lower `candidate` against `reference`, inside the job (state `st`)."
   [st reference candidate opts]
@@ -178,7 +193,13 @@
           cand-term (profile/strip-annotations (.-term ^Code candidate))
           meter (get-in st [:dyn :meter])
           self (:name opts)                                   ; L4.check.self
-          r (check/check ref-term cand-term (:world st) meter self)
+          ;; L4.prepare.reference: a candidate for a named definition is checked
+          ;; against that definition, not against whatever reference is passed
+          is-own (when self (own-reference (:world st) self ref-term meter))
+          r (if (and is-own (not= :equal (:result is-own)))
+              is-own
+              (cond-> (check/check ref-term cand-term (:world st) meter self)
+                (:premises is-own) (update :premises #(into (or % #{}) (:premises is-own)))))
           r (if-let [cert (and (= :different (:result r)) (:certificate opts))]
               (if-let [certify (get @certifiers (:kind cert))]
                 ;; certifiers charge the preparation's budget and see its self
@@ -191,6 +212,9 @@
                 {:result :certificate-failed :message (str "no certifier for " (pr-str (:kind cert)))})
               r)]
       (case (:result r)
+        :not-reference (reject :L4.prepare.reference
+                               (str "the reference is not the definition of " self)
+                               :difference (:difference r))
         :certificate-failed (reject :L4.check.certificate (str "the certificate was not accepted: " (:message r)))
         :exhausted {:status :exhausted :rule :L4.check.exhausted
                     :message "the checker ran out of budget before deciding"}
@@ -326,7 +350,7 @@
                                  :else (.-term ^Code reference)})))})
 
 (defn- runtime-info
-  "Host facts a specializer may use (design/06-speculation.md#6-specializers)."
+  "Host facts a specializer may use (design/06-speculation.md#6-specializers-the-jit-is-programmable)."
   []
   {:host :jvm
    :java (System/getProperty "java.version")

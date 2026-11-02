@@ -1,12 +1,12 @@
 (ns klara.compile.facts
-  "Facts about definitions (design/06-speculation.md#3-facts), computed by
-  the kernel's own analyses. The first is purity (L4.facts.pure): calling the
-  definition on data cannot mutate anything that existed before the call or
-  perform an effect, so running it to measure it (the investor) changes
-  nothing but time. Conservative: what the analysis cannot see through is
-  not pure."
+  "Facts about definitions (design/06-speculation.md, section 3), computed
+  by the kernel's own analyses: effect classes (L4.facts.effect) and their
+  purity view (L4.facts.pure). Conservative: what the analysis cannot see
+  through (a function it cannot see called, a host function not known to
+  it) is outside."
   (:require [klara.lang.builtins :as b]
             [klara.lang.term :as t]
+            [klara.runtime.machine]
             [klara.runtime.value :as v]
             [klara.runtime.world :as w]))
 
@@ -90,24 +90,51 @@
 
 (declare definition-effect)
 
-(defn- host-effect [q t fresh]
+(defn- host-effect
+  "The effect of calling host function q; t is the call, or nil when q is
+   handed to a host function that calls it (its arguments unknown)."
+  [q t fresh]
   (cond (or (pure-host? q) (contains? calling-host q)) none
         (contains? array-writes q)
-        (if (and (= :local (get-in t [:args 0 :op])) (contains? fresh (get-in t [:args 0 :name])))
+        (if (and t (= :local (get-in t [:args 0 :op])) (contains? fresh (get-in t [:args 0 :name])))
           (effect-of :fresh (str "writes an array it allocated (" q ")"))
           (effect-of :shared (str "writes an array it did not allocate (" q ")")))
         (contains? intrinsic-classes q) (let [c (intrinsic-classes q)]
                                           (if (= :pure c) none (effect-of c (str "calls " q))))
         :else (effect-of :outside (str "calls " q))))
 
+(declare closure-effect)
+
+(defn- value-effect
+  "The effect of calling value x, a constant or a captured value."
+  [ctx x]
+  (cond (v/closure? x) (closure-effect ctx x)
+        (or (v/data? x) (v/declared-pure? x)) none
+        (instance? clojure.lang.IFn x) (effect-of :outside (str "calls the host function " (pr-str x)))
+        :else none))
+
 (defn- term-effect
-  "The effect class of evaluating term t, with a reason. `fresh` holds locals
-   bound to objects allocated in this call. Calls of the definition's own
-   parameters are recorded as relative (L4.facts.effect)."
-  [ctx t fresh]
-  (let [go #(term-effect ctx % fresh)
+  "The effect class of evaluating term t, with a reason. In scope `sc`,
+   :fresh holds locals bound to objects allocated in this call and :known
+   locals bound to functions whose bodies are analysed where they are made.
+   Calls of the definition's own parameters are recorded as relative
+   (L4.facts.effect); calling any other function the analysis cannot see
+   (another local, a computed function) is outside."
+  [ctx t sc]
+  (let [go #(term-effect ctx % sc)
         all (fn [ts] (reduce join none (map go ts)))
-        param #(when (= :local (:op %)) (get (:params ctx) (:name %)))]
+        param #(when (= :local (:op %)) (get (:params ctx) (:name %)))
+        ;; the effect of calling f, beyond evaluating it
+        called (fn [f t]
+                 (case (:op f)
+                   :host (host-effect (:name f) t (:fresh sc))
+                   (:global :fn) none                     ; analysed by go
+                   :const (value-effect ctx (:value f))
+                   :local (cond (param f) (do (vswap! (:relative ctx) conj (param f)) none)
+                                (contains? (:known sc) (:name f)) none
+                                :else (effect-of :outside (str "calls " (:name f) ", a function it cannot see")))
+                   (effect-of :outside "calls a computed function")))
+        known-fn? #(= :fn (:op %))]
     (case (:op t)
       (:const :local :host) none
       :global (let [q (get-in t [:link :name])
@@ -121,39 +148,58 @@
                   (effect-of :outside (str "calls the host function in " q))
                   :else (do (when d (vswap! (:premises ctx) conj [q (:generation d)])) none)))
       ;; an inner function (a loop) may write arrays this call allocated: they
-      ;; did not exist before the call either
-      :fn (reduce join none (map (fn [a] (term-effect ctx (:body a) fresh)) (:arities t)))
+      ;; did not exist before the call either; it may call itself
+      :fn (let [sc (cond-> sc (:self t) (update :known conj (:self t)))]
+            (reduce join none (map (fn [a] (term-effect ctx (:body a) sc)) (:arities t))))
       :let (join (go (:init t))
                  (term-effect ctx (:body t)
-                              (cond-> fresh
+                              (cond-> sc
                                 (and (= :app (:op (:init t))) (= :host (get-in t [:init :fn :op]))
                                      (or (contains? allocating (get-in t [:init :fn :name]))
                                          (= :fresh (intrinsic-classes (get-in t [:init :fn :name])))))
-                                (conj (:name t)))))
+                                (update :fresh conj (:name t))
+                                (known-fn? (:init t)) (update :known conj (:name t)))))
+      :letrec (let [sc (update sc :known into (keep (fn [[n f]] (when (known-fn? f) n)) (:bindings t)))]
+                (reduce join none (map #(term-effect ctx % sc) (t/children t))))
       :app (let [f (:fn t)]
-             ;; a parameter called, or handed to a host function that calls it
-             (when-let [i (param f)] (vswap! (:relative ctx) conj i))
-             (when-let [called (and (= :host (:op f)) (calling-host (:name f)))]
-               (doseq [[k a] (map-indexed vector (:args t))
-                       :when (or (= :all called) (contains? called k))]
-                 (when-let [i (param a)] (vswap! (:relative ctx) conj i))))
-             (join (if (= :host (:op f)) (host-effect (:name f) t fresh) (go f))
-                   (all (:args t))))
+             ;; a host function that calls its arguments: those it calls are called
+             (let [cb (when (= :host (:op f)) (calling-host (:name f)))
+                   callbacks (when cb (keep-indexed (fn [k a] (when (or (= :all cb) (contains? cb k)) a)) (:args t)))]
+               (reduce join
+                       (join (if (= :host (:op f)) none (go f)) (called f t))
+                       (concat (map go (:args t))
+                               (map #(called % nil) callbacks)))))
       :def (join (effect-of :world (str "defines " (:name t))) (go (:init t)))
       ;; templates build code: their holes run now, the template later
       :code (all (:holes t))
-      (:if :do :recur :throw :try :letrec) (all (t/children t))
+      (:if :do :recur :throw :try) (all (t/children t))
       (effect-of :outside (str "contains " (name (:op t)))))))
 
+(defn- closure-effect
+  "The effect of calling closure f: its term, and calling what it captured
+   (so its body may call its captured locals)."
+  [ctx ^klara.runtime.value.Closure f]
+  (if (contains? @(:seen ctx) f)
+    none
+    (do (vswap! (:seen ctx) conj f)
+        (reduce join
+                (term-effect (assoc ctx :params {}) (.-term f) {:fresh #{} :known (set (keys (v/captured f)))})
+                (map (fn [[_ x]] (value-effect ctx (if (instance? klara.runtime.machine.RecRef x) @x x)))
+                     (v/captured f))))))
+
 (defn- definition-effect
-  "The effect of definition q's body; recursive definitions are assumed
-   pure while being analysed."
+  "The effect of definition q's body and of the values it captured;
+   recursive definitions are assumed pure while being analysed."
   [ctx q]
   (if (contains? @(:seen ctx) q)
     none
     (do (vswap! (:seen ctx) conj q)
         (let [d (w/lookup (:world ctx) q)
-              e (term-effect ctx (.-term ^klara.runtime.value.Closure (:value d)) #{})]
+              ^klara.runtime.value.Closure f (:value d)
+              e (reduce join
+                        (term-effect ctx (.-term f) {:fresh #{} :known (set (keys (v/captured f)))})
+                        (map (fn [[_ x]] (value-effect ctx (if (instance? klara.runtime.machine.RecRef x) @x x)))
+                             (v/captured f)))]
           (vswap! (:premises ctx) conj [q (:generation d)])
           (cond-> e (:why e) (update :why #(str (t/base-name q) " " %)))))))
 

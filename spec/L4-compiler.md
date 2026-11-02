@@ -12,11 +12,16 @@ steps):
 3. the backend (`L4.lower.*`) on the candidate.
 
 It returns an outcome with `:status` `:ready`, `:rejected` (with `:rule`,
-`:message`) or `:exhausted`, and `:report`. A `:ready` outcome carries
+`:message`), `:declined` (L4.prepare.declined) or `:exhausted`, and
+`:report`. A `:ready` outcome carries
 `:candidate` and `:premises`.
 
 `L4.prepare.reference` The reference must be Code for a `fn`; for
-`(compiler/reference q)`, `q` must name a function definition.
+`(compiler/reference q)`, `q` must name a function definition. With
+`(:name opts)` `q`, the reference must mean `q`'s current definition: it is
+`q`'s own term, or the checker relates it to that term (its premises join
+the candidate's); otherwise the outcome is `:rejected` with this rule. So a
+candidate installed on `q` is always checked against what `q` means.
 
 `L4.prepare.recipe-failed` A recipe that throws or returns a non-Code value
 gives `:rejected` with this rule.
@@ -32,14 +37,18 @@ under a step budget.
 
 `L4.check.delta` A pinned link to a definition whose value is a closure
 without basis may be replaced by the closure's term with its globals pinned
-to the same world. A late link may be replaced likewise, using the
+to the same world and its captured locals as constants (a letrec cell as the
+function it holds; an atom or other reference as itself, never its current
+contents). A late link may be replaced likewise, using the
 preparation world, and records the premise `(name, generation)`. A lifted
 closure constant may be replaced by its `reify`. The replacement may happen
 at the head of a term, in a call's function position, or in the term a
 `let` or an `if` evaluates first.
 
 `L4.check.beta` `((fn [x...] b) v...)` with values `v` and a fixed arity
-matching the arguments may be replaced by `b` with `x := v`.
+matching the arguments may be replaced by `b` with `x := v`. A loop (a
+function applied where it is made that recurs to itself) is not reduced;
+L4.check.fix relates loops.
 
 `L4.check.let-value` `(let [x v] b)` with value `v` may be replaced by
 `b[x := v]`.
@@ -49,8 +58,9 @@ matching the arguments may be replaced by `b` with `x := v`.
 `L4.check.if-constant` `(if c a b)` with constant `c` may be replaced by `a`
 if `c` is truthy and `b` otherwise.
 
-`L4.check.prim` A call of a host function in the pure table to constant
-arguments may be replaced by its result, if the call returns normally.
+`L4.check.prim` A call of a host function in the pure table, or one
+registered as pure, to constant immutable data may be replaced by its
+result, if the call returns normally with immutable data.
 
 `L4.check.bool-let` `(let [x e] b)` where `e` is a call of a host function
 that returns true or false whenever it returns (`=`, `<`, `empty?`, the type
@@ -84,9 +94,11 @@ same syntax up to renaming the locals they bind (a template is a value: it
 is never unfolded or computed), and their holes are equal terms in order.
 
 `L4.check.const` Two constants are equal only if no Klara program can tell
-them apart: the same class and metadata and, for collections, equal
-elements in the same iteration order (so `1` and `1N`, a list and a vector,
-an array map and a hash map, a sorted and a hash set differ). Functions,
+them apart: the same class and metadata; scalars equal by the host's
+`equals`, not by `=` (so `0.0` and `-0.0`, `1.0M` and `1.00M` differ); and,
+for collections, such elements in the same iteration order (so `1` and `1N`,
+a list and a vector, an array map and a hash map, a sorted and a hash set
+differ). Functions,
 code and other objects are equal only to themselves.
 
 `L4.check.self` When preparing the definition `q` (`(:name opts)`), `q` is
@@ -95,7 +107,8 @@ candidate, so the reference may not be assumed for it there. It may be
 unfolded on the reference's side; the candidate then equals a finite
 unfolding of the reference, which has the same fixed point.
 
-A *value* for these rules is a `:const`, a `:local`, or a `:fn`.
+A *value* for these rules is a `:const`, a `:local`, a `:host` function or
+a `:fn`.
 
 `L4.check.certificate` When the rules above do not relate the candidate to
 the reference, `(:certificate opts)` may supply a proof. A certifier
@@ -106,19 +119,21 @@ with a kernel. The theorem may assume guards on the arguments (for example
 proof that does not check rejects the candidate with this rule.
 
 `L4.check.speculate` A speculation `(if g a b)` is equivalent to `r` if `g`
-is a guard (a pure host predicate on locals and constants, which cannot fail),
-`a` is equivalent to `r` and `b` is equivalent to `r`.
+is an admissible guard (L4.check.speculate-assume), `b`, the fallback, is
+equivalent to `r`, and `a` is equivalent to `r` where the guard holds
+(L4.check.speculate-assume, L4.check.speculate-value).
 
 `L4.check.delta-data` A global whose definition is immutable data (not a
 function, macro or mutable object) means its value; its generation is a
-premise. `(klara.jit/known? c)` tells whether Code `c` is a constant or
+premise. `(klara.code/known c)` tells whether Code `c` is a constant or
 such a global.
 
 `L4.check.speculate-value` In a speculation whose guard is
 `(klara.jit/same? x c)` for a local `x` and a constant `c`, the specialized
 branch must mean the reference with `x` replaced by `c`. `same?` holds only
-when `x` is equal to `c` and of the same class, recursively for collections,
-so `x` and `c` cannot be told apart.
+when `x` and `c` cannot be told apart: a scalar of the same class, metadata
+and host `equals` (L4.check.const), any other value only if it is `c`
+itself.
 
 `L4.check.speculate-assume` In a speculation `(if g S R)`, `S` must mean the
 reference where `g` holds: while comparing, an `if` whose test is `g` takes
@@ -126,8 +141,9 @@ its then branch, and one whose test `g` negates (`g` = `(not t)`) its else
 branch. A guard is admissible if it is total (locals, constants, total
 predicates such as type tests, `instance?` of a constant class,
 `identical?`, `not`, `same?`) or if it
-is the reference's own test or its negation, which the reference evaluates
-first, so the guard fails only where the reference fails.
+is the fallback's own test or its negation (the head test of the
+speculation's else branch, which evaluates it first), so the guard fails
+only where the fallback fails.
 
 `L4.check.in-place` A candidate with the certificate `{:kind :in-place}` is
 admitted when (1) its erasure, which drops `own`, `transient` and
@@ -160,22 +176,27 @@ subterms.
 #{i ..}}` (with `:why` when `c` is not `:pure`) for the function definition
 `q`: the most an evaluation of its body (and of the definitions it calls)
 may do, in the order of what can contain it: `:pure` (nothing), `:fresh`
-(writes to arrays or atoms allocated in the same call: the call contains
-them), `:world` (`def` and world operations: a job contains them), `:handled`
+(writes to arrays allocated in the same call: the call contains them; making
+an atom or volatile is fresh, any `swap!` or `reset!` is `:shared`), `:world` (`def` and world operations: a job contains them), `:handled`
 (`perform`, printing: a handler or a job), `:shared` (writes to objects that
 existed before: `aset` on an array not allocated in the call, `swap!` and
 the other host mutations), `:outside` (interop, host functions not known or
 declared pure: nothing contains them). `:relative` are the indices of the
-parameters it calls or hands to host functions: calling `q` has their
-effects too. The analysis is conservative: what it cannot see through is
+parameters it calls or hands to host functions that call them: calling `q`
+has their effects too. A function handed to such a host function (`mapv`,
+`run!`, `apply`, ...) counts as called there; the values a closure captured
+count as called by it. The analysis is conservative: calling anything it
+cannot see (a local that is neither a parameter nor bound to a function
+written in the body, a computed function, an unknown host function) is
 `:outside`.
 
 `L4.facts.pure` `(klara.jit/pure? q)` is `{:pure true :premises ..}` when
 calling the function definition `q` on plain data can neither mutate
 anything that existed before the call nor perform an effect: its body and
 those of the definitions it calls use only pure host functions, functions
-that allocate, and writes to arrays allocated in the same call; no interop
-or intrinsics. A definition it uses holds data, a pure function definition,
+that allocate (including atoms and volatiles), pure intrinsics (code views,
+`lift`) and writes to arrays allocated in the same call; no interop or other
+intrinsics. A definition it uses holds data, a pure function definition,
 or a host function declared pure (record constructors, L0.surface.defrecord);
 any other host function in a definition makes it impure. Otherwise
 `{:pure false :why ..}`. It is L4.facts.effect's class `:pure` or `:fresh`.
@@ -183,13 +204,15 @@ any other host function in a definition makes it impure. Otherwise
 ## Lowering
 
 `L4.lower.subset` The backend accepts terms without `:try`, `:interop`,
-`:code`, `:hole`, `:def` and `:letrec`, and without calls of intrinsics
-(`perform`, `handle`, world and job operations), except in the else branch
+`:code`, `:hole`, `:def` and `:letrec`, and without any intrinsic (`perform`,
+`handle`, printing, atoms, `lift`, time, world and job operations), except in the else branch
 of a speculation, which is left to the interpreter (L4.exec.leave). Others
 give `:rejected` with this rule.
 
 `L4.lower.links` A pinned or guarded link is lowered to its value as a
-constant. A late link is lowered to a lookup in the effective world at the
+constant. (Nothing produces guarded links yet; when something does, the
+checker must unfold the link's `:value`, which lowering embeds, not the
+world's definition.) A late link is lowered to a lookup in the effective world at the
 time of the call.
 
 `L4.lower.calls` Calls to closures go through the runtime: a closure with an
@@ -226,8 +249,8 @@ The result is the same: `aget` and `alength` of the host.
 runs the compiled body if the candidate is valid in `E`, and otherwise
 evaluates `reference` in `E`.
 
-`L4.exec.install` `(compiler/install! outcome)` for a reference that is
-`(compiler/reference q)` records the executable on `q`'s definition in the
+`L4.exec.install` `(compiler/install! outcome)` for an outcome prepared with
+`(:name opts)` `q` (whose reference means `q`, L4.prepare.reference) records the executable on `q`'s definition in the
 current world (through `:world/update`, so inside a job only in the job's
 world), without changing the definition's value or generation. Calls to `q`
 in worlds where the candidate is valid use the compiled body. Installing a
@@ -387,7 +410,8 @@ interpreted time a definition has spent from its profile's events and the
 interpreter's measured cost per event. Below the policy's `:baseline-ns`
 it leaves the definition alone; past it, it compiles the definition as it
 is, without running it (any definition, pure or not); past `:explore-ns`,
-for a pure definition with a plain-data sample, it prepares and measures
+for a definition whose effects a job contains (L4.facts.effect: up to
+`:handled`) with a plain-data sample, it prepares and measures
 its alternatives and installs the one with the best expected gain (preparing
 is paid by then, so it decides whether to explore, not what to install), if
 any is measurably faster than the interpreter, and otherwise compiles the

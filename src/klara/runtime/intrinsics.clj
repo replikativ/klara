@@ -106,7 +106,9 @@
   ([f] (reify-closure f (.-term ^Closure f)))
   ([^Closure f term]
   (let [env (v/captured f)
-        rec (fn [x] (if (instance? clojure.lang.IDeref x) (if (v/closure? @x) @x x) x))
+        ;; letrec cells hold the function they name (L2.reify.fn); any other
+        ;; reference stays itself, and lifting refuses it if mutable
+        rec (fn [x] (if (instance? klara.runtime.machine.RecRef x) @x x))
         body (t/substitute term (into {} (map (fn [[n x]] [n (m/lift-term (rec x))])) env))
         body (if-let [b (.-basis f)] (pin-links body b) body)]
     (Code. (t/refresh-free body)))))

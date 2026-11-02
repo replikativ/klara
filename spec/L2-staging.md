@@ -77,7 +77,9 @@ lifted.
 ## Reify
 
 `L2.reify.fn` `(reify f)` for a closure returns Code `(fn ...)` with the
-closure's arities. Its captured locals are lifted. If the closure has no
+closure's arities. Its captured locals are lifted (a letrec cell as the
+function it holds; any other reference as itself, so a mutable one is
+refused, L2.lift.mutable). If the closure has no
 basis, its globals become late links; if it has basis `w`, they become
 links pinned to `w`.
 

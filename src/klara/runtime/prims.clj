@@ -9,6 +9,14 @@
   differential test against the formal semantics (spec/formal)."
   (:refer-clojure :exclude [- conj! assoc! dissoc! disj! pop! persistent! transient]))
 
+(defn same-scalar?
+  "Scalars a program cannot tell apart: the same class and equal by the
+   host's equals, not by `=`, which identifies 0.0 with -0.0 and 1.0M with
+   1.00M (L4.check.const)."
+  [a b]
+  (or (identical? a b)
+      (and (some? a) (some? b) (= (class a) (class b)) (.equals ^Object a b))))
+
 (defn same?
   "Value speculation guard (L4.check.speculate-value): x cannot be told apart
    from c. A collection or other object must be c itself (identity is
@@ -18,8 +26,7 @@
   [x c]
   (or (identical? x c)
       (and (or (nil? c) (number? c) (string? c) (keyword? c) (symbol? c) (boolean? c) (char? c))
-           (= (class x) (class c))
-           (= x c)
+           (same-scalar? x c)
            (= (meta x) (meta c)))))
 
 (defn -

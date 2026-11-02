@@ -17,6 +17,7 @@
   the reference, which has the same fixed point."
   (:require [klara.lang.builtins :as b]
             [klara.lang.term :as t]
+            [klara.runtime.machine]
             [klara.runtime.prims :as prims]
             [klara.runtime.value :as v]
             [klara.runtime.world :as w])
@@ -51,7 +52,7 @@
     (and (= (count a) (count b))
          (every? true? (map same-value? (seq a) (seq b))))
     (instance? java.util.Map$Entry a) (and (same-value? (key a) (key b)) (same-value? (val a) (val b)))
-    (or (nil? a) (number? a) (string? a) (keyword? a) (symbol? a) (boolean? a) (char? a)) (= a b)
+    (or (nil? a) (number? a) (string? a) (keyword? a) (symbol? a) (boolean? a) (char? a)) (prims/same-scalar? a b)
     :else false))
 
 (defn- value-sig
@@ -64,7 +65,10 @@
           [(class x) (value-sig (meta x)) (mapv value-sig (seq x))])
         (instance? java.util.Map$Entry x) [(value-sig (key x)) (value-sig (val x))]
         (or (number? x) (string? x) (keyword? x) (symbol? x) (boolean? x) (char? x))
-        [(class x) (when (instance? clojure.lang.IMeta x) (value-sig (meta x))) x]
+        [(class x) (when (instance? clojure.lang.IMeta x) (value-sig (meta x)))
+         ;; keys compare by =: doubles and decimals by their printed form, so
+         ;; -0.0 and 0.0, 1.0M and 1.00M stay apart (see prims/same-scalar?)
+         (if (or (instance? Double x) (instance? Float x) (instance? BigDecimal x)) (str x) x)]
         :else [::object (System/identityHashCode x)]))
 
 (defn- value-term?
@@ -94,9 +98,11 @@
 
 (defn- closure-term
   "The term of closure `f` with its captured locals as constants and its
-   globals linked by its basis."
+   globals linked by its basis. Only letrec cells are unwrapped: a captured
+   atom or volatile is a constant reference to it, not its current value
+   (L4.check.delta)."
   [^Closure f]
-  (let [subst (into {} (map (fn [[n x]] [n (t/const (if (instance? clojure.lang.IDeref x) @x x))]))
+  (let [subst (into {} (map (fn [[n x]] [n (t/const (if (instance? klara.runtime.machine.RecRef x) @x x))]))
                     (v/captured f))
         term (t/substitute (.-term f) subst)]
     (if-let [basis (.-basis f)]
