@@ -123,7 +123,9 @@ function or continuation, and every loop iteration (`recur`), costs one
 step, in interpreted and compiled code alike (L4.lower.steps). Compiled
 code may take fewer steps than the reference it replaces (an inlined or
 unfolded call costs none), so a computation that exhausts a budget
-interpreted may finish compiled (spec/cases/L4-specialize.clj). Every
+interpreted may finish compiled (spec/cases/L4-specialize.clj). A candidate
+that gives way to its reference on an error (L4.check.law) is charged for
+both, so on that path it may take more steps than the reference. Every
 non-terminating computation performs infinitely many of them, so a finite
 budget always ends.
 
