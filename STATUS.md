@@ -53,8 +53,7 @@ progress and safety proved in ansatz. The CEK machine is compared with it
 differentially on generated programs and the conformance corpus, through
 the real reader and expander (`clojure -M:formal:test-formal`, 500 generated
 programs by default; with `KLARA_DIFF_SEEDS=5000`, 10003 of 10003 forms
-agreed when last run). The `:formal` alias needs an ansatz checkout next to
-this repository (`../ansatz`). The comparison found and fixed a
+agreed when last run). The comparison found and fixed a
 Clojure subtraction inconsistency and a missing not-a-function rule.
 
 The checker's head rules, in the fragment's form, are proved to be steps of the semantics, and a

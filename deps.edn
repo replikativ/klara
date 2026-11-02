@@ -10,10 +10,10 @@
                       {:git/tag "v0.5.1" :git/sha "dfb30dd"}}
          :jvm-opts ["-Xss16m" "-Xmx512m" "-XX:SoftRefLRUPolicyMSPerMB=0"]
          :main-opts ["-m" "cognitect.test-runner"]}
-  ;; The formal semantics (spec/formal) is checked by ansatz. Local checkout
-  ;; while ansatz fixes land; pin a release once stable.
+  ;; The formal semantics (spec/formal) is checked by ansatz. To work against
+  ;; a local checkout: -Sdeps '{:deps {org.replikativ/ansatz {:local/root "../ansatz"}}}'
   :formal {:extra-paths ["spec/formal/src" "spec/formal/test"]
-           :extra-deps {org.replikativ/ansatz {:local/root "../ansatz"}}
+           :extra-deps {org.replikativ/ansatz {:mvn/version "0.2.579"}}
            :jvm-opts ["--enable-native-access=ALL-UNNAMED"]}
   ;; clojure -M:formal:test-formal  checks the formal semantics and runs the
   ;; differential tests (KLARA_DIFF_SEEDS sets the number of generated programs)

@@ -11,8 +11,9 @@ clojure -M:formal:test-formal   # check every definition and theorem, run the di
 KLARA_DIFF_SEEDS=5000 clojure -M:formal:test-formal
 ```
 
-The `:formal` alias expects an [ansatz](https://github.com/replikativ/ansatz)
-checkout next to this repository (`../ansatz`, see `deps.edn`).
+The `:formal` alias uses the [ansatz](https://github.com/replikativ/ansatz)
+release pinned in `deps.edn`; `deps.edn` also shows how to use a local
+checkout instead.
 
 ## Files
 
