@@ -1,102 +1,189 @@
 # Ownership: affine regions as checked staged rewrites
 
-Status: implemented in P6 (design/PLAN.md) without its proofs. The kernel's
-ownership judgment and erasure check are `klara.compile.own`
+Status: the inferred mode is implemented (P6, design/PLAN.md), without its
+proofs: the ownership judgment and erasure check are `klara.compile.own`
 (L4.check.in-place), the recipe is `klara.own/in-place`, and
-`showcases/in_place.clj` shows it on a word-count loop. Open: the
-erasure theorem, and `WO` defined and proved in ansatz (plan steps 4-5
-below). The earlier prototype (tag `prototype-2026-10-31` on the `main`
-branch) implemented a hosted version, described at the end.
+`showcases/in_place.clj` shows it on a word-count loop. The declared mode
+(an explicit affine subset that programs write) is designed here and not
+implemented. A first version of the declared mode was reviewed for
+soundness on 2026-11-01 and failed in four ways; the design below answers
+that review (last section). The earlier prototype (tag
+`prototype-2026-10-31` on the `main` branch history) had a different,
+hosted design, compared at the end.
 
-## The idea in one paragraph
+## The idea
 
-Klara stays functional. Ownership is not a language feature and has no
-surface syntax: it is a representation choice the investor may make inside a
-closed region where a value is provably unique, so updating it in place
-cannot be observed. This is "functional but in-place", as in Lean 4
-(Ullrich and de Moura, *Counting Immutable Beans*, 2019) and Koka (Reinking
-et al., *Perceus*, PLDI 2021); on the JVM there is no reference counting, so a
-static uniqueness judgment plays that role. In-place update entangles memory
-(aliasing, cache interference, no sharing across forks), so persistent
-structures stay the default; the investor chooses the owned representation
-only where its cost model predicts a benefit, such as a large accumulator in
-a loop. Admission goes through the same pipeline as every other
-optimization: one theorem proved once, one check per candidate.
+Klara stays functional. Ownership never changes what a program means: it is
+a representation, a value updated in place, chosen inside a boundary where
+nobody else can observe the update. The meaning of owned code is its
+*erasure*, the same code with every owned operation read persistently. This
+is "functional but in-place", as in Lean 4 (Ullrich and de Moura,
+*Counting Immutable Beans*, 2019) and Koka (Reinking et al., *Perceus*, PLDI
+2021); on the JVM there is no reference counting, so a static uniqueness
+judgment plays that role.
 
-## The owned fragment is Clojure's transient discipline (internally)
+Ownership comes from two places, with one judgment and one meaning:
 
-The candidate language for owned code is Clojure's transients, because its
-usage rule is well known and its implementation exists. Programmers write
-ordinary persistent code; owned code appears only in candidates.
+- **inferred**: the investor's `klara.own/in-place` recipe rewrites an
+  ordinary persistent loop into owned code, and the kernel admits it if the
+  judgment holds (implemented);
+- **declared**: a program writes owned code itself, in a definition marked
+  `defaffine`, and the judgment is checked when it is defined; if it does
+  not hold the definition is rejected with a diagnostic (planned).
+
+## Boundaries: the memory model decides where ownership can live
+
+A value can be owned only within a visibility boundary of the memory model
+([01-lifetimes.md](01-lifetimes.md)), the same boundaries the effect classes
+name (L4.facts.effect):
+
+| boundary | who sees a write inside it | effect class of the writes it contains |
+|---|---|---|
+| a compiled region admitted as owned | nobody outside it | none for owned values (their erasure writes nothing); `:fresh` for arrays it allocates |
+| a job (a forked world) | the job, until it is adopted | `:world` |
+| the session | everyone | `:shared` |
+
+The first is the only boundary that holds owned values. Jobs and the session
+only ever see persistent values, so a fork never shares, copies or splits an
+owned value, and no permission accounting across forks is needed.
+
+**The interpreter runs the erasure.** The interpreter never holds an owned
+value: `transient`, `own` and `freeze` are the identity there and the owned
+operations act persistently (L0.surface.transient). Only compiled code that
+the kernel admitted with the ownership judgment makes transients
+(L4.check.in-place). Every way out of such code freezes (`persistent!`,
+O(1)):
+
+| way out of an owned region | what crosses |
+|---|---|
+| return | `persistent!` at the exits (the judgment requires it) |
+| leaving to the interpreter (a failed speculation, a budget tick, L4.exec.leave) | every live local is frozen, once per transient (`prims/freeze`) |
+| a call of unknown or host code, a closure, data, `throw`, `perform` | nothing: the judgment forbids a token there |
+| an effect captured inside the region | nothing: compiled code performs no effects (L4.lower.subset) |
+
+So everything that runs in the interpreter, including jobs, their
+suspensions and outcomes, continuations resumed any number of times,
+profile samples, lifted constants, definitions and exceptions, sees
+persistent values only. A declared definition is therefore also an
+obligation to compile: until it is compiled it runs its erasure, correctly
+and persistently.
+
+Host code can still make a transient through interop (`(.asTransient v)`).
+It is a mutable host object like an array: `lift` refuses it, it is not
+data, and jobs and the investor treat it as they treat arrays
+(L2.lift.mutable).
+
+## The owned fragment: threaded tokens
+
+An owned value is a *token*, used linearly: every owned operation consumes
+the token and returns the next one. This is Clojure's transient discipline
+(whose rule Clojure users already know), not cells: a cell form such as
+`(update! o f)` that changes `o` behind its name has no local erasure (in
+`(do (update! o conj 3) (freeze o))` the persistent reading loses the 3).
+
+| form | consumes | returns | erasure |
+|---|---|---|---|
+| `(own v)` | | a token for `v` | `v` |
+| `(conj! t x)`, `(assoc! t k v)`, `(dissoc! t k)`, `(disj! t k)`, `(pop! t)` | `t` | the next token | `conj`, `assoc`, ... |
+| `(get t k)`, `(nth t i)`, `(count t)`, `(contains? t k)` | nothing | a value | the same |
+| `(freeze t)` (`persistent!`) | `t` | a persistent value | `t` |
+
+A parameter can be owned:
+
+- `^:own t`: the caller moves a token in and the function returns the next
+  one (alone, or in a vector with other results); the caller's token is
+  consumed by the call. Erasure: an ordinary parameter.
+- `^:borrow x`: the function gets a frozen snapshot, an ordinary value. The
+  caller's token is frozen for the call and owned again after it (`own` on a
+  persistent value is O(1); the first writes after it copy their paths).
+  Erasure: an ordinary parameter. A borrow therefore needs no lexical
+  lifetime: what the callee keeps is a value.
 
 ```clojure
-;; reference                                  ;; owned candidate
-(loop [i 0 acc []]                            (persistent!
-  (if (< i n)                                   (loop [i 0 acc (transient [])]
-    (recur (inc i) (conj acc i))                  (if (< i n)
-    acc))                                           (recur (inc i) (conj! acc i))
-                                                    acc)))
+(defaffine add-all [^:own acc xs]          ; moves acc in, returns the next token
+  (loop [i 0 acc acc]
+    (if (< i (count xs)) (recur (inc i) (conj! acc (nth xs i))) acc)))
+
+(defaffine histogram [words]             ; erasure: an ordinary persistent function
+  (loop [i 0 counts (own {})]
+    (if (< i (count words))
+      (let [w (nth words i)]
+        (recur (inc i) (assoc! counts w (inc (get counts w 0)))))  ; read, then consume
+      (freeze counts))))
 ```
 
-Clojure checks the transient rule only partly, at run time. Klara checks it
-statically, as the *ownership judgment* `WO`, on the candidate:
+## The judgment
 
-- an owned token comes from `transient` and ends at `persistent!`;
-- each token is used at most once on every control path (affine), and the
-  result of `conj!`, `assoc!`, `dissoc!`, `disj!`, `pop!` is the next token;
-- a token never escapes: it is not captured by a closure, stored in data,
-  passed to an unknown function, compared, hashed or returned from the region
-  except through `persistent!`;
-- reads (`get`, `nth`, `count`, `contains?`) consume nothing, but must not
-  follow the token's consumption.
+`WO` is a decision procedure on Core terms (`klara.compile.own` today, for
+loop accumulators; the declared mode extends it). Its rules:
 
-**Erasure** maps owned code back to functional code: `transient` and
-`persistent!` become the identity, `conj!` becomes `conj`, and so on. Erasure
-defines the meaning of owned code.
+1. A token is made by `own`, by an owned operation from a token, or is an
+   `^:own` parameter.
+2. Each token is consumed at most once on every control path; reads do not
+   consume it but must come before its consumption.
+3. At a branch, both arms consume the same tokens; a loop threads tokens
+   through `recur` at the same positions.
+4. A token is never captured by a function, stored in data, compared,
+   hashed, thrown, performed, or passed to a host function or a function
+   that is not a declared definition with `^:own` at that position.
+5. A call of a declared definition with an `^:own` parameter consumes the
+   token and its result is the next token; the callee's admission is a
+   premise (its generation), so redefining it retires the caller's code.
+6. A region ends by freezing: at its exits every token is frozen or
+   consumed.
+
+The effect class is a property of the meaning: a definition is classified
+by its erasure (L4.facts.effect). Owned writes are invisible by
+construction, so they add nothing; an `^:own` callee does not write its
+caller's object in the erasure either, since it returns a new value.
 
 ## How a candidate is admitted
 
 ```text
-reference R ── recipe (Klara) ──> owned candidate C
-                                   │
-             1. WO(C)              │  the ownership judgment, a decision procedure
-             2. erase(C) ≡ R       │  the existing definitional checker (L4.check.*)
-             3. lower(C)           │  owned ops become Clojure transient ops
+reference R ── recipe (Klara) ──> owned candidate C        (inferred)
+declared definition D: R = erase(D), C = D                 (declared)
+
+             1. WO(C)              the ownership judgment
+             2. erase(C) ≡ R       the definitional checker (L4.check.*); trivial when declared
+             3. lower(C)           own becomes a transient where freezing gives the value back
 ```
 
-The theorem that makes this sound is proved once, about the formal semantics:
+`own` lowers to a transient only for an editable collection without
+metadata, and to the value itself otherwise (nil, lists, sorted
+collections, values with metadata), which the owned operations then update
+persistently: so `freeze ∘ own` is the identity on every value, the premise
+the erasure theorem needs. Step 3 stays trusted and tested differentially,
+like the rest of the backend.
 
-> **Erasure.** For every closed `C` with `WO(C)`, running `C` with a store of
-> mutable cells reaches the same observations as running `erase(C)`.
+## Soundness
 
-Then step 2 is automatic for every candidate: no recipe author writes a
-proof. Step 1 is a decision procedure; following `wsb-WS` (the closedness
-check of `run`), it is defined in ansatz, compiled, and proved sound, so the
-ownership checker itself is verified. Step 3 (lowering to JVM transients)
-stays trusted and is tested differentially, like the rest of the backend.
+> **Erasure.** For every closed `p` with `WO(p)`:
+> `Obs(run p) = Obs(run (erase p))`,
+> where `Obs` is the final value up to structural equality with class and
+> metadata, the ordered effects that reach default handlers or job intents,
+> the world's changes, and rule-tagged errors. Compiled code may take fewer
+> steps than its erasure, so with budgets it is a refinement
+> (L3.budget.steps).
 
-The formal semantics gains a store: `Config` gets a heap of cells, `Tm` gets
-`own`, `freeze` and the cell operations, and erasure is a function on `Tm`.
-The erasure proof is a simulation: an invariant relates each live cell in the
-store to the substituted value the erased term holds at the same point.
-Linearity is what makes the invariant hold: no second reference to a cell
-exists that could observe the update.
+What the formal semantics (`spec/formal`) needs before this can be stated:
+collections; a heap of cells, each live or frozen, in `Config`; `own`, the
+owned operations and `freeze` in `Tm`; a host-callback rule without replay
+(true of the implementation since L3.budget.exhausted makes exhaustion inside
+a host call final); `WO` defined in ansatz. The proof is a simulation: each
+live cell's content is the unique occurrence of that value in the erased
+term at the same point, and linearity is what keeps it unique. Then `WO`
+itself, compiled from ansatz, replaces the host decision procedure.
 
 ## Klara programs do the rewriting
 
-Recipes are Klara code over Code views ([02-compilation.md](02-compilation.md)),
-not hosted transformations behind a policy switch.
-
-**Accumulator ownership** (`klara.own/in-place`, lib/klara/own.clj), a
-specializer the investor may choose. It finds loops in the reference (a
-self-recursive function applied where it is made, with `recur` in tail
-positions) whose accumulator is only ever replaced by a persistent update of
-itself (`conj`, `assoc`, `dissoc`, `disj`). It marks the accumulator's
-initial value `own` (a transient in compiled code), replaces the updates by
-their owned versions (`assoc` by `assoc!`) and returns `(persistent! acc)`
-at the exits. It is plain Klara over the views (`code/view`,
-`code/children`, `code/with-children`, `code/make`), so it is a staged
-program that writes the candidate. It declines when there is nothing to own.
+Recipes are Klara code over Code views ([02-compilation.md](02-compilation.md)).
+**Accumulator ownership** (`klara.own/in-place`, lib/klara/own.clj) finds
+loops (a self-recursive function applied where it is made, with `recur` in
+tail positions) whose accumulator is only ever replaced by a persistent
+update of itself (`conj`, `assoc`, `dissoc`, `disj`). It marks the
+accumulator's initial value `own`, replaces the updates by their owned
+versions and returns `(persistent! acc)` at the exits. It declines when
+there is nothing to own.
 
 ```clojure
 ;; the investor considers it among other alternatives; for a test it can be forced
@@ -104,75 +191,99 @@ program that writes the candidate. It declines when there is nothing to own.
                                  :certificate {:kind :in-place}})
 ```
 
-The recipe can be wrong. If it marks a binding that escapes or is used twice,
-`WO` rejects the candidate. If it changes anything else, the definitional
-check of the erasure rejects it. Either way the reference keeps running.
-
-Other loop rewrites the prototype explored would be recipes of the same
-kind: fusing `map`/`filter`/`reduce` chains into one loop
-(definitional, checked by unfolding), and counted loops on primitive longs
-(which need a premise: an argument guard, or a certificate, L4.check.certificate).
+The recipe can be wrong: if it marks a binding that escapes or is used
+twice, `WO` rejects the candidate; if it changes anything else, the
+definitional check of the erasure rejects it. Either way the reference keeps
+running. Loop fusion and counted loops on primitive longs would be recipes
+of the same kind (the latter with a premise: an argument guard or a
+certificate, L4.check.certificate).
 
 ## How it ties into the memory model
 
-- **Lifetimes** ([01-lifetimes.md](01-lifetimes.md)). An owned token is an
-  affine resource whose lifetime is the dynamic extent of its region. It is a
-  root only while the region runs; `persistent!` is the only way out, and it
-  costs O(1). The collectability obligation: after a region exits, nothing
-  but the frozen value is reachable from its tokens.
+- **Lifetimes.** A token is reachable only from the frames of the compiled
+  region that owns it; leaving the region by any way out freezes it, so the
+  roots argument (L1.retain.roots) is unchanged: after a region exits, only
+  persistent values remain.
 - **Bounded memory.** The point of the rewrite: a loop that builds a vector
-  allocates a new path-copied root per iteration in the reference, and
-  updates one transient in the candidate. Allocation, not just time, is part
-  of what the benchmark reports.
-- **Continuations and forks.** A continuation captured inside a region would
-  let the program resume twice and observe the mutation. Compiled regions
-  cannot perform effects (L4.lower.subset), so nothing is captured inside
-  them. If owned code is ever interpreted, a region frame makes every
-  continuation that holds it one-shot, and a second resume raises
-  `L3.affine.reuse`, the rule the spec already reserves.
-- **Jobs.** A transient created inside a job belongs to the job, like atoms
-  created in it (L3.job.host-mutation). A fork never copies a token: forking
-  a continuation that holds a region frame is refused.
+  allocates a path-copied root per iteration in the reference and updates one
+  transient in the candidate. Allocation is part of what benchmarks report.
+- **Continuations.** No continuation is captured inside an owned region,
+  since compiled code performs no effects, and leaving freezes. Continuations
+  stay multi-shot. If compiled code ever performs effects (compiling
+  everything, 07-performance.md, path step 2), capture must freeze the
+  region's tokens and owned operations re-own lazily, as Perceus stops
+  in-place reuse once a resumed continuation shares a value. A one-shot
+  rule is not used for collections: it would add an error the erasure does
+  not have, and handlers have no types to check it statically.
+- **Jobs.** Jobs see only persistent values; adopting a job carries its
+  world's changes and a persistent value, which the parent may own again in
+  O(1).
 
-## What the interpreter does and does not do
+## Arrays and other resources that cannot be frozen cheaply
 
-The interpreter optimizations of the performance milestone are host code in
-the trusted runtime (`klara.runtime.machine`, `klara.runtime.prepare`). They
-change representation, not meaning, and are guarded by the differential
-tests against the formal semantics. Ownership is different: it is a source
-rewrite with an observable boundary, so it belongs to the compiler pipeline,
-where guest programs propose and the kernel checks. The interpreter runs the
-reference; owned code runs compiled.
+A primitive array has no O(1) freeze: freezing copies. For `long[]`
+accumulators (the prototype's private-accumulator family) the options are a
+copy at each way out, or a one-shot discipline checked at run time, where
+`L3.affine.reuse` (planned) applies: a continuation that captured such a
+resource may be resumed once. Budgets are the other candidate affine
+resource; their boundary is the job that holds them.
+
+## What the soundness review found, and the answers
+
+The first version of the declared mode (2026-11-01) used cells, made
+continuations inside a region one-shot, bound edit tokens to jobs and let
+owned values cross into the interpreter. An adversarial review against the
+implementation found:
+
+| finding | answer |
+|---|---|
+| a suspended job resumed twice, or two resumes in parallel jobs, share an owned or fresh object | the interpreter never holds owned values; jobs and suspensions see persistent values |
+| exhaustion inside a host call replayed the call, repeating its callbacks' writes (a bug of the implementation) | fixed: such an outcome is final (L3.budget.exhausted) |
+| one-shot continuations change observations and cannot be checked without effect types | freeze on capture (today: no capture inside owned code, freeze on leave) |
+| `own` lowered to an unguarded transient: nil, lists, sorted sets threw, metadata was lost (a bug of the implementation) | fixed: `own` becomes a transient only where freezing gives the value back |
+| owned values could cross into jobs, outcomes, exceptions, `def`, `lift`, profile samples | none can: they never leave compiled code unfrozen; host transients are mutable (L2.lift.mutable) |
+| the effect lattice is not an ownership judgment | effects are classified on the erasure; `WO` decides ownership |
+| cell-style `update!` has no local erasure | threaded tokens |
+| Clojure 1.12 transients do not check threads, and stale tokens still write | nothing relies on edit tokens: `WO` is static |
+| a stored continuation can keep a region alive | no continuation holds a token |
+| `(reduce + t)`, `=`, `hash` on a transient differ from the persistent value | tokens never reach host code (rule 4) |
+| fractional permissions | not needed: freeze and own again cover the prototype's examples; fractions would pay only for large arrays read in parallel rounds |
 
 ## Plan
 
-1. [x] **Views for loops.** `klara.code` views cover `:recur`, function
-   self names and arities (no separate `code/rewrite`: the recipe walks
-   `code/children`).
-2. [x] **Owned Core in the checker.** `WO` as a host decision procedure;
-   erasure; admission as above; lowering to transients
-   (`klara.compile.own`, L4.check.in-place).
-3. [x] **The accumulator recipe** in `lib/` (`klara.own/in-place`), with a
-   word-count loop as the acceptance program (`showcases/in_place.clj`) and
-   rejection cases (an accumulator passed elsewhere, multi-shot resumption;
-   `test/klara/own_test.clj`, `test/klara/adversarial_test.clj`).
-4. **Formal.** Store semantics in `spec/formal`, `WO` defined in ansatz with
-   a soundness proof, and the erasure theorem. Then replace the host `WO` by
-   the compiled verified one.
-5. **Primitive arrays.** `long[]` for numeric accumulators under argument
-   guards or certificates, the prototype's private-accumulator family.
+1. [x] **Views for loops** (`klara.code` covers `:recur`, self names,
+   arities).
+2. [x] **Owned Core in the checker**: `WO` for loop accumulators, erasure,
+   admission, lowering (`klara.compile.own`, L4.check.in-place).
+3. [x] **The accumulator recipe** (`klara.own/in-place`, `showcases/in_place.clj`,
+   rejection cases in `test/klara/own_test.clj` and
+   `test/klara/adversarial_test.clj`).
+4. [x] **Fixes from the soundness review**: total lowering of `own`, final
+   exhaustion inside host calls, host transients as mutable.
+5. **The declared mode** (L4.check.affine, planned): `defaffine`, `^:own`
+   and `^:borrow` parameters, `WO` extended by rules 1-6 above with
+   diagnostics that name the rule and the place, the compile obligation at
+   definition.
+6. **Formal**: the store semantics, `WO` in ansatz, the erasure theorem; then
+   the verified `WO` replaces the host one.
+7. **Primitive arrays and budgets** as resources that cannot be frozen
+   cheaply (`L3.affine.reuse`).
 
-## What the prototype did, and what changes
+## What the prototype did
 
-The prototype had surface ownership forms (`own`, `update!`, `borrow`,
-`freeze`) checked at run time by the authority store, a static affine checker
-producing derivations, and an inferred-accumulator conversion to private
-`long[]` loops. The analysis and the rewrite were hosted Clojure; guest code
-only chose among fixed hosted actions (`:local-call`, `:private-accumulator`).
-Its proofs were about a separate finite model (`PrivatePlan`), connected to
-the real terms by tested bridges.
+The prototype (rfc/0005 and rfc/0001 at the tag) had surface forms (`own`,
+`read`, `update!`, `borrow`, `move`, `freeze`, `drop!`, and `^:own`,
+`^:borrow`, `^:move` parameters) on a dynamic authority store: owned cells
+were one kind of authority with fractional permissions (Boyland 2003), a
+fork split every authority, so a fork holding a write share was rejected and
+read fractions crossed forks, and checks could run at three binding times
+(every use, once per region entry, or statically with erasure). It also had
+a static checker producing derivations and an inferred conversion to private
+`long[]` loops, all hosted Clojure, with proofs about a separate finite
+model.
 
-The design above changes three things: the rewrite is a Klara program; the
-owned fragment is the transient discipline, so erasure is simple and the
-reference is ordinary Clojure; and correctness splits into one theorem about
-the real semantics plus an automatic check per candidate.
+This design keeps the surface idea, the declared and inferred modes with one
+judgment, erasure as meaning and the requirement that ownership fit forks.
+It drops the authority store and the fractions: ownership lives only inside
+compiled regions, whose every way out freezes, so forks see values and the
+memory model needs no second mechanism.

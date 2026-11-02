@@ -143,7 +143,12 @@ and `clojure -M:bench` stay green at every commit. Progress is recorded here.
   `equals` (L4.check.const, `same?`); the effect analysis outside for
   anything it cannot see (L4.facts.effect). Proof claims mapped theorem by
   theorem to the rules they cover (spec/formal/README.md); prose and spec
-  brought up to date with the code.
+  brought up to date with the code. A soundness review of the explicit
+  affine subset found three more bugs, fixed with adversarial tests:
+  exhaustion inside a host call replayed the call (now final,
+  L3.budget.exhausted), `own` lowered to an unguarded transient
+  (L4.check.in-place), host transients were not mutable (L2.lift.mutable);
+  the affine design was rewritten on its findings (04-ownership.md).
 
 ## Next iteration
 
@@ -151,7 +156,10 @@ A direct bytecode backend (07-performance.md, path step 3): the subset
 lowered today, emitted as hidden classes with explicit context, primitive
 signatures and real loops, designed to become the first backend of a
 checked low-level IR. Then vectorized reductions (09-extensions.md, step 5)
-with a reassociation opt-in and overflow certificates.
+with a reassociation opt-in and overflow certificates. The declared affine
+subset (04-ownership.md, plan step 5, L4.check.affine): `defaffine`,
+`^:own`/`^:borrow` parameters, threaded tokens, the interpreter running the
+erasure.
 
 ## Showcase programs
 
@@ -183,10 +191,10 @@ evidence, guards, time, allocation), and run as a test.
    guard as a certified alternative, has its first building blocks proved
    (`ev-prim-lit`, `ev-prim-l`, `ev-prim-r`, `step-of-ev`: a step inside
    nested arithmetic), but is blocked on bounding nonlinear intermediates
-   (`i*i <= 2^40` from `|i| <= 2^20`): ansatz has no `nlinarith`, and
-   `linarith` over the product of the bounds did not finish. Next: a
-   nonlinear tactic in ansatz, or a reflected arithmetic evaluator proved
-   once. (The plan said "long arithmetic" as the speculative step; it is
+   (`i*i <= 2^40` from `|i| <= 2^20`): ansatz had no `nlinarith`, and
+   `linarith` over the product of the bounds did not finish. ansatz 0.2.579
+   (pinned since 2026-11-01) has `nlinarith` and `positivity` (ansatz PR
+   #369): to be retried. (The plan said "long arithmetic" as the speculative step; it is
    pointless on HotSpot, see 06-speculation.md §4.)
    Originally: Polynomial scoring: the investor plans
    fusion (definitional), Horner's rule (certificate under a range guard)

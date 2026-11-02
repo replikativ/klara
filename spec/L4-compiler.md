@@ -145,6 +145,14 @@ is the fallback's own test or its negation (the head test of the
 speculation's else branch, which evaluates it first), so the guard fails
 only where the fallback fails.
 
+`L4.check.affine` (planned) A definition made with `defaffine` is checked
+by the ownership judgment when it is defined (design/04-ownership.md: tokens
+used linearly, `^:own` parameters moved in and returned, `^:borrow`
+parameters given a frozen snapshot, no token captured, stored, compared,
+thrown, performed or passed to code that is not a declared definition),
+and rejected with this rule, the judgment's clause and the place otherwise.
+It runs its erasure until it is compiled as owned (L4.check.in-place).
+
 `L4.check.in-place` A candidate with the certificate `{:kind :in-place}` is
 admitted when (1) its erasure, which drops `own`, `transient` and
 `persistent!` and reads `conj!`, `assoc!`, `dissoc!`, `disj!`, `pop!` as their
