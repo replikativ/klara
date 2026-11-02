@@ -138,7 +138,10 @@
   (when-not (= (.-owner ^Token t) (.-id w))
     (fail :L3.account.foreign "this token belongs to another job's wallet"))
   (or (get (:live s) t)
-      (fail :L3.affine.reuse "this token was already used: an operation consumed it")))
+      (fail :L3.affine.reuse "this token was already used: an operation consumed it"
+            :hint (str "a second alias, collection or closure, or a continuation resumed twice "
+                       "(L3.cont.context): pass each resumption its own token, or run each "
+                       "branch as a job with its own budget"))))
 
 (defn- swap-held!
   "Swap the wallet with (f s held-vector); returns f's second value."

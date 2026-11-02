@@ -98,6 +98,21 @@ it stopped, so tokens it took are foreign to the resumed one
 (L3.account.foreign). An
 outcome without a continuation (L3.budget.exhausted) raises this rule.
 
+`L3.job.resumed` An outcome is a handle, used at most once: resuming the
+same `:exhausted` outcome twice raises this rule. (Two resumptions would be
+two runs of one job, sharing its intents, world and adoption.) Continuations
+captured by handlers stay multi-shot (L3.cont.multishot); a continuation
+captures frames, the world and the mint, never the dynamic context (step
+meter, wallet, default handlers, job), which is the resumer's
+(L3.cont.context).
+
+`L3.cont.context` Resuming a continuation runs its frames with the world and
+mint it captured and the dynamic context of the code that resumes it: steps
+and spending are charged to the resumer's meter and wallet, every time it is
+resumed. Copying a continuation copies control and values, never a wallet,
+so it cannot create authority; a token captured in it is shared by the
+copies, and the second consumption raises L3.affine.reuse.
+
 `L3.job.discard` Dropping an outcome is discarding the job. Nothing needs to
 be called, and the parent's spent budget is not reduced.
 

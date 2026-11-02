@@ -104,6 +104,7 @@
 (defn resolver [session ns-sym]
   (let [world (current-world session)]
     {:ns ns-sym
+     :world world
      :defined (fn [q] (w/lookup world q))
      :ns-info (fn [n] (w/ns-info world n))
      :run-macro (macro-runner session)}))

@@ -65,11 +65,22 @@
                  (repeat :handled))
          (zipmap (map #(symbol "klara.core" (name %)) b/mutating-host) (repeat :shared))
          (zipmap '[klara.core/atom klara.core/volatile!] (repeat :fresh))
+         ;; accounts live outside the forks: spending is not undone, and
+         ;; measuring must not repeat it (design/10-accounting.md)
+         (zipmap '[klara.account/mint! klara.account/spend! klara.account/wallet klara.account/take
+                   klara.account/spend klara.account/split klara.account/join klara.account/put
+                   klara.account/holds? klara.account/balance klara.account/token?]
+                 (repeat :shared))
          (zipmap '[klara.stage/lift klara.stage/liftable? klara.stage/code? klara.stage/form
                    klara.code/free klara.code/children klara.code/with-children klara.code/view
                    klara.code/make klara.code/subst klara.code/unfold klara.code/known
                    klara.code/pure-host? klara.code/fn* klara.code/loop*]
                  (repeat :pure))))
+
+(defn intrinsic-class
+  "The effect class of the Klara intrinsic q, or nil if it is not classified."
+  [q]
+  (intrinsic-classes q))
 
 (def ^:private calling-host
   "Host functions that call functions they are given (and do nothing else),

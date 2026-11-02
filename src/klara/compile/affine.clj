@@ -22,7 +22,21 @@
     5. a call of a declared definition consumes the tokens at its `^:own`
        positions and gives back what it declares it returns;
     6. at every exit each token was consumed or is returned (alone, or in a
-       vector), and no token is dropped.
+       vector), and no token is dropped;
+    7. no token is live where the computation may be captured: at a
+       `perform`, a `def`, or a call that may perform (L4.facts.effect above
+       `:shared`, a function it cannot see, a definition that does). A
+       continuation is multi-shot, and authority is not (L3.cont.context).
+
+  `try` (clause 4): the body may read the tokens live before it and consume
+  them; those it may consume are unavailable after the `try` on both paths
+  (on the handler path the raise point is unknown, and a token the body did
+  not reach stays live until its job settles). The `try` gives no token;
+  catch and finally arms read only the tokens the body leaves live.
+
+  Tokens that reach the definition from code it does not judge (the result
+  of an undeclared call, `run`, interop) are data to the judgment: it cannot
+  operate on them (clause 1), so their dynamic checks remain.
 
   The definition keeps running with all dynamic checks (L3.affine.reuse):
   nothing relies on the judgment yet. Its use is the diagnostic at
@@ -30,10 +44,19 @@
   `:klara/affine {:own #{i} :borrow #{i} :returns r}` that callers are
   checked against."
   (:require [klara.lang.builtins :as b]
+            [klara.compile.facts :as facts]
             [klara.lang.expand :as ex]
             [klara.lang.term :as t]))
 
 (def ^:private ^:dynamic *place* "The nearest enclosing source position." nil)
+
+(def ^:private ^:dynamic *self*
+  "The definition being checked: its name and whether its body may be captured."
+  nil)
+
+(def ^:private ^:dynamic *premises*
+  "The effect facts the judgment relied on: [q generation] pairs (a volatile)."
+  nil)
 
 (defn- violation [clause term msg & [local]]
   (throw (ex-info (str "defaffine: " msg (when local (str ": " (t/base-name local))))
@@ -80,6 +103,58 @@
               (when-let [a (get-in d [:meta :klara/affine])]
                 {:consumes (:own a) :reads (:borrow a) :returns (or (:returns a) :value) :declared true}))
     nil))
+
+(def ^:private uncapturing-intrinsics
+  "Intrinsics that never capture the caller's continuation: account
+   operations, and jobs (a job frame stops effect search, L3.job.run)."
+  '#{klara.job/run klara.job/run-all klara.job/resume})
+
+(declare capture-points)
+
+(defn- capture
+  "Why calling `f` (the operator of an application) may capture the
+   caller's continuation (clause 7), or nil. Host functions cannot: a Klara
+   callback they call runs in a nested machine (L3.effect.host-boundary)."
+  [env f]
+  (case (:op f)
+    :host (let [q (:name f)]
+            (when (and (= :intrinsic (:kind (b/lookup q)))
+                       (not (contains? ops q))
+                       (not= "klara.account" (namespace q))
+                       (not (contains? uncapturing-intrinsics q))
+                       (not (#{:pure :fresh} (facts/intrinsic-class q))))
+              (str "calls " q)))
+    :global (let [q (get-in f [:link :name])]
+              (if (= q (:name *self*))
+                (when @(:captures *self*) (str "calls itself, and its body " @(:captures *self*)))
+                (when-let [d ((:defined env) q)]
+                  (when (instance? klara.runtime.value.Closure (:value d))
+                    (let [e (facts/effect (:world env) q)]
+                      (when *premises* (vswap! *premises* into (:premises e)))
+                      (cond (not (#{:pure :fresh :shared} (:class e)))
+                            (str "calls " (t/base-name q) ", which may perform (" (:why e) ")")
+                            (seq (:relative e))
+                            (str "calls " (t/base-name q) ", whose effect is its arguments'")))))))
+    :fn nil                                                ; its body is checked in place
+    (str "calls a function it cannot see")))
+
+(defn- capture-points
+  "The first place in `term` where the computation may be captured, as a
+   reason, or nil (for a definition calling itself)."
+  [env term]
+  (or (case (:op term)
+        :def (str "defines " (:name term))
+        :app (capture env (:fn term))
+        nil)
+      (some #(capture-points env %) (t/children term))))
+
+(defn- capturable!
+  "Clause 7: refuse a capture point while a token (owned, borrowed or in a
+   pair) is live."
+  [st term reason]
+  (when (and reason (seq (:live st)))
+    (violation 7 term (str "a token is live where the computation may be captured: " reason)
+               (first (keys (:live st))))))
 
 (declare chk)
 
@@ -169,6 +244,8 @@
   [st term env ctx tail?]
   (binding [*place* (or (:pos term) *place*)] (chk* st term env ctx tail?)))
 
+(declare chk-app chk-try chk-other)
+
 (defn- chk*
   [st term env ctx tail?]
   (case (:op term)
@@ -220,7 +297,17 @@
             (chk {:live {} :dead #{}} body env {} true))
           [st :value])
     :app (let [f (:fn term)
-               spec (spec-of env f)]
+               spec (spec-of env f)
+               [st' k :as r] (chk-app st term f spec env ctx tail?)]
+           ;; the tokens still live during the call (those moved into it are the callee's)
+           (capturable! st' term (capture env f))
+           r)
+    :try (chk-try st term env ctx)
+    :def (do (capturable! st term (str "defines " (:name term)))
+             (chk-other st term env ctx))
+    (chk-other st term env ctx)))
+
+(defn- chk-app [st term f spec env ctx tail?]
            (cond
              (and (= :host (:op f)) (= 'clojure.core/nth (:name f)) (nth-of-tuple st term))
              (nth-of-tuple st term)
@@ -236,15 +323,44 @@
 
              :else (let [st (value st f env ctx)]
                      [(reduce (fn [st a] (value st a env ctx)) st (:args term)) :value])))
-    ;; any other form may not mention a token
-    (let [used (filter #(or (contains? (:live st) %) (contains? (:dead st) %)) (t/free-locals term))]
-      (when (seq used) (violation 4 term "a token used other than by an operation" (first used)))
-      [st :value])))
+
+(defn- chk-other
+  "Any other form (throw, def, interop, letrec, code, ...): it may not
+   mention a token, and none of its parts may give one (a token made inside
+   would be stored, thrown or quoted)."
+  [st term env ctx]
+  (let [used (filter #(or (contains? (:live st) %) (contains? (:dead st) %)) (t/free-locals term))]
+    (when (seq used) (violation 4 term "a token used other than by an operation" (first used)))
+    (doseq [c (t/children term)] (value st c env ctx))
+    [st :value]))
+
+(defn- chk-try
+  "try (clause 4): see the namespace docstring."
+  [st term env ctx]
+  (let [[st1 k] (chk st (:body term) env ctx false)
+        _ (when (token-result? k)
+            (violation 4 term "a try gives no token: consume or put it back inside the body"))
+        live (set (live-tokens st1))
+        arm (fn [acc b]
+              (let [[sa ka] (chk st1 b env ctx false)]
+                (when (token-result? ka) (violation 4 b "a catch or finally gives no token"))
+                (when-not (= live (set (live-tokens sa)))
+                  (violation 3 b "a catch or finally may only read the tokens the body leaves live"))
+                (update acc :dead into (:dead sa))))
+        arms (concat (map :body (:catches term)) (when (:finally term) [(:finally term)]))]
+    [(reduce arm st1 arms) :value]))
+
+(declare check*)
 
 (defn check
   "Check a declared definition's fn term; returns what it returns (:value,
-   :token or {:tuple positions})."
-  [fn-term own borrow env]
+   :token or {:tuple positions}). `self` is the definition's qualified name."
+  ([fn-term own borrow env] (check fn-term own borrow env nil))
+  ([fn-term own borrow env self]
+   (binding [*self* {:name self :captures (delay (capture-points env fn-term))}]
+     (check* fn-term own borrow env))))
+
+(defn- check* [fn-term own borrow env]
   (let [{:keys [params rest body]} (first (:arities fn-term))]
     (when (or rest (not= 1 (count (:arities fn-term))))
       (violation 1 fn-term "defaffine takes one fixed parameter vector"))
@@ -270,7 +386,10 @@
                borrow (positions params :borrow)
                ;; the definition's position, for diagnostics on forms that have none
                fn-form (with-meta (list* 'clojure.core/fn params body) (meta form))
-               term (ex/expand (assoc env :self (symbol (str (:ns env)) (name nm))) fn-form)
-               returns (check term own borrow env)]
-           (list* 'def (vary-meta nm assoc :klara/affine {:own own :borrow borrow :returns returns})
+               self (symbol (str (:ns env)) (name nm))
+               term (ex/expand (assoc env :self self) fn-form)
+               premises (volatile! #{})
+               returns (binding [*premises* premises] (check term own borrow env self))]
+           (list* 'def (vary-meta nm assoc :klara/affine {:own own :borrow borrow :returns returns
+                                                          :premises @premises})
                   (concat (when doc [doc]) [fn-form]))))})

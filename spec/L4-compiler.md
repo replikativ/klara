@@ -156,20 +156,41 @@ call that returns one, or is an `^:own` parameter, and operations that
 consume a token are given one; (2) each token is consumed at most once on
 every path, and read only before; (3) both arms of a branch consume the
 same tokens and give the same kind of result, and loops thread tokens
-through `recur`; (4) a token is never captured, stored in data, or passed
-other than to an operation or to a declared definition at an `^:own` or
-`^:borrow` position; (5) a declared call consumes the tokens at its
-`^:own` positions and returns what it declares; (6) at every exit each
-token was consumed or is returned, alone or in a vector, and none is
-dropped. A definition that fails is not defined and raises this rule with
-`:clause`, `:place` and `:local`. A definition that passes records
-`:klara/affine {:own #{i} :borrow #{i} :returns r}` in its metadata, against
-which declared callers are checked. It runs with every dynamic check
-(L3.affine.reuse); one fixed arity is supported.
+through `recur`; (4) a token is never captured (by a function or a code
+template), stored in data, or passed other than to an operation or to a
+declared definition at an `^:own` or `^:borrow` position, and no part of
+another form (`throw`, `def`, interop, ...) gives one; (5) a declared call
+consumes the tokens at its `^:own` positions and returns what it declares;
+(6) at every exit each token was consumed or is returned, alone or in a
+vector, and none is dropped; (7) no token (owned, borrowed or in a pair) is
+live where the computation may be captured: at a `perform`, a `def`, an
+intrinsic that may perform, a call of a function it cannot see, or a call of
+a definition whose effect class (L4.facts.effect) is above `:shared` or
+relative to its arguments (L3.cont.context: a continuation is multi-shot,
+authority is not). Calls of host functions cannot capture
+(L3.effect.host-boundary), nor can `job/run` (a job frame stops effect
+search). `try`: the body may read and consume the tokens live before it;
+those it may consume are unavailable after the `try` on both paths, the
+`try` gives no token, and its catch and finally arms only read the tokens
+the body leaves live. A raise does not return tokens: one the body had not
+consumed when it raised stays live until its job settles
+(L3.account.settle). The judgment covers the tokens the definition makes,
+owns or receives at declared positions; a token that reaches it from code it
+does not judge (the result of an undeclared call, `run`, interop) is data to
+it and keeps its dynamic checks, since no operation in the definition accepts
+it (clause 1). A definition that fails is not defined and raises this rule
+with `:clause`, `:place` and `:local`. A definition that passes records
+`:klara/affine {:own #{i} :borrow #{i} :returns r :premises #{[q g]}}` in its
+metadata: declared callers are checked against it, and `:premises` are the
+callees whose effect facts clause 7 relied on, at their generations. It runs
+with every dynamic check (L3.affine.reuse); one fixed arity is supported.
 
 `L4.check.affine-erase` (planned) A declared definition is compiled when it
 is defined, as owned code (L4.check.in-place) where it threads collections,
-and admitted code skips the dynamic reuse check on its account tokens.
+and admitted code skips the dynamic reuse check on its account tokens. The
+admission's premises are the declaration's `:premises`; a callee redefined
+past them invalidates the code (L4.check.premises, L4.exec.valid). Only the reuse check is
+erased: the foreign check, `put`, settlement and the cone check stay.
 
 `L4.check.in-place` A candidate with the certificate `{:kind :in-place}` is
 admitted when (1) its erasure, which drops `own`, `transient` and

@@ -29,7 +29,9 @@
            [money a2] (ask money (str a1 r))]
        (a/put permit) (a/put money) a2))
    (defaffine halves [^:own t] (let [[x y] (a/split t {:eur 1/2})] (a/join x y)))
-   (defaffine thread [^:own t] (loop [i 0 t t] (if (< i 3) (recur (inc i) t) t)))")
+   (defaffine thread [^:own t] (loop [i 0 t t] (if (< i 3) (recur (inc i) t) t)))
+   (defn asks [] (klara.effect/perform :ask 1))
+   (defn twice [x] (* 2 x))")
 
 (deftest declared-definitions-run-as-before   ; L4.check.affine
   (let [s (session)]
@@ -40,7 +42,7 @@
     (is (= {:eur 19/2 :db 3} (k/eval-string s "(a/wallet)")))
     (is (= {:eur 1} (k/eval-string s "(let [t (halves (a/take {:eur 1}))] (let [b (a/balance t)] (a/put t) b))")))
     (testing "the declaration callers are checked against"
-      (is (= {:own #{0} :borrow #{} :returns {:tuple #{0}}}
+      (is (= {:own #{0} :borrow #{} :returns {:tuple #{0}} :premises #{}}
              (get-in ((:defined (klara.runtime.session/resolver s 'af)) 'af/ask) [:meta :klara/affine]))))
     (testing "an undeclared caller is still checked at run time"
       (is (= :L3.affine.reuse
@@ -68,13 +70,44 @@
            [6 nil "(defaffine careless [q] (let [money (a/take {:eur 1})] (ask money q) (ask money q)))"]
            [6 "t" "(defaffine leak [q] (let [t (a/take {:eur 1})] q))"]
            [6 "t" "(defaffine bad-recur [^:own t] (loop [i 0 t t] (if (< i 3) (recur (inc i) (a/take {:eur 1})) (a/put t))))"]
-           [6 "x" "(defaffine half-dropped [^:own t] (let [[x y] (a/split t {:eur 1/2})] (a/put y)))"]]]
+           [6 "x" "(defaffine half-dropped [^:own t] (let [[x y] (a/split t {:eur 1/2})] (a/put y)))"]
+           ;; try: no token out of it, nothing consumed twice, arms only read
+           [4 nil "(defaffine launder [] (conj [] (try (a/take {:eur 1}) (catch Exception e nil))))"]
+           [2 "t" "(defaffine after-try [^:own t] (try (a/put t) (catch Exception e nil)) (a/put t))"]
+           [3 nil "(defaffine catch-put [^:own t] (try (a/holds? t {:eur 1}) (catch Exception e (a/put t))) t)"]
+           [3 nil "(defaffine finally-put [^:own t] (try 1 (finally (a/put t))) t)"]
+           ;; no part of another form may give a token
+           [4 nil "(defaffine stash [] (def stashed (a/take {:eur 1})) nil)"]
+           [4 "t" "(defaffine quoted [^:own t] (klara.stage/code (a/put t)))"]
+           [4 nil "(defaffine thrown [] (throw (ex-info \"x\" {:t (a/take {:eur 1})})))"]
+           ;; clause 7: no token live where the computation may be captured
+           [7 "t" "(defaffine pf [] (let [t (a/take {:eur 1})] (klara.effect/perform :ask 1) (a/put t)))"]
+           [7 "t" "(defaffine via [^:own t] (asks) t)"]
+           [7 "t" "(defaffine via-local [^:own t f] (f) t)"]
+           [7 "t" "(defaffine defining [^:own t] (def z 1) t)"]
+           [7 "t" "(defaffine printing [^:own t] (println 1) t)"]
+           [7 "b" "(defaffine borrowed [^:borrow b] (asks) nil)"]]]
     (testing src
       (let [r (rejection src)]
         (is (= :L4.check.affine (:rule r)))
         (is (= clause (:clause r)))
         (is (= local (some-> (:local r) str)))
         (is (some? (:place r)) (pr-str r))))))
+
+(deftest try-and-calls-under-tokens   ; L4.check.affine
+  (let [s (session)]
+    (k/eval-string s library)
+    (k/eval-string s "(defaffine guarded [^:own t] (try (a/put t) (catch Exception e nil)) :done)
+                      (defaffine reads [^:own t] (let [ok (try (a/holds? t {:eur 1}) (catch Exception e false))] (a/put t) ok))
+                      (defaffine pure-call [^:own t] (let [n (twice 2)] (a/put t) n))
+                      (defaffine in-job [^:own t] (let [o (job/run {} asks)] (a/put t) (:status o)))")
+    (is (= [:done true 4 :failed {:eur 10 :db 3}]
+           (k/eval-string s "[(guarded (a/take {:eur 1})) (reads (a/take {:eur 1})) (pure-call (a/take {:eur 1}))
+                              (in-job (a/take {:eur 1})) (a/wallet)]")))
+    (testing "the effect facts relied on are recorded as premises"
+      (is (contains? (set (map first (get-in ((:defined (klara.runtime.session/resolver s 'af)) 'af/pure-call)
+                                             [:meta :klara/affine :premises])))
+                     'af/twice)))))
 
 (deftest a-rejected-definition-is-not-defined   ; L4.check.affine
   (let [s (session)]

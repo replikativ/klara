@@ -67,7 +67,8 @@
                       ;; outcome is final (resuming it would run the call again)
                       {:resumable false
                        :message "the budget ran out inside a host call, which cannot be resumed"}
-                      {:continuation suspension})))))
+                      ;; an outcome is a handle: resumed at most once (L3.job.resumed)
+                      {:continuation suspension ::resumable (atom true)})))))
 
 (defn- job-defaults []
   {:time/now (fn [st _] (assoc st :mode :ret :ctl (System/nanoTime) :env nil))   ; L3.effect.time
@@ -162,6 +163,10 @@
            (fail :L3.job.resume (str "only an exhausted job can be resumed, not " (:status outcome))))
          (when-not (:continuation outcome)
            (fail :L3.job.resume "this job ran out of budget inside a host call and cannot be resumed"))
+         ;; resuming twice would run two continuations of one job against its
+         ;; one record (intents, world, adoption): an outcome is resumed once
+         (when-not (compare-and-set! (::resumable outcome) true false)
+           (fail :L3.job.resumed "this outcome was already resumed"))
          (let [{:keys [mode ctl env frames world mint]} (:continuation outcome)
                ;; a new grant and wallet: tokens of the settled one are foreign now
                st (enter st (::job outcome) (grant! st budget nil))]
