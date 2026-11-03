@@ -109,7 +109,7 @@
   (Star c1 c3)
   (cases hs :with
     [(refl x) (exfalso) (exact (ht c1 h1))]
-    [(step x y z hxy hyz) (have he (= Config c1 y)) (exact (step-det x c1 y h1 hxy)) (rw [he]) (exact hyz)]))
+    [(step x y z hxy hyz) (have he (= Config c1 y)) (exact (step-det c c1 y h1 hxy)) (rw [he]) (exact hyz)]))
 
 (a/theorem step-equiv [c :- Config, c1 :- Config, d :- Config, h1 :- (Step c c1),
                        ht :- (forall [e :- Config] (Not (Step d e)))]

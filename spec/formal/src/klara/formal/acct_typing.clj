@@ -838,9 +838,9 @@
   (case next (simp only [Acct.frame])
     (exact (Acct.OK.next _ _ _ _ _ _ _ (hn _ _ ht he) (hm _ he) (Acct.frame-rel _ _ _ _ fr kf hsum hi hr))))
   (case eff (simp only [Acct.frame])
-    (apply Acct.OK.eff) (exact (efk ek)) (exact (hke he)) (assumption) (assumption)
-    (intro m) (rw [(hsum m k), (hkc m), (hz he m)])
-    (exact (hkf he k ek hk)))
+    (apply Acct.OK.eff) (exact (hke he)) (assumption) (assumption)
+    (exact (hkf he k ek hk))
+    (intro m) (rw [(hsum m k), (hkc m), (hz he m)]))
   (case exn (simp only [Acct.frame]) (apply Acct.OK.exn) (assumption) (assumption))
   (case stuck (simp only [Acct.frame]) (apply Acct.OK.stuck) (assumption) (assumption)))
 
@@ -959,14 +959,13 @@
   (intro i) (apply (Acct.scope _ _ _ _ hx0)) (simp [List.length])
   (have hvc (=> (= Bool (Acct.unr A) Bool.true) (forall [m :- Nat] (= Nat (Acct.cnt m x) 0))))
   (intro q) (intro m) (exact (Acct.val-unr-cnt x A Bool.false hx0 vx q m))
-  (apply Acct.OK.next)
-  (exact e3)
+  (apply (Acct.OK.next _ _ _ _ _ _ e3))
+  (exact (Acct.subst-ty _ _ _ _ hb 0 A x (Eq.refl _) hx0 hvo hvc))
+  (intro q) (rw [q]) (simp)
   (apply Acct.pure-rel) (exact hi)
   (intro m)
   (have u (<= (Acct.cnt m (Acct.subst 0 x b)) (+ (Acct.cnt m b) (Acct.cnt m x)))) (exact (Acct.subst-cnt-le x b A Bool.false hx0 vx hl m))
   (simp only [Acct.cnt]) (omega)
-  (exact (Acct.subst-ty _ _ _ _ hb 0 A x (Eq.refl _) hx0 hvo hvc))
-  (intro q) (rw [q]) (simp)
 )
 
 (a/theorem Acct.or-imp [a :- Bool, b :- Bool, c :- Bool, h :- (=> (= Bool a Bool.true) (= Bool b Bool.true)),
@@ -991,8 +990,6 @@
 
 (a/theorem Acct.or-r [a :- Bool, b :- Bool, c :- Bool, h :- (= Bool c Bool.true)] (= Bool (Bool.or a (Bool.or b c)) Bool.true)
   (cases a) (all_goals (cases b)) (all_goals (cases c)) (all_goals (simp_all)))
-
-(a/theorem Acct.ff-tt [] (Not (= Bool Bool.false Bool.true)) (intro h) (cases h))
 
 (a/theorem Acct.app-ok [s :- Acct.Store, f :- Acct.Tm, x :- Acct.Tm, A :- Acct.Ty, B :- Acct.Ty, e1 :- Bool, e2 :- Bool, e3 :- Bool,
                      hf :- (Acct.HasTy (List.nil Acct.Ty) f (Acct.Ty.arr A B e3) e1),
@@ -1026,9 +1023,9 @@
     (intro m) (intro y) (simp only [Acct.cnt]) (omega)
     (exact hi)
     (exact ok2)
-    (intro y) (intro f2) (intro hy) (intro hf2) (rw [e10]) (exact (Acct.HasTy.app (List.nil Acct.Ty) f y A B Bool.false f2 e3 hf0 hy (fn [q :- (= Bool Bool.false Bool.true)] (absurd q Acct.ff-tt))))
+    (intro y) (intro f2) (intro hy) (intro hf2) (rw [e10]) (exact (Acct.HasTy.app (List.nil Acct.Ty) f y A B Bool.false f2 e3 hf0 hy (fn [q :- (= Bool Bool.false Bool.true)] (absurd q Bool.false_ne_true))))
     (intro f2) (intro hf2) (intro h) (exact (Acct.or-imp2 e1 f2 e2 e3 hf2 h))
-    (intro he2) (intro k) (intro ek) (intro hk) (rw [e10]) (exact (Acct.HasTy.app (List.cons Acct.Ty Acct.Ty.dat (List.nil Acct.Ty)) f k A B Bool.false ek e3 (Acct.weaken1 f _ Bool.false hf0) hk (fn [q :- (= Bool Bool.false Bool.true)] (absurd q Acct.ff-tt))))
+    (intro he2) (intro k) (intro ek) (intro hk) (rw [e10]) (exact (Acct.HasTy.app (List.cons Acct.Ty Acct.Ty.dat (List.nil Acct.Ty)) f k A B Bool.false ek e3 (Acct.weaken1 f _ Bool.false hf0) hk (fn [q :- (= Bool Bool.false Bool.true)] (absurd q Bool.false_ne_true))))
     (intro he2) (intro m) (exact (Acct.val-unr-cnt f (Acct.Ty.arr A B e3) Bool.false hf0 vf (Eq.refl _) m))
     (intro he2) (exact (Acct.or-m _ _ _ he2))
     (cases o2)
@@ -1139,15 +1136,14 @@
   (cases qa (Acct.amount x))
   (all_goals (try (dsimp only)))
   (apply Acct.OK.stuck) (intro z) (cases z) (intro z) (cases z)
-  (unfold Acct.takeN)
+  (unfold Acct.takeN) (try (dsimp only))
   (cases qb (Nat.ble val wallet))
   (all_goals (try (dsimp only)))
   (apply Acct.OK.stuck) (intro z) (cases z) (intro z) (cases z)
-  (apply Acct.OK.next)
-  (exact Bool.false)
-  (apply Acct.new-tok-rel) (exact hi) (intro m) (intro h) (exact h) (intro m) (intro lv) (intro lv2) (rw [lv] at lv2) (simp at lv2)
+  (apply (Acct.OK.next _ _ _ _ _ _ Bool.false))
   (constructor)
-  (intro q) (exact (absurd q Acct.ff-tt))
+  (intro q) (exact (absurd q Bool.false_ne_true))
+  (apply Acct.new-tok-rel) (exact hi) (intro m) (intro h) (exact h) (intro m) (intro lv) (intro lv2) (rw [lv] at lv2) (simp at lv2)
   )
 
 (a/theorem Acct.spend-red [s :- Acct.Store, i :- Nat, x :- Acct.Tm, e1 :- Bool, hi :- (Acct.Inv s (Acct.Tm.spend (Acct.Tm.tok i) x))]
@@ -1170,13 +1166,12 @@
   (cases qb (Nat.ble val (Acct.amt live i)))
   (all_goals (try (dsimp only)))
   (apply Acct.OK.stuck) (intro z) (cases z) (intro z) (cases z)
-  (apply Acct.OK.next)
-  (exact Bool.false)
+  (apply (Acct.OK.next _ _ _ _ _ _ Bool.false))
+  (constructor)
+  (intro q) (exact (absurd q Bool.false_ne_true))
   (apply Acct.new-tok-rel) (exact hi)
   (intro m) (intro h) (exact (Acct.remove-sub live i m h))
   (intro m) (intro lv) (intro lv2) (have eq (= Nat m i)) (exact (Acct.remove-gone live i m lv lv2)) (rw [eq]) (omega)
-  (constructor)
-  (intro q) (exact (absurd q Acct.ff-tt))
   )
 
 (a/theorem Acct.put-red [s :- Acct.Store, i :- Nat, e1 :- Bool, hi :- (Acct.Inv s (Acct.Tm.put (Acct.Tm.tok i)))]
@@ -1189,13 +1184,12 @@
                  (Acct.putH (Acct.Store.mk wallet spent next live) i (Acct.find live i))))
   (rw [fi])
   (unfold Acct.putH) (try (dsimp only))
-  (apply Acct.OK.next)
-  (exact Bool.false)
+  (apply (Acct.OK.next _ _ _ _ _ _ Bool.false))
+  (constructor)
+  (intro q) (exact (absurd q Bool.false_ne_true))
   (apply Acct.put-rel) (exact hi)
   (intro m) (intro h) (exact (Acct.remove-sub live i m h))
   (intro m) (intro lv) (intro lv2) (have eq (= Nat m i)) (exact (Acct.remove-gone live i m lv lv2)) (rw [eq]) (omega)
-  (constructor)
-  (intro q) (exact (absurd q Acct.ff-tt))
   )
 
 (a/theorem Acct.join-red [s :- Acct.Store, i :- Nat, j :- Nat, e1 :- Bool, hi :- (Acct.Inv s (Acct.Tm.join (Acct.Tm.tok i) (Acct.Tm.tok j)))]
@@ -1220,16 +1214,15 @@
                  (Acct.joinH (Acct.Store.mk wallet spent next live) i j (Acct.find live i) (Acct.find live j))))
   (rw [fi, fj])
   (unfold Acct.joinH) (try (dsimp only))
-  (apply Acct.OK.next)
-  (exact Bool.false)
+  (apply (Acct.OK.next _ _ _ _ _ _ Bool.false))
+  (constructor)
+  (intro q) (exact (absurd q Bool.false_ne_true))
   (apply Acct.new-tok-rel) (exact hi)
   (intro m) (intro h) (exact (Acct.remove-sub live i m (Acct.remove-sub (Acct.remove live i) j m h)))
   (intro m) (intro lv) (intro lv2)
   (cases q (Acct.isLive (Acct.remove live i) m))
   (have eq (= Nat m i)) (exact (Acct.remove-gone live i m lv q)) (rw [eq, ci]) (omega)
   (have eq (= Nat m j)) (exact (Acct.remove-gone (Acct.remove live i) j m q lv2)) (rw [eq, cj]) (omega)
-  (constructor)
-  (intro q) (exact (absurd q Acct.ff-tt))
   )
 
 (a/theorem Acct.inv-le [s :- Acct.Store, t :- Acct.Tm, e :- Acct.Tm, hi :- (Acct.Inv s t),
@@ -1245,7 +1238,7 @@
   (cases a) (all_goals (simp_all)))
 
 (a/theorem Acct.ff-of [f :- Bool, h :- (=> (= Bool f Bool.true) (= Bool Bool.false Bool.true))] (= Bool f Bool.false)
-  (cases f) (rfl) (exfalso) (exact (Acct.ff-tt (h (Eq.refl _)))))
+  (cases f) (rfl) (exfalso) (exact (Bool.false_ne_true (h (Eq.refl _)))))
 
 (a/theorem Acct.tt-ff [] (Not (= Bool Bool.true Bool.false)) (intro h) (cases h))
 
@@ -1285,14 +1278,13 @@
     (have e10 (= Bool e1 Bool.false)) (exact (Acct.val-eff _ _ _ _ he ve))
     (have he0 (Acct.HasTy (List.nil Acct.Ty) e A Bool.false)) (rw [e10] at he) (exact he)
     (simp only [Acct.seq1])
-    (apply Acct.OK.next)
-    (exact e2)
+    (apply (Acct.OK.next _ _ _ _ _ _ e2))
+    (exact (Acct.subst-ty _ _ _ _ hb 0 A e (Eq.refl _) he0 (Acct.closed0 e A Bool.false he0) (fn [q :- (= Bool (Acct.unr A) Bool.true)] (Acct.val-unr-cnt e A Bool.false he0 ve q))))
+    (intro q) (exact (Acct.or-r2 _ _ q))
     (apply Acct.pure-rel) (exact hi)
     (intro m)
     (have u (<= (Acct.cnt m (Acct.subst 0 e b)) (+ (Acct.cnt m b) (Acct.cnt m e)))) (exact (Acct.subst-cnt-le e b A Bool.false he0 ve hl m))
-    (simp only [Acct.cnt]) (omega)
-    (exact (Acct.subst-ty _ _ _ _ hb 0 A e (Eq.refl _) he0 (Acct.closed0 e A Bool.false he0) (fn [q :- (= Bool (Acct.unr A) Bool.true)] (Acct.val-unr-cnt e A Bool.false he0 ve q))))
-    (intro q) (exact (Acct.or-r2 _ _ q)))
+    (simp only [Acct.cnt]) (omega))
   (all_goals (exact FR1))
   )
 
@@ -1323,16 +1315,18 @@
     (unfold Acct.pick)
     (cases qt (Acct.truthy c))
     (all_goals (try (dsimp only)))
-    (apply Acct.OK.next) (exact e3)
+    (apply (Acct.OK.next _ _ _ _ _ _ e3))
+    (exact he)
+    (intro q) (exact (Acct.or-r _ _ _ q))
     (apply Acct.pure-rel) (exact hi) (intro m)
     (show (<= (Acct.cnt m e) (+ (Acct.cnt m c) (Acct.mx (Acct.cnt m u) (Acct.cnt m e)))))
     (have x1 (<= (Acct.cnt m e) (Acct.mx (Acct.cnt m u) (Acct.cnt m e)))) (exact (Acct.mx-r _ _)) (omega)
-    (exact he) (intro q) (exact (Acct.or-r _ _ _ q))
-    (apply Acct.OK.next) (exact e2)
+    (apply (Acct.OK.next _ _ _ _ _ _ e2))
+    (exact hu)
+    (intro q) (exact (Acct.or-m _ _ _ q))
     (apply Acct.pure-rel) (exact hi) (intro m)
     (show (<= (Acct.cnt m u) (+ (Acct.cnt m c) (Acct.mx (Acct.cnt m u) (Acct.cnt m e)))))
-    (have x1 (<= (Acct.cnt m u) (Acct.mx (Acct.cnt m u) (Acct.cnt m e)))) (exact (Acct.mx-l _ _)) (omega)
-    (exact hu) (intro q) (exact (Acct.or-m _ _ _ q)))
+    (have x1 (<= (Acct.cnt m u) (Acct.mx (Acct.cnt m u) (Acct.cnt m e)))) (exact (Acct.mx-l _ _)) (omega))
   (all_goals (exact FR1))
   )
 
@@ -1431,7 +1425,7 @@
                     vu :- (= Bool (Acct.isVal u) Bool.true)]
   (Not (= Bool e1 Bool.true))
   (have e0 (= Bool e1 Bool.false)) (exact (Acct.val-eff _ _ _ _ hu vu))
-  (rw [e0]) (exact Acct.ff-tt))
+  (rw [e0]) (exact Bool.false_ne_true))
 
 (a/theorem Acct.spend-ok [s :- Acct.Store, u :- Acct.Tm, x :- Acct.Tm, e1 :- Bool,
                        hu :- (Acct.HasTy (List.nil Acct.Ty) u Acct.Ty.tok e1),
@@ -1467,9 +1461,9 @@
     (rw [f20] at hy)
     (exact (Acct.HasTy.spend (List.nil Acct.Ty) u y e1 hu hy (fn [q :- (= Bool e1 Bool.true)] (absurd q (Acct.ff-eq e1 u Acct.Ty.tok hu vu)))))
     (intro f2) (intro hf2) (intro h) (exact h)
-    (intro q) (exact (absurd q Acct.ff-tt))
-    (intro q) (exact (absurd q Acct.ff-tt))
-    (intro q) (exact (absurd q Acct.ff-tt))
+    (intro q) (exact (absurd q Bool.false_ne_true))
+    (intro q) (exact (absurd q Bool.false_ne_true))
+    (intro q) (exact (absurd q Bool.false_ne_true))
     (cases o2)
     (case val
       (have eu (= Acct.Tm u (Acct.Tm.tok (Acct.tokId u)))) (exact (Acct.tok-of u e1 hu vu))
@@ -1513,9 +1507,9 @@
     (rw [f20] at hy)
     (exact (Acct.HasTy.join (List.nil Acct.Ty) u y e1 hu hy (fn [q :- (= Bool e1 Bool.true)] (absurd q (Acct.ff-eq e1 u Acct.Ty.tok hu vu)))))
     (intro f2) (intro hf2) (intro h) (exact h)
-    (intro q) (exact (absurd q Acct.ff-tt))
-    (intro q) (exact (absurd q Acct.ff-tt))
-    (intro q) (exact (absurd q Acct.ff-tt))
+    (intro q) (exact (absurd q Bool.false_ne_true))
+    (intro q) (exact (absurd q Bool.false_ne_true))
+    (intro q) (exact (absurd q Bool.false_ne_true))
     (cases o2)
     (case val
       (have vx (= Bool (Acct.isVal x) Bool.true)) (exact (hv2 (Eq.refl _)))
@@ -1538,11 +1532,10 @@
                         hfr :- (Acct.Tf 1 (List.nil Acct.Ty) r), hfo :- (Acct.Tf 3 (List.nil Acct.Ty) o),
                         hi :- (Acct.Inv s (Acct.Tm.handle ops b r o))]
   (Acct.OK s (Acct.Tm.handle ops b r o) B Bool.true (Acct.Out.next s (Acct.Tm.handling ops b r o)))
-  (apply Acct.OK.next)
-  (exact Bool.true)
-  (apply Acct.pure-rel) (exact hi) (intro m) (exact (Nat.le_refl _))
+  (apply (Acct.OK.next _ _ _ _ _ _ Bool.true))
   (exact (Acct.HasTy.handling (List.nil Acct.Ty) ops b r o B e1 e2 e3 hb hr ho hfr hfo))
-  (intro q) (rfl))
+  (intro q) (rfl)
+  (apply Acct.pure-rel) (exact hi) (intro m) (exact (Nat.le_refl _)))
 
 (a/theorem Acct.try-ok [s :- Acct.Store, b :- Acct.Tm, h :- Acct.Tm, A :- Acct.Ty, e1 :- Bool, e2 :- Bool,
                      hb :- (Acct.HasTy (List.nil Acct.Ty) b A e1),
@@ -1563,20 +1556,20 @@
   (cases o1)
   (case val
     (show (Acct.OK s (Acct.Tm.try_ b h) A (Bool.or e1 e2) (Acct.Out.next s b)))
-    (apply Acct.OK.next) (exact e1)
-    (apply Acct.pure-rel) (exact hi) (intro m) (show (<= (Acct.cnt m b) (+ (Acct.cnt m b) (Acct.cnt m h)))) (omega)
+    (apply (Acct.OK.next _ _ _ _ _ _ e1))
     (exact hb)
-    (intro q) (exact (Acct.or-l _ _ q)))
+    (intro q) (exact (Acct.or-l _ _ q))
+    (apply Acct.pure-rel) (exact hi) (intro m) (show (<= (Acct.cnt m b) (+ (Acct.cnt m b) (Acct.cnt m h)))) (omega))
   (case exn
     (have hv (Acct.HasTy (List.nil Acct.Ty) v Acct.Ty.dat Bool.false)) (exact (Acct.ok-exn-v _ _ _ _ _ h1))
     (have hvc (forall [m :- Nat] (= Nat (Acct.cnt m v) 0))) (intro m) (exact (Acct.ok-exn-c _ _ _ _ _ h1 m))
     (show (Acct.OK s (Acct.Tm.try_ b h) A (Bool.or e1 e2) (Acct.Out.next s (Acct.subst 0 v h))))
-    (apply Acct.OK.next) (exact e2)
+    (apply (Acct.OK.next _ _ _ _ _ _ e2))
+    (exact (Acct.subst-ty _ _ _ _ hh 0 Acct.Ty.dat v (Eq.refl _) hv (Acct.closed0 v Acct.Ty.dat Bool.false hv) (fn [q :- (= Bool (Acct.unr Acct.Ty.dat) Bool.true)] hvc)))
+    (intro q) (exact (Acct.or-r2 _ _ q))
     (apply Acct.pure-rel) (exact hi) (intro m)
     (rw [(Acct.cnt-subst-0 m v (hvc m) h 0)])
-    (show (<= (Acct.cnt m h) (+ (Acct.cnt m b) (Acct.cnt m h)))) (omega)
-    (exact (Acct.subst-ty _ _ _ _ hh 0 Acct.Ty.dat v (Eq.refl _) hv (Acct.closed0 v Acct.Ty.dat Bool.false hv) (fn [q :- (= Bool (Acct.unr Acct.Ty.dat) Bool.true)] hvc)))
-    (intro q) (exact (Acct.or-r2 _ _ q)))
+    (show (<= (Acct.cnt m h) (+ (Acct.cnt m b) (Acct.cnt m h)))) (omega))
   (all_goals (exact FR)))
 
 (a/theorem Acct.handling-eff [s :- Acct.Store, ops :- (List Nat), b :- Acct.Tm, r :- Acct.Tm, o :- Acct.Tm, B :- Acct.Ty,
@@ -1619,13 +1612,13 @@
   (exact (Acct.subst-ty _ _ _ _ T2 0 Acct.Ty.dat (Acct.Tm.lit (Acct.Datum.num op)) (Eq.refl _) (Acct.HasTy.lit (List.nil Acct.Ty) (Acct.Datum.num op))
            (fn [i :- Nat] (Eq.refl _)) (fn [q :- (= Bool (Acct.unr Acct.Ty.dat) Bool.true)] (fn [m :- Nat] (Eq.refl _)))))
   (have CKl (forall [m :- Nat] (= Nat (Acct.cnt m (Acct.Tm.lam (Acct.Tm.handling ops k r o))) 0))) (intro m) (exact (CK m))
-  (apply Acct.OK.next) (exact e3)
+  (apply (Acct.OK.next _ _ _ _ _ _ e3))
+  (exact T3)
+  (intro q) (rfl)
   (apply Acct.pure-rel) (exact hi) (intro m)
   (have z0 (= Nat (Acct.cnt m (Acct.Tm.lit (Acct.Datum.num op))) 0)) (rfl)
   (rw [(Acct.cnt-subst-0 m _ z0 _ 0), (Acct.cnt-subst-0 m v (hvc m) _ 0), (Acct.cnt-subst-0 m _ (CKl m) o 0), (Acct.tf-c _ _ _ hfo m)])
-  (omega)
-  (exact T3)
-  (intro q) (rfl))
+  (omega))
 
 (a/theorem Acct.handling-ok [s :- Acct.Store, ops :- (List Nat), b :- Acct.Tm, r :- Acct.Tm, o :- Acct.Tm, B :- Acct.Ty,
                           e1 :- Bool, e2 :- Bool, e3 :- Bool,
@@ -1660,12 +1653,12 @@
     (have hb0 (Acct.HasTy (List.nil Acct.Ty) b Acct.Ty.dat Bool.false)) (rw [e10] at hb) (exact hb)
     (have cb (forall [m :- Nat] (= Nat (Acct.cnt m b) 0))) (intro m) (exact (Acct.val-unr-cnt b Acct.Ty.dat Bool.false hb0 vb (Eq.refl _) m))
     (show (Acct.OK s (Acct.Tm.handling ops b r o) B Bool.true (Acct.Out.next s (Acct.subst 0 b r))))
-    (apply Acct.OK.next) (exact e2)
+    (apply (Acct.OK.next _ _ _ _ _ _ e2))
+    (exact (Acct.subst-ty _ _ _ _ hr 0 Acct.Ty.dat b (Eq.refl _) hb0 (Acct.closed0 _ _ _ hb0) (fn [q :- (= Bool (Acct.unr Acct.Ty.dat) Bool.true)] cb)))
+    (intro q) (rfl)
     (apply Acct.pure-rel) (exact hi) (intro m)
     (rw [(Acct.cnt-subst-0 m b (cb m) r 0)])
-    (show (<= (Acct.cnt m r) (+ (Acct.cnt m b) (+ (Acct.cnt m r) (Acct.cnt m o))))) (omega)
-    (exact (Acct.subst-ty _ _ _ _ hr 0 Acct.Ty.dat b (Eq.refl _) hb0 (Acct.closed0 _ _ _ hb0) (fn [q :- (= Bool (Acct.unr Acct.Ty.dat) Bool.true)] cb)))
-    (intro q) (rfl))
+    (show (<= (Acct.cnt m r) (+ (Acct.cnt m b) (+ (Acct.cnt m r) (Acct.cnt m o))))) (omega))
   (case eff
     (cases h1)
     (exact (Acct.handling-eff _ ops _ r o B e2 e3 _ _ _ _ hr ho hfr hfo hv hvc hk hkc hi)))

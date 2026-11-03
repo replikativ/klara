@@ -13,7 +13,7 @@
   ;; The formal semantics (spec/formal) is checked by ansatz. To work against
   ;; a local checkout: -Sdeps '{:deps {org.replikativ/ansatz {:local/root "../ansatz"}}}'
   :formal {:extra-paths ["spec/formal/src" "spec/formal/test"]
-           :extra-deps {org.replikativ/ansatz {:mvn/version "0.2.579"}}
+           :extra-deps {org.replikativ/ansatz {:mvn/version "0.2.592"}}
            :jvm-opts ["--enable-native-access=ALL-UNNAMED"]}
   ;; clojure -M:formal:test-formal  checks the formal semantics and runs the
   ;; differential tests (KLARA_DIFF_SEEDS sets the number of generated programs)

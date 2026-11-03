@@ -121,6 +121,13 @@ wallet and spent amount (500 programs by default; about a fifth end in
 
 ### Workarounds to remove when ansatz catches up
 
+Done with the pin at 0.2.592: `Acct.ff-tt` replaced by `Bool.false_ne_true`;
+the proofs follow Lean's `apply` goal order (`Acct.OK.next` takes its
+witness explicitly, then `ht`, `he`, `hr`), `unfold` by delta expansion
+and Lean's `cases`. The cleanup below waits for the remaining fixes
+(`simp only` with the given equations only, no-confusion in `simp`), so that
+the proofs are rewritten once.
+
 The λ-acct proofs work around ansatz behaviour that differs from Lean 4
 (listed for the ansatz maintainers in the Klara memory and fixed there one
 pull request at a time). When Klara's ansatz pin is raised past those
@@ -128,8 +135,7 @@ fixes, remove:
 
 - the `load-init!` guard at the top of `core.clj` and `acct.clj` (an
   idempotent `load-init!`);
-- `Acct.ff-tt` (use `Bool.false_ne_true`) and `Acct.tf-subst0` (if `exact`
-  accepts `j + 0` for `j`);
+- `Acct.tf-subst0` (if `exact` accepts `j + 0` for `j`);
 - the `show` steps that recover a function call after `unfold`, and the
   `cases q (e)` plus `dsimp only` detours, in `Acct.ev-val`, `Acct.if-ok`,
   `Acct.spendN-nv`, `Acct.spend-red`, `Acct.put-red`, `Acct.join-red`,
@@ -142,9 +148,10 @@ fixes, remove:
 - the accessor lemmas (`Acct.rel-a` to `rel-e`, `Acct.inv-1` to `inv-3`,
   `Acct.ok-exn-v`, `Acct.ok-exn-c`, `Acct.lam-inv-b`, `Acct.lam-inv-l`) and
   the `Acct.*-ev` wrappers, where they only exist because `cases` renamed
-  variables (keep those that read better);
+  variables (keep those that read better); possible since ansatz 0.2.592
+  (Lean's `cases`: no induction hypotheses, names kept);
 - `exact` with every argument in place of `apply` (goal order), where
-  `apply` reads better;
+  `apply` reads better; possible since 0.2.592 (Lean's goal order);
 - `LE.le Nat instLENat` and `Bool.true`/`Bool.false` in the field types and
   indices of `Acct.Tf`, `Acct.HasTy`, `Acct.Inv`, `Acct.StepRel`, `Acct.OK`.
 
