@@ -3,15 +3,16 @@
 
   A state is
     mode   :eval (ctl is a term, evaluated in env) or :ret (ctl is a value)
-    k      the continuation: a list of frames, top first; frames are maps
+    k      the continuation: a stack of frames, top first (klara.runtime.stack,
+           which also lists the frame kinds)
     world  the effective world E      (L1.context.*)
     mint   the basis stamped on new closures, nil or a world
     dyn    {:meter :defaults :session :job}: what belongs to the caller
            rather than to the code (budget, default handlers)
 
-  Every frame is plain data, so a continuation is a vector of frames and
-  resuming it pushes them back: handlers are deep and continuations
-  multi-shot (L3.handle.deep, L3.cont.multishot). Calls in tail position push
+  Handlers are deep and continuations multi-shot (L3.handle.deep,
+  L3.cont.multishot): a captured continuation is a vector of frames, and
+  resuming it pushes them back. Calls in tail position push
   no frame (L0.eval.tail); closures capture only their :free locals
   (L0.space.closure).
 
@@ -24,6 +25,7 @@
   (:require [klara.lang.builtins :as b]
             [klara.lang.term :as t]
             [klara.runtime.prepare :as prep]
+            [klara.runtime.stack :as ks]
             [klara.runtime.value :as v]
             [klara.runtime.world :as w])
   (:import [klara.runtime.value Closure Continuation Code CodeVar World]))
@@ -174,20 +176,10 @@
     (fail :L2.lift.mutable (str "cannot lift mutable " (type m) " into code") :value (str m)))
   (t/const x))
 
-(defn constructing
-  "Fresh names bound by code constructions still in progress on `k`
-   (L2.code.extrusion is checked against the dynamic extent of construction).
-   A :binders frame (code/fn*, code/loop*) binds names the same way. A host
-   callback is part of that extent: at its boundary the search goes on in
-   the continuation of the host call."
-  [k]
-  (or (some (fn [f]
-              (case (:f f)
-                (:code :binders) (:bound f)
-                :boundary (when-let [ok (:outer-k f)] (constructing ok))
-                nil))
-            k)
-      #{}))
+(def constructing
+  "Fresh names bound by code constructions in progress on a stack
+   (klara.runtime.stack/constructing)."
+  ks/constructing)
 
 (defn- instantiate
   "Finish a code node: holes have been evaluated to Code values. `allowed`
@@ -283,37 +275,45 @@
 (defn state [mode ctl env k world mint dyn]
   {:mode mode :ctl ctl :env env :k k :world world :mint mint :dyn dyn})
 
-(defn- find-handler
-  "Index of the nearest handle frame for `op`, or the index of the first
-   frame that stops the search (:job, :boundary), or nil."
-  [k op]
-  (loop [k k i 0]
-    (when-let [f (first k)]
-      (case (:f f)
-        :handle (if (contains? (:handlers f) op) [:handler i] (recur (rest k) (inc i)))
-        (:job :boundary) [:stop i]
-        (recur (rest k) (inc i))))))
-
 (defn perform
   "Perform `op` with `args` from state `st` (L3.perform.op)."
   [st op args]
   (let [k (:k st)
-        [kind i] (find-handler k op)]
-    (if (= kind :handler)
-      (let [a (object-array (inc i))
-            below (loop [k k j 0] (if (<= j i) (do (aset a j (first k)) (recur (rest k) (inc j))) k))
-            frame (aget a i)
-            cont (Continuation. (owning a) (:world st) (:mint st))
+        i (ks/find-handler k op)
+        a (when (>= i 0) (object-array (inc i)))
+        below (when a (ks/split! k a (inc i)))
+        frame (when a (aget a i))]
+    (if (identical? :handle (ks/kind frame))
+      (let [cont (Continuation. (owning a) (:world st) (:mint st))
             handler (get (:handlers frame) op)]
         ;; the handler runs outside its frame, in the handle expression's context
         (state :apply [handler (prepend cont args)] (:env st) below (:world frame) (:mint frame) (:dyn st)))
-      (if-let [d (and (not (and (= kind :stop) (:deopt (nth k i)))) (get-in st [:dyn :defaults op]))]
-        (d st args)
-        (if (and (= kind :stop) (:deopt (nth k i)))
-          ;; L4.exec.leave: hand the whole state to the compiled caller
-          (throw (ex-info "leave nested machine" {::abandon :effect ::state st}))
-          (fail (if (and (= kind :stop) (= :boundary (:f (nth k i)))) :L3.effect.host-boundary :L3.effect.unhandled)
-                (str "unhandled effect " op) :op op))))))
+      ;; frame is nil or a stop frame
+      (let [deopt (:deopt frame)]
+        (if-let [d (and (not deopt) (get-in st [:dyn :defaults op]))]
+          (d st args)
+          (if deopt
+            ;; L4.exec.leave: hand the whole state to the compiled caller
+            (throw (ex-info "leave nested machine" {::abandon :effect ::state st}))
+            (fail (if (identical? :boundary (ks/kind frame)) :L3.effect.host-boundary :L3.effect.unhandled)
+                  (str "unhandled effect " op) :op op)))))))
+
+;; The intrinsics klara.effect/perform and klara.effect/handle* (registered
+;; in klara.runtime.intrinsics). step-apply recognizes them and runs the
+;; common case on the registers (perform-op!, handle-op!); these are the rule.
+
+(defn perform-intrinsic
+  "(perform op & args), L3.perform.op."
+  [st [op & args]]
+  (when-not (keyword? op) (fail :L3.perform.op (str "operation must be a keyword, got " (pr-str op))))
+  (perform st op (vec args)))
+
+(defn handle-intrinsic
+  "(handle* handlers thunk), L3.handle.deep: apply thunk under a handle frame."
+  [st [handlers thunk]]
+  (when-not (map? handlers) (fail :L3.handle.deep "handlers must be a map of operation to function"))
+  (assoc st :mode :apply :ctl [thunk []]
+         :k (ks/push (:k st) (ks/handle-frame (dissoc handlers :return) (:return handlers) (:world st) (:mint st)))))
 
 ;; ---------------------------------------------------------------------------
 ;; Klara stack traces (L0.trace.positions)
@@ -325,7 +325,7 @@
     (:pos (.sourceTerm ^klara.runtime.prepare.INode x))))
 
 (defn- frame-pos [f]
-  (some node-pos [(:body f) (:then f) (:node f) (first (:todo f)) (:term f)]))
+  (some node-pos (ks/frame-nodes f)))
 
 (defn klara-trace
   "Source positions of the computation in state `st`, innermost first: the
@@ -353,30 +353,29 @@
   (attach-trace! ex st)
   (loop [k (:k st)]
     (if-let [f (first k)]
-      (case (:f f)
+      (case (ks/kind f)
         :try (if-let [c (some #(when (instance? (:class %) ex) %) (:catches f))]
                (let [env (conj (:env f) ex)
-                     k (if (:finally f) (conj (rest k) {:f :finally-ret :term (:finally f) :env (:env f)}) (rest k))]
+                     k (if (:finally f) (ks/push (rest k) (ks/finally-ret-frame (:finally f) (:env f))) (rest k))]
                  (assoc st :mode :eval :ctl (:body c) :env env :k k :world (:world f) :mint (:mint f)))
                (if (:finally f)
                  (assoc st :mode :eval :ctl (:finally f) :env (:env f)
-                        :k (conj (rest k) {:f :finally-throw :ex ex}) :world (:world f) :mint (:mint f))
+                        :k (ks/push (rest k) (ks/finally-throw-frame ex)) :world (:world f) :mint (:mint f))
                  (recur (rest k))))
         :job ((:on-throw f) (assoc st :k (rest k)) f ex)
         :boundary (throw ex)
         (recur (rest k)))
       (throw ex))))
 
-(defn- stop-frame [k] (some #(#{:job :boundary} (:f %)) k))
 
 (defn- exhaust
   "The budget ran out in `st` (L3.budget.exhausted). Inside a nested machine
    the host call is abandoned; the job that owns the budget then suspends
    at that call."
   [st]
-  (let [stop (some #(when (#{:job :boundary} (:f %)) %) (:k st))]
+  (let [stop (ks/stop-frame (:k st))]
     (cond
-      (= :job (:f stop)) ((get-in st [:dyn :on-exhausted]) st)
+      (identical? :job (ks/kind stop)) ((get-in st [:dyn :on-exhausted]) st)
       ;; inside a nested machine of compiled code: leave with the state, so the
       ;; job suspends exactly here (L4.exec.leave)
       (:deopt stop) (throw (ex-info "leave nested machine" {::abandon :exhausted ::state st}))
@@ -495,6 +494,14 @@
 
 (defn- profiling? [dyn] (nil? (:no-profile dyn)))
 
+;; What the steps need from dyn, cached in the registers by its identity (dyn
+;; changes only where a job, a handler context or klara.profile/without
+;; switches it): register 8 the dyn they were read from, 9 its step meter,
+;; 10 whether profiles are recorded (L4.profile.record).
+(defn- sync-dyn! [^objects regs dyn]
+  (when-not (identical? dyn (aget regs 8))
+    (aset regs 8 dyn) (aset regs 9 (:meter dyn)) (aset regs 10 (profiling? dyn))))
+
 (defn- self-call-frame?
   "Is args frame f completing a definition's call of itself?"
   [f]
@@ -503,16 +510,16 @@
 
 (defn- record-entry!
   "L4.profile.record: a function entry (or loop iteration) with its arguments."
-  [dyn ^Closure f args external]
-  (when (profiling? dyn)
+  [prof ^Closure f args external]
+  (when prof
     (.enter ^klara.runtime.prepare.IProfile (.-profile ^klara.runtime.prepare.Fn (.-node f)) args (boolean external))))
 
-(defn- record-call! [dyn ^klara.runtime.prepare.App c fv]
-  (when (and (profiling? dyn) (or (instance? Closure fv) (instance? klara.runtime.value.IExecutable fv)))
+(defn- record-call! [prof ^klara.runtime.prepare.App c fv]
+  (when (and prof (or (instance? Closure fv) (instance? klara.runtime.value.IExecutable fv)))
     (.call ^klara.runtime.prepare.IProfile (.-profile c) fv)))
 
-(defn- record-branch! [dyn ^klara.runtime.prepare.If c x]
-  (when (profiling? dyn) (.branch ^klara.runtime.prepare.IProfile (.-profile c) (boolean x))))
+(defn- record-branch! [prof ^klara.runtime.prepare.If c x]
+  (when prof (.branch ^klara.runtime.prepare.IProfile (.-profile c) (boolean x))))
 
 (defn- save! [^objects r mode ctl env k world mint dyn]
   (aset r 0 mode) (aset r 1 ctl) (aset r 2 env) (aset r 3 k)
@@ -534,7 +541,9 @@
 (defn- step-eval [regs]
   (let [^objects regs regs
         mode (aget regs 0) ctl (aget regs 1) env (aget regs 2) k (aget regs 3)
-        world (aget regs 4) mint (aget regs 5) dyn (aget regs 6) ctx (aget regs 7)]
+        world (aget regs 4) mint (aget regs 5) dyn (aget regs 6) ctx (aget regs 7)
+        _ (sync-dyn! regs dyn)
+        meter (aget regs 9) prof (aget regs 10)]
       (let [c ctl
             x (imm c env world mint dyn ctx)]
         (if-not (identical? x none)
@@ -542,18 +551,18 @@
           (case (prep/tag c)
             5 (let [^klara.runtime.prepare.App c c
                     fv (imm (.-f c) env world mint dyn ctx)
-                    _ (when-not (identical? fv none) (record-call! dyn c fv))]
+                    _ (when-not (identical? fv none) (record-call! prof c fv))]
                 (cond
                   (identical? fv none)
-                  (next! regs :eval (.-f c) env (conj k {:f :args :node c :todo (.-args c) :vals [] :env env :recur (.-recur-arity c)}) world mint dyn)
-                  (and (.-all-imm c) (instance? Closure fv) (nil? (.-basis ^Closure fv)) (not (charge! (:meter dyn))))
+                  (next! regs :eval (.-f c) env (ks/push k (ks/args-frame c (.-args c) [] env (.-recur-arity c))) world mint dyn)
+                  (and (.-all-imm c) (instance? Closure fv) (nil? (.-basis ^Closure fv)) (not (charge! meter)))
                   ;; the common case: an open closure on immediate arguments, entered directly
                   (let [^Closure fv fv
                         args (imm-all (.-args c) env world mint dyn ctx)
                         ra (.-recur-arity c)
                         i (if ra (long ra) (select-arity fv (count args)))
                         ^klara.runtime.prepare.Arity a (nth (.-arities ^klara.runtime.prepare.Fn (.-node fv)) i)]
-                    (record-entry! dyn fv args (not (.-self-call c)))
+                    (record-entry! prof fv args (not (.-self-call c)))
                     (next! regs :eval (.-body a) (bind-args fv a args (boolean ra)) k world mint dyn))
                   (.-all-imm c)
                   (next! regs :apply [fv (imm-all (.-args c) env world mint dyn ctx) (.-recur-arity c) (.-self-call c)] env k world mint dyn)
@@ -562,23 +571,23 @@
                     (if (nil? remaining)
                       (next! regs :apply [fv vals (.-recur-arity c) (.-self-call c)] env k world mint dyn)
                       (next! regs :eval (first remaining) env
-                             (conj k {:f :args :node c :todo (subvec remaining 1) :vals (prepend fv vals) :env env :recur (.-recur-arity c)})
+                             (ks/push k (ks/args-frame c (subvec remaining 1) (prepend fv vals) env (.-recur-arity c)))
                              world mint dyn)))))
             6 (let [^klara.runtime.prepare.Let c c
                     x (imm (.-init c) env world mint dyn ctx)]
                 (if (identical? x none)
-                  (next! regs :eval (.-init c) env (conj k {:f :let :body (.-body c) :env env}) world mint dyn)
+                  (next! regs :eval (.-init c) env (ks/push k (ks/let-frame (.-body c) env)) world mint dyn)
                   (next! regs :eval (.-body c) (conj env x) k world mint dyn)))
             8 (let [^klara.runtime.prepare.If c c
                     x (imm (.-test c) env world mint dyn ctx)]
                 (if (identical? x none)
-                  (next! regs :eval (.-test c) env (conj k {:f :if :node c :then (.-then c) :else (.-else c) :env env}) world mint dyn)
-                  (do (record-branch! dyn c x)
+                  (next! regs :eval (.-test c) env (ks/push k (ks/if-frame c (.-then c) (.-else c) env)) world mint dyn)
+                  (do (record-branch! prof c x)
                       (next! regs :eval (if x (.-then c) (.-else c)) env k world mint dyn))))
             9 (let [^klara.runtime.prepare.Do c c
                     exprs (.-exprs c)]
                 (if (seq exprs)
-                  (next! regs :eval (first exprs) env (conj k {:f :do :rest (concat (rest exprs) [(.-last c)]) :env env}) world mint dyn)
+                  (next! regs :eval (first exprs) env (ks/push k (ks/do-frame (concat (rest exprs) [(.-last c)]) env)) world mint dyn)
                   (next! regs :eval (.-last c) env k world mint dyn)))
             7 (let [^klara.runtime.prepare.Letrec c c
                     fns (.-fns c)
@@ -597,13 +606,13 @@
                    ;; its entry charges this iteration's step (L4.lower.steps)
                    compiled
                    (next! regs :apply [compiled (imm-all (.-args c) env world mint dyn ctx) nil] env k world mint dyn)
-                   (and fast (not (charge! (:meter dyn))))
+                   (and fast (not (charge! meter)))
                    ;; a loop iteration: re-enter the arity directly (L0.eval.tail)
                    (let [^Closure self self
                          fnode (.-node self)
                          ^klara.runtime.prepare.Arity a (nth (.-arities ^klara.runtime.prepare.Fn fnode) (.-arity c))
                          args (imm-all (.-args c) env world mint dyn ctx)]
-                     (record-entry! dyn self args true)
+                     (record-entry! prof self args true)
                      (next! regs :eval (.-body a) (bind-args self a args true) k world mint dyn))
                    :else
                  (let [[vals remaining] (if (.-all-imm c)
@@ -612,21 +621,21 @@
                  (if (nil? remaining)
                    (next! regs :apply [self vals (.-arity c)] env k world mint dyn)
                    (next! regs :eval (first remaining) env
-                          (conj k {:f :args :node c :todo (subvec remaining 1) :vals (prepend self vals) :env env :recur (.-arity c)})
+                          (ks/push k (ks/args-frame c (subvec remaining 1) (prepend self vals) env (.-arity c)))
                           world mint dyn)))))
-            11 (next! regs :eval (.-ex ^klara.runtime.prepare.Throw c) env (conj k {:f :throw}) world mint dyn)
+            11 (next! regs :eval (.-ex ^klara.runtime.prepare.Throw c) env (ks/push k ks/throw-frame) world mint dyn)
             12 (let [^klara.runtime.prepare.Try c c]
                  (next! regs :eval (.-body c) env
-                        (conj k {:f :try :catches (.-catches c) :finally (.-finally c) :env env :world world :mint mint})
+                        (ks/push k (ks/try-frame (.-catches c) (.-finally c) env world mint))
                         world mint dyn))
             13 (let [^klara.runtime.prepare.Interop c c
                      cs (.-args c)]
                  (if (seq cs)
-                   (next! regs :eval (first cs) env (conj k {:f :interop :term (.-term c) :todo (rest cs) :vals [] :env env}) world mint dyn)
+                   (next! regs :eval (first cs) env (ks/push k (ks/interop-frame (.-term c) (rest cs) [] env)) world mint dyn)
                    (next! regs :ret (do (set-context! world mint dyn) (interop (.-term c) [])) env k world mint dyn)))
             14 (let [^klara.runtime.prepare.Def c c]
                  (when mint (fail :L1.def.pinned (str "def of " (:name (.-term c)) " in a pinned context")))
-                 (next! regs :eval (.-init c) env (conj k {:f :def :term (.-term c)}) world mint dyn))
+                 (next! regs :eval (.-init c) env (ks/push k (ks/def-frame (.-term c))) world mint dyn))
             15 (let [^klara.runtime.prepare.Code c c
                      term (.-term c)
                      [tmpl renaming] (t/freshen (:template term))
@@ -634,9 +643,8 @@
                      holes (.-holes c)]
                  (if (seq holes)
                    (next! regs :eval (first holes) hole-env
-                          (conj k {:f :code :node c :env env :hole-env hole-env :tmpl tmpl
-                                   :bound (into (constructing k) (vals renaming))
-                                   :todo (rest holes) :vals []})
+                          (ks/push k (ks/code-frame c env hole-env tmpl (into (constructing k) (vals renaming))
+                                                    (rest holes) []))
                           world mint dyn)
                    (next! regs :ret (instantiate c env (constructing k) tmpl []) env k world mint dyn)))
             (fail :L0.term.wf (str "unknown node " c)))))))
@@ -644,11 +652,13 @@
 (defn- step-ret [regs]
   (let [^objects regs regs
         mode (aget regs 0) ctl (aget regs 1) env (aget regs 2) k (aget regs 3)
-        world (aget regs 4) mint (aget regs 5) dyn (aget regs 6) ctx (aget regs 7)]
+        world (aget regs 4) mint (aget regs 5) dyn (aget regs 6) ctx (aget regs 7)
+        _ (sync-dyn! regs dyn)
+        meter (aget regs 9) prof (aget regs 10)]
       (if (empty? k)
         (state :done ctl env k world mint dyn)
         (let [x ctl f (first k) k (rest k)]
-          (case (:f f)
+          (case (ks/kind f)
             :args (let [vals (conj (:vals f) x)]
                     (if-let [todo (not-empty (:todo f))]
                       (let [[more remaining] (imm-prefix todo (:env f) world mint dyn ctx)
@@ -656,13 +666,13 @@
                         (if (nil? remaining)
                           (next! regs :apply [(first vals) (subvec vals 1) (:recur f) (self-call-frame? f)] env k world mint dyn)
                           (next! regs :eval (first remaining) (:env f)
-                                 (conj k (assoc f :todo (subvec remaining 1) :vals vals)) world mint dyn)))
+                                 (ks/push k (ks/args-frame (:node f) (subvec remaining 1) vals (:env f) (:recur f))) world mint dyn)))
                       (next! regs :apply [(first vals) (subvec vals 1) (:recur f) (self-call-frame? f)] env k world mint dyn)))
             :let (next! regs :eval (:body f) (conj (:env f) x) k world mint dyn)
-            :if (do (record-branch! dyn (:node f) x)
+            :if (do (record-branch! prof (:node f) x)
                     (next! regs :eval (if x (:then f) (:else f)) (:env f) k world mint dyn))
             :do (let [[a & more] (:rest f)]
-                  (next! regs :eval a (:env f) (if more (conj k (assoc f :rest more)) k) world mint dyn))
+                  (next! regs :eval a (:env f) (if more (ks/push k (ks/do-frame more (:env f))) k) world mint dyn))
             :restore (next! regs :ret x env k (:world f) (:mint f) dyn)
             :restore-profile (next! regs :ret x env k world mint
                                     (if (:no-profile f) (assoc dyn :no-profile true) (dissoc dyn :no-profile)))
@@ -671,60 +681,136 @@
                       (next! regs :apply [r [x]] env k (:world f) (:mint f) dyn)
                       (next! regs :ret x env k world mint dyn))
             :try (if (:finally f)
-                   (next! regs :eval (:finally f) (:env f) (conj k {:f :finally-value :value x}) world mint dyn)
+                   (next! regs :eval (:finally f) (:env f) (ks/push k (ks/finally-value-frame x)) world mint dyn)
                    (next! regs :ret x env k world mint dyn))
             :finally-value (next! regs :ret (:value f) env k world mint dyn)
-            :finally-ret (next! regs :eval (:term f) (:env f) (conj k {:f :finally-value :value x}) world mint dyn)
+            :finally-ret (next! regs :eval (:term f) (:env f) (ks/push k (ks/finally-value-frame x)) world mint dyn)
             :finally-throw (raise (state :ret x env k world mint dyn) (:ex f))
             :throw (raise (state :ret x env k world mint dyn)
                           (if (instance? Throwable x) x
                               (ex-info (str "throw of a non-throwable: " (pr-str x)) {:rule :L0.eval.exception :value x})))
             :interop (let [vals (conj (:vals f) x)]
                        (if-let [[a & more] (seq (:todo f))]
-                         (next! regs :eval a (:env f) (conj k (assoc f :todo more :vals vals)) world mint dyn)
+                         (next! regs :eval a (:env f) (ks/push k (ks/interop-frame (:term f) more vals (:env f))) world mint dyn)
                          (next! regs :ret (do (set-context! world mint dyn) (interop (:term f) vals)) env k world mint dyn)))
             :def (let [c (:term f)]
                    (perform (state :ret x env k world mint dyn) :world/define
                             [(:name c) {:form (:form c) :term (:init c) :value x :macro? (:macro? c) :meta (:meta c)}]))
             :code (let [vals (conj (:vals f) x)]
                     (if-let [[a & more] (seq (:todo f))]
-                      (next! regs :eval a (:hole-env f) (conj k (assoc f :todo more :vals vals)) world mint dyn)
+                      (next! regs :eval a (:hole-env f)
+                             (ks/push k (ks/code-frame (:node f) (:env f) (:hole-env f) (:tmpl f) (:bound f) more vals))
+                             world mint dyn)
                       (next! regs :ret (instantiate (:node f) (:env f) (constructing k) (:tmpl f) vals) env k world mint dyn)))
             :job ((:on-return f) (state :ret x env k world mint dyn) f x)
             :boundary (state :done x env k world mint dyn)
             :frame-fn ((:fn f) (state :ret x env k world mint dyn) x))))))
 
+(defonce ^{:doc "Take resume-in-place where it applies. Off, every effect
+  takes the rule as written; the suites run both ways."}
+  tail-resume? (atom true))
+
+(defn- resume-in-place?
+  "Can clause `h`, applied to `n` arguments, resume in place?"
+  [h ^long n meter]
+  (and (instance? Closure h) (nil? (.-basis ^Closure h))
+       (some? (.-tail-arg ^klara.runtime.prepare.Fn (.-node ^Closure h)))
+       (== n (.-nparams ^klara.runtime.prepare.Arity (nth (.-arities ^klara.runtime.prepare.Fn (.-node ^Closure h)) 0)))
+       (or (nil? meter) (>= (aget ^longs meter 0) 2))
+       @tail-resume?))
+
+(defn- resume-in-place!
+  "The clause application `h` to `args` (the first the continuation `cont`
+   of the stack `k` above `below`), when `h` is (fn [k ..] (k e)) and e is
+   immediate (klara.runtime.prepare/tail-arg). The rule applies the clause on
+   `below`, in the handle's world and mint `fworld` `fmint`; its body applies
+   cont to the value of e in tail position, which pushes the frames of cont
+   back onto `below`, giving `k`, in the perform's world and mint. That is two
+   applications, so two steps (L3.budget.steps), and resume-in-place? asks for
+   both to be there: otherwise the rule runs, and exhausts where it does. e
+   cannot perform, leave or call Klara code (it is immediate), so nothing
+   else can happen in between. What is observable is kept: the clause's
+   profile records its entry with the real continuation (L4.profile.record),
+   and while e is evaluated the registers hold the state the rule would be
+   in, so an exception e raises is raised from there (L0.eval.exception,
+   L0.trace.positions)."
+  [^objects regs ^Closure h args k below world mint fworld fmint dyn]
+  (let [meter (aget regs 9)
+        ^klara.runtime.prepare.Fn node (.-node h)
+        ^klara.runtime.prepare.Arity a (nth (.-arities node) 0)
+        _ (charge! meter)
+        _ (record-entry! (aget regs 10) h args true)
+        env' (bind-args h a args false)]
+    (save! regs :eval (.-body a) env' below fworld fmint dyn)
+    (let [v (imm (.-tail-arg node) env' fworld fmint dyn (aget regs 7))]
+      (charge! meter)
+      (next! regs :ret v nil k world mint dyn))))
+
+(defn- perform-op!
+  "perform-intrinsic on the registers, for the common case: a keyword
+   operation with a handler on the stack. The clause application is the
+   state perform returns (L3.perform.op); any other case takes perform."
+  [^objects regs ctl args env k world mint dyn]
+  (let [op (when (pos? (count args)) (nth args 0))
+        i (if (keyword? op) (ks/find-handler k op) -1)
+        a (when (>= i 0) (object-array (inc i)))
+        below (when a (ks/split! k a (inc i)))
+        frame (when a (aget a i))]
+    (if (identical? :handle (ks/kind frame))
+      (let [h (get (:handlers frame) op)
+            ;; [op & args] becomes [continuation & args]
+            args (assoc (if (vector? args) args (vec args)) 0 (Continuation. (owning a) world mint))]
+        (if (resume-in-place? h (count args) (aget regs 9))
+          (resume-in-place! regs h args k below world mint (:world frame) (:mint frame) dyn)
+          (next! regs :apply [h args] env below (:world frame) (:mint frame) dyn)))
+      (perform-intrinsic (state :apply ctl env k world mint dyn) args))))
+
+(defn- handle-op!
+  "handle-intrinsic on the registers, for well-formed arguments."
+  [^objects regs ctl args env k world mint dyn]
+  (let [handlers (when (== 2 (count args)) (nth args 0))]
+    (if (map? handlers)
+      (next! regs :apply [(nth args 1) []] env
+             (ks/push k (ks/handle-frame (dissoc handlers :return) (:return handlers) world mint)) world mint dyn)
+      (handle-intrinsic (state :apply ctl env k world mint dyn) args))))
+
 (defn- step-apply [regs]
   (let [^objects regs regs
         mode (aget regs 0) ctl (aget regs 1) env (aget regs 2) k (aget regs 3)
-        world (aget regs 4) mint (aget regs 5) dyn (aget regs 6)]
+        world (aget regs 4) mint (aget regs 5) dyn (aget regs 6)
+        _ (sync-dyn! regs dyn)
+        meter (aget regs 9) prof (aget regs 10)]
       (let [[fv args recur-arity] ctl]
         (cond
           (instance? Closure fv)
-          (if (charge! (:meter dyn))
+          (if (charge! meter)
             (exhaust (state :apply ctl env k world mint dyn))
             (let [^Closure fv fv
                   i (if recur-arity (long recur-arity) (select-arity fv (count args)))
                   ^klara.runtime.prepare.Arity a (nth (.-arities ^klara.runtime.prepare.Fn (.-node fv)) i)
-                  _ (record-entry! dyn fv args (not (get ctl 3)))
+                  _ (record-entry! prof fv args (not (get ctl 3)))
                   env' (bind-args fv a args (boolean recur-arity))
                   basis (.-basis fv)]
               (if (and basis (not (identical? basis mint)))
                 ;; L1.context.call-based: run in the basis, restore afterwards
                 (next! regs :eval (.-body a) env'
-                       (if (= :restore (:f (first k))) k (conj k {:f :restore :world world :mint mint}))
+                       (if (identical? :restore (ks/kind (first k))) k (ks/push k (ks/restore-frame world mint)))
                        basis basis dyn)
                 (next! regs :eval (.-body a) env' k world mint dyn))))
 
           (instance? Continuation fv)
           (let [^Continuation fv fv]
             (when-not (= 1 (count args)) (fail :L0.eval.arity "a continuation takes one argument"))
-            (if (charge! (:meter dyn))
+            (if (charge! meter)
               (exhaust (state :apply ctl env k world mint dyn))
-              (next! regs :ret (first args) nil (reduce conj k (rseq (.-frames fv))) (.-world fv) (.-mint fv) dyn)))
+              (next! regs :ret (first args) nil (ks/reinstate k (.-frames fv)) (.-world fv) (.-mint fv) dyn)))
 
           (instance? Intrinsic fv)
-          ((:f fv) (state :apply ctl env k world mint dyn) args)
+          (let [g (.-f ^Intrinsic fv)]
+            (cond
+              (identical? g perform-intrinsic) (perform-op! regs ctl args env k world mint dyn)
+              (identical? g handle-intrinsic) (handle-op! regs ctl args env k world mint dyn)
+              :else (g (state :apply ctl env k world mint dyn) args)))
 
           (instance? klara.runtime.value.IExecutable fv)
           (v/-execute fv (state :apply ctl env k world mint dyn) args)
@@ -757,11 +843,13 @@
   [st ^objects regs]
   (save! regs (:mode st) (:ctl st) (:env st) (:k st) (:world st) (:mint st) (:dyn st))
   (loop []
-    (let [r (case (aget regs 0)
-              :eval (step-eval regs)
-              :ret (step-ret regs)
-              :apply (step-apply regs)
-              :done (regs-state regs))]
+    (let [mode (aget regs 0)
+          ;; identity tests: the modes are constants, and case would hash them
+          r (cond
+              (identical? mode :eval) (step-eval regs)
+              (identical? mode :ret) (step-ret regs)
+              (identical? mode :apply) (step-apply regs)
+              :else (regs-state regs))]
       (if (nil? r) (recur) r))))
 
 (defn run-state
@@ -769,19 +857,20 @@
    state map."
   [st]
   (let [saved (.get context)
-        regs (object-array 8)
+        regs (object-array 11)
         ctx (object-array 6)]
     ;; world mint dyn, the meter cached per dyn (see meter-of), and the
     ;; continuation of the host call in progress (see constructing)
     (.set context ctx)
     (aset regs 7 ctx)
+    (aset regs 8 none)
     (try
       (loop [st st]
         (let [r (try (drive st regs)
                      (catch Throwable ex
                        (let [st (regs-state regs)]
                          (if-let [reason (abandoned ex)]
-                           (if (and (= reason :exhausted) (= :job (stop-frame (:k st))))
+                           (if (and (= reason :exhausted) (identical? :job (ks/kind (ks/stop-frame (:k st)))))
                              ;; the budget ran out inside a host call: the host's stack
                              ;; is gone, and running the call again would repeat what
                              ;; its callbacks did to objects (L3.budget.exhausted)
@@ -806,7 +895,7 @@
    the compiled call (L4.exec.leave)."
   [[world mint dyn _ _ outer-k] f args & [deopt?]]
   (let [r (run-state (state :apply [f (vec args)] nil
-                            (list {:f :boundary :deopt deopt? :outer-k outer-k}) world mint dyn))]
+                            (ks/push ks/empty-stack (ks/boundary-frame deopt? outer-k)) world mint dyn))]
     ;; the caller goes on in the world the callback left (L1.def.read-your-writes)
     (when-let [^objects c (.get context)] (aset c 0 (:world r)))
     (:ctl r)))

@@ -71,7 +71,9 @@
 ;; A function node. `osr` is set when compiled code for this very node
 ;; exists (it belongs to a candidate whose leaves continue here): an IFn of
 ;; [closure world mint] returning an executable for the closure, or nil.
-(deftype Fn [term arities captured profile ^:volatile-mutable osr-entry]
+;; `tail-arg`: for a function of the shape (fn [k ..] (k e)), the node of e
+;; (see tail-arg), else nil.
+(deftype Fn [term arities captured profile tail-arg ^:volatile-mutable osr-entry]
   INode (tag [_] 4) (sourceTerm [_] term)
   IOsr (osr [_] osr-entry) (setOsr [_ e] (set! osr-entry e))
   Object (toString [_] "#node/Fn"))
@@ -257,20 +259,51 @@
   (and self (or (contains? (t/free-locals (:body arity)) self)
                 (some #(and (= :recur (:op %)) (= self (:target %))) (t/nodes (:body arity))))))
 
+(defn- mentions-slot?
+  "Does immediate node `n` read local slot `i` (directly, or by capturing it)?"
+  [n ^long i]
+  (condp instance? n
+    Local (== i (.-slot ^Local n))
+    Fn (boolean (some #(== i (long %)) (.-captured ^Fn n)))
+    App (boolean (some #(mentions-slot? % i) (.-args ^App n)))
+    false))
+
+(defn- tail-arg
+  "The node of e if `arities` are the one arity (fn [k ..] (k e)): fixed
+   parameters, a body that applies the first parameter to an immediate node
+   e that does not mention it. Such a handler clause resumes its
+   continuation at once, in tail position, with a value computed without a
+   frame (the machine's resume-in-place)."
+  [arities nfree]
+  (when (== 1 (count arities))
+    (let [^Arity a (first arities)
+          k-slot (+ (long nfree) (if (.-self? a) 1 0))
+          body (.-body a)]
+      (when (and (not (.-rest? a)) (pos? (.-nparams a)) (instance? App body))
+        (let [^App body body
+              f (.-f body)
+              args (.-args body)]
+          (when (and (nil? (.-recur-arity body)) (instance? Local f) (== k-slot (.-slot ^Local f))
+                     (== 1 (count args)) (imm-node? (first args))
+                     (not (mentions-slot? (first args) k-slot)))
+            (first args)))))))
+
 (defn prep-fn [scope term host-value]
   (let [free (:free term)
-        self (:self term)]
+        self (:self term)
+        arities (mapv (fn [a]
+                        (let [used (boolean (self-used? self a))
+                              inner (cond-> (vec free)
+                                      used (conj self)
+                                      true (into (:params a))
+                                      (:rest a) (conj (:rest a)))]
+                          (Arity. (count (:params a)) (boolean (:rest a)) used (prep inner (:body a) host-value))))
+                      (:arities term))]
     (Fn. term
-         (mapv (fn [a]
-                 (let [used (boolean (self-used? self a))
-                       inner (cond-> (vec free)
-                               used (conj self)
-                               true (into (:params a))
-                               (:rest a) (conj (:rest a)))]
-                   (Arity. (count (:params a)) (boolean (:rest a)) used (prep inner (:body a) host-value))))
-               (:arities term))
+         arities
          (mapv #(slot-of scope %) free)
          (new-profile)
+         (tail-arg arities (count free))
          nil)))
 
 (defn prep

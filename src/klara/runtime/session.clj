@@ -11,6 +11,7 @@
             [klara.lang.term :as t]
             [klara.runtime.account :as account]
             [klara.runtime.machine :as m]
+            [klara.runtime.stack :as ks]
             [klara.runtime.value :as v]
             [klara.runtime.world :as w])
   (:import [klara.runtime.value Code World]))
@@ -269,4 +270,4 @@
               :fn (fn [st _]
                     (assoc st :mode :ret :env nil
                            :ctl (assoc (retained (get-in st [:dyn :session]))
-                                       :jobs (count (filter #(= :job (:f %)) (:k st))))))})
+                                       :jobs (ks/count-kind (:k st) :job))))})

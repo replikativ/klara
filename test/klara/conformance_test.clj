@@ -27,7 +27,9 @@
            (let [d (ex-data e)] {:rule (:rule d) :message (.getMessage e)}))
          (catch Throwable e {:error (str e)}))))
 
-(deftest conformance
+(defn check-cases
+  "Run every case and check it against its expectation."
+  []
   (doseq [f (cases)]
     (let [text (slurp f)
           expect (header text "expect")
@@ -37,3 +39,5 @@
         (if expect-rule
           (is (= (edn/read-string expect-rule) (:rule result)) (pr-str result))
           (is (= (edn/read-string expect) (:value result)) (pr-str result)))))))
+
+(deftest conformance (check-cases))

@@ -17,6 +17,7 @@
             [klara.runtime.profile :as profile]
             [klara.runtime.job :as job]
             [klara.runtime.machine :as m]
+            [klara.runtime.stack :as ks]
             [klara.runtime.value :as v]
             [klara.runtime.world :as w])
   (:import [klara.runtime.value Closure Code]))
@@ -291,18 +292,18 @@
            (fail :L4.prepare.reference "the reference must be code for a function"))
          (let [opts (or opts {})
                recipe (or (:recipe opts) identity)
-               st (assoc st :k (conj (:k st) {:f :frame-fn :fn settle}))
+               st (assoc st :k (ks/push (:k st) (ks/fn-frame settle)))
                st (job/start st {:budget (or (:budget opts) {:steps 100000})})]
            (assoc st :mode :apply :ctl [recipe [reference]]
-                  :k (conj (:k st) {:f :frame-fn
-                                    :fn (fn [st cand]
+                  :k (ks/push (:k st) (ks/fn-frame
+                                    (fn [st cand]
                                           ;; a recipe may return {:code c :provenance m}: m is
                                           ;; data about how c came about, carried out of the job
                                           (let [[c m] (if (and (map? cand) (contains? cand :code))
                                                         [(:code cand) (:provenance cand)]
                                                         [cand nil])]
                                             (ret st (cond-> (finish st reference c opts)
-                                                      m (assoc :recipe-provenance m)))))}))))})
+                                                      m (assoc :recipe-provenance m))))))))))})
 
 (b/register! 'klara.compiler.kernel/executable
   {:kind :intrinsic

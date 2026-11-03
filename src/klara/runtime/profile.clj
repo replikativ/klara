@@ -7,6 +7,7 @@
             [klara.lang.term :as t]
             [klara.runtime.intrinsics :as intr :refer [defintrinsic]]
             [klara.runtime.prepare :as prep]
+            [klara.runtime.stack :as ks]
             [klara.runtime.value :as v])
   (:import [klara.runtime.value Closure Code]))
 
@@ -163,4 +164,4 @@
   ;; elsewhere keeps that context's budget and job)
   (let [dyn (:dyn st)]
     (assoc st :mode :apply :ctl [thunk []] :dyn (assoc dyn :no-profile true)
-           :k (conj (:k st) {:f :restore-profile :no-profile (:no-profile dyn)}))))
+           :k (ks/push (:k st) (ks/restore-profile-frame (:no-profile dyn))))))

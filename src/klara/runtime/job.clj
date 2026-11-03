@@ -11,6 +11,7 @@
             [klara.lang.term :as t]
             [klara.runtime.account :as acct]
             [klara.runtime.machine :as m]
+            [klara.runtime.stack :as ks]
             [klara.runtime.session :as session]
             [klara.runtime.world :as w]))
 
@@ -55,12 +56,10 @@
   "Suspend at the current state: the frames above the job frame and the
    current control are the continuation (L3.budget.exhausted)."
   [st]
-  (let [k (:k st)
-        i (count (take-while #(not= :job (:f %)) k))
-        frame (nth k i)
+  (let [[frames frame below] (ks/split-at-job (:k st))
         suspension {:mode (:mode st) :ctl (:ctl st) :env (:env st)
-                    :frames (vec (take i k)) :world (:world st) :mint (:mint st)}]
-    (leave (assoc st :k (nthrest k (inc i))) frame
+                    :frames frames :world (:world st) :mint (:mint st)}]
+    (leave (assoc st :k below) frame
            (outcome frame :exhausted
                     (if (::m/in-host st)
                       ;; inside a host call there is no continuation to keep: the
@@ -94,14 +93,14 @@
   [st job grant]
   (let [meter (long-array [(long (:steps grant))])
         wallet (acct/child-wallet (get-in st [:dyn :wallet]) meter (dissoc grant :steps))
-        frame {:f :job :job job :meter meter :wallet wallet :granted grant
-               :parent-dyn (:dyn st) :world (:world st) :mint (:mint st)
-               :on-return on-return :on-throw on-throw}
+        frame (ks/job-frame {:job job :meter meter :wallet wallet :granted grant
+                             :parent-dyn (:dyn st) :world (:world st) :mint (:mint st)
+                             :on-return on-return :on-throw on-throw})
         dyn (cond-> {:meter meter :wallet wallet :defaults (job-defaults) :session (get-in st [:dyn :session])
                      :job job :on-exhausted on-exhausted}
               ;; L3.job.profile: a job may run without training profiles
               (or (false? (:profile @job)) (get-in st [:dyn :no-profile])) (assoc :no-profile true))]
-    (assoc st :k (conj (:k st) frame) :dyn dyn)))
+    (assoc st :k (ks/push (:k st) frame) :dyn dyn)))
 
 (defn- grant! [st budget withdrawn]
   (acct/grant! (:dyn st) budget default-steps withdrawn))
@@ -147,7 +146,7 @@
                each (quot granted (max n 1))
                run1 (fn [thunk]
                       (let [own (long-array [each])
-                            base (assoc st :k () :dyn (assoc (:dyn st) :meter own))
+                            base (assoc st :k ks/empty-stack :dyn (assoc (:dyn st) :meter own))
                             s (assoc (start base (assoc opts :budget {:steps each} ::withdrawn each-rest))
                                      :mode :apply :ctl [thunk []])]
                         [(:ctl (m/run-state s)) (aget own 0)]))
@@ -171,7 +170,7 @@
                ;; a new grant and wallet: tokens of the settled one are foreign now
                st (enter st (::job outcome) (grant! st budget nil))]
            (assoc st :mode mode :ctl ctl :env env :world world :mint mint
-                  :k (reduce conj (:k st) (rseq frames)))))})
+                  :k (ks/reinstate (:k st) frames))))})
 
 (b/register! 'klara.job/adopt!                                       ; L3.job.adopt
   {:kind :intrinsic

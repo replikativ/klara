@@ -42,6 +42,7 @@
             [klara.runtime.machine :as m]
             [klara.runtime.prepare :as prep]
             [klara.runtime.prims :as prims]
+            [klara.runtime.stack :as ks]
             [klara.runtime.value :as v])
   (:import [klara.runtime.value Closure]))
 
@@ -113,18 +114,18 @@
 
 (defn leave-eval [node env] (leave {:mode :eval :node node :env env}))
 
-(defn let-frame [body-node env] {:f :let :body body-node :env env})
+(defn let-frame [body-node env] (ks/let-frame body-node env))
 
 (defn try-frame
   "L4.lower.try: the interpreter's frame for a try whose body left compiled code."
   [catches finally env ^objects ctx]
-  {:f :try :catches catches :finally finally :env env :world (aget ctx 0) :mint (aget ctx 1)})
+  (ks/try-frame catches finally env (aget ctx 0) (aget ctx 1)))
 
 (defn finally-frame
   "L4.lower.try: the frame that runs a try's finally clause after a catch arm
    that left compiled code."
   [finally env]
-  {:f :finally-ret :term finally :env env})
+  (ks/finally-ret-frame finally env))
 
 ;; Stress testing: leave at function entries with probability `stress`, to
 ;; exercise frame states everywhere (as V8's --deopt-every-n-times does).
@@ -202,14 +203,14 @@
    was entered, after compiled code left with `leave` (L4.exec.frame-state)."
   [st leave]
   (let [{:keys [mode frames]} leave
-        k (reduce conj (:k st) (rseq (vec frames)))]
+        k (ks/reinstate (:k st) (vec frames))]
+    ;; built whole, not by assoc: this runs whenever compiled code leaves
     (case mode
-      :eval (assoc st :mode :eval :ctl (:node leave) :env (:env leave) :k k)
-      :apply (assoc st :mode :apply :ctl [(:f leave) (vec (:args leave)) nil] :env nil :k k)
+      :eval (m/state :eval (:node leave) (:env leave) k (:world st) (:mint st) (:dyn st))
+      :apply (m/state :apply [(:f leave) (vec (:args leave)) nil] nil k (:world st) (:mint st) (:dyn st))
       :nested (let [n (:state leave)
-                    inner (take-while #(not= :boundary (:f %)) (:k n))]
-                (assoc st :mode (:mode n) :ctl (:ctl n) :env (:env n)
-                       :k (reduce conj k (reverse inner)) :world (:world n) :mint (:mint n))))))
+                    inner (ks/above-boundary (:k n))]
+                (m/state (:mode n) (:ctl n) (:env n) (reduce conj k (reverse inner)) (:world n) (:mint n) (:dyn st))))))
 
 ;; ---------------------------------------------------------------------------
 ;; Calls
@@ -267,7 +268,7 @@
   [r]
   (if-let [l (leave? r)]
     (let [^objects c (m/current-context)
-          base {:mode :ret :ctl nil :env nil :k (list {:f :boundary :deopt false})
+          base {:mode :ret :ctl nil :env nil :k (ks/push ks/empty-stack (ks/boundary-frame false nil))
                 :world (aget c 0) :mint (aget c 1) :dyn (aget c 2)}]
       (:ctl (m/run-state (resume base l))))
     r))

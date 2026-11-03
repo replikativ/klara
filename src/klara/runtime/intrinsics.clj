@@ -9,6 +9,7 @@
             [klara.runtime.prepare :as prep]
             [klara.lang.term :as t]
             [klara.runtime.machine :as m]
+            [klara.runtime.stack :as ks]
             [klara.runtime.value :as v]
             [klara.runtime.world :as w])
   (:import [klara.runtime.value Closure Code World]))
@@ -38,7 +39,7 @@
 (defintrinsic klara.world/in [st [world f & args]]              ; L1.context.in
   (check-world world)
   (assoc st :mode :apply :ctl [f (vec args)]
-         :k (conj (:k st) {:f :restore :world (:world st) :mint (:mint st)})
+         :k (ks/push (:k st) (ks/restore-frame (:world st) (:mint st)))
          :world world :mint world))
 
 (defintrinsic klara.world/get [st [world q]]                    ; L1.context.get
@@ -127,15 +128,10 @@
 ;; ---------------------------------------------------------------------------
 ;; klara.effect (spec/L3-effects.md)
 
-(defintrinsic klara.effect/perform [st [op & args]]             ; L3.perform.op
-  (when-not (keyword? op) (fail :L3.perform.op (str "operation must be a keyword, got " (pr-str op))))
-  (m/perform st op (vec args)))
-
-(defintrinsic klara.effect/handle* [st [handlers thunk]]        ; L3.handle.deep
-  (when-not (map? handlers) (fail :L3.handle.deep "handlers must be a map of operation to function"))
-  (assoc st :mode :apply :ctl [thunk []]
-         :k (conj (:k st) {:f :handle :handlers (dissoc handlers :return) :return (:return handlers)
-                           :world (:world st) :mint (:mint st)})))
+;; perform and handle* are defined in the machine, which runs them on its
+;; fast path (klara.runtime.machine/perform-op!)
+(b/register! 'klara.effect/perform {:kind :intrinsic :fn m/perform-intrinsic})   ; L3.perform.op
+(b/register! 'klara.effect/handle* {:kind :intrinsic :fn m/handle-intrinsic})    ; L3.handle.deep
 
 (b/register! 'klara.effect/handle
              {:kind :macro
@@ -369,11 +365,12 @@
   [st f args fresh k]
   (let [stack (:k st)]
     (assoc st :mode :apply :ctl [f (vec args)]
-           :k (conj stack {:f :frame-fn :fn (fn [st body]
-                                              (when-not (v/code? body)
-                                                (fail :L2.code.binders (str "the body function returned " (pr-str body) ", not code")))
-                                              (k st (.-term ^Code body)))}
-                    {:f :binders :bound (into (m/constructing stack) fresh)}))))
+           :k (-> stack
+                  (ks/push (ks/fn-frame (fn [st body]
+                                          (when-not (v/code? body)
+                                            (fail :L2.code.binders (str "the body function returned " (pr-str body) ", not code")))
+                                          (k st (.-term ^Code body)))))
+                  (ks/push (ks/binders-frame (into (ks/constructing stack) fresh)))))))
 
 (defintrinsic klara.code/fn* [st [n f]]                        ; L2.code.binders
   ;; (fn self [p1 .. pn] body), body = (f self p1 .. pn) with each as Code
