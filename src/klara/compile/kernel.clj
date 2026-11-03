@@ -83,7 +83,7 @@
         (= ::invalid r)
         (do (set! last-path :reference)                           ; L4.exec.executable
             (assoc st :mode :apply
-                   :ctl [(m/closure-of (.-term ^Code (:reference cand)) (:mint st)) (vec args)]))
+                   :ctl (m/apply-ctl (m/closure-of (.-term ^Code (:reference cand)) (:mint st)) (vec args))))
         (lower/leave? r)
         (do (set! last-path :left)                                 ; L4.exec.leave
             (lower/resume st (lower/leave? r)))
@@ -294,7 +294,7 @@
                recipe (or (:recipe opts) identity)
                st (assoc st :k (ks/push (:k st) (ks/fn-frame settle)))
                st (job/start st {:budget (or (:budget opts) {:steps 100000})})]
-           (assoc st :mode :apply :ctl [recipe [reference]]
+           (assoc st :mode :apply :ctl (m/apply-ctl recipe [reference])
                   :k (ks/push (:k st) (ks/fn-frame
                                     (fn [st cand]
                                           ;; a recipe may return {:code c :provenance m}: m is

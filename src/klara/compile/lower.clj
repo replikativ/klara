@@ -207,7 +207,7 @@
     ;; built whole, not by assoc: this runs whenever compiled code leaves
     (case mode
       :eval (m/state :eval (:node leave) (:env leave) k (:world st) (:mint st) (:dyn st))
-      :apply (m/state :apply [(:f leave) (vec (:args leave)) nil] nil k (:world st) (:mint st) (:dyn st))
+      :apply (m/state :apply (m/apply-ctl (:f leave) (vec (:args leave))) nil k (:world st) (:mint st) (:dyn st))
       :nested (let [n (:state leave)
                     inner (ks/above-boundary (:k n))]
                 (m/state (:mode n) (:ctl n) (:env n) (reduce conj k (reverse inner)) (:world n) (:mint n) (:dyn st))))))

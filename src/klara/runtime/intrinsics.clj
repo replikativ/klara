@@ -38,7 +38,7 @@
 
 (defintrinsic klara.world/in [st [world f & args]]              ; L1.context.in
   (check-world world)
-  (assoc st :mode :apply :ctl [f (vec args)]
+  (assoc st :mode :apply :ctl (m/apply-ctl f (vec args))
          :k (ks/push (:k st) (ks/restore-frame (:world st) (:mint st)))
          :world world :mint world))
 
@@ -163,7 +163,7 @@
                           (fail :L3.job.host-mutation
                                 (str (name s) " on an object created outside this job")
                                 :hint "create the atom inside the job, or return a value instead"))
-                        (assoc st :mode :apply :ctl [hf (vec args)]))})))
+                        (assoc st :mode :apply :ctl (m/apply-ctl hf (vec args))))})))
 
 (doseq [[s f] {'atom atom 'volatile! volatile!}]
   (b/register! (symbol "klara.core" (name s))
@@ -364,7 +364,7 @@
   "Apply f to args with `fresh` counting as bound; then call (k st body-code)."
   [st f args fresh k]
   (let [stack (:k st)]
-    (assoc st :mode :apply :ctl [f (vec args)]
+    (assoc st :mode :apply :ctl (m/apply-ctl f (vec args))
            :k (-> stack
                   (ks/push (ks/fn-frame (fn [st body]
                                           (when-not (v/code? body)

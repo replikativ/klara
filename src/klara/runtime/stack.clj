@@ -9,7 +9,7 @@
   here and in the machine's steps; everything else (effects, jobs, nested
   machines, compiled code leaving) goes through the operations below.
 
-  The frame kinds, the grammar of K:
+  The frame kinds, the grammar of K (one record type each, below):
 
     evaluation in progress
       :args           a call: the values so far, the argument nodes to go
@@ -42,50 +42,90 @@
 
 ;; ---------------------------------------------------------------------------
 ;; Frames
+;;
+;; One record type per kind, with a constant tag for the machine's dispatch
+;; (as prepared nodes have, klara.runtime.prepare). Fields are read by name,
+;; as keywords on slow paths and as fields in the machine's steps.
+
+(definterface IFrame
+  (^long tag [])
+  (kind []))
+
+(defmacro ^:private defframe [name tag kind fields]
+  `(defrecord ~name ~fields
+     IFrame (~'tag [_#] ~tag) (~'kind [_#] ~kind)))
+
+(def ^:const ARGS 0) (def ^:const LET 1) (def ^:const IF 2) (def ^:const DO 3)
+(def ^:const INTEROP 4) (def ^:const CODE 5) (def ^:const THROW 6) (def ^:const DEF 7)
+(def ^:const RESTORE 8) (def ^:const RESTORE-PROFILE 9) (def ^:const BINDERS 10) (def ^:const FRAME-FN 11)
+(def ^:const TRY 12) (def ^:const FINALLY-VALUE 13) (def ^:const FINALLY-RET 14) (def ^:const FINALLY-THROW 15)
+(def ^:const HANDLE 16) (def ^:const JOB 17) (def ^:const BOUNDARY 18)
+
+(defframe ArgsFrame 0 :args [node todo vals env recur-arity])
+(defframe LetFrame 1 :let [body env])
+(defframe IfFrame 2 :if [node then else env])
+(defframe DoFrame 3 :do [exprs env])
+(defframe InteropFrame 4 :interop [term todo vals env])
+(defframe CodeFrame 5 :code [node env hole-env tmpl bound todo vals])
+(defframe ThrowFrame 6 :throw [])
+(defframe DefFrame 7 :def [term])
+(defframe RestoreFrame 8 :restore [world mint])
+(defframe RestoreProfileFrame 9 :restore-profile [no-profile])
+(defframe BindersFrame 10 :binders [bound])
+(defframe FnFrame 11 :frame-fn [callback])
+(defframe TryFrame 12 :try [catches finally-node env world mint])
+(defframe FinallyValueFrame 13 :finally-value [value])
+(defframe FinallyRetFrame 14 :finally-ret [term env])
+(defframe FinallyThrowFrame 15 :finally-throw [ex])
+(defframe HandleFrame 16 :handle [handlers return world mint])
+(defframe JobFrame 17 :job [job meter wallet granted parent-dyn world mint on-return on-throw])
+(defframe BoundaryFrame 18 :boundary [deopt outer-k])
+
+(defn tag
+  "The tag of frame `f` (the constants above)."
+  ^long [f]
+  (.tag ^IFrame f))
 
 (defn kind
-  "The kind of frame `f` (see the namespace doc)."
+  "The kind of frame `f` (see the namespace doc), or nil for nil."
   [f]
-  (:f f))
+  (when f (.kind ^IFrame f)))
 
-(defn args-frame [node todo vals env recur] {:f :args :node node :todo todo :vals vals :env env :recur recur})
-(defn let-frame [body env] {:f :let :body body :env env})
-(defn if-frame [node then else env] {:f :if :node node :then then :else else :env env})
-(defn do-frame [rest env] {:f :do :rest rest :env env})
-(defn interop-frame [term todo vals env] {:f :interop :term term :todo todo :vals vals :env env})
-(defn code-frame [node env hole-env tmpl bound todo vals]
-  {:f :code :node node :env env :hole-env hole-env :tmpl tmpl :bound bound :todo todo :vals vals})
-(def throw-frame {:f :throw})
-(defn def-frame [term] {:f :def :term term})
+(defn args-frame [node todo vals env recur-arity] (ArgsFrame. node todo vals env recur-arity))
+(defn let-frame [body env] (LetFrame. body env))
+(defn if-frame [node then else env] (IfFrame. node then else env))
+(defn do-frame [exprs env] (DoFrame. exprs env))
+(defn interop-frame [term todo vals env] (InteropFrame. term todo vals env))
+(defn code-frame [node env hole-env tmpl bound todo vals] (CodeFrame. node env hole-env tmpl bound todo vals))
+(def throw-frame (ThrowFrame.))
+(defn def-frame [term] (DefFrame. term))
 
-(defn restore-frame [world mint] {:f :restore :world world :mint mint})
-(defn restore-profile-frame [no-profile] {:f :restore-profile :no-profile no-profile})
-(defn binders-frame [bound] {:f :binders :bound bound})
+(defn restore-frame [world mint] (RestoreFrame. world mint))
+(defn restore-profile-frame [no-profile] (RestoreProfileFrame. no-profile))
+(defn binders-frame [bound] (BindersFrame. bound))
 (defn fn-frame
-  "A frame that hands the returned value to (f state value), which returns
-   the next state."
-  [f]
-  {:f :frame-fn :fn f})
+  "A frame that hands the returned value to (callback state value), which
+   returns the next state."
+  [callback]
+  (FnFrame. callback))
 
-(defn try-frame [catches finally env world mint]
-  {:f :try :catches catches :finally finally :env env :world world :mint mint})
-(defn finally-value-frame [value] {:f :finally-value :value value})
-(defn finally-ret-frame [term env] {:f :finally-ret :term term :env env})
-(defn finally-throw-frame [ex] {:f :finally-throw :ex ex})
+(defn try-frame [catches finally-node env world mint] (TryFrame. catches finally-node env world mint))
+(defn finally-value-frame [value] (FinallyValueFrame. value))
+(defn finally-ret-frame [term env] (FinallyRetFrame. term env))
+(defn finally-throw-frame [ex] (FinallyThrowFrame. ex))
 
-(defn handle-frame [handlers return world mint]
-  {:f :handle :handlers handlers :return return :world world :mint mint})
+(defn handle-frame [handlers return world mint] (HandleFrame. handlers return world mint))
 (defn job-frame
   "A job's frame: {:job :meter :wallet :granted :parent-dyn :world :mint
    :on-return :on-throw} (klara.runtime.job)."
   [fields]
-  (assoc fields :f :job))
+  (map->JobFrame fields))
 (defn boundary-frame
   "The bottom frame of a nested machine. `deopt?`: compiled code called it,
    so an effect nobody inside handles leaves with the state (L4.exec.leave).
    `outer-k`: the continuation of the host call, for constructing."
   [deopt? outer-k]
-  {:f :boundary :deopt deopt? :outer-k outer-k})
+  (BoundaryFrame. deopt? outer-k))
 
 (defn stop?
   "Does frame `f` stop the effect search, exceptions and exhaustion?"
@@ -107,7 +147,7 @@
     (if-let [f (first k)]
       (let [x (kind f)]
         (cond
-          (identical? x :handle) (if (contains? (:handlers f) op) i (recur (next k) (inc i)))
+          (identical? x :handle) (if (contains? (.-handlers ^HandleFrame f) op) i (recur (next k) (inc i)))
           (or (identical? x :job) (identical? x :boundary)) i
           :else (recur (next k) (inc i))))
       -1)))

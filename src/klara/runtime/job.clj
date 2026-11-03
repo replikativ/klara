@@ -119,7 +119,7 @@
 (b/register! 'klara.job/run                                          ; L3.job.run
   {:kind :intrinsic
    :fn (fn [st [opts thunk]]
-         (assoc (start st opts) :mode :apply :ctl [thunk []]))})
+         (assoc (start st opts) :mode :apply :ctl (m/apply-ctl thunk [])))})
 
 (b/register! 'klara.job/run-all                                      ; L3.job.parallel
   {:kind :intrinsic
@@ -148,7 +148,7 @@
                       (let [own (long-array [each])
                             base (assoc st :k ks/empty-stack :dyn (assoc (:dyn st) :meter own))
                             s (assoc (start base (assoc opts :budget {:steps each} ::withdrawn each-rest))
-                                     :mode :apply :ctl [thunk []])]
+                                     :mode :apply :ctl (m/apply-ctl thunk []))]
                         [(:ctl (m/run-state s)) (aget own 0)]))
                results (mapv deref (mapv #(future (run1 %)) thunks))]
            (when-let [^longs pm (get-in st [:dyn :meter])]

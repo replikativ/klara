@@ -6,6 +6,7 @@
   (:require [klara.lang.builtins :as b]
             [klara.lang.term :as t]
             [klara.runtime.intrinsics :as intr :refer [defintrinsic]]
+            [klara.runtime.machine :as m]
             [klara.runtime.prepare :as prep]
             [klara.runtime.stack :as ks]
             [klara.runtime.value :as v])
@@ -163,5 +164,5 @@
   ;; does; only the flag is restored when it returns (a continuation resumed
   ;; elsewhere keeps that context's budget and job)
   (let [dyn (:dyn st)]
-    (assoc st :mode :apply :ctl [thunk []] :dyn (assoc dyn :no-profile true)
+    (assoc st :mode :apply :ctl (m/apply-ctl thunk []) :dyn (assoc dyn :no-profile true)
            :k (ks/push (:k st) (ks/restore-profile-frame (:no-profile dyn))))))
