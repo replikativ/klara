@@ -13,7 +13,7 @@ by the [conformance cases](spec/cases/), the [examples](examples/) or the
 | L1 Worlds | Immutable worlds, late binding, pinned functions, `world/in`/`get`/`define`/`publish!`/`advance`, deltas and conflict detection, footprint slices, bounded history, `ns`/`require` with aliases and refers | No durable storage; reload of an already loaded namespace is not supported |
 | L2 Staging | `code`/`esc`/`lift`/`run`/`reify`, fresh names, implicit cross-stage persistence, late and pinned links, dynamic extrusion check, Code views | No let-insertion; guarded links exist in the semantics but are not yet produced by the compiler |
 | L3 Effects and jobs | Deep multi-shot handlers, default handlers, jobs with forked worlds, step budgets, nested reservation, deferred printing, adopt, resume, host-mutation refusal, parallel jobs (`run-all`), jobs without profiling; accounts: resource vectors, wallets per job, tokens checked at use (reuse, foreign), settlement with receipts shaped as kontor transfers, conservation tested on generated programs | Only printing and definitions are isolated effects; `defaffine` checks threaded tokens at definition (L4.check.affine) and compiles the definition (L4.check.affine-erase), but tokens stay boxed, so the reuse check (a lookup the operation needs anyway) remains |
-| L4 Compilation | Profiles; preparation as a job; the definitional checker with premises, speculation (assumptions, value guards), data definitions, fixpoint induction for loops against recursive definitions; certificates (ansatz, in-place ownership); lowering to JVM code with frame states, leaves as values, OSR, direct calls, host loops, hints as guards, arrays without reflection; compiled code in the world with provenance; precompilation from saved profiles; effect classes (L4.facts.effect) | Lowering excludes interop, `letrec`, `recur` inside `try` and a `finally` that may leave; `perform` and `handle` compile by leaving, so handler dispatch and continuations run interpreted (about 1 µs per effect); Clojure forms as host IR (loops outside return position cost a closure; a direct bytecode backend is planned) |
+| L4 Compilation | Profiles; preparation as a job; the definitional checker with premises, speculation (assumptions, value guards), data definitions, fixpoint induction for loops against recursive definitions; certificates (ansatz, in-place ownership); lowering to JVM code with frame states, leaves as values, OSR, direct calls, host loops, hints as guards, arrays without reflection; compiled code in the world with provenance; precompilation from saved profiles; effect classes (L4.facts.effect) | Lowering excludes interop, `letrec`, `recur` inside `try` and a `finally` that may leave; `perform` and `handle` compile by leaving, so handler dispatch and continuations run interpreted, and a loop that performs on every iteration is slower compiled than interpreted (it leaves and re-enters through OSR each time); Clojure forms as host IR (loops outside return position cost a closure; a direct bytecode backend is planned) |
 | L5 Guest compiler | Klara code: `klara.jit` (specializers; the default is a staged interpreter that generates code from profiles, design/08), rules that extend it (`klara.jit.rules`, user rules such as `showcases/regex.clj`), `klara.own` (in-place), `klara.investor` (tiers by interpreted time spent, callees first, parallel exploration, steady-state measurement in jobs, net-gain decisions kept in the world, an opt-in trigger between forms) | Libraries cannot yet add to the world's rule set from their own namespace; vectorization and primitive representations are measured, not built (design/09) |
 | Lifetimes | Named roots, footprint slices, deltas instead of parent references, per-candidate class loaders, retention report; collectability tests and a soak test | Retention is reported, not charged |
 
@@ -106,11 +106,26 @@ V8; compiled code is what makes Klara usable.
 on micro benchmarks in one JVM: good for finding cliffs, not for
 publication. It warms each engine for 20 calls or 2 s (an earlier 3-call
 warmup left SCI cold and reported 2 to 13 times). The interpreter pays for
-frames that SCI does not have and runs at 4 to 15 times SCI on plain
-programs, sequential Monte Carlo with multi-shot handlers included (about 7
+frames that SCI does not have and runs at 4 to 10 times SCI on plain
+programs, sequential Monte Carlo with multi-shot handlers included (about 5
 times SCI running a plain state machine); programs that perform an effect
-per iteration run at 25 to 30 times (50–190 times on plain programs before
-these):
+per iteration run at 15 to 21 times (50–190 times on plain programs before
+these). Most of that gap is the interpreter, not effects: the generator's
+effect-free twin alone is about 10 times SCI. An effect costs about 0.25 µs
+over a call when its clause resumes in tail position, about 0.5 µs
+otherwise, plus about 20 ns per frame between the perform and its handler:
+
+- The continuation is defined in one module (`klara.runtime.stack`): one
+  record type per frame kind, with a tag the machine dispatches on.
+- `perform` and `handle` run on the machine's registers; a clause
+  `(fn [k ..] (k e))` with an immediate `e` resumes in place, exactly
+  (steps, exhaustion, profiles, exceptions), with a switch to take the rule
+  instead, under which every spec case also runs.
+- Not built: stack segments delimited by handlers (design/12-native.md),
+  which would make capture and resumption independent of depth; at the
+  depths measured (1 to 6 frames per capture, 12 at most) they would save
+  about 0.1 µs per effect. Handler state as a primitive is not built either:
+  the closure it would remove is under 2% of SMC.
 
 - Terms are prepared once into nodes with slot environments, resolved host
   functions and inline caches for globals keyed by world id
