@@ -19,7 +19,6 @@
   (induction l)
   (all_goals (intro i) (intro m) (intro h))
   (simp [Acct.find] at h)
-  (cases h)
   (revert h)
   (simp only [Acct.find, Acct.remove, Acct.total])
   (split)

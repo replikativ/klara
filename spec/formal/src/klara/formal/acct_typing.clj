@@ -340,10 +340,10 @@
   (cases hb (Nat.beq (+ i 1) k))
   (have hq (Not (= Nat (+ i 1) k))) (intro q) (rw [q] at hb) (simp at hb)
   (have n1 (Not (= Nat i (- k 1)))) (omega)
-  (rw [(Acct.beq-ne i (- k 1) n1)])
+  (simp only [Acct.occ hb]) (rw [(Acct.beq-ne i (- k 1) n1)])
   (have hq (= Nat (+ i 1) k)) (exact (Acct.beq-t (+ i 1) k hb))
   (have hq2 (= Nat i (- k 1))) (omega)
-  (rw [(Eq.symm hq2)]) (simp)
+  (simp only [Acct.occ hb]) (rw [(Eq.symm hq2)]) (simp)
   (simp only [h1])
   (have hkj (= Nat k j)) (exact (Acct.beq-t k j h1))
   (have n2 (Not (= Nat (+ i 1) k))) (omega)
@@ -409,7 +409,7 @@
   (all_goals (try (have hz (And (= Nat (Acct.occ j u) 0) (= Nat (Acct.occ j e) 0)))
                   (apply Acct.mx-zero) (omega)))
   (all_goals (try (simp_all [Acct.mx])))
-  (cases q1 (Nat.beq j i))
+  (simp only [Acct.substVar]) (cases q1 (Nat.beq j i))
   (have ne (Not (= Nat i j))) (intro qq) (rw [qq] at q1) (simp at q1)
   (rw [(Acct.beq-ne i j ne)])
   (cases q2 (Nat.blt j i)) (all_goals (simp [Acct.cnt]))
@@ -446,7 +446,8 @@
   (case try_ (specialize ih_b j) (specialize ih_h (+ j 1)) (omega))
   (case perform (specialize ih_x j) (omega))
   (case handle (specialize ih_b j) (specialize ih_r (+ j 1)) (specialize ih_o (+ j 3)) (omega))
-  (case handling (specialize ih_b j) (specialize ih_r (+ j 1)) (specialize ih_o (+ j 3)) (omega)))
+  (case handling (specialize ih_b j) (specialize ih_r (+ j 1)) (specialize ih_o (+ j 3)) (omega))
+  (case lit (omega)))
 
 (a/theorem Acct.tf-subst [k :- Nat, G :- (List Acct.Ty), t :- Acct.Tm, j :- Nat, A :- Acct.Ty, v :- Acct.Tm,
                      h :- (Acct.Tf k G t), hA :- (= (Option Acct.Ty) (Acct.ctx G j) (Option.some Acct.Ty A)),
@@ -1127,6 +1128,7 @@
   (simp only [Acct.nx, Acct.lv]) (intro m) (intro l1) (intro lv) (intro lv2)
   (apply And.intro) (try (simp only [Acct.cnt])) (exact (hcons m lv lv2))
   (simp only [Acct.nx, Acct.lv]) (intro m) (intro g) (apply And.intro) (try (simp only [Acct.cnt])) (try (omega))
+  (case he.right (intro hc) (simp [Acct.cnt] at hc))
   )
 
 (a/theorem Acct.take-red [s :- Acct.Store, x :- Acct.Tm, e1 :- Bool, hi :- (Acct.Inv s (Acct.Tm.take x))]

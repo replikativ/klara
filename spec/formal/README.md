@@ -124,9 +124,12 @@ wallet and spent amount (500 programs by default; about a fifth end in
 Done with the pin at 0.2.592: `Acct.ff-tt` replaced by `Bool.false_ne_true`;
 the proofs follow Lean's `apply` goal order (`Acct.OK.next` takes its
 witness explicitly, then `ht`, `he`, `hr`), `unfold` by delta expansion
-and Lean's `cases`. The cleanup below waits for the remaining fixes
-(`simp only` with the given equations only, no-confusion in `simp`), so that
-the proofs are rewritten once.
+and Lean's `cases`. Done with the pin at 0.2.593: `simp only [f]` rewrites
+with exactly the given equations (callees stay folded unless listed) and
+`simp` closes constructor contradictions (reduceCtorEq); six proofs list
+the equations they now need. The cleanup below waits for the remaining
+fixes (leftover `rw` holes as goals, `split at h`, a named Prop `by_cases`,
+an idempotent `load-init!`), so that the proofs are rewritten once.
 
 The λ-acct proofs work around ansatz behaviour that differs from Lean 4
 (listed for the ansatz maintainers in the Klara memory and fixed there one
@@ -139,10 +142,10 @@ fixes, remove:
 - the `show` steps that recover a function call after `unfold`, and the
   `cases q (e)` plus `dsimp only` detours, in `Acct.ev-val`, `Acct.if-ok`,
   `Acct.spendN-nv`, `Acct.spend-red`, `Acct.put-red`, `Acct.join-red`,
-  `Acct.spendStep-erase`, `Acct.putStep-erase`, `Acct.joinN-erase` (once
-  `simp only [f]` rewrites with f's equations only);
+  `Acct.spendStep-erase`, `Acct.putStep-erase`, `Acct.joinN-erase`
+  (possible since 0.2.593: `simp only [f]` rewrites with f's equations only);
 - the extra `cases h` after `simp at h` in `Acct.co-stepOut` and `Acct.tf-nil`
-  (no-confusion in simp);
+  (possible since 0.2.593: no-confusion in simp);
 - `cases hb (Nat.beq ..)` in place of a named `by_cases` in
   `Acct.occ-substVar-ge`;
 - the accessor lemmas (`Acct.rel-a` to `rel-e`, `Acct.inv-1` to `inv-3`,

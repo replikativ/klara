@@ -654,5 +654,5 @@
   (have hw (= Bool (wsb 0 t) true)) (exact (quotable-wsb t h 0))
   (have r (= (Option Config) (step (Config.mk w ws n (Tm.run_ (Tm.code t))))
              (Option.some Config (Config.mk w ws n t))))
-  (simp only [step, run1]) (try (simp only [ev])) (rw [hb]) (try (rw [hd])) (try (rw [hw])) (try (rfl))
+  (simp only [step run1 ev atZero frame seq1 runStep runCode]) (try (simp only [ev])) (rw [hb]) (simp only [frame seq1 runStep runCode hd hw]) (try (rw [hd])) (try (rw [hw])) (try (rfl))
   (exact (Step.mk _ _ r)))
